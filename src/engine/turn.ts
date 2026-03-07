@@ -1,34 +1,146 @@
-import type { GameState, FacilityDef, TechDef, NewsItem } from './types';
+import type { GameState, FacilityDef, TechDef, EventDef, CardDef, NewsItem } from './types';
 import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion } from './facilities';
 import { tickWill, computeBankDecay, applyFieldDeltas, applyResourceDeltas, DEFAULT_WILL_CONFIG } from './resources';
 import { checkResearchProgress } from './research';
+import { drawCards } from './cards';
+import {
+  selectNewEvents,
+  tickEventCountdowns,
+  getJustExpiredEvents,
+  applyEventEffect,
+  getEffectForResolution,
+} from './events';
 import { ZERO_RESOURCES } from './state';
+import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
-// World Phase
+// Turn structure: Event → Draw → Action → Bank → World
 //
-// The World Phase is the last of the five turn phases (Event → Draw → Action
-// → Bank → World). It applies all passive effects: facility output, resource
-// ticks, Will drift, mine depletion, climate progression, and research checks.
+// Event, Draw, and World phases are automated (called by the engine).
+// Action and Bank phases are player-driven: the UI calls individual
+// action functions (playCard, bankCard, etc.) from cards.ts and events.ts,
+// then signals completion with endActionPhase / endBankPhase.
 //
-// PRNG call order within this phase (must remain stable for seed reproducibility):
-//   1. Climate degradation RNG calls (Phase 5, not yet implemented)
-//   2. Bloc simulation RNG calls (Phase 7, not yet implemented)
-//   3. Event pool RNG calls (Phase 4, not yet implemented)
-//
+// PRNG canonical call order within each automated phase (must not change):
+//   Event Phase: selectNewEvents → nextInt (count) → next() per pick
+//   Draw Phase:  drawCards → shuffle (deck ids)
+//   World Phase: (climate RNG — Phase 5) → (bloc RNG — Phase 7)
 // ---------------------------------------------------------------------------
 
-/** Climate pressure increase per turn (in points, 0–100 scale). */
 const CLIMATE_PRESSURE_PER_TURN = 0.5;
 
+// ---------------------------------------------------------------------------
+// Phase 1: Event Phase
+// ---------------------------------------------------------------------------
+
 /**
- * Execute the World Phase for one turn.
+ * Automated portion of the Event Phase:
+ *   1. Tick countdowns on all active events.
+ *   2. Apply effects of any events that just expired.
+ *   3. Expire standing action restrictions that have ended.
+ *   4. Select and add new events from the pool.
  *
- * Accepts def lookup maps from the data layer so the engine remains
- * independent of src/data imports.
- *
- * ProjectDef lookup will be added in Phase 4 when the project system
- * is implemented; project upkeep is zero until then.
+ * Player counter/mitigation actions are handled separately by the UI
+ * before this function is called (or can follow it, depending on UX order).
+ */
+export function executeEventPhase(
+  state: GameState,
+  eventDefs: Map<string, EventDef>,
+  eventPool: EventDef[],
+  rng: Rng,
+): GameState {
+  const { player } = state;
+
+  // 1. Tick countdowns
+  const tickedEvents = tickEventCountdowns(state.activeEvents);
+
+  // 2. Apply effects of events that just expired
+  let updatedPlayer = { ...player };
+  let updatedTiles = [...state.map.earthTiles];
+  const expired = getJustExpiredEvents(tickedEvents);
+
+  for (const event of expired) {
+    const def = eventDefs.get(event.defId);
+    if (!def) continue;
+    const effect = getEffectForResolution(def, 'expired');
+    if (!effect) continue;
+    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn);
+    updatedPlayer = result.player;
+    updatedTiles = result.mapTiles;
+  }
+
+  // 3. Expire standing action restrictions
+  const activeRestrictions = player.activeEventRestrictions.filter(
+    r => r.expiresAfterTurn >= state.turn,
+  );
+
+  // 4. Select and add new events
+  const newEvents = selectNewEvents(
+    eventPool,
+    state.era,
+    state.pushFactor,
+    player.blocDefId,
+    tickedEvents,
+    rng,
+    state.turn,
+  );
+
+  return {
+    ...state,
+    phase: 'draw',
+    activeEvents: [...tickedEvents, ...newEvents],
+    map: { ...state.map, earthTiles: updatedTiles },
+    player: { ...updatedPlayer, activeEventRestrictions: activeRestrictions },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2: Draw Phase
+// ---------------------------------------------------------------------------
+
+/**
+ * Draw cards up to the hand limit from the player's deck.
+ * Recycles the discard pile if the deck is insufficient.
+ */
+export function executeDrawPhase(state: GameState, rng: Rng): GameState {
+  const newCards = drawCards(state.player.cards, rng);
+  return {
+    ...state,
+    phase: 'action',
+    player: { ...state.player, cards: newCards },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3: Action Phase  (player-driven)
+// Phase 4: Bank Phase    (player-driven)
+//
+// The UI calls functions in cards.ts and events.ts directly to mutate
+// state during these phases. When done, it calls endBankPhase below.
+// ---------------------------------------------------------------------------
+
+/**
+ * Transition out of the Bank Phase: discard all remaining hand cards
+ * and advance phase to 'world'. Called by the UI when the player is done.
+ */
+export function endBankPhase(state: GameState): GameState {
+  const discarded = state.player.cards.map(c =>
+    c.zone === 'hand' ? { ...c, zone: 'discard' as const } : c,
+  );
+  return {
+    ...state,
+    phase: 'world',
+    player: { ...state.player, cards: discarded },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5: World Phase
+// ---------------------------------------------------------------------------
+
+/**
+ * Execute the World Phase: apply all passive effects for the turn.
+ * Advances turn counter and year at the end.
  */
 export function executeWorldPhase(
   state: GameState,
@@ -54,7 +166,7 @@ export function executeWorldPhase(
 
   // 3. Bank decay and project upkeep
   const bankDecay = computeBankDecay(player.cards);
-  const projectUpkeep = ZERO_RESOURCES; // Phase 4: wire in actual project upkeep
+  const projectUpkeep = ZERO_RESOURCES; // Phase 4 extended: wire in actual project upkeep
 
   // 4. Apply resource and field changes
   const newFields = applyFieldDeltas(player.fields, totalFields);
@@ -69,7 +181,24 @@ export function executeWorldPhase(
     nextTurn,
   );
 
-  // 6. Build news feed entries for research events
+  // 6. Card upgrades from newly discovered techs
+  let updatedCards = player.cards;
+  for (const defId of newDiscoveries) {
+    const techDef = techDefs.get(defId);
+    if (!techDef) continue;
+    // New cards added to deck; upgrades handled via data layer in content pass
+    for (const cardDefId of techDef.unlocksCards) {
+      const newCard = {
+        id: `${cardDefId}-t${nextTurn}`,
+        defId: cardDefId,
+        zone: 'deck' as const,
+        bankedSinceTurn: null,
+      };
+      updatedCards = [...updatedCards, newCard];
+    }
+  }
+
+  // 7. News feed entries for research events
   const researchNews: NewsItem[] = [
     ...newRumours.map(defId => ({
       id: `${nextTurn}-rumour-${defId}`,
@@ -88,21 +217,21 @@ export function executeWorldPhase(
     })),
   ];
 
-  // 7. Will natural drift
+  // 8. Will natural drift
   const willConfig = DEFAULT_WILL_CONFIG[player.willProfile];
   const newWill = tickWill(player.will, willConfig);
 
-  // 8. Mine depletion
+  // 9. Mine depletion
   const newFacilities = tickMineDepletion(player.facilities, facilityDefs);
 
-  // 9. Climate pressure
+  // 10. Climate pressure
   const newClimatePressure = Math.min(100, state.climatePressure + CLIMATE_PRESSURE_PER_TURN);
 
   return {
     ...state,
     turn: nextTurn,
     year: state.year + 1,
-    phase: 'event', // reset to first phase for next turn
+    phase: 'event', // reset to start of next turn
     climatePressure: newClimatePressure,
     player: {
       ...player,
@@ -111,6 +240,7 @@ export function executeWorldPhase(
       will: newWill,
       facilities: newFacilities,
       techs: updatedTechs,
+      cards: updatedCards,
       newsFeed: [...player.newsFeed, ...researchNews],
     },
   };

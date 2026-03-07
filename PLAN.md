@@ -72,10 +72,12 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - Research check wired into `turn.ts` World Phase; news feed entries generated for rumours, progress, and discoveries ✅
 - 27 tests in `research.test.ts`; recipe seeding determinism and breakthrough detection verified ✅ (71 total)
 
-### Phase 4 — Card system
-- `cards.ts`: deck, draw, bank (cap 2, decay 1 Funding/card/turn), counter mechanic, standing action restriction flags
-- `events.ts`: event pool, countdown tick, three response tiers
-- Full turn loop in `turn.ts`: Event → Draw → Action → Bank → World
+### Phase 4 — Card system ✅
+- `cards.ts`: drawCards (seeded shuffle + discard recycle), playCardFromHand, playCardAsCounter, bankCard/unbankCard (BANK_LIMIT=2), discardHand, addCardsToDeck, upgradeCard (zone-preserving), getActiveRestrictions/isActionRestricted ✅
+- `events.ts`: getEligibleEvents (era/pushFactor/bloc filter), selectNewEvents (0–2/turn via RNG), tickEventCountdowns (auto-expire at 0), resolveEvent, applyEventEffect (resources/fields/restrictions), getEffectForResolution (mitigation scaling, counter nullification) ✅
+- Full five-phase turn loop in `turn.ts`: executeEventPhase, executeDrawPhase, endBankPhase; Action+Bank phases are player-driven primitives ✅
+- Card upgrades from tech discoveries wired into World Phase; PRNG call order documented in turn.ts ✅
+- 51 new tests across `cards.test.ts` and `events.test.ts` (122 total) ✅
 
 ### Phase 5 — Earth map (Phaser)
 - `EarthScene.ts`: load Tiled hex JSON, render tiles with type-based colour/saturation palette
