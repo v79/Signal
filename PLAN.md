@@ -52,19 +52,19 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 
 ## Implementation phases
 
-### Phase 1 — Foundation
-- Scaffold SvelteKit + Vite project
-- Add Phaser as a client-only dynamic import
-- Configure Vitest
-- Implement `rng.ts` (mulberry32) with tests
+### Phase 1 — Foundation ✅
+- Scaffold SvelteKit + Vite project ✅
+- Add Phaser as a client-only dynamic import (`MapContainer.svelte`) ✅
+- Configure Vitest ✅
+- Implement `rng.ts` (mulberry32 + djb2 string hashing) with 10 tests ✅
 - Define all TypeScript interfaces in `types.ts` ✅
-- Implement `state.ts` factory
+- Implement `state.ts` factory (`createGameState`, `serialise/deserialise`) ✅
 
-### Phase 2 — Engine core (no rendering)
-- `resources.ts`: resource tick, Will volatility model per bloc type
-- `facilities.ts`: effect table, adjacency computation
-- `turn.ts`: World Phase only (resources + facilities tick)
-- Vitest coverage for resource accumulation and adjacency bonuses
+### Phase 2 — Engine core (no rendering) ✅
+- `resources.ts`: resource tick, Will volatility model (democratic vs authoritarian drift rates, ceilings) ✅
+- `facilities.ts`: facility output scaled by condition + tile productivity, hex adjacency computation, mine depletion ✅
+- `turn.ts`: World Phase orchestrator (facilities → resources → Will → depletion → climate pressure) ✅
+- 34 tests across `facilities.test.ts` and `resources.test.ts` (44 total) ✅
 
 ### Phase 3 — Research system
 - `research.ts`: field accumulation from facility output, seeded recipe generation with stable "shapes" (base thresholds randomised ±20%), discovery stage transitions, cross-field breakthrough detection
