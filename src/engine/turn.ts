@@ -17,6 +17,11 @@ import {
   applyBoardResourceMultipliers,
   tickBoardAges,
 } from './board';
+import {
+  tickSignalProgress,
+  didCrossStrengthThreshold,
+  signalProgressNewsText,
+} from './signal';
 import { ZERO_RESOURCES } from './state';
 import type { Rng } from './rng';
 
@@ -248,6 +253,13 @@ export function executeWorldPhase(
   // 13. Board age ticking (retirements generate news)
   const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, nextTurn);
 
+  // 14. Signal progress tick
+  const prevSignalProgress = state.signal.decodeProgress;
+  const newSignal = tickSignalProgress(state.signal, newFields, newFacilities, facilityDefs);
+  const signalNews: NewsItem[] = didCrossStrengthThreshold(prevSignalProgress, newSignal.decodeProgress)
+    ? [{ id: `signal-${nextTurn}`, turn: nextTurn, text: signalProgressNewsText(newSignal.decodeProgress, nextTurn) }]
+    : [];
+
   return {
     ...state,
     turn: nextTurn,
@@ -255,6 +267,7 @@ export function executeWorldPhase(
     phase: 'event', // reset to start of next turn
     climatePressure: newClimatePressure,
     blocs: updatedBlocs,
+    signal: newSignal,
     player: {
       ...player,
       resources: newResources,
@@ -264,7 +277,7 @@ export function executeWorldPhase(
       techs: updatedTechs,
       cards: updatedCards,
       board: updatedBoard,
-      newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews, ...boardNews],
+      newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews, ...boardNews, ...signalNews],
     },
   };
 }
