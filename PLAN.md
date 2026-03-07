@@ -99,11 +99,14 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `MapContainer.svelte`: loads Phaser + EarthScene dynamically (SSR-safe); wires callbacks; hosts FacilityPicker overlay ✅
 - `+page.svelte`: map-placeholder replaced by `<MapContainer>`; `build` standing action toggles tile selection ✅
 
-### Phase 7 — Bloc simulation
-- `blocs.ts`: per-turn simulation step; weighted decision rules; decline thresholds
-- Bloc elimination and merger event generation
-- News ticker component (Svelte)
-- Diplomatic event cards appear in Event Zone
+### Phase 7 — Bloc simulation ✅
+- `blocs.ts`: `initialiseBlocStates`, `simulateBlocs` (passive income, will drift via tickWill, field accumulation proportional to will, elimination checks), `checkBlocMergers` (news items when two blocs are weakened) ✅
+- Elimination conditions: authoritarian will < willCollapsThreshold, universal will < 5, or resource exhaustion; news item generated on elimination ✅
+- Periodic status news staggered per bloc (every 5 turns, offset by defId hash) ✅
+- `blocs.ts` wired into `executeWorldPhase` (step 11); `blocDefs` parameter added; bloc news merged into player.newsFeed ✅
+- `STUB_BLOC_DEFS` (4 blocs: NorthAmerica, EastAsia, SouthAmerica, AfricaCoalition) + `initialiseBlocStates` in game store; demo state includes live bloc simulation ✅
+- `NewsTicker.svelte`: horizontally scrolling CSS-animated strip, duplicated content for seamless loop, aria-live for accessibility ✅
+- 14 tests in `blocs.test.ts` (136 total) ✅
 
 ### Phase 8 — Board system
 - `board.ts`: character pool; lifecycle events; buff/debuff applied as multipliers/modifiers in `resources.ts` and `research.ts`

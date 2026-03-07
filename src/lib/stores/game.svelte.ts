@@ -5,11 +5,21 @@ import type {
   StandingActionDef,
   FacilityDef,
   FacilityInstance,
+  BlocDef,
+  BlocState,
   MapTile,
   TileType,
   FieldPoints,
 } from '../../engine/types';
+import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
+import { createRng } from '../../engine/rng';
+import {
+  endBankPhase,
+  executeWorldPhase,
+  executeEventPhase,
+  executeDrawPhase,
+} from '../../engine/turn';
 
 // ---------------------------------------------------------------------------
 // Stub content definitions (replaced by src/data/ in the content pass)
@@ -190,6 +200,57 @@ export const STUB_FACILITY_DEFS: Map<string, FacilityDef> = new Map([
   }],
 ]);
 
+export const STUB_BLOC_DEFS: Map<string, BlocDef> = new Map([
+  ['northAmerica', {
+    id: 'northAmerica',
+    name: 'North American Alliance',
+    willProfile: 'democratic',
+    victoryBias: 'economicHegemony',
+    startingResources: { funding: 80, materials: 60, politicalWill: 70 },
+    startingFields: { engineering: 20, computing: 15 },
+    victoryCostModifiers: {},
+    specificEventTags: ['trade', 'technology'],
+    willCeiling: 90,
+    willCollapsThreshold: 0,
+  }],
+  ['eastAsia', {
+    id: 'eastAsia',
+    name: 'East Asian Consortium',
+    willProfile: 'authoritarian',
+    victoryBias: 'terraforming',
+    startingResources: { funding: 70, materials: 80, politicalWill: 50 },
+    startingFields: { engineering: 25, mathematics: 10 },
+    victoryCostModifiers: {},
+    specificEventTags: ['industrial', 'expansion'],
+    willCeiling: 75,
+    willCollapsThreshold: 15,
+  }],
+  ['southAmerica', {
+    id: 'southAmerica',
+    name: 'South American Union',
+    willProfile: 'democratic',
+    victoryBias: 'ecologicalRestoration',
+    startingResources: { funding: 50, materials: 55, politicalWill: 65 },
+    startingFields: { biochemistry: 15, socialScience: 10 },
+    victoryCostModifiers: {},
+    specificEventTags: ['environment', 'diplomatic'],
+    willCeiling: 85,
+    willCollapsThreshold: 0,
+  }],
+  ['africaCoalition', {
+    id: 'africaCoalition',
+    name: 'African Coalition',
+    willProfile: 'democratic',
+    victoryBias: 'wormhole',
+    startingResources: { funding: 45, materials: 65, politicalWill: 60 },
+    startingFields: { socialScience: 12, biochemistry: 8 },
+    victoryCostModifiers: {},
+    specificEventTags: ['diplomatic', 'environment'],
+    willCeiling: 80,
+    willCollapsThreshold: 0,
+  }],
+]);
+
 // ---------------------------------------------------------------------------
 // Map tile generation (deterministic, position-based)
 // ---------------------------------------------------------------------------
@@ -241,6 +302,7 @@ function createDemoState(): GameState {
   });
 
   const earthTiles = generateEarthTiles(3);
+  const blocs = initialiseBlocStates([...STUB_BLOC_DEFS.values()]);
 
   return {
     ...base,
@@ -268,6 +330,7 @@ function createDemoState(): GameState {
         { actionId: 'build', expiresAfterTurn: 3 },
       ],
     },
+    blocs,
     map: {
       ...base.map,
       earthTiles,
@@ -446,5 +509,31 @@ export const gameStore = {
         ),
       },
     };
+  },
+
+  /**
+   * Advance the game phase.
+   *  action → bank  (instant, no engine calls)
+   *  bank   → event → draw → action  (full World Phase + automated phases)
+   */
+  advancePhase(): void {
+    if (_state.phase === 'action') {
+      _state = { ..._state, phase: 'bank' };
+      return;
+    }
+    if (_state.phase === 'bank') {
+      // Each turn gets its own deterministic RNG slice derived from seed + turn number.
+      const rng = createRng(`${_state.seed}-t${_state.turn}`);
+      let next = endBankPhase(_state);
+      next = executeWorldPhase(next, STUB_FACILITY_DEFS, new Map(), STUB_BLOC_DEFS);
+      next = executeEventPhase(
+        next,
+        STUB_EVENT_DEFS,
+        [...STUB_EVENT_DEFS.values()],
+        rng,
+      );
+      next = executeDrawPhase(next, rng);
+      _state = next;
+    }
   },
 };
