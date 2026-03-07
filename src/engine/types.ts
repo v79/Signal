@@ -592,7 +592,8 @@ export type VictoryCondition =
 export type LossCondition =
   | 'climateCollapse'
   | 'signalMisinterpretation'
-  | 'politicalCollapse';
+  | 'politicalCollapse'
+  | 'resourceExhaustion';
 
 export type MoralOutcome = 'abandonedEarth' | null;
 

@@ -135,10 +135,15 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - Scene tab bar in `MapContainer.svelte`: EARTH | NEAR SPACE | ASTEROID BELT; era-gated (locked with padlock icon); amber `DEV › ERA` button advances era without landmark projects (explicit dev scaffold, removed when Phase 11 lands) ✅
 - `generateSpaceNodes()`, `generateBeltNodes()`, `generateBeltEdges()` in game store; `devAdvanceEra()`, `selectSpaceNode()`, `selectBeltNode()` actions; demo state populates all three map layers ✅
 
-### Phase 11 — Victory & loss
-- `victory.ts`: checkers for all four victories and four loss conditions, called at end of World Phase
-- Post-game summary screen (Svelte route)
-- Abandoned Earth metric tracked throughout (Earth welfare score alongside space investment)
+### Phase 11 — Victory & loss ✅
+- `victory.ts`: checkers for all four victories (wormhole, ecologicalRestoration, economicHegemony, terraforming) and four loss conditions (climateCollapse, signalMisinterpretation, politicalCollapse, resourceExhaustion) ✅
+- `checkVictoryConditions` wired into `executeWorldPhase` step 16 (after all state updates); losses take priority over simultaneous victories ✅
+- `tickEarthWelfare` wired into World Phase step 15; decays with climate pressure, recovers with Earth-based facilities ✅
+- `abandonedEarth` moral outcome appended to any victory when earthWelfareScore < 40 ✅
+- `resourceExhaustion` added to `LossCondition` type (all three resource pools simultaneously ≤ 0) ✅
+- `/summary` route: post-game summary with victory/loss banner, condition description, Abandoned Earth warning, stat table (turn/year/era/resources/fields), PLAY AGAIN button ✅
+- `game.svelte.ts`: `advancePhase()` detects outcome after World Phase and navigates to `/summary`; `resetGame()` action clears all state ✅
+- 37 tests in `victory.test.ts` (228 total) ✅
 
 ### Phase 12 — Save system & seeded runs
 - `GameState` serializes to JSON with `JSON.stringify` (no special handling needed if types are designed correctly)

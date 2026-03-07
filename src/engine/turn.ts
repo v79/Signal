@@ -22,6 +22,7 @@ import {
   didCrossStrengthThreshold,
   signalProgressNewsText,
 } from './signal';
+import { checkVictoryConditions, tickEarthWelfare } from './victory';
 import { ZERO_RESOURCES } from './state';
 import type { Rng } from './rng';
 
@@ -260,12 +261,17 @@ export function executeWorldPhase(
     ? [{ id: `signal-${nextTurn}`, turn: nextTurn, text: signalProgressNewsText(newSignal.decodeProgress, nextTurn) }]
     : [];
 
-  return {
+  // 15. Earth welfare tick
+  const newEarthWelfare = tickEarthWelfare(state);
+
+  // Assemble the next state (outcome checked below)
+  const nextState: GameState = {
     ...state,
     turn: nextTurn,
     year: state.year + 1,
     phase: 'event', // reset to start of next turn
     climatePressure: newClimatePressure,
+    earthWelfareScore: newEarthWelfare,
     blocs: updatedBlocs,
     signal: newSignal,
     player: {
@@ -280,4 +286,8 @@ export function executeWorldPhase(
       newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews, ...boardNews, ...signalNews],
     },
   };
+
+  // 16. Victory / loss check (uses fully updated state)
+  const outcome = nextState.outcome ?? checkVictoryConditions(nextState);
+  return { ...nextState, outcome };
 }

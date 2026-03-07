@@ -20,6 +20,7 @@ import type {
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
 import { createRng } from '../../engine/rng';
+import { goto } from '$app/navigation';
 import {
   endBankPhase,
   executeWorldPhase,
@@ -707,6 +708,9 @@ export const gameStore = {
    * Advance the game phase.
    *  action → bank  (instant, no engine calls)
    *  bank   → event → draw → action  (full World Phase + automated phases)
+   *
+   * If the World Phase triggers a victory or loss, navigation to /summary
+   * happens automatically after state is updated.
    */
   advancePhase(): void {
     if (_state.phase === 'action') {
@@ -718,6 +722,12 @@ export const gameStore = {
       const rng = createRng(`${_state.seed}-t${_state.turn}`);
       let next = endBankPhase(_state);
       next = executeWorldPhase(next, STUB_FACILITY_DEFS, new Map(), STUB_BLOC_DEFS, STUB_BOARD_DEFS);
+      // If the game ended, skip the remaining automated phases and navigate.
+      if (next.outcome) {
+        _state = next;
+        goto('/summary');
+        return;
+      }
       next = executeEventPhase(
         next,
         STUB_EVENT_DEFS,
@@ -727,6 +737,14 @@ export const gameStore = {
       next = executeDrawPhase(next, rng);
       _state = next;
     }
+  },
+
+  /** Reset the game to a fresh demo state. */
+  resetGame(): void {
+    _state = createDemoState();
+    _selectedCoordKey    = null;
+    _selectedSpaceNodeId = null;
+    _selectedBeltNodeId  = null;
   },
 
   /** Recruit a board member. Deducts the recruit cost and adds the member to their role slot. */
