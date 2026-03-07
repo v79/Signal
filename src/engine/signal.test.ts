@@ -10,7 +10,7 @@ import {
   signalProgressNewsText,
 } from './signal';
 import { createRng } from './rng';
-import type { SignalState, FieldPoints, FacilityInstance, FacilityDef } from './types';
+import type { SignalState, FieldPoints, FacilityInstance, FacilityDef, SignalResponseOption } from './types';
 
 // ---------------------------------------------------------------------------
 // Fixtures
