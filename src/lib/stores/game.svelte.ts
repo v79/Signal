@@ -23,6 +23,8 @@ import {
   executeDrawPhase,
 } from '../../engine/turn';
 import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../engine/board';
+import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
+import type { SignalResponseOption } from '../../engine/types';
 
 // ---------------------------------------------------------------------------
 // Stub content definitions (replaced by src/data/ in the content pass)
@@ -120,6 +122,36 @@ export const STUB_EVENT_DEFS: Map<string, EventDef> = new Map([
     negativeEffect: { resources: { politicalWill: -5 } },
     positiveEffect: { resources: { materials: 25 } },
   }],
+  ['signalInterference', {
+    id: 'signalInterference',
+    name: 'Signal Interference',
+    description: 'Atmospheric disturbances are corrupting signal readings.',
+    flavourText: 'The transmission is becoming harder to distinguish from noise.',
+    tags: ['signal', 'interference'],
+    eras: ['earth'],
+    pushFactors: null,
+    blocIds: null,
+    countdownTurns: 3,
+    responseTier: 'partialMitigation',
+    negativeEffect: { fields: { physics: -10, mathematics: -5 } },
+    positiveEffect: null,
+    mitigationCost: { funding: 20 },
+    mitigationFactor: 0.5,
+  }],
+  ['signalBreakthrough', {
+    id: 'signalBreakthrough',
+    name: 'Signal Breakthrough',
+    description: 'Analysts have isolated a coherent pattern in the transmission.',
+    flavourText: 'The mathematics underlying the signal have become unmistakable.',
+    tags: ['signal'],
+    eras: ['nearSpace', 'deepSpace'],
+    pushFactors: null,
+    blocIds: null,
+    countdownTurns: 2,
+    responseTier: 'noCounter',
+    negativeEffect: null,
+    positiveEffect: { fields: { physics: 20, mathematics: 15 } },
+  }],
 ]);
 
 export const STUB_STANDING_ACTIONS: StandingActionDef[] = [
@@ -197,6 +229,20 @@ export const STUB_FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     upkeepCost: { funding: 3 },
     fieldOutput: { engineering: 4 },
     resourceOutput: { materials: 4 },
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+  }],
+  ['deepSpaceArray', {
+    id: 'deepSpaceArray',
+    name: 'Deep Space Array',
+    description: 'Dedicated signal decoding infrastructure. Accelerates decode progress each turn.',
+    era: 'earth',
+    allowedTileTypes: ['highland', 'arid', 'coastal'],
+    buildCost: { funding: 60, materials: 40 },
+    upkeepCost: { funding: 8 },
+    fieldOutput: { physics: 5, computing: 3 },
+    resourceOutput: {},
     adjacencyBonuses: [],
     adjacencyPenalties: [],
     depletes: false,
@@ -660,6 +706,31 @@ export const gameStore = {
     _state = {
       ..._state,
       player: { ..._state.player, board: newBoard },
+    };
+  },
+
+  /**
+   * Generate wormhole response options for the signal climax.
+   * Returns the options (caller should display them); does not mutate state.
+   */
+  getWormholeOptions(): SignalResponseOption[] {
+    const rng = createRng(`${_state.seed}-wormhole`);
+    return generateWormholeOptions(_state.signal, rng);
+  },
+
+  /** Commit the player's chosen wormhole response. */
+  commitWormholeResponse(optionId: string, options: SignalResponseOption[]): void {
+    const newSignal = commitSignalResponse(_state.signal, optionId, options);
+    const text = newSignal.wormholeActivated
+      ? 'The resonance pathway is open. The wormhole is activated.'
+      : 'The response was incorrect. The signal locks closed. The opportunity is lost.';
+    _state = {
+      ..._state,
+      signal: newSignal,
+      player: {
+        ..._state.player,
+        newsFeed: [..._state.player.newsFeed, { id: `wormhole-t${_state.turn}`, turn: _state.turn, text }],
+      },
     };
   },
 };

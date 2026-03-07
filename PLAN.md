@@ -118,9 +118,15 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `BoardPanel.svelte`: 7 collapsible role slots; active members show name/age/buffs/debuffs; vacant slots show recruit candidates ✅
 - 25 tests in `board.test.ts` (147 total) ✅
 
-### Phase 9 — Signal track
-- `signal.ts`: decoding progress fed by Physics + Mathematics + Deep Space Array count; era strength levels; wormhole climax generates 2–3 candidate response options (count and confidence determined by signal investment)
-- Signal events wired into event pool per era
+### Phase 9 — Signal track ✅
+- `signal.ts`: `computeSignalProgressDelta` (base + (physics+math)/50 + deepSpaceArrayCount×3), `computeEraStrength` (faint/structured/urgent by progress threshold), `tickSignalProgress`, `isSignalClimax` ✅
+- `generateWormholeOptions`: 2 options if progress < 70, 3 if >= 70; correct option confidence hint scales with investment; seeded position via RNG ✅
+- `commitSignalResponse`: locks state, sets `wormholeActivated` on correct answer; `didCrossStrengthThreshold` for news generation ✅
+- Signal ticking wired into `executeWorldPhase` (step 14); strength-threshold crossings generate news feed entries ✅
+- `deepSpaceArray` facility stub added; signal event stubs: `signalInterference` (earth) and `signalBreakthrough` (nearSpace/deepSpace) ✅
+- `ResearchFeed.svelte`: wormhole climax UI with response option buttons, confidence hints, success/failure result ✅
+- `getWormholeOptions()` and `commitWormholeResponse()` in game store ✅
+- 30 tests in `signal.test.ts` (191 total) ✅
 
 ### Phase 10 — Near Space & Asteroid Belt
 - `SpaceScene.ts`: second Phaser scene, distance-based adjacency, no climate degradation

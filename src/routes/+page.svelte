@@ -17,6 +17,12 @@
     STUB_BOARD_DEFS,
   } from '$lib/stores/game.svelte';
   import type { BoardRole } from '../engine/types';
+  import { isSignalClimax } from '../engine/signal';
+
+  // Generate wormhole options once when the climax is reached (deterministic seed).
+  const wormholeOptions = $derived(
+    isSignalClimax(gameStore.state.signal) ? gameStore.getWormholeOptions() : [],
+  );
 
   function handleStandingAction(id: string): void {
     if (id === 'build') {
@@ -64,6 +70,8 @@
         fields={gameStore.state.player.fields}
         newsFeed={gameStore.state.player.newsFeed}
         signal={gameStore.state.signal}
+        {wormholeOptions}
+        onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
       />
       <BoardPanel
         board={gameStore.state.player.board}
