@@ -1,15 +1,9 @@
 import type {
   GameState,
-  CardDef,
-  EventDef,
-  StandingActionDef,
-  FacilityDef,
   FacilityInstance,
-  BlocDef,
   BlocState,
   MapTile,
   TileType,
-  BoardMemberDef,
   BoardRole,
   FieldPoints,
   SpaceNode,
@@ -30,280 +24,22 @@ import {
 import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../engine/board';
 import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
 import type { SignalResponseOption } from '../../engine/types';
+import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
+import { CARD_DEFS } from '../../data/cards';
+import { EVENT_DEFS } from '../../data/events';
+import { FACILITY_DEFS } from '../../data/facilities';
+import { BLOC_DEFS } from '../../data/blocs';
+import { BOARD_DEFS } from '../../data/board';
+import { STANDING_ACTIONS } from '../../data/standingActions';
 
 // ---------------------------------------------------------------------------
-// Stub content definitions (replaced by src/data/ in the content pass)
+// Re-export data for components that import from this store
 // ---------------------------------------------------------------------------
 
-export const STUB_CARD_DEFS: Map<string, CardDef> = new Map([
-  ['lobbying', {
-    id: 'lobbying',
-    name: 'Political Lobbying',
-    description: 'Rally political support for the programme.',
-    flavourText: 'The corridors of power must be navigated carefully.',
-    era: 'earth',
-    effect: { resources: { politicalWill: 5 } },
-    counterEffect: {
-      countersEventTag: 'interference',
-      additionalCost: { politicalWill: 10 },
-      fullNeutralise: true,
-    },
-    upgradesFrom: null,
-  }],
-  ['emergencyProcurement', {
-    id: 'emergencyProcurement',
-    name: 'Emergency Procurement',
-    description: 'Rush order for critical materials.',
-    flavourText: 'No time for the usual channels.',
-    era: 'earth',
-    effect: { resources: { materials: 15, funding: -10 } },
-    counterEffect: null,
-    upgradesFrom: null,
-  }],
-  ['publicAppeal', {
-    id: 'publicAppeal',
-    name: 'Public Outreach',
-    description: 'Broadcast the mission to the public.',
-    flavourText: 'The people deserve to know what is at stake.',
-    era: 'earth',
-    effect: { resources: { politicalWill: 8, funding: 5 } },
-    counterEffect: null,
-    upgradesFrom: null,
-  }],
-  ['academicConference', {
-    id: 'academicConference',
-    name: 'Academic Conference',
-    description: 'Host international researchers.',
-    flavourText: 'The best minds of a generation, gathered.',
-    era: 'earth',
-    effect: { fields: { physics: 8, mathematics: 6 } },
-    counterEffect: null,
-    upgradesFrom: null,
-  }],
-  ['coalitionBuilding', {
-    id: 'coalitionBuilding',
-    name: 'Coalition Building',
-    description: 'Coordinate with allied pressure groups.',
-    flavourText: 'There is strength in numbers.',
-    era: 'earth',
-    effect: { resources: { politicalWill: 12 } },
-    counterEffect: {
-      countersEventTag: 'scandal',
-      additionalCost: { politicalWill: 5 },
-      fullNeutralise: false,
-    },
-    upgradesFrom: null,
-  }],
-]);
-
-export const STUB_EVENT_DEFS: Map<string, EventDef> = new Map([
-  ['fundingCrisis', {
-    id: 'fundingCrisis',
-    name: 'Funding Crisis',
-    description: 'Budget shortfall threatens operations.',
-    flavourText: 'The finance committee is alarmed.',
-    tags: ['crisis', 'funding'],
-    eras: ['earth'],
-    pushFactors: null,
-    blocIds: null,
-    countdownTurns: 3,
-    responseTier: 'partialMitigation',
-    negativeEffect: { resources: { funding: -30 } },
-    positiveEffect: null,
-    mitigationCost: { funding: 15 },
-    mitigationFactor: 0.5,
-  }],
-  ['diplomaticOverture', {
-    id: 'diplomaticOverture',
-    name: 'Diplomatic Overture',
-    description: 'A rival bloc proposes a materials deal.',
-    flavourText: 'An offer has arrived through back channels.',
-    tags: ['diplomatic'],
-    eras: ['earth', 'nearSpace'],
-    pushFactors: null,
-    blocIds: null,
-    countdownTurns: 2,
-    responseTier: 'noCounter',
-    negativeEffect: { resources: { politicalWill: -5 } },
-    positiveEffect: { resources: { materials: 25 } },
-  }],
-  ['signalInterference', {
-    id: 'signalInterference',
-    name: 'Signal Interference',
-    description: 'Atmospheric disturbances are corrupting signal readings.',
-    flavourText: 'The transmission is becoming harder to distinguish from noise.',
-    tags: ['signal', 'interference'],
-    eras: ['earth'],
-    pushFactors: null,
-    blocIds: null,
-    countdownTurns: 3,
-    responseTier: 'partialMitigation',
-    negativeEffect: { fields: { physics: -10, mathematics: -5 } },
-    positiveEffect: null,
-    mitigationCost: { funding: 20 },
-    mitigationFactor: 0.5,
-  }],
-  ['signalBreakthrough', {
-    id: 'signalBreakthrough',
-    name: 'Signal Breakthrough',
-    description: 'Analysts have isolated a coherent pattern in the transmission.',
-    flavourText: 'The mathematics underlying the signal have become unmistakable.',
-    tags: ['signal'],
-    eras: ['nearSpace', 'deepSpace'],
-    pushFactors: null,
-    blocIds: null,
-    countdownTurns: 2,
-    responseTier: 'noCounter',
-    negativeEffect: {},
-    positiveEffect: { fields: { physics: 20, mathematics: 15 } },
-  }],
-]);
-
-export const STUB_STANDING_ACTIONS: StandingActionDef[] = [
-  { id: 'build',     name: 'Build',     description: 'Construct a facility on the map.',              cost: { materials: 20 },                    actionKey: 'build' },
-  { id: 'recruit',   name: 'Recruit',   description: 'Hire a new board member.',                      cost: { funding: 15, politicalWill: 10 },   actionKey: 'recruit' },
-  { id: 'trade',     name: 'Trade',     description: 'Exchange resources with a bloc.',               cost: { politicalWill: 5 },                 actionKey: 'trade' },
-  { id: 'survey',    name: 'Survey',    description: 'Survey new territory or asteroid nodes.',       cost: { materials: 5 },                     actionKey: 'survey' },
-  { id: 'negotiate', name: 'Negotiate', description: 'Conduct diplomatic negotiations with a bloc.',  cost: { funding: 10, politicalWill: 8 },    actionKey: 'negotiate' },
-];
-
-export const STUB_FACILITY_DEFS: Map<string, FacilityDef> = new Map([
-  ['researchLab', {
-    id: 'researchLab',
-    name: 'Research Laboratory',
-    description: 'Generates Physics and Mathematics field points each turn.',
-    era: 'earth',
-    allowedTileTypes: ['urban', 'highland'],
-    buildCost: { funding: 30, materials: 10 },
-    upkeepCost: { funding: 5 },
-    fieldOutput: { physics: 3, mathematics: 2 },
-    resourceOutput: {},
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: false,
-  }],
-  ['mine', {
-    id: 'mine',
-    name: 'Resource Mine',
-    description: 'Extracts raw materials each turn. Output depletes over time.',
-    era: 'earth',
-    allowedTileTypes: ['highland', 'arid', 'industrial'],
-    buildCost: { materials: 20 },
-    upkeepCost: { funding: 2 },
-    fieldOutput: {},
-    resourceOutput: { materials: 8 },
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: true,
-  }],
-  ['solarFarm', {
-    id: 'solarFarm',
-    name: 'Solar Farm',
-    description: 'Generates steady Funding and minor Engineering field points.',
-    era: 'earth',
-    allowedTileTypes: ['arid', 'agricultural', 'coastal'],
-    buildCost: { materials: 15, funding: 10 },
-    upkeepCost: {},
-    fieldOutput: { engineering: 1 },
-    resourceOutput: { funding: 5 },
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: false,
-  }],
-  ['publicUniversity', {
-    id: 'publicUniversity',
-    name: 'Public University',
-    description: 'Broad research output across multiple fields. High upkeep.',
-    era: 'earth',
-    allowedTileTypes: ['urban', 'agricultural'],
-    buildCost: { funding: 50, materials: 5 },
-    upkeepCost: { funding: 8, politicalWill: 2 },
-    fieldOutput: { physics: 2, mathematics: 2, computing: 2, socialScience: 3 },
-    resourceOutput: {},
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: false,
-  }],
-  ['engineeringWorks', {
-    id: 'engineeringWorks',
-    name: 'Engineering Works',
-    description: 'Heavy manufacturing; generates Engineering and Materials.',
-    era: 'earth',
-    allowedTileTypes: ['industrial', 'urban'],
-    buildCost: { funding: 20, materials: 30 },
-    upkeepCost: { funding: 3 },
-    fieldOutput: { engineering: 4 },
-    resourceOutput: { materials: 4 },
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: false,
-  }],
-  ['deepSpaceArray', {
-    id: 'deepSpaceArray',
-    name: 'Deep Space Array',
-    description: 'Dedicated signal decoding infrastructure. Accelerates decode progress each turn.',
-    era: 'earth',
-    allowedTileTypes: ['highland', 'arid', 'coastal'],
-    buildCost: { funding: 60, materials: 40 },
-    upkeepCost: { funding: 8 },
-    fieldOutput: { physics: 5, computing: 3 },
-    resourceOutput: {},
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: false,
-  }],
-]);
-
-export const STUB_BLOC_DEFS: Map<string, BlocDef> = new Map([
-  ['northAmerica', {
-    id: 'northAmerica',
-    name: 'North American Alliance',
-    willProfile: 'democratic',
-    victoryBias: 'economicHegemony',
-    startingResources: { funding: 80, materials: 60, politicalWill: 70 },
-    startingFields: { engineering: 20, computing: 15 },
-    victoryCostModifiers: {},
-    specificEventTags: ['trade', 'technology'],
-    willCeiling: 90,
-    willCollapsThreshold: 0,
-  }],
-  ['eastAsia', {
-    id: 'eastAsia',
-    name: 'East Asian Consortium',
-    willProfile: 'authoritarian',
-    victoryBias: 'terraforming',
-    startingResources: { funding: 70, materials: 80, politicalWill: 50 },
-    startingFields: { engineering: 25, mathematics: 10 },
-    victoryCostModifiers: {},
-    specificEventTags: ['industrial', 'expansion'],
-    willCeiling: 75,
-    willCollapsThreshold: 15,
-  }],
-  ['southAmerica', {
-    id: 'southAmerica',
-    name: 'South American Union',
-    willProfile: 'democratic',
-    victoryBias: 'ecologicalRestoration',
-    startingResources: { funding: 50, materials: 55, politicalWill: 65 },
-    startingFields: { biochemistry: 15, socialScience: 10 },
-    victoryCostModifiers: {},
-    specificEventTags: ['environment', 'diplomatic'],
-    willCeiling: 85,
-    willCollapsThreshold: 0,
-  }],
-  ['africaCoalition', {
-    id: 'africaCoalition',
-    name: 'African Coalition',
-    willProfile: 'democratic',
-    victoryBias: 'wormhole',
-    startingResources: { funding: 45, materials: 65, politicalWill: 60 },
-    startingFields: { socialScience: 12, biochemistry: 8 },
-    victoryCostModifiers: {},
-    specificEventTags: ['diplomatic', 'environment'],
-    willCeiling: 80,
-    willCollapsThreshold: 0,
-  }],
-]);
+export { CARD_DEFS as CARD_DEFS } from '../../data/cards';
+export { EVENT_DEFS as EVENT_DEFS } from '../../data/events';
+export { STANDING_ACTIONS as STUB_STANDING_ACTIONS } from '../../data/standingActions';
+export { BOARD_DEFS as BOARD_DEFS } from '../../data/board';
 
 // ---------------------------------------------------------------------------
 // Map tile generation (deterministic, position-based)
@@ -378,81 +114,6 @@ export function generateBeltEdges(): BeltEdge[] {
 }
 
 // ---------------------------------------------------------------------------
-// Stub board member definitions (replaced by src/data/ in the content pass)
-// ---------------------------------------------------------------------------
-
-export const STUB_BOARD_DEFS: Map<string, BoardMemberDef> = new Map([
-  ['drRamirez', {
-    id: 'drRamirez',
-    name: 'Dr. Elena Ramirez',
-    role: 'chiefScientist' as BoardRole,
-    buffs: [{ description: '+20% Physics output per turn', fieldMultipliers: { physics: 1.2 } }],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['ingMarkov', {
-    id: 'ingMarkov',
-    name: 'Ing. Pavel Markov',
-    role: 'directorOfEngineering' as BoardRole,
-    buffs: [
-      { description: '+15% Materials income from facilities', resourceMultipliers: { materials: 1.15 } },
-      { description: 'Auto-counters industrial accident events', autoCountersEventTag: 'industrial' },
-    ],
-    debuffs: [{ description: '-10% Funding income (bureaucratic friction)', resourceMultipliers: { funding: 0.9 } }],
-    isAI: false,
-  }],
-  ['chairOsei', {
-    id: 'chairOsei',
-    name: 'Chair Abena Osei',
-    role: 'politicalLiaison' as BoardRole,
-    buffs: [
-      { description: '+10% Political Will income', resourceMultipliers: { politicalWill: 1.1 } },
-      { description: 'Auto-counters diplomatic interference', autoCountersEventTag: 'interference' },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['drKowalski', {
-    id: 'drKowalski',
-    name: 'Dr. Tomasz Kowalski',
-    role: 'headOfFinance' as BoardRole,
-    buffs: [{ description: '+25% Funding income from facilities', resourceMultipliers: { funding: 1.25 } }],
-    debuffs: [{ description: '-5% Materials income (cost controls)', resourceMultipliers: { materials: 0.95 } }],
-    isAI: false,
-  }],
-  ['dirBristow', {
-    id: 'dirBristow',
-    name: 'Director J. Bristow',
-    role: 'securityDirector' as BoardRole,
-    buffs: [
-      { description: 'Auto-counters security threat events', autoCountersEventTag: 'security' },
-      { description: '+10% Computing field output', fieldMultipliers: { computing: 1.1 } },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['drOkonkwo', {
-    id: 'drOkonkwo',
-    name: 'Dr. Chidi Okonkwo',
-    role: 'signalAnalyst' as BoardRole,
-    buffs: [
-      { description: '+20% Mathematics output per turn', fieldMultipliers: { mathematics: 1.2 } },
-      { description: '+15% Physics output per turn', fieldMultipliers: { physics: 1.15 } },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['mgChen', {
-    id: 'mgChen',
-    name: 'Manager Liwei Chen',
-    role: 'directorOfOperations' as BoardRole,
-    buffs: [{ description: '+10% all facility resource output', resourceMultipliers: { funding: 1.1, materials: 1.1 } }],
-    debuffs: [],
-    isAI: false,
-  }],
-]);
-
-// ---------------------------------------------------------------------------
 // Demo initial state
 // ---------------------------------------------------------------------------
 
@@ -469,7 +130,7 @@ function createDemoState(): GameState {
   });
 
   const earthTiles = generateEarthTiles(3);
-  const blocs = initialiseBlocStates([...STUB_BLOC_DEFS.values()]);
+  const blocs = initialiseBlocStates([...BLOC_DEFS.values()]);
 
   return {
     ...base,
@@ -526,7 +187,8 @@ function createDemoState(): GameState {
 // Reactive game store (Svelte 5 runes — module-level $state)
 // ---------------------------------------------------------------------------
 
-let _state = $state<GameState>(createDemoState());
+const _savedState = autoLoad();
+let _state = $state<GameState>(_savedState ?? createDemoState());
 
 /** UI-only: which hex coord key is currently selected for facility placement. */
 let _selectedCoordKey    = $state<string | null>(null);
@@ -555,7 +217,7 @@ export const gameStore = {
   },
 
   buildFacility(coordKey: string, defId: string): void {
-    const def = STUB_FACILITY_DEFS.get(defId);
+    const def = FACILITY_DEFS.get(defId);
     if (!def) return;
 
     const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
@@ -591,7 +253,7 @@ export const gameStore = {
   mitigateEvent(eventId: string): void {
     const event = _state.activeEvents.find(e => e.id === eventId);
     if (!event) return;
-    const def = STUB_EVENT_DEFS.get(event.defId);
+    const def = EVENT_DEFS.get(event.defId);
     const cost = def?.mitigationCost ?? {};
     _state = {
       ..._state,
@@ -612,7 +274,7 @@ export const gameStore = {
   acceptEvent(eventId: string): void {
     const event = _state.activeEvents.find(e => e.id === eventId);
     if (!event) return;
-    const def = STUB_EVENT_DEFS.get(event.defId);
+    const def = EVENT_DEFS.get(event.defId);
     const gain = def?.positiveEffect?.resources ?? {};
     _state = {
       ..._state,
@@ -642,7 +304,7 @@ export const gameStore = {
   playCard(cardId: string): void {
     const card = _state.player.cards.find(c => c.id === cardId);
     if (!card || card.zone !== 'hand') return;
-    const def = STUB_CARD_DEFS.get(card.defId);
+    const def = CARD_DEFS.get(card.defId);
     if (!def) return;
 
     let resources = { ..._state.player.resources };
@@ -721,7 +383,7 @@ export const gameStore = {
       // Each turn gets its own deterministic RNG slice derived from seed + turn number.
       const rng = createRng(`${_state.seed}-t${_state.turn}`);
       let next = endBankPhase(_state);
-      next = executeWorldPhase(next, STUB_FACILITY_DEFS, new Map(), STUB_BLOC_DEFS, STUB_BOARD_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, new Map(), BLOC_DEFS, BOARD_DEFS);
       // If the game ended, skip the remaining automated phases and navigate.
       if (next.outcome) {
         _state = next;
@@ -730,18 +392,35 @@ export const gameStore = {
       }
       next = executeEventPhase(
         next,
-        STUB_EVENT_DEFS,
-        [...STUB_EVENT_DEFS.values()],
+        EVENT_DEFS,
+        [...EVENT_DEFS.values()],
         rng,
       );
       next = executeDrawPhase(next, rng);
       _state = next;
+      // Auto-save after each completed World Phase.
+      autoSave(_state);
     }
   },
 
   /** Reset the game to a fresh demo state. */
   resetGame(): void {
+    clearSave();
     _state = createDemoState();
+    _selectedCoordKey    = null;
+    _selectedSpaceNodeId = null;
+    _selectedBeltNodeId  = null;
+  },
+
+  /** Download the current game state as a JSON file. */
+  exportSave(): void {
+    exportSave(_state);
+  },
+
+  /** Load a game state from a user-supplied JSON file. */
+  async importSaveFile(file: File): Promise<void> {
+    const loaded = await importSave(file);
+    _state = loaded;
     _selectedCoordKey    = null;
     _selectedSpaceNodeId = null;
     _selectedBeltNodeId  = null;
@@ -749,7 +428,7 @@ export const gameStore = {
 
   /** Recruit a board member. Deducts the recruit cost and adds the member to their role slot. */
   recruitMember(defId: string, startAge: number): void {
-    const def = STUB_BOARD_DEFS.get(defId);
+    const def = BOARD_DEFS.get(defId);
     if (!def) return;
     if (!isBoardSlotVacant(_state.player.board, def.role)) return;
 

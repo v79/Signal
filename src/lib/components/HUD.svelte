@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Resources, FieldPoints, Era, TurnPhase } from '../../engine/types';
+  import SaveControls from './SaveControls.svelte';
 
   let {
     resources,
@@ -10,6 +11,9 @@
     phase,
     climatePressure,
     will,
+    seed,
+    onExport,
+    onImport,
   }: {
     resources: Resources;
     fields: FieldPoints;
@@ -19,6 +23,9 @@
     phase: TurnPhase;
     climatePressure: number;
     will: number;
+    seed: string;
+    onExport: () => void;
+    onImport: (file: File) => Promise<void>;
   } = $props();
 
   const ERA_LABELS: Record<Era, string> = {
@@ -67,6 +74,8 @@
     <span class="label">YEAR</span><span class="value">{year}</span>
     <span class="era-badge">{ERA_LABELS[era]}</span>
     <span class="phase-badge">{PHASE_LABELS[phase]}</span>
+    <span class="divider">│</span>
+    <SaveControls {seed} {turn} {onExport} {onImport} />
   </div>
 
   <div class="hud-center">
