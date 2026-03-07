@@ -9,13 +9,11 @@
   import NewsTicker      from '$lib/components/NewsTicker.svelte';
   import PhaseControls   from '$lib/components/PhaseControls.svelte';
 
-  import {
-    gameStore,
-    STUB_CARD_DEFS,
-    STUB_EVENT_DEFS,
-    STUB_STANDING_ACTIONS,
-    STUB_BOARD_DEFS,
-  } from '$lib/stores/game.svelte';
+  import { gameStore } from '$lib/stores/game.svelte';
+  import { CARD_DEFS } from '../data/cards';
+  import { EVENT_DEFS } from '../data/events';
+  import { STANDING_ACTIONS } from '../data/standingActions';
+  import { BOARD_DEFS } from '../data/board';
   import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
 
@@ -48,6 +46,9 @@
     phase={gameStore.state.phase}
     climatePressure={gameStore.state.climatePressure}
     will={gameStore.state.player.will}
+    seed={gameStore.state.seed}
+    onExport={() => gameStore.exportSave()}
+    onImport={(file) => gameStore.importSaveFile(file)}
   />
 
   <!-- Middle row -->
@@ -55,7 +56,7 @@
     <!-- Left: active events -->
     <EventZone
       events={gameStore.state.activeEvents}
-      eventDefs={STUB_EVENT_DEFS}
+      eventDefs={EVENT_DEFS}
       onMitigate={(id) => gameStore.mitigateEvent(id)}
       onAccept={(id)   => gameStore.acceptEvent(id)}
       onDecline={(id)  => gameStore.declineEvent(id)}
@@ -75,7 +76,7 @@
       />
       <BoardPanel
         board={gameStore.state.player.board}
-        boardDefs={STUB_BOARD_DEFS}
+        boardDefs={BOARD_DEFS}
         phase={gameStore.state.phase}
         onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
         onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
@@ -89,7 +90,7 @@
   <!-- Bottom row -->
   <div class="bottom-row">
     <StandingActions
-      actions={STUB_STANDING_ACTIONS}
+      actions={STANDING_ACTIONS}
       restrictions={gameStore.state.player.activeEventRestrictions}
       turn={gameStore.state.turn}
       phase={gameStore.state.phase}
@@ -99,7 +100,7 @@
 
     <CardHand
       cards={gameStore.state.player.cards}
-      cardDefs={STUB_CARD_DEFS}
+      cardDefs={CARD_DEFS}
       phase={gameStore.state.phase}
       onPlay={(id)   => gameStore.playCard(id)}
       onBank={(id)   => gameStore.bankCard(id)}

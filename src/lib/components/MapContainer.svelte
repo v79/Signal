@@ -2,7 +2,8 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import FacilityPicker from './FacilityPicker.svelte';
-  import { gameStore, STUB_FACILITY_DEFS } from '../stores/game.svelte';
+  import { gameStore } from '../stores/game.svelte';
+  import { FACILITY_DEFS } from '../../data/facilities';
   import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
@@ -155,7 +156,7 @@
     {#if selectedTile && activeTab === 'earth'}
       <FacilityPicker
         tile={selectedTile}
-        facilityDefs={STUB_FACILITY_DEFS}
+        facilityDefs={FACILITY_DEFS}
         playerResources={gameStore.state.player.resources}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onClose={() => gameStore.selectTile(null)}
