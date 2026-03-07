@@ -2,8 +2,9 @@
   import { gameStore } from '$lib/stores/game.svelte';
   import type { VictoryCondition, LossCondition } from '../../engine/types';
 
-  const outcome = $derived(gameStore.state.outcome);
-  const state   = $derived(gameStore.state);
+  // Summary is only reachable after a game ends, so state is always non-null here.
+  const outcome = $derived(gameStore.state!.outcome);
+  const state   = $derived(gameStore.state!);
 
   // ---------------------------------------------------------------------------
   // Condition copy
@@ -125,7 +126,7 @@
 
     <!-- Actions -->
     <div class="actions">
-      <button class="btn-play-again" onclick={() => { gameStore.resetGame(); window.location.href = '/'; }}>
+      <button class="btn-play-again" onclick={() => gameStore.resetGame()}>
         PLAY AGAIN
       </button>
     </div>
