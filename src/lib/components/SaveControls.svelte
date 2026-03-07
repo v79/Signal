@@ -8,10 +8,23 @@
     seed: string;
     turn: number;
     onExport: () => void;
-    onImport: (file: File) => void;
+    onImport: (file: File) => Promise<void>;
   } = $props();
 
   let copied = $state(false);
+  let importError = $state<string | null>(null);
+  let errorTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function showError(msg: string): void {
+    if (errorTimer) clearTimeout(errorTimer);
+    importError = msg;
+    errorTimer = setTimeout(() => { importError = null; }, 5000);
+  }
+
+  function dismissError(): void {
+    if (errorTimer) clearTimeout(errorTimer);
+    importError = null;
+  }
 
   function copySeed(): void {
     navigator.clipboard.writeText(seed).then(() => {
@@ -20,13 +33,17 @@
     }).catch(() => {/* ignore */});
   }
 
-  function handleFileChange(event: Event): void {
+  async function handleFileChange(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (file) {
-      onImport(file);
-      // Reset so the same file can be re-imported if needed
-      input.value = '';
+    if (!file) return;
+    // Reset so the same file can be re-imported if needed
+    input.value = '';
+    try {
+      await onImport(file);
+    } catch (err: unknown) {
+      const msg = typeof err === 'string' ? err : (err instanceof Error ? err.message : 'Unknown error loading save file.');
+      showError(msg);
     }
   }
 </script>
@@ -54,6 +71,14 @@
     />
   </label>
 </div>
+
+{#if importError}
+  <div class="import-error" role="alert">
+    <span class="error-icon">⚠</span>
+    <span class="error-text">{importError}</span>
+    <button class="error-dismiss" onclick={dismissError} aria-label="Dismiss">✕</button>
+  </div>
+{/if}
 
 <style>
   .save-controls {
@@ -117,5 +142,49 @@
 
   .hidden-input {
     display: none;
+  }
+
+  .import-error {
+    position: fixed;
+    top: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #1a0e0e;
+    border: 1px solid #8b3030;
+    color: #d08080;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 0.85rem;
+    z-index: 1000;
+    max-width: 36rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  .error-icon {
+    color: #c04040;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .error-text {
+    flex: 1;
+  }
+
+  .error-dismiss {
+    background: none;
+    border: none;
+    color: #6a4040;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0 0.1rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .error-dismiss:hover {
+    color: #d08080;
   }
 </style>

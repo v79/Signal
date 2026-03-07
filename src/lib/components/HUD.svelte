@@ -25,7 +25,7 @@
     will: number;
     seed: string;
     onExport: () => void;
-    onImport: (file: File) => void;
+    onImport: (file: File) => Promise<void>;
   } = $props();
 
   const ERA_LABELS: Record<Era, string> = {
