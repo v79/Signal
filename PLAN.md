@@ -79,18 +79,25 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - Card upgrades from tech discoveries wired into World Phase; PRNG call order documented in turn.ts ✅
 - 51 new tests across `cards.test.ts` and `events.test.ts` (122 total) ✅
 
-### Phase 5 — Earth map (Phaser)
-- `EarthScene.ts`: load Tiled hex JSON, render tiles with type-based colour/saturation palette
-- Facility placement: click tile → select facility type → validate → commit to engine state
-- Climate degradation: tile visual state updates each World Phase
-- Adjacency bonus highlight on facility hover
+### Phase 6 — Svelte UI ✅
+> Implemented before Phase 5 (no impact — the two phases are independent layers).
+- `game.svelte.ts`: Svelte 5 rune-based game store; stub card/event/standing-action defs; full action handlers (playCard, bankCard, unbankCard, mitigateEvent, acceptEvent, declineEvent) ✅
+- `HUD.svelte`: top bar — resources (Funding/Materials/Will), all six research fields, turn/year, era badge, phase badge, climate pressure bar, Will bar ✅
+- `EventZone.svelte`: left panel — active events with countdown urgency colouring, response buttons per tier (mitigate/accept/decline/counter-hint), effect previews ✅
+- `CardHand.svelte`: bottom panel — hand cards (play/bank) and bank cards (unbank), effect lines, counter tag indicator, bank decay notice ✅
+- `StandingActions.svelte`: bottom-left — five standing action buttons, greyed when restricted or unaffordable, restriction lock icon ✅
+- `ResearchFeed.svelte`: right panel — field progress bars (scaled to 200 pts), signal decode bar, scrollable news feed ✅
+- `+page.svelte`: CSS grid layout (EventZone | map | ResearchFeed) + bottom row (StandingActions | CardHand) ✅
 
-### Phase 6 — Svelte UI
-- `HUD.svelte`: resources, research fields, turn/year counter, era indicator
-- `CardHand.svelte`: drawn cards, drag-to-play or click-to-play
-- `EventZone.svelte`: active events with countdown, counter/mitigate/accept/decline actions
-- `StandingActions.svelte`: always-visible toolbar, greyed out when restricted
-- `ResearchFeed.svelte`: Rumour and Progress notifications as they fire
+### Phase 5 — Earth map (Phaser) ✅
+- `EarthScene.ts`: procedural flat-top hex grid (radius 3, 37 tiles), rendered with Phaser Graphics; type-based fill/stroke palette; productivity darkening; climate pressure red tint ✅
+- Tile hit-testing via axial cube-rounding (accurate pixel → hex coordinate); hover highlight; click-to-select ✅
+- Facility indicator: per-defId coloured circle; condition ring when degraded ✅
+- `generateEarthTiles()` + deterministic `tileTypeForCoord()` in store (position-based hash, no RNG) ✅
+- `game.svelte.ts`: added `STUB_FACILITY_DEFS` (5 types), `selectedCoordKey` UI state, `selectTile()`, `buildFacility()` (deducts cost, adds FacilityInstance, updates tile) ✅
+- `FacilityPicker.svelte`: modal overlay showing eligible facilities for clicked tile type; affordability check; BUILD button commits to engine state ✅
+- `MapContainer.svelte`: loads Phaser + EarthScene dynamically (SSR-safe); wires callbacks; hosts FacilityPicker overlay ✅
+- `+page.svelte`: map-placeholder replaced by `<MapContainer>`; `build` standing action toggles tile selection ✅
 
 ### Phase 7 — Bloc simulation
 - `blocs.ts`: per-turn simulation step; weighted decision rules; decline thresholds

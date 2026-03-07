@@ -4,6 +4,7 @@
   import ResearchFeed    from '$lib/components/ResearchFeed.svelte';
   import StandingActions from '$lib/components/StandingActions.svelte';
   import CardHand        from '$lib/components/CardHand.svelte';
+  import MapContainer    from '$lib/components/MapContainer.svelte';
 
   import {
     gameStore,
@@ -11,6 +12,18 @@
     STUB_EVENT_DEFS,
     STUB_STANDING_ACTIONS,
   } from '$lib/stores/game.svelte';
+
+  function handleStandingAction(id: string): void {
+    if (id === 'build') {
+      // Prompt the player to click a tile on the map.
+      // If a tile is already selected, deselect it (toggle).
+      if (gameStore.selectedCoordKey != null) {
+        gameStore.selectTile(null);
+      }
+      // Otherwise the player clicks a tile — EarthScene handles onTileClick.
+    }
+    // Other actions (recruit, trade, survey, negotiate) wired in later phases.
+  }
 </script>
 
 <div class="game-layout">
@@ -37,11 +50,8 @@
       onDecline={(id)  => gameStore.declineEvent(id)}
     />
 
-    <!-- Centre: map placeholder (Phase 5) -->
-    <div class="map-placeholder">
-      <span class="map-placeholder-text">MAP</span>
-      <span class="map-placeholder-sub">Earth surface layer renders here in Phase 5.</span>
-    </div>
+    <!-- Centre: Earth map (Phaser) -->
+    <MapContainer />
 
     <!-- Right: research fields + news feed -->
     <ResearchFeed
@@ -59,7 +69,7 @@
       turn={gameStore.state.turn}
       phase={gameStore.state.phase}
       playerResources={gameStore.state.player.resources}
-      onAction={(id) => console.log('Standing action:', id)}
+      onAction={handleStandingAction}
     />
 
     <CardHand
@@ -90,32 +100,7 @@
     overflow: hidden;
   }
 
-  .map-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    background: #070b10;
-    border-right: 1px solid #1e2530;
-  }
-
-  .map-placeholder-text {
-    font-size: 1.5rem;
-    letter-spacing: 0.5em;
-    color: #1a2530;
-  }
-
-  .map-placeholder-sub {
-    font-size: 0.68rem;
-    color: #2a3545;
-    letter-spacing: 0.08em;
-    max-width: 20rem;
-    text-align: center;
-    line-height: 1.5;
-  }
-
-  .bottom-row {
+.bottom-row {
     display: grid;
     grid-template-columns: auto 1fr;
     border-top: 1px solid #1e2530;
