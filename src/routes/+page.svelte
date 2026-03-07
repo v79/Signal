@@ -2,6 +2,7 @@
   import HUD             from '$lib/components/HUD.svelte';
   import EventZone       from '$lib/components/EventZone.svelte';
   import ResearchFeed    from '$lib/components/ResearchFeed.svelte';
+  import BoardPanel      from '$lib/components/BoardPanel.svelte';
   import StandingActions from '$lib/components/StandingActions.svelte';
   import CardHand        from '$lib/components/CardHand.svelte';
   import MapContainer    from '$lib/components/MapContainer.svelte';
@@ -13,7 +14,9 @@
     STUB_CARD_DEFS,
     STUB_EVENT_DEFS,
     STUB_STANDING_ACTIONS,
+    STUB_BOARD_DEFS,
   } from '$lib/stores/game.svelte';
+  import type { BoardRole } from '../engine/types';
 
   function handleStandingAction(id: string): void {
     if (id === 'build') {
@@ -55,12 +58,21 @@
     <!-- Centre: Earth map (Phaser) -->
     <MapContainer />
 
-    <!-- Right: research fields + news feed -->
-    <ResearchFeed
-      fields={gameStore.state.player.fields}
-      newsFeed={gameStore.state.player.newsFeed}
-      signal={gameStore.state.signal}
-    />
+    <!-- Right: research + board -->
+    <div class="right-column">
+      <ResearchFeed
+        fields={gameStore.state.player.fields}
+        newsFeed={gameStore.state.player.newsFeed}
+        signal={gameStore.state.signal}
+      />
+      <BoardPanel
+        board={gameStore.state.player.board}
+        boardDefs={STUB_BOARD_DEFS}
+        phase={gameStore.state.phase}
+        onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
+        onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
+      />
+    </div>
   </div>
 
   <!-- News ticker strip -->
@@ -111,7 +123,14 @@
     overflow: hidden;
   }
 
-.bottom-row {
+  .right-column {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .bottom-row {
     display: grid;
     grid-template-columns: auto 1fr auto;
     border-top: 1px solid #1e2530;

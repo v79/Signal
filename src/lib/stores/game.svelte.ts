@@ -9,6 +9,8 @@ import type {
   BlocState,
   MapTile,
   TileType,
+  BoardMemberDef,
+  BoardRole,
   FieldPoints,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
@@ -20,6 +22,7 @@ import {
   executeEventPhase,
   executeDrawPhase,
 } from '../../engine/turn';
+import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../engine/board';
 
 // ---------------------------------------------------------------------------
 // Stub content definitions (replaced by src/data/ in the content pass)
@@ -286,6 +289,81 @@ export function generateEarthTiles(radius = 3): MapTile[] {
 }
 
 // ---------------------------------------------------------------------------
+// Stub board member definitions (replaced by src/data/ in the content pass)
+// ---------------------------------------------------------------------------
+
+export const STUB_BOARD_DEFS: Map<string, BoardMemberDef> = new Map([
+  ['drRamirez', {
+    id: 'drRamirez',
+    name: 'Dr. Elena Ramirez',
+    role: 'chiefScientist' as BoardRole,
+    buffs: [{ description: '+20% Physics output per turn', fieldMultipliers: { physics: 1.2 } }],
+    debuffs: [],
+    isAI: false,
+  }],
+  ['ingMarkov', {
+    id: 'ingMarkov',
+    name: 'Ing. Pavel Markov',
+    role: 'directorOfEngineering' as BoardRole,
+    buffs: [
+      { description: '+15% Materials income from facilities', resourceMultipliers: { materials: 1.15 } },
+      { description: 'Auto-counters industrial accident events', autoCountersEventTag: 'industrial' },
+    ],
+    debuffs: [{ description: '-10% Funding income (bureaucratic friction)', resourceMultipliers: { funding: 0.9 } }],
+    isAI: false,
+  }],
+  ['chairOsei', {
+    id: 'chairOsei',
+    name: 'Chair Abena Osei',
+    role: 'politicalLiaison' as BoardRole,
+    buffs: [
+      { description: '+10% Political Will income', resourceMultipliers: { politicalWill: 1.1 } },
+      { description: 'Auto-counters diplomatic interference', autoCountersEventTag: 'interference' },
+    ],
+    debuffs: [],
+    isAI: false,
+  }],
+  ['drKowalski', {
+    id: 'drKowalski',
+    name: 'Dr. Tomasz Kowalski',
+    role: 'headOfFinance' as BoardRole,
+    buffs: [{ description: '+25% Funding income from facilities', resourceMultipliers: { funding: 1.25 } }],
+    debuffs: [{ description: '-5% Materials income (cost controls)', resourceMultipliers: { materials: 0.95 } }],
+    isAI: false,
+  }],
+  ['dirBristow', {
+    id: 'dirBristow',
+    name: 'Director J. Bristow',
+    role: 'securityDirector' as BoardRole,
+    buffs: [
+      { description: 'Auto-counters security threat events', autoCountersEventTag: 'security' },
+      { description: '+10% Computing field output', fieldMultipliers: { computing: 1.1 } },
+    ],
+    debuffs: [],
+    isAI: false,
+  }],
+  ['drOkonkwo', {
+    id: 'drOkonkwo',
+    name: 'Dr. Chidi Okonkwo',
+    role: 'signalAnalyst' as BoardRole,
+    buffs: [
+      { description: '+20% Mathematics output per turn', fieldMultipliers: { mathematics: 1.2 } },
+      { description: '+15% Physics output per turn', fieldMultipliers: { physics: 1.15 } },
+    ],
+    debuffs: [],
+    isAI: false,
+  }],
+  ['mgChen', {
+    id: 'mgChen',
+    name: 'Manager Liwei Chen',
+    role: 'directorOfOperations' as BoardRole,
+    buffs: [{ description: '+10% all facility resource output', resourceMultipliers: { funding: 1.1, materials: 1.1 } }],
+    debuffs: [],
+    isAI: false,
+  }],
+]);
+
+// ---------------------------------------------------------------------------
 // Demo initial state
 // ---------------------------------------------------------------------------
 
@@ -329,6 +407,16 @@ function createDemoState(): GameState {
       activeEventRestrictions: [
         { actionId: 'build', expiresAfterTurn: 3 },
       ],
+      board: {
+        chiefScientist: {
+          id: 'drRamirez-t1', defId: 'drRamirez', role: 'chiefScientist' as BoardRole,
+          age: 48, joinedTurn: 1, leftTurn: null, leftReason: null,
+        },
+        politicalLiaison: {
+          id: 'chairOsei-t1', defId: 'chairOsei', role: 'politicalLiaison' as BoardRole,
+          age: 55, joinedTurn: 1, leftTurn: null, leftReason: null,
+        },
+      },
     },
     blocs,
     map: {
@@ -525,7 +613,7 @@ export const gameStore = {
       // Each turn gets its own deterministic RNG slice derived from seed + turn number.
       const rng = createRng(`${_state.seed}-t${_state.turn}`);
       let next = endBankPhase(_state);
-      next = executeWorldPhase(next, STUB_FACILITY_DEFS, new Map(), STUB_BLOC_DEFS);
+      next = executeWorldPhase(next, STUB_FACILITY_DEFS, new Map(), STUB_BLOC_DEFS, STUB_BOARD_DEFS);
       next = executeEventPhase(
         next,
         STUB_EVENT_DEFS,
@@ -535,5 +623,43 @@ export const gameStore = {
       next = executeDrawPhase(next, rng);
       _state = next;
     }
+  },
+
+  /** Recruit a board member. Deducts the recruit cost and adds the member to their role slot. */
+  recruitMember(defId: string, startAge: number): void {
+    const def = STUB_BOARD_DEFS.get(defId);
+    if (!def) return;
+    if (!isBoardSlotVacant(_state.player.board, def.role)) return;
+
+    const RECRUIT_COST = { funding: 15, materials: 0, politicalWill: 10 };
+    if (_state.player.resources.funding < RECRUIT_COST.funding) return;
+    if (_state.player.resources.politicalWill < RECRUIT_COST.politicalWill) return;
+
+    const newBoard = recruitBoardMember(_state.player.board, def, startAge, _state.turn);
+    _state = {
+      ..._state,
+      player: {
+        ..._state.player,
+        resources: {
+          ..._state.player.resources,
+          funding:       _state.player.resources.funding       - RECRUIT_COST.funding,
+          politicalWill: _state.player.resources.politicalWill - RECRUIT_COST.politicalWill,
+        },
+        board: newBoard,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          { id: `recruit-${defId}-t${_state.turn}`, turn: _state.turn, text: `${def.name} has joined the board as ${def.role}.` },
+        ],
+      },
+    };
+  },
+
+  /** Remove a board member (resign or dismiss). */
+  dismissMember(role: BoardRole): void {
+    const newBoard = removeBoardMember(_state.player.board, role, 'resigned', _state.turn);
+    _state = {
+      ..._state,
+      player: { ..._state.player, board: newBoard },
+    };
   },
 };
