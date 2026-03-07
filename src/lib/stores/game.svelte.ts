@@ -13,6 +13,13 @@ import type {
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
+import { createRng } from '../../engine/rng';
+import {
+  endBankPhase,
+  executeWorldPhase,
+  executeEventPhase,
+  executeDrawPhase,
+} from '../../engine/turn';
 
 // ---------------------------------------------------------------------------
 // Stub content definitions (replaced by src/data/ in the content pass)
@@ -502,5 +509,31 @@ export const gameStore = {
         ),
       },
     };
+  },
+
+  /**
+   * Advance the game phase.
+   *  action → bank  (instant, no engine calls)
+   *  bank   → event → draw → action  (full World Phase + automated phases)
+   */
+  advancePhase(): void {
+    if (_state.phase === 'action') {
+      _state = { ..._state, phase: 'bank' };
+      return;
+    }
+    if (_state.phase === 'bank') {
+      // Each turn gets its own deterministic RNG slice derived from seed + turn number.
+      const rng = createRng(`${_state.seed}-t${_state.turn}`);
+      let next = endBankPhase(_state);
+      next = executeWorldPhase(next, STUB_FACILITY_DEFS, new Map(), STUB_BLOC_DEFS);
+      next = executeEventPhase(
+        next,
+        STUB_EVENT_DEFS,
+        [...STUB_EVENT_DEFS.values()],
+        rng,
+      );
+      next = executeDrawPhase(next, rng);
+      _state = next;
+    }
   },
 };

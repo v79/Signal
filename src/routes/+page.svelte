@@ -6,6 +6,7 @@
   import CardHand        from '$lib/components/CardHand.svelte';
   import MapContainer    from '$lib/components/MapContainer.svelte';
   import NewsTicker      from '$lib/components/NewsTicker.svelte';
+  import PhaseControls   from '$lib/components/PhaseControls.svelte';
 
   import {
     gameStore,
@@ -84,6 +85,12 @@
       onBank={(id)   => gameStore.bankCard(id)}
       onUnbank={(id) => gameStore.unbankCard(id)}
     />
+
+    <PhaseControls
+      phase={gameStore.state.phase}
+      turn={gameStore.state.turn}
+      onAdvance={() => gameStore.advancePhase()}
+    />
   </div>
 </div>
 
@@ -106,7 +113,7 @@
 
 .bottom-row {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     border-top: 1px solid #1e2530;
     flex-shrink: 0;
     max-height: 14rem;
