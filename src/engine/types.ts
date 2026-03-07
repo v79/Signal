@@ -62,11 +62,23 @@ export interface HexCoord {
   r: number;
 }
 
+/**
+ * A tile that has been rendered permanently unusable by an environmental
+ * or geopolitical event. Null means the tile is intact (though it may
+ * still have reduced productivity).
+ *
+ * - flooded:    Coastal inundation from sea level rise (climate push factor)
+ * - dustbowl:   Agricultural/forested tiles dried out by sustained drought
+ * - irradiated: Contamination from industrial accident or conflict
+ *               (more likely under geopolitical tension push factor)
+ */
+export type TileDestroyedStatus = 'flooded' | 'dustbowl' | 'irradiated';
+
 export interface MapTile {
   coord: HexCoord;
   type: TileType;
-  /** Whether this tile has been flooded by climate change (no longer usable). */
-  flooded: boolean;
+  /** Null if intact; set when the tile is permanently taken out of use. */
+  destroyedStatus: TileDestroyedStatus | null;
   /**
    * 0–1. Degrades over time due to climate change or resource exhaustion.
    * Affects productivity of facilities on this tile.
@@ -386,8 +398,8 @@ export interface EventDef {
 export interface EventEffect {
   resources?: Partial<Resources>;
   fields?: Partial<FieldPoints>;
-  /** Tile coord string to flood or degrade. */
-  degradeTile?: string;
+  /** Destroy a tile: coord string + the status to apply. */
+  destroyTile?: { coordKey: string; status: TileDestroyedStatus };
   /** Standing action IDs to restrict. */
   restrictActions?: string[];
   /** Number of turns the restriction lasts. */
