@@ -3,6 +3,10 @@ import type {
   CardDef,
   EventDef,
   StandingActionDef,
+  FacilityDef,
+  FacilityInstance,
+  MapTile,
+  TileType,
   FieldPoints,
 } from '../../engine/types';
 import { createGameState } from '../../engine/state';
@@ -113,6 +117,113 @@ export const STUB_STANDING_ACTIONS: StandingActionDef[] = [
   { id: 'negotiate', name: 'Negotiate', description: 'Conduct diplomatic negotiations with a bloc.',  cost: { funding: 10, politicalWill: 8 },    actionKey: 'negotiate' },
 ];
 
+export const STUB_FACILITY_DEFS: Map<string, FacilityDef> = new Map([
+  ['researchLab', {
+    id: 'researchLab',
+    name: 'Research Laboratory',
+    description: 'Generates Physics and Mathematics field points each turn.',
+    era: 'earth',
+    allowedTileTypes: ['urban', 'highland'],
+    buildCost: { funding: 30, materials: 10 },
+    upkeepCost: { funding: 5 },
+    fieldOutput: { physics: 3, mathematics: 2 },
+    resourceOutput: {},
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+  }],
+  ['mine', {
+    id: 'mine',
+    name: 'Resource Mine',
+    description: 'Extracts raw materials each turn. Output depletes over time.',
+    era: 'earth',
+    allowedTileTypes: ['highland', 'arid', 'industrial'],
+    buildCost: { materials: 20 },
+    upkeepCost: { funding: 2 },
+    fieldOutput: {},
+    resourceOutput: { materials: 8 },
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: true,
+  }],
+  ['solarFarm', {
+    id: 'solarFarm',
+    name: 'Solar Farm',
+    description: 'Generates steady Funding and minor Engineering field points.',
+    era: 'earth',
+    allowedTileTypes: ['arid', 'agricultural', 'coastal'],
+    buildCost: { materials: 15, funding: 10 },
+    upkeepCost: {},
+    fieldOutput: { engineering: 1 },
+    resourceOutput: { funding: 5 },
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+  }],
+  ['publicUniversity', {
+    id: 'publicUniversity',
+    name: 'Public University',
+    description: 'Broad research output across multiple fields. High upkeep.',
+    era: 'earth',
+    allowedTileTypes: ['urban', 'agricultural'],
+    buildCost: { funding: 50, materials: 5 },
+    upkeepCost: { funding: 8, politicalWill: 2 },
+    fieldOutput: { physics: 2, mathematics: 2, computing: 2, socialScience: 3 },
+    resourceOutput: {},
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+  }],
+  ['engineeringWorks', {
+    id: 'engineeringWorks',
+    name: 'Engineering Works',
+    description: 'Heavy manufacturing; generates Engineering and Materials.',
+    era: 'earth',
+    allowedTileTypes: ['industrial', 'urban'],
+    buildCost: { funding: 20, materials: 30 },
+    upkeepCost: { funding: 3 },
+    fieldOutput: { engineering: 4 },
+    resourceOutput: { materials: 4 },
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+  }],
+]);
+
+// ---------------------------------------------------------------------------
+// Map tile generation (deterministic, position-based)
+// ---------------------------------------------------------------------------
+
+const TILE_TYPES: TileType[] = ['urban', 'industrial', 'coastal', 'highland', 'forested', 'arid', 'agricultural'];
+const EDGE_TYPES: TileType[] = ['coastal', 'coastal', 'forested', 'arid', 'highland', 'forested', 'coastal'];
+
+function tileTypeForCoord(q: number, r: number): TileType {
+  if (q === 0 && r === 0) return 'urban';
+  const dist = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+  // Simple integer hash of (q, r) — no RNG needed, fully deterministic
+  const h = ((q * 374761393 + r * 1073741827) ^ ((q * r) * 31337)) >>> 0;
+  if (dist >= 3) return EDGE_TYPES[h % EDGE_TYPES.length];
+  return TILE_TYPES[h % TILE_TYPES.length];
+}
+
+export function generateEarthTiles(radius = 3): MapTile[] {
+  const tiles: MapTile[] = [];
+  for (let q = -radius; q <= radius; q++) {
+    const rMin = Math.max(-radius, -q - radius);
+    const rMax = Math.min(radius, -q + radius);
+    for (let r = rMin; r <= rMax; r++) {
+      tiles.push({
+        coord: { q, r },
+        type: tileTypeForCoord(q, r),
+        destroyedStatus: null,
+        productivity: 1.0,
+        facilityId: null,
+      });
+    }
+  }
+  return tiles;
+}
+
 // ---------------------------------------------------------------------------
 // Demo initial state
 // ---------------------------------------------------------------------------
@@ -128,6 +239,8 @@ function createDemoState(): GameState {
     startingResources: { funding: 85, materials: 40, politicalWill: 55 },
     startingFields: { physics: 42, mathematics: 18, engineering: 65, computing: 38 } as Partial<FieldPoints>,
   });
+
+  const earthTiles = generateEarthTiles(3);
 
   return {
     ...base,
@@ -155,6 +268,10 @@ function createDemoState(): GameState {
         { actionId: 'build', expiresAfterTurn: 3 },
       ],
     },
+    map: {
+      ...base.map,
+      earthTiles,
+    },
     activeEvents: [
       { id: 'fundingCrisis-t1',      defId: 'fundingCrisis',      arrivedTurn: 1, countdownRemaining: 2, resolved: false, resolvedWith: null },
       { id: 'diplomaticOverture-t3', defId: 'diplomaticOverture', arrivedTurn: 3, countdownRemaining: 1, resolved: false, resolvedWith: null },
@@ -168,8 +285,52 @@ function createDemoState(): GameState {
 
 let _state = $state<GameState>(createDemoState());
 
+/** UI-only: which hex coord key is currently selected for facility placement. */
+let _selectedCoordKey = $state<string | null>(null);
+
 export const gameStore = {
   get state(): GameState { return _state; },
+
+  /** The coord key of the currently selected tile (UI state, not game state). */
+  get selectedCoordKey(): string | null { return _selectedCoordKey; },
+
+  selectTile(key: string | null): void {
+    _selectedCoordKey = key;
+  },
+
+  buildFacility(coordKey: string, defId: string): void {
+    const def = STUB_FACILITY_DEFS.get(defId);
+    if (!def) return;
+
+    const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
+    const newFacility: FacilityInstance = {
+      id: facilityId,
+      defId,
+      locationKey: coordKey,
+      condition: 1.0,
+      builtTurn: _state.turn,
+    };
+
+    _state = {
+      ..._state,
+      player: {
+        ..._state.player,
+        resources: {
+          funding:       Math.max(0, _state.player.resources.funding       - (def.buildCost.funding       ?? 0)),
+          materials:     Math.max(0, _state.player.resources.materials     - (def.buildCost.materials     ?? 0)),
+          politicalWill: Math.max(0, _state.player.resources.politicalWill - (def.buildCost.politicalWill ?? 0)),
+        },
+        facilities: [..._state.player.facilities, newFacility],
+      },
+      map: {
+        ..._state.map,
+        earthTiles: _state.map.earthTiles.map(t =>
+          `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId } : t,
+        ),
+      },
+    };
+    _selectedCoordKey = null;
+  },
 
   mitigateEvent(eventId: string): void {
     const event = _state.activeEvents.find(e => e.id === eventId);

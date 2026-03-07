@@ -1,0 +1,258 @@
+import Phaser from 'phaser';
+import type { MapTile, FacilityInstance, TileType, TileDestroyedStatus } from '../engine/types';
+
+// ---------------------------------------------------------------------------
+// Tile visual constants
+// ---------------------------------------------------------------------------
+
+/** Flat-top hex size in pixels (centre to vertex). */
+const HEX_SIZE = 42;
+
+/** Base fill colours per tile type (flat-top hex). */
+const TILE_FILL: Record<TileType, number> = {
+  urban:        0x1e2d40,
+  industrial:   0x2d1e10,
+  coastal:      0x0f2840,
+  highland:     0x1e2d1e,
+  forested:     0x0f2d18,
+  arid:         0x2d221a,
+  agricultural: 0x182d0f,
+};
+
+/** Stroke (edge) colours — slightly lighter. */
+const TILE_STROKE: Record<TileType, number> = {
+  urban:        0x3a5878,
+  industrial:   0x5a3820,
+  coastal:      0x1a4870,
+  highland:     0x3a5838,
+  forested:     0x1a5830,
+  arid:         0x5a4428,
+  highland2:    0x3a5838, // alias (unused, for safety)
+  agricultural: 0x2a5818,
+} as Record<TileType, number>;
+
+/** Overlay colour when a tile is destroyed. */
+const DESTROYED_FILL: Record<TileDestroyedStatus, number> = {
+  flooded:    0x0a1848,
+  dustbowl:   0x482810,
+  irradiated: 0x183010,
+};
+
+/** Facility indicator colours by defId. */
+const FACILITY_COLORS: Record<string, number> = {
+  researchLab:       0x6aaad8,
+  mine:              0xc8a040,
+  solarFarm:         0xd8c840,
+  publicUniversity:  0xa070d8,
+  engineeringWorks:  0xd87840,
+};
+
+// ---------------------------------------------------------------------------
+// Callbacks interface — injected from MapContainer so the scene never imports
+// Svelte modules (avoids compile-time coupling with runes).
+// ---------------------------------------------------------------------------
+
+export interface EarthSceneCallbacks {
+  getTiles:      () => MapTile[];
+  getFacilities: () => FacilityInstance[];
+  getSelected:   () => string | null;
+  getClimate:    () => number;
+  onTileClick:   (coordKey: string) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Scene
+// ---------------------------------------------------------------------------
+
+export class EarthScene extends Phaser.Scene {
+  private cb!: EarthSceneCallbacks;
+  private tileGfx!: Phaser.GameObjects.Graphics;
+  private overlayGfx!: Phaser.GameObjects.Graphics;
+  private hoveredKey: string | null = null;
+
+  constructor() {
+    super({ key: 'EarthScene' });
+  }
+
+  /** Called by MapContainer after scene is ready. */
+  setCallbacks(cb: EarthSceneCallbacks): void {
+    this.cb = cb;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  create(): void {
+    this.cameras.main.setBackgroundColor(0x060a10);
+
+    this.tileGfx    = this.add.graphics();
+    this.overlayGfx = this.add.graphics();
+
+    // Hover tracking
+    this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
+      const key = this.hitTest(ptr.x, ptr.y);
+      if (key !== this.hoveredKey) {
+        this.hoveredKey = key;
+      }
+    });
+
+    // Click → select tile
+    this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      const key = this.hitTest(ptr.x, ptr.y);
+      if (key && this.cb) {
+        this.cb.onTileClick(key);
+      }
+    });
+  }
+
+  update(): void {
+    this.renderAll();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Hex geometry helpers
+  // ---------------------------------------------------------------------------
+
+  /** World position of the centre of a flat-top hex at axial (q, r). */
+  private hexCenter(q: number, r: number): { x: number; y: number } {
+    const cx = this.scale.width  / 2;
+    const cy = this.scale.height / 2;
+    return {
+      x: cx + HEX_SIZE * (1.5  * q),
+      y: cy + HEX_SIZE * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r),
+    };
+  }
+
+  /**
+   * Vertices of a flat-top hexagon centred at (cx, cy).
+   * Returns [x0,y0, x1,y1, ...] for Phaser fillPoints.
+   */
+  private hexVertices(cx: number, cy: number): { x: number; y: number }[] {
+    const pts: { x: number; y: number }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i;
+      pts.push({ x: cx + HEX_SIZE * Math.cos(angle), y: cy + HEX_SIZE * Math.sin(angle) });
+    }
+    return pts;
+  }
+
+  /**
+   * Axial cube-rounding hit-test: returns the coordKey of the hex that
+   * contains pixel (px, py), or null if no tile exists there.
+   */
+  private hitTest(px: number, py: number): string | null {
+    if (!this.cb) return null;
+    const cx = px - this.scale.width  / 2;
+    const cy = py - this.scale.height / 2;
+
+    // Inverse of the flat-top hex formula
+    const fq =  (2 / 3 * cx) / HEX_SIZE;
+    const fr = (-1 / 3 * cx + Math.sqrt(3) / 3 * cy) / HEX_SIZE;
+    const fs = -fq - fr;
+
+    let q = Math.round(fq);
+    let r = Math.round(fr);
+    const s = Math.round(fs);
+
+    const dq = Math.abs(q - fq);
+    const dr = Math.abs(r - fr);
+    const ds = Math.abs(s - fs);
+
+    if (dq > dr && dq > ds)      q = -r - s;
+    else if (dr > ds)            r = -q - s;
+
+    const key = `${q},${r}`;
+    const tiles = this.cb.getTiles();
+    return tiles.some(t => t.coord.q === q && t.coord.r === r) ? key : null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------------------
+
+  private renderAll(): void {
+    if (!this.cb) return;
+
+    this.tileGfx.clear();
+    this.overlayGfx.clear();
+
+    const tiles      = this.cb.getTiles();
+    const facilities = this.cb.getFacilities();
+    const selected   = this.cb.getSelected();
+    const climate    = this.cb.getClimate(); // 0–100
+
+    const facilityMap = new Map(facilities.map(f => [f.locationKey, f]));
+
+    for (const tile of tiles) {
+      const key = `${tile.coord.q},${tile.coord.r}`;
+      const { x, y } = this.hexCenter(tile.coord.q, tile.coord.r);
+      const verts = this.hexVertices(x, y);
+      const facility = facilityMap.get(key);
+      const isHovered  = key === this.hoveredKey;
+      const isSelected = key === selected;
+
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility ?? null, climate);
+    }
+  }
+
+  private drawTile(
+    tile: MapTile,
+    verts: { x: number; y: number }[],
+    cx: number,
+    cy: number,
+    hovered: boolean,
+    selected: boolean,
+    facility: FacilityInstance | null,
+    climate: number,
+  ): void {
+    const baseFill   = TILE_FILL[tile.type]   ?? 0x1e2d40;
+    const baseStroke = TILE_STROKE[tile.type] ?? 0x3a5878;
+
+    // Productivity darkening: 0.4 at min productivity
+    const prodAlpha  = 0.4 + tile.productivity * 0.6;
+
+    // Draw hex fill
+    this.tileGfx.fillStyle(baseFill, prodAlpha);
+    this.tileGfx.fillPoints(verts, true);
+
+    // Destroyed overlay
+    if (tile.destroyedStatus) {
+      this.tileGfx.fillStyle(DESTROYED_FILL[tile.destroyedStatus], 0.55);
+      this.tileGfx.fillPoints(verts, true);
+    }
+
+    // Climate pressure: faint red tint at high climate
+    if (climate > 20) {
+      const climateTint = Math.min(0.35, (climate - 20) / 200);
+      this.tileGfx.fillStyle(0x4a0808, climateTint);
+      this.tileGfx.fillPoints(verts, true);
+    }
+
+    // Stroke
+    const strokeAlpha = selected ? 1.0 : hovered ? 0.85 : 0.4;
+    const strokeColor = selected ? 0x88c8ff : hovered ? 0x6aaad8 : baseStroke;
+    const strokeW     = selected ? 2.5 : hovered ? 1.5 : 1.0;
+    this.tileGfx.lineStyle(strokeW, strokeColor, strokeAlpha);
+    this.tileGfx.strokePoints(verts, true);
+
+    // Facility indicator
+    if (facility) {
+      const fColor = FACILITY_COLORS[facility.defId] ?? 0xffffff;
+      const r = HEX_SIZE * 0.22;
+      this.overlayGfx.fillStyle(fColor, 0.9);
+      this.overlayGfx.fillCircle(cx, cy, r);
+      // Condition ring (dim if degraded)
+      if (facility.condition < 1) {
+        this.overlayGfx.lineStyle(1.5, fColor, 0.4);
+        this.overlayGfx.strokeCircle(cx, cy, r + 3);
+      }
+    }
+
+    // Selection pulse ring
+    if (selected) {
+      this.overlayGfx.lineStyle(1.5, 0x88c8ff, 0.5);
+      this.overlayGfx.strokeCircle(cx, cy, HEX_SIZE * 0.7);
+    }
+  }
+}
