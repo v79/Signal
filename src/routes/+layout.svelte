@@ -9,6 +9,10 @@
 </div>
 
 <style>
+  :global(html) {
+    font-size: 17px;
+  }
+
   :global(*) {
     box-sizing: border-box;
     margin: 0;
