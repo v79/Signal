@@ -66,9 +66,11 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `turn.ts`: World Phase orchestrator (facilities → resources → Will → depletion → climate pressure) ✅
 - 34 tests across `facilities.test.ts` and `resources.test.ts` (44 total) ✅
 
-### Phase 3 — Research system
-- `research.ts`: field accumulation from facility output, seeded recipe generation with stable "shapes" (base thresholds randomised ±20%), discovery stage transitions, cross-field breakthrough detection
-- Vitest: recipe seeding is deterministic, breakthrough detection fires correctly
+### Phase 3 — Research system ✅
+- `research.ts`: seeded recipe generation (base ± variance), discovery stage transitions (unknown → rumour → progress → discovered), cross-field breakthrough detection ✅
+- `requiresSimultaneous` distinction: breakthrough techs require ALL fields at 30% for rumour vs ANY field for standard techs ✅
+- Research check wired into `turn.ts` World Phase; news feed entries generated for rumours, progress, and discoveries ✅
+- 27 tests in `research.test.ts`; recipe seeding determinism and breakthrough detection verified ✅ (71 total)
 
 ### Phase 4 — Card system
 - `cards.ts`: deck, draw, bank (cap 2, decay 1 Funding/card/turn), counter mechanic, standing action restriction flags
