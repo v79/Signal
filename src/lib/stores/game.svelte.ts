@@ -12,6 +12,10 @@ import type {
   BoardMemberDef,
   BoardRole,
   FieldPoints,
+  SpaceNode,
+  BeltNode,
+  BeltEdge,
+  Era,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
@@ -149,7 +153,7 @@ export const STUB_EVENT_DEFS: Map<string, EventDef> = new Map([
     blocIds: null,
     countdownTurns: 2,
     responseTier: 'noCounter',
-    negativeEffect: null,
+    negativeEffect: {},
     positiveEffect: { fields: { physics: 20, mathematics: 15 } },
   }],
 ]);
@@ -335,6 +339,44 @@ export function generateEarthTiles(radius = 3): MapTile[] {
 }
 
 // ---------------------------------------------------------------------------
+// Space / Belt node generation (deterministic, fixed topology)
+// ---------------------------------------------------------------------------
+
+export function generateSpaceNodes(): SpaceNode[] {
+  return [
+    { id: 'leo',          type: 'lowEarthOrbit', label: 'LEO',           launchCost: 10, facilityId: null },
+    { id: 'l1',           type: 'lagrangePoint', label: 'L1',            launchCost: 20, facilityId: null },
+    { id: 'l2',           type: 'lagrangePoint', label: 'L2',            launchCost: 20, facilityId: null },
+    { id: 'lunarOrbit',   type: 'lunarOrbit',    label: 'Lunar Orbit',   launchCost: 30, facilityId: null },
+    { id: 'lunarSurface', type: 'lunarSurface',  label: 'Lunar Surface', launchCost: 45, facilityId: null },
+  ];
+}
+
+export function generateBeltNodes(): BeltNode[] {
+  return [
+    { id: 'ceres',      type: 'asteroid',     label: 'Ceres',      prospected: true,  materialYield: 12,   facilityId: null },
+    { id: 'vesta',      type: 'asteroid',     label: 'Vesta',      prospected: false, materialYield: null, facilityId: null },
+    { id: 'psyche',     type: 'asteroid',     label: 'Psyche',     prospected: false, materialYield: null, facilityId: null },
+    { id: 'europa',     type: 'jovianMoon',   label: 'Europa',     prospected: false, materialYield: null, facilityId: null },
+    { id: 'ganymede',   type: 'jovianMoon',   label: 'Ganymede',   prospected: false, materialYield: null, facilityId: null },
+    { id: 'trojans',    type: 'transitPoint', label: 'Trojans',    prospected: false, materialYield: null, facilityId: null },
+    { id: 'heliopause', type: 'heliopause',   label: 'Heliopause', prospected: false, materialYield: null, facilityId: null },
+  ];
+}
+
+export function generateBeltEdges(): BeltEdge[] {
+  return [
+    { id: 'e-ceres-vesta',        fromNodeId: 'ceres',    toNodeId: 'vesta',      active: false, establishCost: 15 },
+    { id: 'e-ceres-psyche',       fromNodeId: 'ceres',    toNodeId: 'psyche',     active: false, establishCost: 15 },
+    { id: 'e-ceres-ganymede',     fromNodeId: 'ceres',    toNodeId: 'ganymede',   active: false, establishCost: 25 },
+    { id: 'e-vesta-europa',       fromNodeId: 'vesta',    toNodeId: 'europa',     active: false, establishCost: 20 },
+    { id: 'e-psyche-trojans',     fromNodeId: 'psyche',   toNodeId: 'trojans',    active: false, establishCost: 20 },
+    { id: 'e-psyche-heliopause',  fromNodeId: 'psyche',   toNodeId: 'heliopause', active: false, establishCost: 35 },
+    { id: 'e-ganymede-heliopause',fromNodeId: 'ganymede', toNodeId: 'heliopause', active: false, establishCost: 30 },
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // Stub board member definitions (replaced by src/data/ in the content pass)
 // ---------------------------------------------------------------------------
 
@@ -468,6 +510,9 @@ function createDemoState(): GameState {
     map: {
       ...base.map,
       earthTiles,
+      spaceNodes: generateSpaceNodes(),
+      beltNodes:  generateBeltNodes(),
+      beltEdges:  generateBeltEdges(),
     },
     activeEvents: [
       { id: 'fundingCrisis-t1',      defId: 'fundingCrisis',      arrivedTurn: 1, countdownRemaining: 2, resolved: false, resolvedWith: null },
@@ -483,16 +528,29 @@ function createDemoState(): GameState {
 let _state = $state<GameState>(createDemoState());
 
 /** UI-only: which hex coord key is currently selected for facility placement. */
-let _selectedCoordKey = $state<string | null>(null);
+let _selectedCoordKey    = $state<string | null>(null);
+let _selectedSpaceNodeId = $state<string | null>(null);
+let _selectedBeltNodeId  = $state<string | null>(null);
 
 export const gameStore = {
   get state(): GameState { return _state; },
 
   /** The coord key of the currently selected tile (UI state, not game state). */
-  get selectedCoordKey(): string | null { return _selectedCoordKey; },
+  get selectedCoordKey():    string | null { return _selectedCoordKey; },
+  get selectedSpaceNodeId(): string | null { return _selectedSpaceNodeId; },
+  get selectedBeltNodeId():  string | null { return _selectedBeltNodeId; },
 
-  selectTile(key: string | null): void {
-    _selectedCoordKey = key;
+  selectTile(key: string | null): void { _selectedCoordKey = key; },
+  selectSpaceNode(id: string | null): void { _selectedSpaceNodeId = id; },
+  selectBeltNode(id: string | null): void { _selectedBeltNodeId = id; },
+
+  /** Dev helper: advance era without going through the full landmark project system. */
+  devAdvanceEra(): void {
+    const ERA_SEQUENCE: Era[] = ['earth', 'nearSpace', 'deepSpace'];
+    const idx = ERA_SEQUENCE.indexOf(_state.era);
+    if (idx < ERA_SEQUENCE.length - 1) {
+      _state = { ..._state, era: ERA_SEQUENCE[idx + 1] };
+    }
   },
 
   buildFacility(coordKey: string, defId: string): void {

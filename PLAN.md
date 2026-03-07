@@ -128,10 +128,12 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `getWormholeOptions()` and `commitWormholeResponse()` in game store ✅
 - 30 tests in `signal.test.ts` (191 total) ✅
 
-### Phase 10 — Near Space & Asteroid Belt
-- `SpaceScene.ts`: second Phaser scene, distance-based adjacency, no climate degradation
-- `AsteroidScene.ts`: node graph renderer (custom Phaser Graphics, not tilemap)
-- Scene switching triggered by landmark project completions
+### Phase 10 — Near Space & Asteroid Belt ✅
+- `SpaceScene.ts`: second Phaser scene; fixed node topology (LEO, L1, L2, Lunar Orbit, Lunar Surface); transit lines; Earth circle; same callback/hit-zone pattern as EarthScene ✅
+- `AsteroidScene.ts`: node-graph renderer; 7 nodes (asteroid/jovianMoon/transitPoint/heliopause); unprospected nodes render as dim "?"; active/potential transit edges; dense star field ✅
+- Scene switching via `game.scene.stop/start`; one Phaser Game instance holds all three scenes; each emits its own ready event for callback wiring ✅
+- Scene tab bar in `MapContainer.svelte`: EARTH | NEAR SPACE | ASTEROID BELT; era-gated (locked with padlock icon); amber `DEV › ERA` button advances era without landmark projects (explicit dev scaffold, removed when Phase 11 lands) ✅
+- `generateSpaceNodes()`, `generateBeltNodes()`, `generateBeltEdges()` in game store; `devAdvanceEra()`, `selectSpaceNode()`, `selectBeltNode()` actions; demo state populates all three map layers ✅
 
 ### Phase 11 — Victory & loss
 - `victory.ts`: checkers for all four victories and four loss conditions, called at end of World Phase

@@ -4,12 +4,43 @@
   import FacilityPicker from './FacilityPicker.svelte';
   import { gameStore, STUB_FACILITY_DEFS } from '../stores/game.svelte';
   import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
+  import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
+  import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
+  import type { Era } from '../../engine/types';
 
-  // Phaser and EarthScene are dynamically imported to avoid SSR.
+  type SceneTab = 'earth' | 'space' | 'belt';
+
+  const TABS: { id: SceneTab; label: string; requiredEra: Era | null }[] = [
+    { id: 'earth', label: 'EARTH',         requiredEra: null        },
+    { id: 'space', label: 'NEAR SPACE',    requiredEra: 'nearSpace' },
+    { id: 'belt',  label: 'ASTEROID BELT', requiredEra: 'deepSpace' },
+  ];
+
+  const ERA_ORDER: Era[] = ['earth', 'nearSpace', 'deepSpace'];
+
+  function eraUnlocked(requiredEra: Era | null): boolean {
+    if (!requiredEra) return true;
+    return ERA_ORDER.indexOf(gameStore.state.era) >= ERA_ORDER.indexOf(requiredEra);
+  }
+
   let container: HTMLDivElement;
   let game: import('phaser').Game | null = null;
+  let activeTab = $state<SceneTab>('earth');
 
-  // The selected tile for facility placement (read from store).
+  const SCENE_KEYS: Record<SceneTab, string> = {
+    earth: 'EarthScene',
+    space: 'SpaceScene',
+    belt:  'AsteroidScene',
+  };
+
+  function switchTab(tab: SceneTab): void {
+    if (!game || activeTab === tab) return;
+    game.scene.stop(SCENE_KEYS[activeTab]);
+    game.scene.start(SCENE_KEYS[tab]);
+    activeTab = tab;
+  }
+
+  // Selected Earth tile for facility placement
   const selectedTile = $derived(
     gameStore.selectedCoordKey != null
       ? gameStore.state.map.earthTiles.find(
@@ -21,25 +52,55 @@
   onMount(async () => {
     if (!browser) return;
 
-    const [Phaser, { EarthScene }] = await Promise.all([
+    const [Phaser, { EarthScene }, { SpaceScene }, { AsteroidScene }] = await Promise.all([
       import('phaser'),
       import('../../phaser/EarthScene'),
+      import('../../phaser/SpaceScene'),
+      import('../../phaser/AsteroidScene'),
     ]);
 
-    const scene = new EarthScene();
+    const earthScene    = new EarthScene();
+    const spaceScene    = new SpaceScene();
+    const asteroidScene = new AsteroidScene();
 
     game = new Phaser.Game({
-      type: Phaser.AUTO,
-      parent: container,
-      width:  container.clientWidth  || 600,
-      height: container.clientHeight || 400,
+      type:            Phaser.AUTO,
+      parent:          container,
+      width:           container.clientWidth  || 600,
+      height:          container.clientHeight || 400,
       backgroundColor: '#060a10',
-      scene: [scene],
-      // Disable the Phaser default banner in console
-      banner: false,
+      scene:           [earthScene, spaceScene, asteroidScene],
+      banner:          false,
     });
 
-    // Wire callbacks once the scene is ready
+    // Wire SpaceScene callbacks each time it (re)starts
+    game.events.on('spaceSceneReady', () => {
+      const space = game!.scene.getScene('SpaceScene') as SpaceSceneType;
+      space.setCallbacks({
+        getNodes:        () => gameStore.state.map.spaceNodes,
+        getFacilities:   () => gameStore.state.player.facilities,
+        getSelectedNode: () => gameStore.selectedSpaceNodeId,
+        onNodeClick:     (id: string) => {
+          gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
+        },
+      });
+    });
+
+    // Wire AsteroidScene callbacks each time it (re)starts
+    game.events.on('asteroidSceneReady', () => {
+      const asteroid = game!.scene.getScene('AsteroidScene') as AsteroidSceneType;
+      asteroid.setCallbacks({
+        getNodes:        () => gameStore.state.map.beltNodes,
+        getEdges:        () => gameStore.state.map.beltEdges,
+        getFacilities:   () => gameStore.state.player.facilities,
+        getSelectedNode: () => gameStore.selectedBeltNodeId,
+        onNodeClick:     (id: string) => {
+          gameStore.selectBeltNode(gameStore.selectedBeltNodeId === id ? null : id);
+        },
+      });
+    });
+
+    // Wire EarthScene callbacks after Phaser is ready; stop the other scenes
     game.events.once('ready', () => {
       const earth = game!.scene.getScene('EarthScene') as EarthSceneType;
       earth.setCallbacks({
@@ -48,10 +109,12 @@
         getSelected:   () => gameStore.selectedCoordKey,
         getClimate:    () => gameStore.state.climatePressure,
         onTileClick:   (key: string) => {
-          // Toggle selection; already-selected tile deselects
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },
       });
+      // Only EarthScene should run at startup
+      game!.scene.stop('SpaceScene');
+      game!.scene.stop('AsteroidScene');
     });
   });
 
@@ -61,27 +124,120 @@
   });
 </script>
 
-<div class="map-container" bind:this={container}>
-  {#if selectedTile}
-    <FacilityPicker
-      tile={selectedTile}
-      facilityDefs={STUB_FACILITY_DEFS}
-      playerResources={gameStore.state.player.resources}
-      onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
-      onClose={() => gameStore.selectTile(null)}
-    />
-  {/if}
+<div class="map-wrapper">
+  <!-- Scene tab bar -->
+  <div class="tab-bar">
+    {#each TABS as tab}
+      <button
+        class="tab"
+        class:active={activeTab === tab.id}
+        class:locked={!eraUnlocked(tab.requiredEra)}
+        disabled={!eraUnlocked(tab.requiredEra)}
+        onclick={() => switchTab(tab.id)}
+      >
+        {tab.label}
+        {#if !eraUnlocked(tab.requiredEra)}
+          <span class="lock">&#x1F512;</span>
+        {/if}
+      </button>
+    {/each}
+
+    <!-- Dev tool: advance era without landmark projects -->
+    {#if gameStore.state.era !== 'deepSpace'}
+      <button class="tab dev-era" onclick={() => gameStore.devAdvanceEra()}>
+        DEV &rsaquo; ERA
+      </button>
+    {/if}
+  </div>
+
+  <!-- Phaser canvas mount point -->
+  <div class="map-container" bind:this={container}>
+    {#if selectedTile && activeTab === 'earth'}
+      <FacilityPicker
+        tile={selectedTile}
+        facilityDefs={STUB_FACILITY_DEFS}
+        playerResources={gameStore.state.player.resources}
+        onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
+        onClose={() => gameStore.selectTile(null)}
+      />
+    {/if}
+  </div>
 </div>
 
 <style>
-  .map-container {
+  .map-wrapper {
     width: 100%;
     height: 100%;
-    position: relative;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 
-  /* Phaser mounts a canvas inside this div; ensure it fills the space */
+  .tab-bar {
+    display: flex;
+    gap: 1px;
+    background: #0a0e14;
+    border-bottom: 1px solid #1e2530;
+    flex-shrink: 0;
+    padding: 2px 4px 0;
+  }
+
+  .tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #4a6080;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    padding: 3px 8px 4px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .tab:hover:not(:disabled) {
+    color: #8aacca;
+  }
+
+  .tab.active {
+    border-bottom-color: #4a90c0;
+    color: #a0c8e8;
+  }
+
+  .tab.locked {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .tab.dev-era {
+    margin-left: auto;
+    color: #a07030;
+    font-size: 0.6rem;
+    border: 1px dashed #4a3010;
+    border-bottom: 2px solid transparent;
+    border-radius: 2px 2px 0 0;
+    padding: 2px 6px 3px;
+  }
+
+  .tab.dev-era:hover {
+    color: #c89040;
+    border-color: #6a4820;
+    border-bottom-color: transparent;
+  }
+
+  .lock {
+    font-size: 0.55rem;
+    opacity: 0.6;
+    margin-left: 2px;
+  }
+
+  .map-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+
   .map-container :global(canvas) {
     display: block;
     width: 100% !important;
