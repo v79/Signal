@@ -1,4 +1,4 @@
-import type { GameState, FacilityDef, TechDef, EventDef, CardDef, NewsItem } from './types';
+import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, NewsItem } from './types';
 import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion } from './facilities';
 import { tickWill, computeBankDecay, applyFieldDeltas, applyResourceDeltas, DEFAULT_WILL_CONFIG } from './resources';
 import { checkResearchProgress } from './research';
@@ -10,6 +10,7 @@ import {
   applyEventEffect,
   getEffectForResolution,
 } from './events';
+import { simulateBlocs, checkBlocMergers } from './blocs';
 import { ZERO_RESOURCES } from './state';
 import type { Rng } from './rng';
 
@@ -146,6 +147,7 @@ export function executeWorldPhase(
   state: GameState,
   facilityDefs: Map<string, FacilityDef>,
   techDefs: Map<string, TechDef> = new Map(),
+  blocDefs: Map<string, BlocDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -227,12 +229,17 @@ export function executeWorldPhase(
   // 10. Climate pressure
   const newClimatePressure = Math.min(100, state.climatePressure + CLIMATE_PRESSURE_PER_TURN);
 
+  // 11. Bloc simulation
+  const { updatedBlocs, newNewsItems: blocNews } = simulateBlocs(state.blocs, blocDefs, nextTurn);
+  const mergerNews = checkBlocMergers(updatedBlocs, blocDefs, nextTurn);
+
   return {
     ...state,
     turn: nextTurn,
     year: state.year + 1,
     phase: 'event', // reset to start of next turn
     climatePressure: newClimatePressure,
+    blocs: updatedBlocs,
     player: {
       ...player,
       resources: newResources,
@@ -241,7 +248,7 @@ export function executeWorldPhase(
       facilities: newFacilities,
       techs: updatedTechs,
       cards: updatedCards,
-      newsFeed: [...player.newsFeed, ...researchNews],
+      newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews],
     },
   };
 }

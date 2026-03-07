@@ -5,6 +5,7 @@
   import StandingActions from '$lib/components/StandingActions.svelte';
   import CardHand        from '$lib/components/CardHand.svelte';
   import MapContainer    from '$lib/components/MapContainer.svelte';
+  import NewsTicker      from '$lib/components/NewsTicker.svelte';
 
   import {
     gameStore,
@@ -60,6 +61,9 @@
       signal={gameStore.state.signal}
     />
   </div>
+
+  <!-- News ticker strip -->
+  <NewsTicker items={gameStore.state.player.newsFeed} />
 
   <!-- Bottom row -->
   <div class="bottom-row">
