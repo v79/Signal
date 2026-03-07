@@ -108,10 +108,15 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `NewsTicker.svelte`: horizontally scrolling CSS-animated strip, duplicated content for seamless loop, aria-live for accessibility ✅
 - 14 tests in `blocs.test.ts` (136 total) ✅
 
-### Phase 8 — Board system
-- `board.ts`: character pool; lifecycle events; buff/debuff applied as multipliers/modifiers in `resources.ts` and `research.ts`
-- Character acquisition events wired into event pool
-- Board panel UI (Svelte)
+### Phase 8 — Board system ✅
+- `board.ts`: `computeBoardModifiers`, `applyBoardFieldMultipliers`, `applyBoardResourceMultipliers` (multiplicative compounding across all active members) ✅
+- `tickBoardAges` (retirement at 70, news item generated), `recruitBoardMember`, `removeBoardMember`, `getBoardAutoCounterTags`, `isBoardSlotVacant`, `getActiveMembers` ✅
+- Board multipliers wired into `executeWorldPhase` (step 3 — applied to facility output before resource/field accumulation) ✅
+- Board age ticking wired into `executeWorldPhase` (step 12 — retirement news merged into newsFeed) ✅
+- `STUB_BOARD_DEFS` (7 members, one per role) + demo state seeded with 2 active members (chiefScientist, politicalLiaison) ✅
+- `recruitMember(defId, startAge)` and `dismissMember(role)` in game store (cost: 15F + 10W) ✅
+- `BoardPanel.svelte`: 7 collapsible role slots; active members show name/age/buffs/debuffs; vacant slots show recruit candidates ✅
+- 25 tests in `board.test.ts` (147 total) ✅
 
 ### Phase 9 — Signal track
 - `signal.ts`: decoding progress fed by Physics + Mathematics + Deep Space Array count; era strength levels; wormhole climax generates 2–3 candidate response options (count and confidence determined by signal investment)

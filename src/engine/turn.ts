@@ -1,4 +1,4 @@
-import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, NewsItem } from './types';
+import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, BoardMemberDef, NewsItem } from './types';
 import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion } from './facilities';
 import { tickWill, computeBankDecay, applyFieldDeltas, applyResourceDeltas, DEFAULT_WILL_CONFIG } from './resources';
 import { checkResearchProgress } from './research';
@@ -11,6 +11,12 @@ import {
   getEffectForResolution,
 } from './events';
 import { simulateBlocs, checkBlocMergers } from './blocs';
+import {
+  computeBoardModifiers,
+  applyBoardFieldMultipliers,
+  applyBoardResourceMultipliers,
+  tickBoardAges,
+} from './board';
 import { ZERO_RESOURCES } from './state';
 import type { Rng } from './rng';
 
@@ -148,6 +154,7 @@ export function executeWorldPhase(
   facilityDefs: Map<string, FacilityDef>,
   techDefs: Map<string, TechDef> = new Map(),
   blocDefs: Map<string, BlocDef> = new Map(),
+  boardDefs: Map<string, BoardMemberDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -166,15 +173,20 @@ export function executeWorldPhase(
     map.earthTiles,
   );
 
-  // 3. Bank decay and project upkeep
+  // 3. Board multipliers applied to facility output
+  const boardMod = computeBoardModifiers(player.board, boardDefs);
+  const boostedFields = applyBoardFieldMultipliers(totalFields, boardMod);
+  const boostedResources = applyBoardResourceMultipliers(totalResources, boardMod);
+
+  // 4. Bank decay and project upkeep
   const bankDecay = computeBankDecay(player.cards);
   const projectUpkeep = ZERO_RESOURCES; // Phase 4 extended: wire in actual project upkeep
 
-  // 4. Apply resource and field changes
-  const newFields = applyFieldDeltas(player.fields, totalFields);
-  const newResources = applyResourceDeltas(player.resources, totalResources, bankDecay, projectUpkeep);
+  // 5. Apply resource and field changes
+  const newFields = applyFieldDeltas(player.fields, boostedFields);
+  const newResources = applyResourceDeltas(player.resources, boostedResources, bankDecay, projectUpkeep);
 
-  // 5. Research progress check (uses updated fields)
+  // 6. Research progress check (uses updated fields)
   const nextTurn = state.turn + 1;
   const { updatedTechs, newDiscoveries, newRumours, newProgressTechs } = checkResearchProgress(
     player.techs,
@@ -183,7 +195,7 @@ export function executeWorldPhase(
     nextTurn,
   );
 
-  // 6. Card upgrades from newly discovered techs
+  // 7. Card upgrades from newly discovered techs
   let updatedCards = player.cards;
   for (const defId of newDiscoveries) {
     const techDef = techDefs.get(defId);
@@ -200,7 +212,7 @@ export function executeWorldPhase(
     }
   }
 
-  // 7. News feed entries for research events
+  // 8. News feed entries for research events
   const researchNews: NewsItem[] = [
     ...newRumours.map(defId => ({
       id: `${nextTurn}-rumour-${defId}`,
@@ -219,19 +231,22 @@ export function executeWorldPhase(
     })),
   ];
 
-  // 8. Will natural drift
+  // 9. Will natural drift
   const willConfig = DEFAULT_WILL_CONFIG[player.willProfile];
   const newWill = tickWill(player.will, willConfig);
 
-  // 9. Mine depletion
+  // 10. Mine depletion
   const newFacilities = tickMineDepletion(player.facilities, facilityDefs);
 
-  // 10. Climate pressure
+  // 11. Climate pressure
   const newClimatePressure = Math.min(100, state.climatePressure + CLIMATE_PRESSURE_PER_TURN);
 
-  // 11. Bloc simulation
+  // 12. Bloc simulation
   const { updatedBlocs, newNewsItems: blocNews } = simulateBlocs(state.blocs, blocDefs, nextTurn);
   const mergerNews = checkBlocMergers(updatedBlocs, blocDefs, nextTurn);
+
+  // 13. Board age ticking (retirements generate news)
+  const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, nextTurn);
 
   return {
     ...state,
@@ -248,7 +263,8 @@ export function executeWorldPhase(
       facilities: newFacilities,
       techs: updatedTechs,
       cards: updatedCards,
-      newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews],
+      board: updatedBoard,
+      newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews, ...boardNews],
     },
   };
 }
