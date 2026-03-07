@@ -12,13 +12,14 @@
 
 export type Seed = string;
 
-/** The five research fields. Field points accumulate passively each turn. */
+/** The six research fields. Field points accumulate passively each turn. */
 export type ResearchField =
   | 'physics'
   | 'mathematics'
   | 'engineering'
-  | 'biology'
-  | 'computing';
+  | 'biochemistry'
+  | 'computing'
+  | 'socialScience';
 
 export type FieldPoints = Record<ResearchField, number>;
 
@@ -436,7 +437,7 @@ export interface StandingActionRestriction {
 // ---------------------------------------------------------------------------
 
 export type VictoryBias =
-  | 'ftl'
+  | 'wormhole'
   | 'ecologicalRestoration'
   | 'economicHegemony'
   | 'terraforming'
@@ -538,7 +539,7 @@ export type BoardSlots = Partial<Record<BoardRole, BoardMemberInstance>>;
 export type SignalEraStrength = 'faint' | 'structured' | 'urgent';
 
 /**
- * The FTL climax presents the player with candidate responses.
+ * The wormhole climax presents the player with candidate responses.
  * How many and how confident is determined by signal investment.
  */
 export interface SignalResponseOption {
@@ -554,8 +555,8 @@ export interface SignalState {
   decodeProgress: number;
   eraStrength: SignalEraStrength;
   /**
-   * True once the player has committed to a response at the FTL climax.
-   * Locks the FTL path open or closed.
+   * True once the player has committed to a response at the wormhole climax.
+   * Locks the wormhole path open or closed.
    */
   responseCommitted: boolean;
   responseCorrect: boolean | null;
@@ -571,7 +572,7 @@ export interface SignalState {
 // ---------------------------------------------------------------------------
 
 export type VictoryCondition =
-  | 'ftl'
+  | 'wormhole'
   | 'ecologicalRestoration'
   | 'economicHegemony'
   | 'terraforming';

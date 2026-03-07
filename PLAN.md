@@ -44,7 +44,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 | `map.ts` | Hex tile state; adjacency lookup (pre-computed); climate degradation scheduling and application |
 | `blocs.ts` | NPC bloc simulation step; decline/elimination; merger event generation |
 | `board.ts` | Character lifecycle (age, retire, resign, die); buff/debuff application pipeline |
-| `signal.ts` | Decoding progress track; era signal strength; FTL climax option generation |
+| `signal.ts` | Decoding progress track; era signal strength; wormhole climax option generation |
 | `victory.ts` | All victory and loss condition checks; Abandoned Earth metric |
 | `turn.ts` | Five-phase orchestrator: calls each subsystem in order |
 
@@ -100,7 +100,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - Board panel UI (Svelte)
 
 ### Phase 9 — Signal track
-- `signal.ts`: decoding progress fed by Physics + Mathematics + Deep Space Array count; era strength levels; FTL climax generates 2–3 candidate response options (count and confidence determined by signal investment)
+- `signal.ts`: decoding progress fed by Physics + Mathematics + Deep Space Array count; era strength levels; wormhole climax generates 2–3 candidate response options (count and confidence determined by signal investment)
 - Signal events wired into event pool per era
 
 ### Phase 10 — Near Space & Asteroid Belt
