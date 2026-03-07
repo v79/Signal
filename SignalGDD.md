@@ -75,14 +75,15 @@ Five fields accumulate points passively based on player actions:
 | Physics | Research stations, observatories, deep space arrays |
 | Mathematics | Universities, computing centres, signal analysis projects |
 | Engineering | Industrial complexes, launch facilities, manufacturing plants |
-| Biology | Medical centres, agricultural facilities, life support research |
+| Biochemistry | Medical centres, agricultural facilities, life support research |
 | Computing | Data centres, communications networks, AI research facilities |
+| Social sciences | Universities, media centres, political projects |
 
 ### 4.3 Technology Discovery
 Each technology has a **recipe** — a required threshold of field points across multiple fields. For example:
 
 - *Orbital Mechanics* might require Physics 40 + Mathematics 30 + Engineering 20
-- *Closed-Loop Life Support* might require Biology 50 + Engineering 35 + Computing 20
+- *Closed-Loop Life Support* might require Biochemistry 50 + Engineering 35 + Computing 20
 
 **Recipes are randomised per playthrough.** The same technology may demand a different field balance each game, preventing experienced players from executing a fixed optimal route. Variance is moderate — the general shape of each tech is stable, but exact proportions shift.
 
@@ -97,7 +98,7 @@ Technologies progress through three visibility stages:
 Some technologies only emerge when two or more fields are *both* at sufficient levels simultaneously. These cross-field discoveries reflect real scientific history — Navigation emerging from the intersection of Astronomy and Mathematics; Computing advancing due to cryptographic needs during wartime. Cross-field breakthroughs are often powerful and surprising, and reward players who build diverse institutions rather than hyper-specialising.
 
 ### 4.6 Signal-Derived Technologies
-As the signal is decoded, it may yield technological insights that could not be derived from human research alone. These are rare, powerful, and tied to the FTL victory path. They appear only for blocs that have invested in signal analysis infrastructure.
+As the signal is decoded, it may yield technological insights that could not be derived from human research alone. These are rare, powerful, and tied to the wormhole victory path. They appear only for blocs that have invested in signal analysis infrastructure.
 
 ---
 
@@ -137,7 +138,7 @@ Facilities are persistent infrastructure that generate resources and field point
 | Industrial Complex | Engineering | Materials (small) | Adjacency bonus with Launch Facility |
 | Mine / Quarry | — | Materials | Depletes over time |
 | Economic Zone | — | Funding | Required to maintain Funding flow |
-| Medical Centre | Biology | Will (small) | Improves population welfare |
+| Medical Centre | Biochemistry | Will (small) | Improves population welfare |
 | Observatory | Physics, Mathematics | — | Accelerates signal-related techs |
 | Deep Space Array | Physics, Computing | — | Required for signal decoding; hints at signal progress |
 | Launch Facility | Engineering | — | Required for space projects; expensive |
@@ -159,7 +160,7 @@ Projects are finite goals with defined costs and one-time rewards. They are dist
 - *First Asteroid Mining Operation* → activates the belt node map
 
 **Scientific Projects** generate large field point bonuses and may accelerate specific techs.
-- *Cancer Cure Programme* → large Biology gain, major Will boost
+- *Cancer Cure Programme* → large Biochemistry gain, major Will boost
 - *Climate Modelling Initiative* → Physics + Mathematics gain; reveals climate timeline more clearly
 - *Signal Decoding Project* → requires Deep Space Array; advances signal understanding
 
@@ -181,7 +182,7 @@ Five or six blocs begin the game with distinct profiles and personalities:
 
 | Bloc | Economic Strength | Material Wealth | Will Profile | Victory Bias |
 |---|---|---|---|---|
-| North America | High | Medium | Volatile (democratic) | FTL / Signal |
+| North America | High | Medium | Volatile (democratic) | Wormhole / Signal |
 | European Union | Medium | Low | Volatile (democratic) | Ecological Restoration |
 | East Asian Cooperative | High | Medium | Stable (authoritarian) | Terraforming |
 | African Union | Low | High | Medium | Economic Hegemony |
@@ -240,13 +241,13 @@ The signal also introduces a **hostile interpretation loss condition** — not a
 
 ## 10. Victory Conditions
 
-### 10.1 FTL / Signal Response *(Primary / Canonical Victory)*
+### 10.1 Wormhole / Signal Response *(Primary / Canonical Victory)*
 Decode the signal fully, develop the technologies it implies (potentially including reverse-engineered insights), and launch a mission to its origin point. This is the "true ending" — the one the game is secretly about. Requires deep investment in Physics, Mathematics, and Computing, plus signal analysis infrastructure.
 
 *Thematic note:* This victory path is lonely and requires the player to let Earth go. It is the hardest to explain to a sceptical public (Will management is crucial) and the most demanding scientifically. It rewards the player who committed earliest and most completely to the signal.
 
 ### 10.2 Ecological Restoration
-Fight the climate pressure mechanic rather than routing around it. Restore Earth's biosphere, stabilise sea levels, and establish a sustainable civilisation that does not need to leave. Requires heavy Biology and Engineering investment and sustained Political Will over a long game. Mutually exclusive in *feel* if not in mechanics with the FTL victory — one is hope, the other is redemption.
+Fight the climate pressure mechanic rather than routing around it. Restore Earth's biosphere, stabilise sea levels, and establish a sustainable civilisation that does not need to leave. Requires heavy Biochemistry and Engineering investment and sustained Political Will over a long game. Mutually exclusive in *feel* if not in mechanics with the wormhole victory — one is hope, the other is redemption.
 
 *Thematic note:* This is the hardest victory because it requires the player to resist the pull of space when the signal is calling. It is the most emotionally resonant for players who feel the real-world weight of the climate theme.
 
@@ -268,13 +269,13 @@ Complete a long multi-stage project to make Mars habitable. Stages: Atmosphere G
 The climate degradation system reaches a point of no return. Society contracts to a pre-industrial state. The corporation loses its mandate. This loss should never feel sudden — the player watches it approach across many turns, facing increasingly costly choices to delay it. The best version of this loss feels *deserved*.
 
 ### 11.2 Signal Misinterpretation
-The signal was a warning, not an invitation. A player who under-invested in signal analysis, or who ignored it entirely, may face a late-game event they cannot adequately respond to — a rogue body on a collision course, a solar event, or a gravitational anomaly. This loss is preventable with adequate investment and is more likely when pursuing non-FTL victory paths without maintaining minimal signal awareness.
+The signal was a warning, not an invitation. A player who under-invested in signal analysis, or who ignored it entirely, may face a late-game event they cannot adequately respond to — a rogue body on a collision course, a solar event, or a gravitational anomaly. This loss is preventable with adequate investment and is more likely when pursuing non-wormhole victory paths without maintaining minimal signal awareness.
 
 ### 11.3 Political Collapse
 Political Will drops to zero and cannot recover. The corporation is dissolved, its mandate revoked by a public that has lost faith. This loss is most likely for democratic blocs that suffer a major public failure (a crewed mission disaster, a widely covered economic scandal) at a moment of already low Will.
 
 ### 11.4 The Abandoned Earth *(Moral Loss)*
-Not a hard game over, but a post-game reckoning. The player achieved a space-based victory (FTL or Terraforming) but neglected Earth so completely that civilisation on the home planet collapsed behind them. They survived — but at terrible cost. The post-game summary names this outcome explicitly. It is morally ambiguous rather than purely negative, and it is historically plausible.
+Not a hard game over, but a post-game reckoning. The player achieved a space-based victory (wormhole or Terraforming) but neglected Earth so completely that civilisation on the home planet collapsed behind them. They survived — but at terrible cost. The post-game summary names this outcome explicitly. It is morally ambiguous rather than purely negative, and it is historically plausible.
 
 ---
 
@@ -343,7 +344,7 @@ The player's deck reflects the state of their civilisation. It grows and changes
 
 - **Era 1 deck** — economic, political, and basic science cards: Build Mine, Lobby Government, Academic Conference, Grant Application, Recruit Engineers
 - **Mid-game additions** — as technologies unlock, new cards enter the deck automatically: Satellite Survey, Orbital Insertion, Signal Analysis Session, Climate Modelling Run
-- **Late game** — the deck contains things unimaginable at game start: Asteroid Prospecting, FTL Prototype Test, Decode Signal Segment, Terraform Atmosphere Seeding
+- **Late game** — the deck contains things unimaginable at game start: Asteroid Prospecting, Wormhole Traversal Test, Decode Signal Segment, Terraform Atmosphere Seeding
 - **Obsolescence** — some early cards are replaced by upgraded versions as technology matures. Build Basic Mine becomes Automated Extraction. This makes progress feel tangible.
 
 When a new card enters the deck due to a research breakthrough, a brief flavour note appears: *"Your materials scientists have refined deep-bore extraction. Automated Extraction is now available."*
@@ -411,7 +412,7 @@ As blocs decline and eras advance, the player's bloc may receive merger offers f
 
 **Thematic examples:**
 - EU absorbs a North African remnant bloc following climate displacement — gains Materials and Engineering field points, inherits political instability events
-- North America merges with a collapsed Latin American federation — gains workforce and Biology field bias, inherits debt liability
+- North America merges with a collapsed Latin American federation — gains workforce and Biochemistry field bias, inherits debt liability
 - East Asian Cooperative absorbs a Pacific island network — gains Computing expertise, loses nothing except Will (controversial domestically)
 
 ### 16.3 Multiplayer
@@ -462,7 +463,7 @@ Vacant seats carry a mild ongoing penalty — that function runs below capacity.
 
 **Character lifecycle** — characters age, retire, resign, and occasionally die. Each character has a visible age or tenure indicator so the player can anticipate succession needs. Resignations can be player-triggered (sacrifice a board member to resolve a scandal event) or event-triggered. Death is rare but legitimate — losing a key character at a critical moment is a meaningful game event, not a surprise punishment.
 
-**AI board members (Era 3)** — by the deep space era, AI characters become available to fill board seats. AI members carry stronger buffs with no human-style debuffs, but introduce a new event pool — questions of autonomy, unsettling unilateral decisions, and political controversy around non-human leadership. The first AI board member is a milestone unlocked by a specific research breakthrough, not a random event. A board that is majority AI by the FTL endgame is a quietly transformed organisation — that transformation is part of the game's story without requiring explicit narrative.
+**AI board members (Era 3)** — by the deep space era, AI characters become available to fill board seats. AI members carry stronger buffs with no human-style debuffs, but introduce a new event pool — questions of autonomy, unsettling unilateral decisions, and political controversy around non-human leadership. The first AI board member is a milestone unlocked by a specific research breakthrough, not a random event. A board that is majority AI by the wormhole endgame is a quietly transformed organisation — that transformation is part of the game's story without requiring explicit narrative.
 
 **What is explicitly deferred:** portrait art, character dialogue, backstory text, inter-character relationship systems. These are optional additions for a later development phase.
 
@@ -486,7 +487,7 @@ The destination of the wormhole is never revealed within the game. It is the fin
 
 **The wormhole, not generic FTL**
 
-The endpoint of the FTL victory path is not invented faster-than-light technology. It is a *door* — a fixed structure at the heliopause, built by something else, that humanity learns to open. This distinction matters:
+The endpoint of the wormhole victory path is not invented faster-than-light technology. It is a *door* — a fixed structure at the heliopause, built by something else, that humanity learns to open. This distinction matters:
 
 - The wormhole is a place on the late-game map, a concrete objective the player's ships travel toward
 - It cannot be replicated; there is only one door
@@ -496,18 +497,18 @@ The endpoint of the FTL victory path is not invented faster-than-light technolog
 
 Signal translation is a partially visible track separate from but connected to the research fields. Physics and Mathematics contribute to decoding progress, but the final translation is a distinct interpretive challenge, not a research threshold. Investment in signal analysis infrastructure (Deep Space Arrays, dedicated projects) narrows uncertainty and provides confidence indicators — but never certainty.
 
-The climax of the FTL path is a late-game event card presenting the player with a choice: *"Your linguists and physicists have prepared three candidate responses to the signal's final sequence. Choose one."* Prior investment determines how many options are presented and how clearly their likely consequences are indicated. A well-prepared civilisation may reduce this to two options with strong confidence signals. An under-prepared one faces three options with no guidance.
+The climax of the wormhole path is a late-game event card presenting the player with a choice: *"Your linguists and physicists have prepared three candidate responses to the signal's final sequence. Choose one."* Prior investment determines how many options are presented and how clearly their likely consequences are indicated. A well-prepared civilisation may reduce this to two options with strong confidence signals. An under-prepared one faces three options with no guidance.
 
 **Consequences of an incorrect response**
 
-- The wormhole option is permanently closed — the signal ceases the relevant transmission, the portal does not activate, and the FTL victory path is no longer available in that run
+- The wormhole option is permanently closed — the signal ceases the relevant transmission, the portal does not activate, and the wormhole victory path is no longer available in that run
 - Ships that subsequently attempt to cross the heliopause are intercepted by automated defensive systems — not an alien war, simply a system doing what it was designed to do when an incorrect response is followed by an intrusion attempt
-- This is a loss condition specific to the FTL path; players pursuing other victories are unaffected but also cannot access the wormhole
+- This is a loss condition specific to the wormhole path; players pursuing other victories are unaffected but also cannot access the wormhole
 
 **Consequences of a correct response**
 
 - The wormhole activates at the heliopause — a new node appears on the deep space map
-- A crewed mission through the wormhole is the final landmark project, and its completion triggers the FTL victory
+- A crewed mission through the wormhole is the final landmark project, and its completion triggers the wormhole victory
 - The signal goes quiet after activation; it has done what it was built to do
 
 **Note on revisability**
