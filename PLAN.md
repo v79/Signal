@@ -145,18 +145,18 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `game.svelte.ts`: `advancePhase()` detects outcome after World Phase and navigates to `/summary`; `resetGame()` action clears all state ✅
 - 37 tests in `victory.test.ts` (228 total) ✅
 
-### Phase 12 — Save system & seeded runs
-- `GameState` serializes to JSON with `JSON.stringify` (no special handling needed if types are designed correctly)
-- `localStorage` auto-save on every World Phase
-- Export to file / import from file
-- Seed display on HUD; shareable seed string
+### Phase 12 — Save system & seeded runs ✅
+- `GameState` serializes to JSON with `JSON.stringify` (no special handling needed if types are designed correctly) ✅
+- `localStorage` auto-save on every World Phase ✅
+- Export to file / import from file ✅
+- Seed display on HUD; shareable seed string ✅
 
-### Content pass (parallel with phases 2–12)
-- All facility definitions in `src/data/facilities.ts`
-- Technology list with base recipe shapes in `src/data/technologies.ts`
-- Card definitions (normal use + counter use) in `src/data/cards.ts`
-- Event definitions with pool tags (bloc-specific, era-gated, push-factor-gated) in `src/data/events.ts`
-- All six bloc starting profiles in `src/data/blocs.ts`
+### Content pass (parallel with phases 2–12) ✅
+- All facility definitions in `src/data/facilities.ts` ✅
+- Technology list with base recipe shapes in `src/data/technologies.ts` — deferred (no TechDef content yet)
+- Card definitions (normal use + counter use) in `src/data/cards.ts` ✅
+- Event definitions with pool tags (bloc-specific, era-gated, push-factor-gated) in `src/data/events.ts` ✅
+- All six bloc starting profiles in `src/data/blocs.ts` ✅ (7 blocs defined)
 
 ---
 
