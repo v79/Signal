@@ -129,7 +129,7 @@
     padding: 0.4rem 1rem;
     background: #0d1018;
     border-bottom: 1px solid #1e2530;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     letter-spacing: 0.08em;
     white-space: nowrap;
     overflow: hidden;
@@ -171,7 +171,7 @@
 
   .label {
     color: #5a6878;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 
   .value {
@@ -218,13 +218,13 @@
   }
 
   .res-label {
-    color: #5a6878;
-    font-size: 0.6rem;
+    color: #6a7888;
+    font-size: 0.68rem;
   }
 
   .res-value {
     font-variant-numeric: tabular-nums;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .fund { color: #c8d050; }
@@ -239,13 +239,13 @@
   }
 
   .field-label {
-    color: #5a6878;
-    font-size: 0.58rem;
+    color: #6a7888;
+    font-size: 0.65rem;
   }
 
   .field-value {
     color: #4a9b7a;
-    font-size: 0.72rem;
+    font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
   }
 </style>

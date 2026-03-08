@@ -1,10 +1,23 @@
 import { test } from '@playwright/test';
-import path from 'path';
 
 test('screenshot new-game screen', async ({ page }) => {
-  await page.goto('/');
-  // Wait for either redirect to /newgame or the game layout to appear
-  await page.waitForURL(url => url.pathname === '/newgame' || url.pathname === '/', { timeout: 10000 });
+  await page.goto('/newgame');
   await page.waitForLoadState('networkidle');
-  await page.screenshot({ path: path.join('screenshots', 'newgame.png'), fullPage: true });
+  await page.screenshot({ path: 'screenshots/newgame-setup.png', fullPage: true });
+});
+
+test('screenshot main game HUD', async ({ page }) => {
+  await page.goto('/newgame');
+  await page.waitForLoadState('networkidle');
+
+  // Select first bloc (already pre-selected) and click BEGIN MISSION
+  await page.click('button.btn-begin');
+
+  // Wait for the main game page to load
+  await page.waitForURL('**/');
+  await page.waitForLoadState('networkidle');
+  // Give Phaser a moment to render the hex map
+  await page.waitForTimeout(1500);
+
+  await page.screenshot({ path: 'screenshots/main-game.png', fullPage: true });
 });

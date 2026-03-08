@@ -37,9 +37,9 @@
   }
 
   .ticker-label {
-    font-size: 0.58rem;
+    font-size: 0.6rem;
     letter-spacing: 0.18em;
-    color: #4a6888;
+    color: #8aacca;
     padding: 0 0.6rem;
     border-right: 1px solid #1a2530;
     height: 100%;
@@ -60,8 +60,8 @@
   .ticker-content {
     display: inline-block;
     white-space: nowrap;
-    font-size: 0.65rem;
-    color: #5a7a8a;
+    font-size: 0.68rem;
+    color: #7a9eb8;
     letter-spacing: 0.05em;
     padding-left: 100%;
     animation: ticker-scroll 60s linear infinite;

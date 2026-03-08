@@ -202,9 +202,9 @@
   }
 
   .event-flavour {
-    color: #4a5868;
+    color: #7a8e9e;
     font-style: italic;
-    font-size: 0.65rem;
+    font-size: 0.67rem;
     line-height: 1.4;
   }
 
