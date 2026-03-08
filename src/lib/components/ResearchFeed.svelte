@@ -1,19 +1,33 @@
 <script lang="ts">
-  import type { FieldPoints, NewsItem, SignalState, SignalResponseOption } from '../../engine/types';
+  import type {
+    FieldPoints, NewsItem, SignalState, SignalResponseOption,
+    TechState, TechDef, CardDef, FacilityDef,
+  } from '../../engine/types';
+  import TechTreeModal from './TechTreeModal.svelte';
 
   let {
     fields,
     newsFeed,
     signal,
+    techs = [],
+    techDefs = new Map(),
+    cardDefs = new Map(),
+    facilityDefs = new Map(),
     wormholeOptions = [],
     onCommitWormholeResponse,
   }: {
     fields: FieldPoints;
     newsFeed: NewsItem[];
     signal: SignalState;
+    techs?: TechState[];
+    techDefs?: Map<string, TechDef>;
+    cardDefs?: Map<string, CardDef>;
+    facilityDefs?: Map<string, FacilityDef>;
     wormholeOptions?: SignalResponseOption[];
     onCommitWormholeResponse?: (optionId: string) => void;
   } = $props();
+
+  let showTechTree = $state(false);
 
   const isClimax = $derived(signal.decodeProgress >= 100 && !signal.responseCommitted);
 
@@ -56,8 +70,23 @@
   }
 </script>
 
+{#if showTechTree}
+  <TechTreeModal
+    {techs}
+    {techDefs}
+    {fields}
+    {signal}
+    {cardDefs}
+    {facilityDefs}
+    onClose={() => { showTechTree = false; }}
+  />
+{/if}
+
 <aside class="research-feed">
-  <div class="panel-title">RESEARCH FIELDS</div>
+  <div class="panel-title-row">
+    <span class="panel-title">RESEARCH FIELDS</span>
+    <button class="tree-btn" onclick={() => { showTechTree = true; }}>TECH TREE</button>
+  </div>
 
   <div class="fields-list">
     {#each FIELD_META as meta}
@@ -146,14 +175,39 @@
     min-width: 0;
   }
 
-  .panel-title {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    color: #5a6878;
+  .panel-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid #1e2530;
     padding-bottom: 0.3rem;
     margin-bottom: 0.2rem;
     flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: #5a6878;
+  }
+
+  .tree-btn {
+    font-family: monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: #3a6070;
+    background: none;
+    border: 1px solid #1a3040;
+    border-radius: 2px;
+    padding: 0.1rem 0.4rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .tree-btn:hover {
+    color: #6aaabb;
+    border-color: #2a5060;
   }
 
   .section-divider {
