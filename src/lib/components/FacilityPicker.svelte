@@ -140,6 +140,9 @@
               <div class="upkeep">
                 Upkeep: {formatCost(def.upkeepCost) || 'Free'}
               </div>
+              <div class="build-time">
+                Build time: {def.buildTime === 0 ? 'Instant' : def.buildTime === 1 ? '1 turn' : `${def.buildTime} turns`}
+              </div>
             </div>
             <div class="facility-action">
               <div class="build-cost" class:cant-afford={!affordable}>
@@ -284,6 +287,11 @@
   .upkeep {
     font-size: 0.6rem;
     color: #5a4a2a;
+  }
+
+  .build-time {
+    font-size: 0.6rem;
+    color: #4a5a6a;
   }
 
   .facility-action {

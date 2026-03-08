@@ -40,3 +40,4 @@ This is a list of future requirements for the game but they are not to be implem
   - Special events
   - Win/lose events
   - Modal User interface to show story text with optional images. Next button to progress through the story text. Close/skip button.
+  - Support for narrative choices - up to 3 options that will trigger in-game actions
