@@ -58,7 +58,7 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map([
     description: 'Analysts have isolated a coherent pattern in the transmission.',
     flavourText: 'The mathematics underlying the signal have become unmistakable.',
     tags: ['signal'],
-    eras: ['nearSpace', 'deepSpace'],
+    eras: ['earth', 'nearSpace', 'deepSpace'],
     pushFactors: null,
     blocIds: null,
     countdownTurns: 2,

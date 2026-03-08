@@ -1,13 +1,22 @@
 // =============================================================================
 // SIGNAL — Facility Definitions
 // Static definitions for all buildable facility types, across all three eras.
+//
+// Tech gates (requiredTechId):
+//   Era 1 base facilities are available from game start (null).
+//   deepSpaceArray requires satelliteCommunications — a proper signal tracking
+//     array needs orbital relay infrastructure.
+//   computingHub requires microprocessors — high-performance clusters depend
+//     on integrated microprocessor architecture.
+//   All Era 2 facilities require orbitalMechanics.
+//   All Era 3 facilities require their respective Era 3 techs (Phase 16).
 // =============================================================================
 
 import type { FacilityDef } from '../engine/types';
 
 export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
   // ---------------------------------------------------------------------------
-  // Era 1 — Earth
+  // Era 1 — Earth (available from 1970; some gated by mid-era techs)
   // ---------------------------------------------------------------------------
   ['researchLab', {
     id: 'researchLab',
@@ -27,7 +36,9 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     ],
     adjacencyPenalties: [],
     depletes: false,
+    requiredTechId: null,
   }],
+
   ['mine', {
     id: 'mine',
     name: 'Resource Mine',
@@ -46,7 +57,9 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       },
     ],
     depletes: true,
+    requiredTechId: null,
   }],
+
   ['solarFarm', {
     id: 'solarFarm',
     name: 'Solar Farm',
@@ -60,7 +73,9 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     adjacencyBonuses: [],
     adjacencyPenalties: [],
     depletes: false,
+    requiredTechId: null,
   }],
+
   ['publicUniversity', {
     id: 'publicUniversity',
     name: 'Public University',
@@ -79,7 +94,9 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     ],
     adjacencyPenalties: [],
     depletes: false,
+    requiredTechId: null,
   }],
+
   ['engineeringWorks', {
     id: 'engineeringWorks',
     name: 'Engineering Works',
@@ -98,11 +115,29 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       },
     ],
     depletes: false,
+    requiredTechId: null,
   }],
+
+  ['bioResearchCentre', {
+    id: 'bioResearchCentre',
+    name: 'Bioresearch Centre',
+    description: 'Advanced life science research. Generates Biochemistry and Social Science.',
+    era: 'earth',
+    allowedTileTypes: ['forested', 'agricultural', 'coastal'],
+    buildCost: { funding: 40, materials: 15 },
+    upkeepCost: { funding: 6 },
+    fieldOutput: { biochemistry: 5, socialScience: 2 },
+    resourceOutput: {},
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+    requiredTechId: null,
+  }],
+
   ['deepSpaceArray', {
     id: 'deepSpaceArray',
     name: 'Deep Space Array',
-    description: 'Dedicated signal decoding infrastructure. Accelerates decode progress each turn.',
+    description: 'Dedicated signal decoding infrastructure. Accelerates decode progress each turn. Requires satellite communications infrastructure.',
     era: 'earth',
     allowedTileTypes: ['highland', 'arid', 'coastal'],
     buildCost: { funding: 60, materials: 40 },
@@ -117,25 +152,13 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     ],
     adjacencyPenalties: [],
     depletes: false,
+    requiredTechId: 'satelliteCommunications',
   }],
-  ['bioResearchCentre', {
-    id: 'bioResearchCentre',
-    name: 'Bioresearch Centre',
-    description: 'Advanced life science research. Generates Biochemistry and Social Science.',
-    era: 'earth',
-    allowedTileTypes: ['forested', 'agricultural', 'coastal'],
-    buildCost: { funding: 40, materials: 15 },
-    upkeepCost: { funding: 6 },
-    fieldOutput: { biochemistry: 5, socialScience: 2 },
-    resourceOutput: {},
-    adjacencyBonuses: [],
-    adjacencyPenalties: [],
-    depletes: false,
-  }],
+
   ['computingHub', {
     id: 'computingHub',
     name: 'Computing Hub',
-    description: 'High-performance computing cluster. Strong Computing output; moderate Mathematics.',
+    description: 'High-performance computing cluster. Strong Computing output; moderate Mathematics. Requires microprocessor architecture.',
     era: 'earth',
     allowedTileTypes: ['urban', 'industrial'],
     buildCost: { funding: 35, materials: 20 },
@@ -150,15 +173,16 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     ],
     adjacencyPenalties: [],
     depletes: false,
+    requiredTechId: 'microprocessors',
   }],
 
   // ---------------------------------------------------------------------------
-  // Era 2 — Near Space
+  // Era 2 — Near Space (all require orbitalMechanics)
   // ---------------------------------------------------------------------------
   ['orbitalPlatform', {
     id: 'orbitalPlatform',
     name: 'Orbital Research Platform',
-    description: 'Low-gravity environment enables unique materials science and physics research.',
+    description: 'Low-gravity environment enables unique materials science and physics research. Requires applied orbital mechanics.',
     era: 'nearSpace',
     allowedTileTypes: [],
     buildCost: { funding: 80, materials: 60 },
@@ -168,11 +192,13 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     adjacencyBonuses: [],
     adjacencyPenalties: [],
     depletes: false,
+    requiredTechId: 'orbitalMechanics',
   }],
+
   ['lunarMine', {
     id: 'lunarMine',
     name: 'Lunar Extraction Facility',
-    description: 'Harvests regolith and subsurface ice. High yield, finite deposits.',
+    description: 'Harvests regolith and subsurface ice. High yield, finite deposits. Requires applied orbital mechanics.',
     era: 'nearSpace',
     allowedTileTypes: [],
     buildCost: { materials: 50, funding: 30 },
@@ -182,6 +208,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     adjacencyBonuses: [],
     adjacencyPenalties: [],
     depletes: true,
+    requiredTechId: 'orbitalMechanics',
   }],
 
   // ---------------------------------------------------------------------------
@@ -190,7 +217,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
   ['asteroidMiner', {
     id: 'asteroidMiner',
     name: 'Asteroid Mining Rig',
-    description: 'Autonomous extraction from metallic asteroid bodies.',
+    description: 'Autonomous extraction from metallic asteroid bodies. Requires advanced robotics.',
     era: 'deepSpace',
     allowedTileTypes: [],
     buildCost: { materials: 80, funding: 40 },
@@ -200,7 +227,9 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     adjacencyBonuses: [],
     adjacencyPenalties: [],
     depletes: true,
+    requiredTechId: 'roboticsAutomation',
   }],
+
   ['heliopauseRelay', {
     id: 'heliopauseRelay',
     name: 'Heliopause Signal Relay',
@@ -214,5 +243,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     adjacencyBonuses: [],
     adjacencyPenalties: [],
     depletes: false,
+    // advancedPropulsion is a Phase 15 tech; gating will be added then.
+    requiredTechId: null,
   }],
 ]);

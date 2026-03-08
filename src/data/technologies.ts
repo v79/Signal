@@ -54,7 +54,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
     requiresSimultaneous: false,
     unlocksCards: ['globalBroadcast'],
     unlocksProjects: [],
-    unlocksFacilities: [],
+    unlocksFacilities: ['deepSpaceArray'],
     signalDerived: false,
   }],
 
@@ -67,7 +67,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
     requiresSimultaneous: false,
     unlocksCards: ['computerModellingRun'],
     unlocksProjects: [],
-    unlocksFacilities: [],
+    unlocksFacilities: ['computingHub'],
     signalDerived: false,
   }],
 
@@ -123,8 +123,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
     requiresSimultaneous: false,
     unlocksCards: [],
     unlocksProjects: [],
-    unlocksFacilities: [],
-    // Facility unlocks (asteroidMiner) deferred to Phase 16 (Era 3 content pass).
+    unlocksFacilities: ['asteroidMiner'],
     signalDerived: false,
   }],
 
@@ -185,7 +184,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
     requiresSimultaneous: true,
     unlocksCards: [],
     unlocksProjects: [],
-    unlocksFacilities: ['orbitalPlatform'],
+    unlocksFacilities: ['orbitalPlatform', 'lunarMine'],
     // Simultaneous requirement: the player must invest in both physics AND mathematics.
     // Neglecting mathematics for physics leaves the Near Space era permanently locked.
     signalDerived: false,

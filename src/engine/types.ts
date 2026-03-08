@@ -166,6 +166,11 @@ export interface FacilityDef {
   adjacencyPenalties: AdjacencyRule[];
   /** If true, the facility's Materials output depletes over time (mines). */
   depletes: boolean;
+  /**
+   * Tech def ID that must be discovered before this facility can be built.
+   * Null means available from game start.
+   */
+  requiredTechId: string | null;
 }
 
 export interface AdjacencyRule {

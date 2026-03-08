@@ -229,6 +229,14 @@ export const gameStore = {
     const def = FACILITY_DEFS.get(defId);
     if (!def) return;
 
+    // Tech gate: refuse if the required technology has not been discovered.
+    if (def.requiredTechId != null) {
+      const techDiscovered = _state.player.techs.some(
+        t => t.defId === def.requiredTechId && t.stage === 'discovered',
+      );
+      if (!techDiscovered) return;
+    }
+
     const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
     const newFacility: FacilityInstance = {
       id: facilityId,
