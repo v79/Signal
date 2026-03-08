@@ -54,6 +54,9 @@
       seed={gs.seed}
       onExport={() => gameStore.exportSave()}
       onImport={(file) => gameStore.importSaveFile(file)}
+      onRestart={() => gameStore.startNewGame(gs.seed, gs.player.blocDefId, gs.pushFactor)}
+      onNewGame={() => gameStore.resetGame()}
+      onSettings={() => {}}
     />
 
     <!-- Middle row -->
