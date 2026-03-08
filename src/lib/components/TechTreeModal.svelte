@@ -27,6 +27,7 @@
   let containerEl: HTMLDivElement;
   let game: import('phaser').Game | null = null;
   let scene: TechTreeSceneType | null = null;
+  let loading = $state(true);
 
   function buildData(): TechTreeSceneData {
     return { techs, techDefs, fields, signal, cardDefs, facilityDefs };
@@ -60,6 +61,7 @@
     game.events.once('ready', () => {
       scene = game!.scene.getScene('TechTreeScene') as TechTreeSceneType;
       scene.setData(buildData());
+      loading = false;
     });
   });
 
@@ -111,6 +113,12 @@
 
     <div class="canvas-wrap">
       <div class="canvas-container" bind:this={containerEl}></div>
+      {#if loading}
+        <div class="loading-overlay">
+          <span class="loading-label">DECRYPTING RESEARCH ARCHIVE</span>
+          <span class="loading-dots" aria-hidden="true">···</span>
+        </div>
+      {/if}
       <div class="zoom-controls" aria-label="Zoom controls">
         <button class="zoom-btn" onclick={() => scene?.zoomIn()}    aria-label="Zoom in">+</button>
         <button class="zoom-btn zoom-reset" onclick={() => scene?.resetZoom()} aria-label="Reset zoom" title="Reset zoom">⊙</button>
@@ -297,6 +305,38 @@
     display: block;
     width: 100% !important;
     height: 100% !important;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    background: #050a10;
+    z-index: 3;
+  }
+
+  .loading-label {
+    font-family: monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: #2e5870;
+  }
+
+  .loading-dots {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #1e3c50;
+    animation: blink 1.4s step-start infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    33%       { opacity: 0.2; }
+    66%       { opacity: 0.6; }
   }
 
   .zoom-controls {
