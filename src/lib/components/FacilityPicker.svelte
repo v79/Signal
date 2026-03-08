@@ -28,10 +28,11 @@
   }
 
   // Facilities whose tile type matches — split into unlocked and locked.
+  // HQ is excluded: it is placed automatically at game start, never built by the player.
   const tileEligible = $derived(
     [...facilityDefs.values()].filter(def =>
-      def.allowedTileTypes.length === 0 ||
-      def.allowedTileTypes.includes(tile.type),
+      def.id !== 'hq' &&
+      (def.allowedTileTypes.length === 0 || def.allowedTileTypes.includes(tile.type)),
     ),
   );
 

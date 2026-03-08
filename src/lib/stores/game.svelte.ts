@@ -265,6 +265,9 @@ export const gameStore = {
     const def = FACILITY_DEFS.get(defId);
     if (!def) return;
 
+    // HQ is placed at game start only — never buildable by the player.
+    if (def.id === 'hq') return;
+
     // Tech gate: refuse if the required technology has not been discovered.
     if (def.requiredTechId != null) {
       const techDiscovered = _state.player.techs.some(
