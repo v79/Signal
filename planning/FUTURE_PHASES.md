@@ -6,7 +6,6 @@ This is a list of future requirements for the game but they are not to be implem
   - clean up the Next turn interface, it doesn't need to show the turn number as that's shown elsewhere.
   - Rounding of resource numbers
   - Materials should be brown, not blue
-  - Ongoing actions panel
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
   - Hover tooltips for most UI elements
   - We may need collapsable panels as the interface gets busier and busier
@@ -30,9 +29,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Show building icons on hex map
   - Generic profile pictures for board members
   - Flavour text for board members
-- Deploy to production
-  - Write IAC using OpenTofu to create an S3 bucket, cloudfront distribution
-  - Build and deploy web app to the S3 bucket
 - Interface for narrative story elements
   - Opening sequence to set the scene
   - Era transitions
