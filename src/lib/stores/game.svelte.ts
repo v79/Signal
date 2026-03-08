@@ -125,6 +125,12 @@ let _selectedCoordKey    = $state<string | null>(null);
 let _selectedSpaceNodeId = $state<string | null>(null);
 let _selectedBeltNodeId  = $state<string | null>(null);
 
+function resetSelections(): void {
+  _selectedCoordKey    = null;
+  _selectedSpaceNodeId = null;
+  _selectedBeltNodeId  = null;
+}
+
 export const gameStore = {
   get state(): GameState | null { return _state; },
 
@@ -187,9 +193,7 @@ export const gameStore = {
 
     clearSave();
     _state = next;
-    _selectedCoordKey    = null;
-    _selectedSpaceNodeId = null;
-    _selectedBeltNodeId  = null;
+    resetSelections();
     goto('/');
   },
 
@@ -404,9 +408,7 @@ export const gameStore = {
   async importSaveFile(file: File): Promise<void> {
     const loaded = await importSave(file);
     _state = loaded;
-    _selectedCoordKey    = null;
-    _selectedSpaceNodeId = null;
-    _selectedBeltNodeId  = null;
+    resetSelections();
   },
 
   /** Recruit a board member. Deducts the recruit cost and adds the member to their role slot. */

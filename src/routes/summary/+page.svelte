@@ -1,10 +1,15 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { gameStore } from '$lib/stores/game.svelte';
   import type { VictoryCondition, LossCondition } from '../../engine/types';
 
-  // Summary is only reachable after a game ends, so state is always non-null here.
-  const outcome = $derived(gameStore.state!.outcome);
-  const state   = $derived(gameStore.state!);
+  onMount(() => {
+    if (!gameStore.state) goto('/newgame');
+  });
+
+  const outcome = $derived(gameStore.state?.outcome);
+  const state   = $derived(gameStore.state);
 
   // ---------------------------------------------------------------------------
   // Condition copy
@@ -72,6 +77,7 @@
   };
 </script>
 
+{#if state}
 <div class="summary-layout">
   <div class="summary-card">
     <!-- Outcome banner -->
@@ -132,6 +138,7 @@
     </div>
   </div>
 </div>
+{/if}
 
 <style>
   :global(body) {

@@ -28,6 +28,11 @@
 
   let pushFactor = $state<PushFactor>('climateChange');
 
+  const PUSH_LABELS: Record<PushFactor, string> = {
+    climateChange:       'CLIMATE CHANGE',
+    geopoliticalTension: 'GEOPOLITICAL TENSION',
+  };
+
   const PUSH_DESCRIPTIONS: Record<PushFactor, string> = {
     climateChange:        'Rising temperatures and ecological instability drive global urgency.',
     geopoliticalTension:  'Superpower rivalry and resource competition dominate world affairs.',
@@ -36,6 +41,12 @@
   // ---------------------------------------------------------------------------
   // Resource bar helper
   // ---------------------------------------------------------------------------
+
+  const RESOURCE_BAR_DEFS: Array<{ label: string; key: 'funding' | 'materials' | 'politicalWill'; cls: string }> = [
+    { label: 'FND', key: 'funding',       cls: 'funding'   },
+    { label: 'MAT', key: 'materials',     cls: 'materials' },
+    { label: 'PWL', key: 'politicalWill', cls: 'will'      },
+  ];
 
   function barWidth(value: number, max = 100): string {
     return `${Math.min(100, (value / max) * 100)}%`;
@@ -99,24 +110,14 @@
             <div class="victory-bias">→ {def.victoryBias.replace(/([A-Z])/g, ' $1').trim().toUpperCase()}</div>
 
             <div class="resource-bars">
-              <div class="bar-row">
-                <span class="bar-label">FND</span>
-                <div class="bar-track">
-                  <div class="bar-fill funding" style="width: {barWidth(def.startingResources.funding)}"></div>
+              {#each RESOURCE_BAR_DEFS as bar}
+                <div class="bar-row">
+                  <span class="bar-label">{bar.label}</span>
+                  <div class="bar-track">
+                    <div class="bar-fill {bar.cls}" style="width: {barWidth(def.startingResources[bar.key])}"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="bar-row">
-                <span class="bar-label">MAT</span>
-                <div class="bar-track">
-                  <div class="bar-fill materials" style="width: {barWidth(def.startingResources.materials)}"></div>
-                </div>
-              </div>
-              <div class="bar-row">
-                <span class="bar-label">PWL</span>
-                <div class="bar-track">
-                  <div class="bar-fill will" style="width: {barWidth(def.startingResources.politicalWill)}"></div>
-                </div>
-              </div>
+              {/each}
             </div>
           </button>
         {/each}
@@ -133,7 +134,7 @@
             class:active={pushFactor === pf}
             onclick={() => { pushFactor = pf; }}
           >
-            <div class="push-label">{pf === 'climateChange' ? 'CLIMATE CHANGE' : 'GEOPOLITICAL TENSION'}</div>
+            <div class="push-label">{PUSH_LABELS[pf]}</div>
             <div class="push-desc">{PUSH_DESCRIPTIONS[pf]}</div>
           </button>
         {/each}
