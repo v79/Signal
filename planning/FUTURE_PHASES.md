@@ -29,6 +29,12 @@ This is a list of future requirements for the game but they are not to be implem
   - Show building icons on hex map
   - Generic profile pictures for board members
   - Flavour text for board members
+- Tech tree dependencies
+  - Most technologies will have prerequisite technologies that must be researched first
+  - Draw connecting lines between discovered technologies and progressing technologies
+  - Clicking on a discovered or in progress technology in the tech tree should show more information
+  - When a technology is researched, a narrative popup should be shown on the main game screen
+  - Unlocked technologies may provide a passive resource gain (but may not, and may be restricted to the current era)
 - Interface for narrative story elements
   - Opening sequence to set the scene
   - Era transitions
