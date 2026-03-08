@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository currently contains only a Game Design Document (`SignalGDD.md`). No code exists yet. This file captures the intended architecture and tech stack to guide initial implementation.
 
+Always create a new branch before implementing any feature or significant change.
+
 ## Tech Stack (from GDD §15)
 
 - **Game rendering:** TypeScript + Phaser.js (tile map, scene management, assets)
