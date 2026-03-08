@@ -75,12 +75,15 @@
     highland: 'Highland', forested: 'Forested', arid: 'Arid', agricultural: 'Agricultural',
   };
 
-  /** The facility def currently on this tile, if any. */
+  /** The facility def currently on this tile, if any (and not being demolished). */
   const occupyingDef = $derived(
-    tile.facilityId != null
+    tile.facilityId != null && tile.pendingActionId == null
       ? [...facilityDefs.values()].find(d => tile.facilityId?.startsWith(d.id)) ?? null
       : null,
   );
+
+  /** True when this tile has an ongoing construction or demolition in progress. */
+  const isPending = $derived(tile.pendingActionId != null);
 </script>
 
 <div class="picker-backdrop" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="none" tabindex="-1">
@@ -98,7 +101,16 @@
       <button class="close-btn" onclick={onClose}>✕</button>
     </div>
 
-    {#if occupyingDef}
+    {#if isPending}
+      <div class="pending-panel">
+        {#if tile.facilityId}
+          <span class="pending-label">Demolition in progress…</span>
+        {:else}
+          <span class="pending-label">Construction in progress…</span>
+        {/if}
+        <span class="pending-hint">End your turn to advance work.</span>
+      </div>
+    {:else if occupyingDef}
       <!-- Occupied tile: show facility info and optional demolish -->
       <div class="occupied-panel">
         <div class="occupied-header">
@@ -394,6 +406,25 @@
   .no-demolish {
     font-size: 0.6rem;
     color: #3a4858;
+    font-style: italic;
+  }
+
+  .pending-panel {
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .pending-label {
+    color: #c8a040;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+  }
+
+  .pending-hint {
+    color: #4a5868;
+    font-size: 0.62rem;
     font-style: italic;
   }
 </style>

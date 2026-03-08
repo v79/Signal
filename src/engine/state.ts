@@ -69,6 +69,7 @@ function createPlayerState(config: GameConfig): PlayerState {
     board: {},
     newsFeed: [],
     activeEventRestrictions: [],
+    constructionQueue: [],
   };
 }
 

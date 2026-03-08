@@ -30,6 +30,7 @@ const basePlayer: PlayerState = {
   board: {},
   newsFeed: [],
   activeEventRestrictions: [],
+  constructionQueue: [],
 };
 
 const fundingCrisisDef: EventDef = {

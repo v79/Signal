@@ -1,5 +1,5 @@
 import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, BoardMemberDef, NewsItem, Resources, FieldPoints } from './types';
-import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion, computeHqBonus } from './facilities';
+import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion, computeHqBonus, tickConstructionQueue } from './facilities';
 import { tickWill, computeBankDecay, applyFieldDeltas, applyResourceDeltas, DEFAULT_WILL_CONFIG } from './resources';
 import { checkResearchProgress } from './research';
 import { drawCards } from './cards';
@@ -164,19 +164,24 @@ export function executeWorldPhase(
 ): GameState {
   const { player, map } = state;
 
+  // 0. Construction queue tick — completes builds/demolitions before output is computed.
+  const nextTurn = state.turn + 1;
+  const { updatedQueue, updatedFacilities: facilitiesAfterQueue, updatedTiles: tilesAfterQueue } =
+    tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn);
+
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
-    player.facilities,
+    facilitiesAfterQueue,
     facilityDefs,
-    map.earthTiles,
+    tilesAfterQueue,
   );
 
   // 2. Facility output (fields + resources, net of upkeep)
   const { totalFields, totalResources } = computeFacilityOutput(
-    player.facilities,
+    facilitiesAfterQueue,
     facilityDefs,
     adjacencyEffects,
-    map.earthTiles,
+    tilesAfterQueue,
   );
 
   // 2b. HQ bonus — applies if the player has an HQ facility on the map.
@@ -206,7 +211,6 @@ export function executeWorldPhase(
   const newResources = applyResourceDeltas(player.resources, boostedResources, bankDecay, projectUpkeep);
 
   // 6. Research progress check (uses updated fields)
-  const nextTurn = state.turn + 1;
   const { updatedTechs, newDiscoveries, newRumours, newProgressTechs } = checkResearchProgress(
     player.techs,
     techDefs,
@@ -255,8 +259,8 @@ export function executeWorldPhase(
   const willConfig = DEFAULT_WILL_CONFIG[player.willProfile];
   const newWill = tickWill(player.will, willConfig);
 
-  // 10. Mine depletion
-  const newFacilities = tickMineDepletion(player.facilities, facilityDefs);
+  // 10. Mine depletion (applied to post-queue facilities)
+  const newFacilities = tickMineDepletion(facilitiesAfterQueue, facilityDefs);
 
   // 11. Climate pressure
   const newClimatePressure = Math.min(100, state.climatePressure + CLIMATE_PRESSURE_PER_TURN);
@@ -288,6 +292,7 @@ export function executeWorldPhase(
     earthWelfareScore: newEarthWelfare,
     blocs: updatedBlocs,
     signal: newSignal,
+    map: { ...map, earthTiles: tilesAfterQueue },
     player: {
       ...player,
       resources: newResources,
@@ -297,6 +302,7 @@ export function executeWorldPhase(
       techs: updatedTechs,
       cards: updatedCards,
       board: updatedBoard,
+      constructionQueue: updatedQueue,
       newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews, ...boardNews, ...signalNews],
     },
   };

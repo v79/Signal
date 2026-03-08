@@ -10,6 +10,7 @@ import type {
   BeltNode,
   BeltEdge,
   PushFactor,
+  OngoingAction,
 } from '../../engine/types';
 import { BLOC_MAPS } from '../../data/blocMaps';
 import { initialiseBlocStates } from '../../engine/blocs';
@@ -276,33 +277,59 @@ export const gameStore = {
       if (!techDiscovered) return;
     }
 
-    const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
-    const newFacility: FacilityInstance = {
-      id: facilityId,
-      defId,
-      locationKey: coordKey,
-      condition: 1.0,
-      builtTurn: _state.turn,
+    // Deduct build cost up-front regardless of whether construction is instant.
+    const newResources = {
+      funding:       Math.max(0, _state.player.resources.funding       - (def.buildCost.funding       ?? 0)),
+      materials:     Math.max(0, _state.player.resources.materials     - (def.buildCost.materials     ?? 0)),
+      politicalWill: Math.max(0, _state.player.resources.politicalWill - (def.buildCost.politicalWill ?? 0)),
     };
 
-    _state = {
-      ..._state,
-      player: {
-        ..._state.player,
-        resources: {
-          funding:       Math.max(0, _state.player.resources.funding       - (def.buildCost.funding       ?? 0)),
-          materials:     Math.max(0, _state.player.resources.materials     - (def.buildCost.materials     ?? 0)),
-          politicalWill: Math.max(0, _state.player.resources.politicalWill - (def.buildCost.politicalWill ?? 0)),
+    if (def.buildTime === 0) {
+      // Instant build
+      const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
+      const newFacility: FacilityInstance = {
+        id: facilityId, defId, locationKey: coordKey, condition: 1.0, builtTurn: _state.turn,
+      };
+      _state = {
+        ..._state,
+        player: {
+          ..._state.player,
+          resources: newResources,
+          facilities: [..._state.player.facilities, newFacility],
         },
-        facilities: [..._state.player.facilities, newFacility],
-      },
-      map: {
-        ..._state.map,
-        earthTiles: _state.map.earthTiles.map(t =>
-          `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId } : t,
-        ),
-      },
-    };
+        map: {
+          ..._state.map,
+          earthTiles: _state.map.earthTiles.map(t =>
+            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId } : t,
+          ),
+        },
+      };
+    } else {
+      // Multi-turn build: enqueue action, mark tile as pending.
+      const actionId = `construct-${defId}-${coordKey}-t${_state.turn}`;
+      const action: OngoingAction = {
+        id: actionId,
+        type: 'construct',
+        facilityDefId: defId,
+        coordKey,
+        turnsRemaining: def.buildTime,
+        totalTurns: def.buildTime,
+      };
+      _state = {
+        ..._state,
+        player: {
+          ..._state.player,
+          resources: newResources,
+          constructionQueue: [..._state.player.constructionQueue, action],
+        },
+        map: {
+          ..._state.map,
+          earthTiles: _state.map.earthTiles.map(t =>
+            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
+          ),
+        },
+      };
+    }
     _selectedCoordKey = null;
   },
 
@@ -315,20 +342,46 @@ export const gameStore = {
     const def = FACILITY_DEFS.get(facility.defId);
     if (!def?.canDelete) return;
 
-    // Instant demolition (multi-turn queue deferred to later phase)
-    _state = {
-      ..._state,
-      player: {
-        ..._state.player,
-        facilities: _state.player.facilities.filter(f => f.id !== facility.id),
-      },
-      map: {
-        ..._state.map,
-        earthTiles: _state.map.earthTiles.map(t =>
-          `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId: null } : t,
-        ),
-      },
-    };
+    if (def.deleteTime === 0) {
+      // Instant demolition
+      _state = {
+        ..._state,
+        player: {
+          ..._state.player,
+          facilities: _state.player.facilities.filter(f => f.id !== facility.id),
+        },
+        map: {
+          ..._state.map,
+          earthTiles: _state.map.earthTiles.map(t =>
+            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId: null } : t,
+          ),
+        },
+      };
+    } else {
+      // Multi-turn demolition: enqueue, mark tile as pending.
+      const actionId = `demolish-${facility.defId}-${coordKey}-t${_state.turn}`;
+      const action: OngoingAction = {
+        id: actionId,
+        type: 'demolish',
+        facilityDefId: facility.defId,
+        coordKey,
+        turnsRemaining: def.deleteTime,
+        totalTurns: def.deleteTime,
+      };
+      _state = {
+        ..._state,
+        player: {
+          ..._state.player,
+          constructionQueue: [..._state.player.constructionQueue, action],
+        },
+        map: {
+          ..._state.map,
+          earthTiles: _state.map.earthTiles.map(t =>
+            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
+          ),
+        },
+      };
+    }
     _selectedCoordKey = null;
   },
 

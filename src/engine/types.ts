@@ -622,6 +622,24 @@ export interface GameOutcome {
 }
 
 // ---------------------------------------------------------------------------
+// Construction queue
+// ---------------------------------------------------------------------------
+
+export type OngoingActionType = 'construct' | 'demolish';
+
+export interface OngoingAction {
+  id: string;
+  type: OngoingActionType;
+  /** DefId of the facility being constructed or demolished. */
+  facilityDefId: string;
+  /** Axial coord key of the target Earth tile. */
+  coordKey: string;
+  turnsRemaining: number;
+  /** Original duration, used to compute progress bar fraction. */
+  totalTurns: number;
+}
+
+// ---------------------------------------------------------------------------
 // Root game state
 // ---------------------------------------------------------------------------
 
@@ -641,6 +659,8 @@ export interface PlayerState {
   /** News items queued for display in the ticker. */
   newsFeed: NewsItem[];
   activeEventRestrictions: StandingActionRestriction[];
+  /** Active multi-turn construction and demolition tasks. */
+  constructionQueue: OngoingAction[];
 }
 
 export interface NewsItem {

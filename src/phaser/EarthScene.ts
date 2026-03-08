@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { MapTile, FacilityInstance, TileType, TileDestroyedStatus } from '../engine/types';
+import type { MapTile, FacilityInstance, TileType, TileDestroyedStatus, OngoingAction } from '../engine/types';
 
 // ---------------------------------------------------------------------------
 // Tile visual constants
@@ -60,6 +60,7 @@ const FACILITY_COLORS: Record<string, number> = {
 export interface EarthSceneCallbacks {
   getTiles:      () => MapTile[];
   getFacilities: () => FacilityInstance[];
+  getQueue:      () => OngoingAction[];
   getSelected:   () => string | null;
   getClimate:    () => number;
   onTileClick:   (coordKey: string) => void;
@@ -186,20 +187,23 @@ export class EarthScene extends Phaser.Scene {
 
     const tiles      = this.cb.getTiles();
     const facilities = this.cb.getFacilities();
+    const queue      = this.cb.getQueue();
     const selected   = this.cb.getSelected();
     const climate    = this.cb.getClimate(); // 0–100
 
     const facilityMap = new Map(facilities.map(f => [f.locationKey, f]));
+    const queueMap    = new Map(queue.map(a => [a.coordKey, a]));
 
     for (const tile of tiles) {
       const key = `${tile.coord.q},${tile.coord.r}`;
       const { x, y } = this.hexCenter(tile.coord.q, tile.coord.r);
       const verts = this.hexVertices(x, y);
-      const facility = facilityMap.get(key);
+      const facility  = facilityMap.get(key) ?? null;
+      const action    = queueMap.get(key) ?? null;
       const isHovered  = key === this.hoveredKey;
       const isSelected = key === selected;
 
-      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility ?? null, climate);
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate);
     }
   }
 
@@ -211,6 +215,7 @@ export class EarthScene extends Phaser.Scene {
     hovered: boolean,
     selected: boolean,
     facility: FacilityInstance | null,
+    action: OngoingAction | null,
     climate: number,
   ): void {
     const baseFill   = TILE_FILL[tile.type]   ?? 0x1e2d40;
@@ -263,6 +268,41 @@ export class EarthScene extends Phaser.Scene {
       if (facility.condition < 1 && facility.defId !== 'hq') {
         this.overlayGfx.lineStyle(1.5, fColor, 0.4);
         this.overlayGfx.strokeCircle(cx, cy, r + 3);
+      }
+    }
+
+    // Construction / demolition overlay
+    if (action) {
+      const progress = (action.totalTurns - action.turnsRemaining) / action.totalTurns;
+      const arcEnd   = Phaser.Math.DegToRad(-90 + 360 * progress);
+
+      if (action.type === 'construct') {
+        // Scaffold: dashed-look ring in facility's colour, pulsed opacity
+        const fColor   = FACILITY_COLORS[action.facilityDefId] ?? 0xaaaaaa;
+        const pulse    = 0.45 + 0.3 * Math.sin(this.time.now * 0.004);
+        this.overlayGfx.lineStyle(2, fColor, pulse);
+        this.overlayGfx.strokeCircle(cx, cy, HEX_SIZE * 0.28);
+        // Progress arc (fills clockwise from top)
+        this.overlayGfx.lineStyle(2.5, fColor, 0.85);
+        this.overlayGfx.beginPath();
+        this.overlayGfx.arc(cx, cy, HEX_SIZE * 0.42, Phaser.Math.DegToRad(-90), arcEnd, false);
+        this.overlayGfx.strokePath();
+      } else {
+        // Demolition: red cross-hatch over the facility indicator
+        const r = HEX_SIZE * 0.22;
+        this.overlayGfx.fillStyle(0x600000, 0.5);
+        this.overlayGfx.fillCircle(cx, cy, r);
+        const arm = r * 0.75;
+        this.overlayGfx.lineStyle(2, 0xff4040, 0.9);
+        this.overlayGfx.lineBetween(cx - arm, cy - arm, cx + arm, cy + arm);
+        this.overlayGfx.lineBetween(cx + arm, cy - arm, cx - arm, cy + arm);
+        // Progress arc (drains clockwise from top)
+        const remaining = 1 - progress;
+        const demArcEnd = Phaser.Math.DegToRad(-90 + 360 * remaining);
+        this.overlayGfx.lineStyle(2, 0xff6060, 0.7);
+        this.overlayGfx.beginPath();
+        this.overlayGfx.arc(cx, cy, HEX_SIZE * 0.42, Phaser.Math.DegToRad(-90), demArcEnd, false);
+        this.overlayGfx.strokePath();
       }
     }
 

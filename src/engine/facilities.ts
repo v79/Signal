@@ -6,6 +6,7 @@ import type {
   FieldPoints,
   Resources,
   WillProfile,
+  OngoingAction,
 } from './types';
 import { ZERO_FIELDS, ZERO_RESOURCES } from './state';
 
@@ -340,6 +341,78 @@ export function getTileSummary(
     destroyedStatus: tile.destroyedStatus,
     canDelete: def.canDelete,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Construction queue tick
+// ---------------------------------------------------------------------------
+
+export interface ConstructionTickResult {
+  updatedQueue: OngoingAction[];
+  updatedFacilities: FacilityInstance[];
+  updatedTiles: MapTile[];
+  completedActions: OngoingAction[];
+}
+
+/**
+ * Advance the construction queue by one turn.
+ * For each action whose turnsRemaining reaches 0:
+ *   - 'construct': creates a FacilityInstance and sets tile.facilityId.
+ *   - 'demolish':  removes the FacilityInstance and clears tile.facilityId.
+ * In both cases tile.pendingActionId is cleared.
+ * Returns new arrays — does not mutate inputs.
+ */
+export function tickConstructionQueue(
+  queue: OngoingAction[],
+  facilities: FacilityInstance[],
+  tiles: MapTile[],
+  completedTurn: number,
+): ConstructionTickResult {
+  const updatedQueue: OngoingAction[] = [];
+  let updatedFacilities = [...facilities];
+  let updatedTiles = [...tiles];
+  const completedActions: OngoingAction[] = [];
+
+  for (const action of queue) {
+    const next = { ...action, turnsRemaining: action.turnsRemaining - 1 };
+
+    if (next.turnsRemaining > 0) {
+      updatedQueue.push(next);
+      continue;
+    }
+
+    // Action complete
+    completedActions.push(next);
+
+    if (action.type === 'construct') {
+      const facilityId = `${action.facilityDefId}-${action.coordKey}-t${completedTurn}`;
+      const newInstance: FacilityInstance = {
+        id: facilityId,
+        defId: action.facilityDefId,
+        locationKey: action.coordKey,
+        condition: 1.0,
+        builtTurn: completedTurn,
+      };
+      updatedFacilities = [...updatedFacilities, newInstance];
+      updatedTiles = updatedTiles.map(t =>
+        coordKey(t.coord) === action.coordKey
+          ? { ...t, facilityId, pendingActionId: null }
+          : t,
+      );
+    } else {
+      // demolish
+      updatedFacilities = updatedFacilities.filter(
+        f => !(f.defId === action.facilityDefId && f.locationKey === action.coordKey),
+      );
+      updatedTiles = updatedTiles.map(t =>
+        coordKey(t.coord) === action.coordKey
+          ? { ...t, facilityId: null, pendingActionId: null }
+          : t,
+      );
+    }
+  }
+
+  return { updatedQueue, updatedFacilities, updatedTiles, completedActions };
 }
 
 // ---------------------------------------------------------------------------

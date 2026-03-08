@@ -112,6 +112,7 @@
       earth.setCallbacks({
         getTiles:      () => gameStore.state?.map.earthTiles ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
+        getQueue:      () => gameStore.state?.player.constructionQueue ?? [],
         getSelected:   () => gameStore.selectedCoordKey,
         getClimate:    () => gameStore.state?.climatePressure ?? 0,
         onTileClick:   (key: string) => {
