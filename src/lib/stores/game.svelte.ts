@@ -25,11 +25,13 @@ import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../
 import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
 import type { SignalResponseOption } from '../../engine/types';
 import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
+import { initialiseTechs } from '../../engine/research';
 import { CARD_DEFS } from '../../data/cards';
 import { EVENT_DEFS } from '../../data/events';
 import { FACILITY_DEFS } from '../../data/facilities';
 import { BLOC_DEFS } from '../../data/blocs';
 import { BOARD_DEFS } from '../../data/board';
+import { TECH_DEFS } from '../../data/technologies';
 import { STANDING_ACTIONS } from '../../data/standingActions';
 
 // ---------------------------------------------------------------------------
@@ -156,7 +158,7 @@ export const gameStore = {
       seed,
       playerBlocDefId,
       pushFactor,
-      startYear: 2025,
+      startYear: 1970,
       willProfile: bloc.willProfile,
       startingWill: Math.round(bloc.willCeiling * 0.7),
       startingResources: { ...bloc.startingResources },
@@ -171,11 +173,36 @@ export const gameStore = {
       { id: 'coalitionBuilding-1',    defId: 'coalitionBuilding',    zone: 'deck', bankedSinceTurn: null },
     ];
 
+    // Tech recipes are generated with a dedicated RNG slice so they are
+    // independent of the draw-phase RNG. Order in canonical PRNG sequence:
+    //   1. createRng(`${seed}-techs`)  → tech recipe generation (game start only)
+    //   2. createRng(`${seed}-t1`)     → opening draw phase
+    const techRng = createRng(`${seed}-techs`);
+    const techs = initialiseTechs([...TECH_DEFS.values()], techRng);
+
+    // Narrative news items seeded at game start:
+    //   Turn 1 (1970): programme initiated.
+    //   Turn 2 (1971): the Signal is first detected — classified.
+    const openingNews: GameState['player']['newsFeed'] = [
+      {
+        id: 'signal-origin-0',
+        turn: 1,
+        text: '1970 — Programme initiated. Our remit: achieve strategic parity in space operations and pursue the source of the anomalous transmission.',
+      },
+      {
+        id: 'signal-origin-1',
+        turn: 2,
+        text: '1971 — CLASSIFIED. Radio telescope array has recorded a structured 21 cm transmission of apparent non-terrestrial origin. Source: beyond the heliopause. Repetition interval: 73.6 hours. Assessment: not natural. Distribution: programme directors only.',
+      },
+    ];
+
     let next: GameState = {
       ...base,
       player: {
         ...base.player,
         cards: starterCards,
+        techs,
+        newsFeed: openingNews,
       },
       blocs: initialiseBlocStates([...BLOC_DEFS.values()]),
       map: {
@@ -188,8 +215,8 @@ export const gameStore = {
     };
 
     // Deal the opening hand using the seeded RNG.
-    const rng = createRng(`${seed}-t1`);
-    next = executeDrawPhase(next, rng);
+    const drawRng = createRng(`${seed}-t1`);
+    next = executeDrawPhase(next, drawRng);
 
     clearSave();
     _state = next;
@@ -373,7 +400,7 @@ export const gameStore = {
       // Each turn gets its own deterministic RNG slice derived from seed + turn number.
       const rng = createRng(`${_state.seed}-t${_state.turn}`);
       let next = endBankPhase(_state);
-      next = executeWorldPhase(next, FACILITY_DEFS, new Map(), BLOC_DEFS, BOARD_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS);
       // If the game ended, skip the remaining automated phases and navigate.
       if (next.outcome) {
         _state = next;
