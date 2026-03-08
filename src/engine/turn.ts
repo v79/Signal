@@ -1,5 +1,5 @@
-import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, BoardMemberDef, NewsItem } from './types';
-import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion } from './facilities';
+import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, BoardMemberDef, NewsItem, Resources, FieldPoints } from './types';
+import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion, computeHqBonus } from './facilities';
 import { tickWill, computeBankDecay, applyFieldDeltas, applyResourceDeltas, DEFAULT_WILL_CONFIG } from './resources';
 import { checkResearchProgress } from './research';
 import { drawCards } from './cards';
@@ -178,6 +178,19 @@ export function executeWorldPhase(
     adjacencyEffects,
     map.earthTiles,
   );
+
+  // 2b. HQ bonus — applies if the player has an HQ facility on the map.
+  //     Output varies by will profile (democratic vs authoritarian).
+  const hasHq = player.facilities.some(f => f.defId === 'hq');
+  if (hasHq) {
+    const hqBonus = computeHqBonus(player.willProfile);
+    for (const k of Object.keys(hqBonus.resources) as (keyof Resources)[]) {
+      totalResources[k] = (totalResources[k] ?? 0) + (hqBonus.resources[k] ?? 0);
+    }
+    for (const k of Object.keys(hqBonus.fields) as (keyof FieldPoints)[]) {
+      totalFields[k] = (totalFields[k] ?? 0) + (hqBonus.fields[k] ?? 0);
+    }
+  }
 
   // 3. Board multipliers applied to facility output
   const boardMod = computeBoardModifiers(player.board, boardDefs);

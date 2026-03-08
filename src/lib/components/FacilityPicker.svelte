@@ -8,6 +8,7 @@
     discoveredTechIds,
     techNames,
     onBuild,
+    onDemolish,
     onClose,
   }: {
     tile: MapTile;
@@ -18,6 +19,7 @@
     /** Maps tech def ID → display name for locked-facility labels. */
     techNames: ReadonlyMap<string, string>;
     onBuild: (defId: string) => void;
+    onDemolish: () => void;
     onClose: () => void;
   } = $props();
 
@@ -71,6 +73,13 @@
     urban: 'Urban', industrial: 'Industrial', coastal: 'Coastal',
     highland: 'Highland', forested: 'Forested', arid: 'Arid', agricultural: 'Agricultural',
   };
+
+  /** The facility def currently on this tile, if any. */
+  const occupyingDef = $derived(
+    tile.facilityId != null
+      ? [...facilityDefs.values()].find(d => tile.facilityId?.startsWith(d.id)) ?? null
+      : null,
+  );
 </script>
 
 <div class="picker-backdrop" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="none" tabindex="-1">
@@ -88,7 +97,31 @@
       <button class="close-btn" onclick={onClose}>✕</button>
     </div>
 
-    {#if eligible.length === 0 && locked.length === 0}
+    {#if occupyingDef}
+      <!-- Occupied tile: show facility info and optional demolish -->
+      <div class="occupied-panel">
+        <div class="occupied-header">
+          <span class="occupied-name">{occupyingDef.name}</span>
+          <span class="occupied-badge">BUILT</span>
+        </div>
+        <span class="facility-desc">{occupyingDef.description}</span>
+        <div class="facility-outputs" style="margin-top: 0.4rem;">
+          {#each formatOutput(occupyingDef) as line}
+            <span class="output-line">{line}</span>
+          {/each}
+        </div>
+        <div class="upkeep">Upkeep: {formatCost(occupyingDef.upkeepCost) || 'Free'}</div>
+        <div class="demolish-row">
+          {#if occupyingDef.canDelete}
+            <button class="demolish-btn" onclick={onDemolish}>
+              DEMOLISH
+            </button>
+          {:else}
+            <span class="no-demolish">Cannot be demolished</span>
+          {/if}
+        </div>
+      </div>
+    {:else if eligible.length === 0 && locked.length === 0}
       <div class="no-facilities">No facilities available for this tile type.</div>
     {:else}
       <div class="facility-list">
@@ -113,10 +146,10 @@
               </div>
               <button
                 class="build-btn"
-                disabled={!affordable || tile.facilityId != null}
+                disabled={!affordable}
                 onclick={() => onBuild(def.id)}
               >
-                {tile.facilityId != null ? 'OCCUPIED' : affordable ? 'BUILD' : 'AFFORD?'}
+                {affordable ? 'BUILD' : 'AFFORD?'}
               </button>
             </div>
           </div>
@@ -302,5 +335,56 @@
     text-align: right;
     line-height: 1.5;
     letter-spacing: 0.05em;
+  }
+
+  .occupied-panel {
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .occupied-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  .occupied-name {
+    color: #c8d0d8;
+    font-size: 0.82rem;
+  }
+
+  .occupied-badge {
+    font-size: 0.58rem;
+    color: #4a9b7a;
+    border: 1px solid #1a4030;
+    padding: 0 0.3rem;
+    letter-spacing: 0.1em;
+  }
+
+  .demolish-row {
+    margin-top: 0.6rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .demolish-btn {
+    font-family: inherit;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid #602020;
+    background: transparent;
+    color: #c04040;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .demolish-btn:hover { background: #200808; }
+
+  .no-demolish {
+    font-size: 0.6rem;
+    color: #3a4858;
+    font-style: italic;
   }
 </style>

@@ -40,11 +40,16 @@ const DESTROYED_FILL: Record<TileDestroyedStatus, number> = {
 
 /** Facility indicator colours by defId. */
 const FACILITY_COLORS: Record<string, number> = {
+  hq:                0xd4a820,
   researchLab:       0x6aaad8,
-  mine:              0xc8a040,
+  mine:              0xb06030,
   solarFarm:         0xd8c840,
+  offshoreWindFarm:  0x40c8d8,
   publicUniversity:  0xa070d8,
   engineeringWorks:  0xd87840,
+  bioResearchCentre: 0x50c878,
+  deepSpaceArray:    0x4060d8,
+  computingHub:      0x20d0a0,
 };
 
 // ---------------------------------------------------------------------------
@@ -58,6 +63,7 @@ export interface EarthSceneCallbacks {
   getSelected:   () => string | null;
   getClimate:    () => number;
   onTileClick:   (coordKey: string) => void;
+  onTileHover:   (coordKey: string | null) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -94,6 +100,7 @@ export class EarthScene extends Phaser.Scene {
       const key = this.hitTest(ptr.x, ptr.y);
       if (key !== this.hoveredKey) {
         this.hoveredKey = key;
+        if (this.cb) this.cb.onTileHover(key);
       }
     });
 
@@ -242,8 +249,18 @@ export class EarthScene extends Phaser.Scene {
       const r = HEX_SIZE * 0.22;
       this.overlayGfx.fillStyle(fColor, 0.9);
       this.overlayGfx.fillCircle(cx, cy, r);
+      // HQ: draw a distinctive outer ring to mark it as permanent
+      if (facility.defId === 'hq') {
+        this.overlayGfx.lineStyle(2, 0xffd060, 0.7);
+        this.overlayGfx.strokeCircle(cx, cy, r + 4);
+        // Small cross mark in the centre
+        const arm = r * 0.55;
+        this.overlayGfx.lineStyle(1.5, 0xfff0c0, 0.85);
+        this.overlayGfx.lineBetween(cx - arm, cy, cx + arm, cy);
+        this.overlayGfx.lineBetween(cx, cy - arm, cx, cy + arm);
+      }
       // Condition ring (dim if degraded)
-      if (facility.condition < 1) {
+      if (facility.condition < 1 && facility.defId !== 'hq') {
         this.overlayGfx.lineStyle(1.5, fColor, 0.4);
         this.overlayGfx.strokeCircle(cx, cy, r + 3);
       }

@@ -11,6 +11,7 @@ import type {
   BeltEdge,
   PushFactor,
 } from '../../engine/types';
+import { BLOC_MAPS } from '../../data/blocMaps';
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
 import { createRng } from '../../engine/rng';
@@ -44,22 +45,37 @@ export { STANDING_ACTIONS as STUB_STANDING_ACTIONS } from '../../data/standingAc
 export { BOARD_DEFS as BOARD_DEFS } from '../../data/board';
 
 // ---------------------------------------------------------------------------
-// Map tile generation (deterministic, position-based)
+// Map tile generation — bloc-specific layouts from blocMaps.ts
 // ---------------------------------------------------------------------------
 
-const TILE_TYPES: TileType[] = ['urban', 'industrial', 'coastal', 'highland', 'forested', 'arid', 'agricultural'];
-const EDGE_TYPES: TileType[] = ['coastal', 'coastal', 'forested', 'arid', 'highland', 'forested', 'coastal'];
-
-function tileTypeForCoord(q: number, r: number): TileType {
-  if (q === 0 && r === 0) return 'urban';
-  const dist = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
-  // Simple integer hash of (q, r) — no RNG needed, fully deterministic
-  const h = ((q * 374761393 + r * 1073741827) ^ ((q * r) * 31337)) >>> 0;
-  if (dist >= 3) return EDGE_TYPES[h % EDGE_TYPES.length];
-  return TILE_TYPES[h % TILE_TYPES.length];
+export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
+  const layout = BLOC_MAPS[blocDefId];
+  if (!layout) {
+    // Fallback: single urban tile at origin (should not happen in practice)
+    return [{ coord: { q: 0, r: 0 }, type: 'urban', destroyedStatus: null, productivity: 1.0, facilityId: null, pendingActionId: null }];
+  }
+  return layout.map(entry => ({
+    coord: { q: entry.q, r: entry.r },
+    type: entry.type,
+    destroyedStatus: null,
+    productivity: 1.0,
+    facilityId: null,
+    pendingActionId: null,
+  }));
 }
 
+// Keep the old name as an alias for backward compatibility with tests
 export function generateEarthTiles(radius = 3): MapTile[] {
+  // Legacy procedural generation — used only in tests that haven't been updated yet
+  const TILE_TYPES: TileType[] = ['urban', 'industrial', 'coastal', 'highland', 'forested', 'arid', 'agricultural'];
+  const EDGE_TYPES: TileType[] = ['coastal', 'coastal', 'forested', 'arid', 'highland', 'forested', 'coastal'];
+  function tileTypeForCoord(q: number, r: number): TileType {
+    if (q === 0 && r === 0) return 'urban';
+    const dist = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+    const h = ((q * 374761393 + r * 1073741827) ^ ((q * r) * 31337)) >>> 0;
+    if (dist >= 3) return EDGE_TYPES[h % EDGE_TYPES.length];
+    return TILE_TYPES[h % TILE_TYPES.length];
+  }
   const tiles: MapTile[] = [];
   for (let q = -radius; q <= radius; q++) {
     const rMin = Math.max(-radius, -q - radius);
@@ -71,6 +87,7 @@ export function generateEarthTiles(radius = 3): MapTile[] {
         destroyedStatus: null,
         productivity: 1.0,
         facilityId: null,
+        pendingActionId: null,
       });
     }
   }
@@ -126,6 +143,8 @@ let _state = $state<GameState | null>(_savedState ?? null);
 let _selectedCoordKey    = $state<string | null>(null);
 let _selectedSpaceNodeId = $state<string | null>(null);
 let _selectedBeltNodeId  = $state<string | null>(null);
+/** UI-only: the coord key of the tile currently under the mouse cursor. */
+let _hoveredTileKey      = $state<string | null>(null);
 
 function resetSelections(): void {
   _selectedCoordKey    = null;
@@ -140,10 +159,12 @@ export const gameStore = {
   get selectedCoordKey():    string | null { return _selectedCoordKey; },
   get selectedSpaceNodeId(): string | null { return _selectedSpaceNodeId; },
   get selectedBeltNodeId():  string | null { return _selectedBeltNodeId; },
+  get hoveredTileKey():      string | null { return _hoveredTileKey; },
 
   selectTile(key: string | null): void { _selectedCoordKey = key; },
   selectSpaceNode(id: string | null): void { _selectedSpaceNodeId = id; },
   selectBeltNode(id: string | null): void { _selectedBeltNodeId = id; },
+  setHoveredTile(key: string | null): void { _hoveredTileKey = key; },
 
   /**
    * Initialise a fresh game run from the new-game setup screen.
@@ -196,6 +217,20 @@ export const gameStore = {
       },
     ];
 
+    // Generate Earth tiles from bloc-specific layout, then place HQ at (0,0).
+    const earthTiles = generateEarthTilesForBloc(playerBlocDefId);
+    const hqFacilityId = 'hq-0,0';
+    const hqFacility: FacilityInstance = {
+      id: hqFacilityId,
+      defId: 'hq',
+      locationKey: '0,0',
+      condition: 1.0,
+      builtTurn: 0,
+    };
+    const tilesWithHq = earthTiles.map(t =>
+      t.coord.q === 0 && t.coord.r === 0 ? { ...t, facilityId: hqFacilityId } : t,
+    );
+
     let next: GameState = {
       ...base,
       player: {
@@ -203,11 +238,12 @@ export const gameStore = {
         cards: starterCards,
         techs,
         newsFeed: openingNews,
+        facilities: [hqFacility],
       },
       blocs: initialiseBlocStates([...BLOC_DEFS.values()]),
       map: {
         ...base.map,
-        earthTiles: generateEarthTiles(3),
+        earthTiles: tilesWithHq,
         spaceNodes: generateSpaceNodes(),
         beltNodes:  generateBeltNodes(),
         beltEdges:  generateBeltEdges(),
@@ -261,6 +297,32 @@ export const gameStore = {
         ..._state.map,
         earthTiles: _state.map.earthTiles.map(t =>
           `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId } : t,
+        ),
+      },
+    };
+    _selectedCoordKey = null;
+  },
+
+  demolishFacility(coordKey: string): void {
+    if (!_state) return;
+    const tile = _state.map.earthTiles.find(t => `${t.coord.q},${t.coord.r}` === coordKey);
+    if (!tile?.facilityId) return;
+    const facility = _state.player.facilities.find(f => f.id === tile.facilityId);
+    if (!facility) return;
+    const def = FACILITY_DEFS.get(facility.defId);
+    if (!def?.canDelete) return;
+
+    // Instant demolition (multi-turn queue deferred to later phase)
+    _state = {
+      ..._state,
+      player: {
+        ..._state.player,
+        facilities: _state.player.facilities.filter(f => f.id !== facility.id),
+      },
+      map: {
+        ..._state.map,
+        earthTiles: _state.map.earthTiles.map(t =>
+          `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId: null } : t,
         ),
       },
     };

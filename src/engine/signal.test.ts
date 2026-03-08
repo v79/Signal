@@ -42,6 +42,7 @@ const ARRAY_DEF: FacilityDef = {
   allowedTileTypes: [],
   buildCost: {},
   upkeepCost: {},
+  buildTime: 3, deleteTime: 2, canDelete: true,
   fieldOutput: { physics: 5, computing: 3 },
   resourceOutput: {},
   adjacencyBonuses: [],

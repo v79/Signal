@@ -86,6 +86,11 @@ export interface MapTile {
   productivity: number;
   /** ID of the facility built here, if any. */
   facilityId: string | null;
+  /**
+   * ID of an OngoingAction currently in progress on this tile (construction
+   * or demolition). Null when the tile is idle.
+   */
+  pendingActionId: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -157,6 +162,12 @@ export interface FacilityDef {
   allowedTileTypes: TileType[];
   buildCost: Partial<Resources>;
   upkeepCost: Partial<Resources>;
+  /** Turns to construct. 0 = instant (placed immediately). */
+  buildTime: number;
+  /** Turns to demolish. 0 = instant. */
+  deleteTime: number;
+  /** Whether this facility can be demolished by the player. False for HQ. */
+  canDelete: boolean;
   /** Base field points generated per turn. */
   fieldOutput: Partial<FieldPoints>;
   /** Base resource delta per turn (positive = generated, negative = consumed). */

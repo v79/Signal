@@ -293,8 +293,8 @@ describe('tickEarthWelfare', () => {
       map: {
         ...base.map,
         earthTiles: [
-          { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: 'f1' },
-          { coord: { q: 1, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: 'f2' },
+          { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: 'f1', pendingActionId: null },
+          { coord: { q: 1, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: 'f2', pendingActionId: null },
         ],
       },
     };
