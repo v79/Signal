@@ -21,6 +21,7 @@ const universityDef: FacilityDef = {
   allowedTileTypes: ['urban'],
   buildCost: { funding: 50 },
   upkeepCost: { funding: 5 },
+  buildTime: 2, deleteTime: 1, canDelete: true,
   fieldOutput: { mathematics: 10, physics: 5 },
   resourceOutput: {},
   adjacencyBonuses: [
@@ -39,6 +40,7 @@ const researchLabDef: FacilityDef = {
   allowedTileTypes: ['urban', 'industrial'],
   buildCost: { funding: 40 },
   upkeepCost: { funding: 4 },
+  buildTime: 2, deleteTime: 1, canDelete: true,
   fieldOutput: { physics: 8, computing: 5 },
   resourceOutput: {},
   adjacencyBonuses: [
@@ -57,6 +59,7 @@ const militaryDef: FacilityDef = {
   allowedTileTypes: ['urban', 'highland'],
   buildCost: { funding: 60 },
   upkeepCost: { funding: 8 },
+  buildTime: 1, deleteTime: 1, canDelete: true,
   fieldOutput: { engineering: 5 },
   resourceOutput: {},
   adjacencyBonuses: [],
@@ -75,6 +78,7 @@ const mineDef: FacilityDef = {
   allowedTileTypes: ['highland', 'arid'],
   buildCost: { funding: 30 },
   upkeepCost: { funding: 2 },
+  buildTime: 1, deleteTime: 1, canDelete: true,
   fieldOutput: {},
   resourceOutput: { materials: 20 },
   adjacencyBonuses: [],
@@ -101,6 +105,7 @@ function makeTile(q: number, r: number, facilityId: string | null = null): MapTi
     destroyedStatus: null,
     productivity: 1,
     facilityId,
+    pendingActionId: null,
   };
 }
 

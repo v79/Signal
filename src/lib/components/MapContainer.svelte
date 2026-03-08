@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import FacilityPicker from './FacilityPicker.svelte';
+  import TileTooltip from './TileTooltip.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS } from '../../data/facilities';
   import { TECH_DEFS } from '../../data/technologies';
@@ -28,6 +29,9 @@
   let container: HTMLDivElement;
   let game: import('phaser').Game | null = null;
   let activeTab = $state<SceneTab>('earth');
+  /** Mouse position inside the map container for tooltip positioning. */
+  let mouseX = $state(0);
+  let mouseY = $state(0);
 
   const SCENE_KEYS: Record<SceneTab, string> = {
     earth: 'EarthScene',
@@ -108,10 +112,14 @@
       earth.setCallbacks({
         getTiles:      () => gameStore.state?.map.earthTiles ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
+        getQueue:      () => gameStore.state?.player.constructionQueue ?? [],
         getSelected:   () => gameStore.selectedCoordKey,
         getClimate:    () => gameStore.state?.climatePressure ?? 0,
         onTileClick:   (key: string) => {
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
+        },
+        onTileHover:   (key: string | null) => {
+          gameStore.setHoveredTile(key);
         },
       });
       // Only EarthScene should run at startup
@@ -146,7 +154,12 @@
   </div>
 
   <!-- Phaser canvas mount point -->
-  <div class="map-container" bind:this={container}>
+  <div
+    class="map-container"
+    bind:this={container}
+    onmousemove={(e) => { mouseX = e.offsetX; mouseY = e.offsetY; }}
+    onmouseleave={() => gameStore.setHoveredTile(null)}
+  >
     {#if selectedTile && activeTab === 'earth'}
       <FacilityPicker
         tile={selectedTile}
@@ -155,7 +168,19 @@
         discoveredTechIds={new Set(gameStore.state!.player.techs.filter(t => t.stage === 'discovered').map(t => t.defId))}
         techNames={new Map([...TECH_DEFS.values()].map(d => [d.id, d.name]))}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
+        onDemolish={() => gameStore.demolishFacility(gameStore.selectedCoordKey!)}
         onClose={() => gameStore.selectTile(null)}
+      />
+    {/if}
+    {#if gameStore.hoveredTileKey && !selectedTile && activeTab === 'earth' && gameStore.state}
+      <TileTooltip
+        tile={gameStore.state.map.earthTiles.find(t => `${t.coord.q},${t.coord.r}` === gameStore.hoveredTileKey) ?? null}
+        facilities={gameStore.state.player.facilities}
+        facilityDefs={FACILITY_DEFS}
+        x={mouseX}
+        y={mouseY}
+        containerWidth={container?.clientWidth ?? 600}
+        containerHeight={container?.clientHeight ?? 400}
       />
     {/if}
   </div>

@@ -46,7 +46,9 @@ test('main game — turn 1 action phase', async ({ page }) => {
 // ---------------------------------------------------------------------------
 // Test 3 — Build facility on the Earth map
 //
-// The center tile (0,0) is always 'urban' (deterministic in tileTypeForCoord).
+// Tile (0,0) is now occupied by the HQ. We instead click the urban tile at
+// (-1,0) in the North American Alliance layout, which is offset from centre
+// by (-63px, -36px) in flat-top hex geometry (HEX_SIZE=42).
 // Urban tiles support Research Lab, Public University, and Engineering Works.
 // North American Alliance starts with 80F / 60M — all are affordable.
 // ---------------------------------------------------------------------------
@@ -54,9 +56,12 @@ test('main game — turn 1 action phase', async ({ page }) => {
 test('build facility — open picker, build, verify on map', async ({ page }) => {
   await startNewGame(page);
 
-  // Click the centre of the Phaser canvas — always hits the urban tile at (0,0)
+  // Click the urban tile at (-1,0): offset (-63, -36) from canvas centre
   const canvas = page.locator('.map-container canvas');
-  await canvas.click();  // Playwright clicks the element centre by default
+  const box = await canvas.boundingBox();
+  const cx = (box?.width ?? 600) / 2;
+  const cy = (box?.height ?? 400) / 2;
+  await canvas.click({ position: { x: cx - 63, y: cy - 36 } });
 
   // Wait for the FacilityPicker dialog
   await page.waitForSelector('[aria-label="Facility Picker"]');

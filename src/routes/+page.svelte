@@ -5,7 +5,8 @@
   import EventZone       from '$lib/components/EventZone.svelte';
   import ResearchFeed    from '$lib/components/ResearchFeed.svelte';
   import BoardPanel      from '$lib/components/BoardPanel.svelte';
-  import StandingActions from '$lib/components/StandingActions.svelte';
+  import StandingActions      from '$lib/components/StandingActions.svelte';
+  import OngoingActionsPanel  from '$lib/components/OngoingActionsPanel.svelte';
   import CardHand        from '$lib/components/CardHand.svelte';
   import MapContainer    from '$lib/components/MapContainer.svelte';
   import NewsTicker      from '$lib/components/NewsTicker.svelte';
@@ -16,6 +17,7 @@
   import { EVENT_DEFS } from '../data/events';
   import { STANDING_ACTIONS } from '../data/standingActions';
   import { BOARD_DEFS } from '../data/board';
+  import { FACILITY_DEFS } from '../data/facilities';
   import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
 
@@ -97,14 +99,20 @@
 
     <!-- Bottom row -->
     <div class="bottom-row">
-      <StandingActions
-        actions={STANDING_ACTIONS}
-        restrictions={gs.player.activeEventRestrictions}
-        turn={gs.turn}
-        phase={gs.phase}
-        playerResources={gs.player.resources}
-        onAction={handleStandingAction}
-      />
+      <div class="left-actions">
+        <StandingActions
+          actions={STANDING_ACTIONS}
+          restrictions={gs.player.activeEventRestrictions}
+          turn={gs.turn}
+          phase={gs.phase}
+          playerResources={gs.player.resources}
+          onAction={handleStandingAction}
+        />
+        <OngoingActionsPanel
+          queue={gs.player.constructionQueue}
+          facilityDefs={FACILITY_DEFS}
+        />
+      </div>
 
       <CardHand
         cards={gs.player.cards}
@@ -154,6 +162,12 @@
     border-top: 1px solid #1e2530;
     flex-shrink: 0;
     max-height: 14rem;
+    overflow: hidden;
+  }
+
+  .left-actions {
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 </style>
