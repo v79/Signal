@@ -3,11 +3,9 @@
 
   let {
     phase,
-    turn,
     onAdvance,
   }: {
     phase: TurnPhase;
-    turn: number;
     onAdvance: () => void;
   } = $props();
 
@@ -21,7 +19,6 @@
 </script>
 
 <div class="phase-controls">
-  <span class="turn-label">Turn {turn}</span>
   <button
     class="advance-btn"
     class:end-turn={phase === 'bank'}
@@ -41,13 +38,6 @@
     background: #070b12;
     border-left: 1px solid #1e2530;
     flex-shrink: 0;
-  }
-
-  .turn-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    color: #3a5268;
-    white-space: nowrap;
   }
 
   .advance-btn {

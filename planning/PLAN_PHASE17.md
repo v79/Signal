@@ -29,7 +29,7 @@ Out of scope for Phase 17 (covered in later phases):
 
 ## Tasks
 
-### 17.1 — Materials colour (trivial)
+### 17.1 — Materials colour (trivial) ✓ COMPLETE
 
 **File:** `src/lib/components/HUD.svelte`
 
@@ -41,7 +41,7 @@ Out of scope for Phase 17 (covered in later phases):
 
 ---
 
-### 17.2 — Round resource numbers
+### 17.2 — Round resource numbers ✓ COMPLETE
 
 **File:** `src/lib/components/HUD.svelte`
 
@@ -61,7 +61,7 @@ Use `{fmt(resources.funding)}` etc. in the template.
 
 ---
 
-### 17.3 — Clean up PhaseControls (remove redundant turn number)
+### 17.3 — Clean up PhaseControls (remove redundant turn number) ✓ COMPLETE
 
 **File:** `src/lib/components/PhaseControls.svelte`
 
@@ -247,9 +247,9 @@ No engine files (`src/engine/`) change. No new tests needed (pure UI); manual sm
 
 ## Acceptance Checklist
 
-- [ ] Materials resource label and value are brown in HUD
-- [ ] Resource values display with comma separators for large numbers
-- [ ] PhaseControls shows no separate turn number
+- [x] Materials resource label and value are brown in HUD
+- [x] Resource values display with comma separators for large numbers
+- [x] PhaseControls shows no separate turn number
 - [ ] Hovering a resource value shows a descriptive tooltip
 - [ ] Hovering a research field abbreviation shows the full field name
 - [ ] ResearchFeed, BoardPanel, and OngoingActionsPanel each have a working collapse toggle
