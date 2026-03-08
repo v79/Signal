@@ -130,7 +130,6 @@
 
       <PhaseControls
         phase={gs.phase}
-        turn={gs.turn}
         onAdvance={() => gameStore.advancePhase()}
       />
     </div>

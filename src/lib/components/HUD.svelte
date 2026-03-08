@@ -82,6 +82,10 @@
     if (w >= 35) return '#c8a040';
     return '#9b4a4a';
   }
+
+  function fmt(n: number): string {
+    return Math.round(n).toLocaleString();
+  }
 </script>
 
 <header class="hud">
@@ -139,15 +143,15 @@
   <div class="hud-right">
     <div class="resource">
       <span class="res-label">FUND</span>
-      <span class="res-value fund">{resources.funding}</span>
+      <span class="res-value fund">{fmt(resources.funding)}</span>
     </div>
     <div class="resource">
       <span class="res-label">MAT</span>
-      <span class="res-value mat">{resources.materials}</span>
+      <span class="res-value mat">{fmt(resources.materials)}</span>
     </div>
     <div class="resource">
       <span class="res-label">WILL</span>
-      <span class="res-value will">{resources.politicalWill}</span>
+      <span class="res-value will">{fmt(resources.politicalWill)}</span>
     </div>
     <span class="divider">│</span>
     {#each FIELD_KEYS as key}
@@ -344,7 +348,7 @@
   }
 
   .fund { color: #c8d050; }
-  .mat  { color: #6ab0d8; }
+  .mat  { color: #8B5E3C; }
   .will { color: #b07ad0; }
 
   .field-mini {
