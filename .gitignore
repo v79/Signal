@@ -9,3 +9,10 @@ dist/
 /test-results/
 /playwright-report/
 screenshots/.last-run.json
+infra/terraform.tfvars
+
+# OpenTofu / Terraform
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/*.tfstate
+infra/*.tfstate.backup
