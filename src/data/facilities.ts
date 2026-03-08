@@ -76,6 +76,22 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     requiredTechId: null,
   }],
 
+  ['offshoreWindFarm', {
+    id: 'offshoreWindFarm',
+    name: 'Offshore Wind Farm',
+    description: 'Generates steady Funding and minor Engineering field points. Requires coastal tile.',
+    era: 'earth',
+    allowedTileTypes: ['coastal'],
+    buildCost: { materials: 20, funding: 15 },
+    upkeepCost: {},
+    fieldOutput: { engineering: 2 },
+    resourceOutput: { funding: 3 },
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+    requiredTechId: null,
+  }],
+
   ['publicUniversity', {
     id: 'publicUniversity',
     name: 'Public University',

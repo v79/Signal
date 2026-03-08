@@ -9,3 +9,4 @@
 - Hovering over a hex should show a preview of the existing facilities on that grid, and a summary of the resources it generates and costs each turn
 - Clicking on a hex with a facility should offer the option to delete the facility
 - Building and deleting facilities may take a number of turns, with more complex/expensive facilities taking longer to build.
+- An "ongoing actions" UI element showing the progress of facility construction/deconstruction, and later for standing actions
