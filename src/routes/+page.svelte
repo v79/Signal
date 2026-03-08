@@ -18,6 +18,7 @@
   import { STANDING_ACTIONS } from '../data/standingActions';
   import { BOARD_DEFS } from '../data/board';
   import { FACILITY_DEFS } from '../data/facilities';
+  import { TECH_DEFS } from '../data/technologies';
   import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
 
@@ -81,6 +82,10 @@
           fields={gs.player.fields}
           newsFeed={gs.player.newsFeed}
           signal={gs.signal}
+          techs={gs.player.techs}
+          techDefs={TECH_DEFS}
+          cardDefs={CARD_DEFS}
+          facilityDefs={FACILITY_DEFS}
           {wormholeOptions}
           onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
         />
