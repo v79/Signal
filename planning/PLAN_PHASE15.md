@@ -12,8 +12,8 @@ Phase 15 makes the Earth map feel like a real strategic board rather than a gene
 2. **HQ facility** ✅ — always present at game start; provides a trickle of resources differentiated by bloc type.
 3. **Hex hover tooltip** ✅ — mousing over any tile shows its type, existing facility, and per-turn resource output.
 4. **Facility deletion** ✅ — clicking a tile that has a facility offers a demolish option (instant); HQ cannot be demolished.
-5. **Multi-turn construction & demolition** — facilities take a configurable number of turns to build or demolish; partial state is tracked and rendered.
-6. **Ongoing Actions panel** — a new UI panel lists active construction and demolition tasks with turns remaining and optional cancel.
+5. **Multi-turn construction & demolition** ✅ — facilities take a configurable number of turns to build or demolish; partial state is tracked and rendered.
+6. **Ongoing Actions panel** ✅ — a new UI panel lists active construction and demolition tasks with turns remaining.
 
 ---
 
@@ -113,92 +113,44 @@ Phase 15 makes the Earth map feel like a real strategic board rather than a gene
 
 ---
 
-## 5. Multi-Turn Construction Queue — TODO
+## 5. Multi-Turn Construction Queue ✅ DONE
 
-### Plan
+### What was implemented
 
-#### 5.1 New Types
+- `OngoingAction` type and `OngoingActionType` added to `src/engine/types.ts`.
+- `constructionQueue: OngoingAction[]` added to `PlayerState`; initialised to `[]` in `createPlayerState`.
+- `buildFacility`: if `def.buildTime === 0` → instant (existing path); if `> 0` → enqueue `OngoingAction`, deduct cost up-front, set `tile.pendingActionId`.
+- `demolishFacility`: if `def.deleteTime === 0` → instant; if `> 0` → enqueue `'demolish'` action, set `tile.pendingActionId`.
+- `tickConstructionQueue` added to `src/engine/facilities.ts` — pure function, no mutation:
+  - Decrements `turnsRemaining` for each action.
+  - On completion: `'construct'` → creates `FacilityInstance`, sets `tile.facilityId`; `'demolish'` → removes instance, clears `tile.facilityId`. Both clear `tile.pendingActionId`.
+  - Returns `{ updatedQueue, updatedFacilities, updatedTiles, completedActions }`.
+- Wired as step 0 of `executeWorldPhase` in `turn.ts` — runs before adjacency and output so newly completed facilities contribute in the same turn. `map.earthTiles` and `constructionQueue` updated in assembled state.
+- EarthScene visuals (via `getQueue` callback):
+  - **Construction**: pulsing scaffold ring in facility colour + clockwise progress arc.
+  - **Demolition**: red filled circle + X cross-hatch + draining arc (remaining proportion).
 
-Add to `src/engine/types.ts`:
+### Tests
 
-```ts
-export type OngoingActionType = 'construct' | 'demolish';
-
-export interface OngoingAction {
-  id: string;
-  type: OngoingActionType;
-  facilityDefId: string;
-  coordKey: string;
-  turnsRemaining: number;
-  totalTurns: number;
-}
-```
-
-Add `constructionQueue: OngoingAction[]` to `PlayerState`.
-
-> Note: `pendingActionId: string | null` on `MapTile` is already in place from §1.
-
-#### 5.2 buildFacility Queue Path
-
-Update `gameStore.buildFacility(coordKey, defId)`:
-- If `def.buildTime === 0`: create instance immediately (existing behaviour).
-- If `def.buildTime > 0`: create `OngoingAction`, push to queue. Deduct cost up-front. Set `tile.pendingActionId = action.id`. Leave `tile.facilityId` null until complete.
-
-#### 5.3 Queue Tick in Turn Engine
-
-Add `tickConstructionQueue` to `src/engine/facilities.ts`, called from `executeWorldPhase`:
-- Decrement `turnsRemaining` for each action.
-- On completion: if `construct`, create `FacilityInstance` and set `tile.facilityId`; if `demolish`, remove instance and clear `tile.facilityId`. Clear `tile.pendingActionId` in both cases.
-
-#### 5.4 demolishFacility Queue Path
-
-Update `demolishFacility` to enqueue a `'demolish'` `OngoingAction` when `def.deleteTime > 0`, rather than removing instantly. Set `tile.pendingActionId`.
-
-#### 5.5 EarthScene Visuals
-
-When `tile.pendingActionId` is set:
-- Construction: scaffold outline (dashed ring) in the facility's eventual colour, animated opacity pulse.
-- Demolition: dim the facility circle with a red overlay.
-- Arc progress indicator around the tile border, filling clockwise.
-
-#### 5.6 Tests
-
-- `src/engine/constructionQueue.test.ts` — enqueue, tick, complete for construct and demolish; instant build bypasses queue; cost deducted at enqueue.
-- Update `turn.test.ts` to cover queue tick in World Phase.
+- `src/engine/constructionQueue.test.ts` — 12 tests: decrement, completion, tile updates, multi-action, demolish removal, edge cases.
 
 ---
 
-## 6. Ongoing Actions Panel — TODO
+## 6. Ongoing Actions Panel ✅ DONE
 
-### Plan
+### What was implemented
 
-New component `src/lib/components/OngoingActionsPanel.svelte`:
-
-```
-┌─ Ongoing Actions ──────────────────────────────────┐
-│ [Build] Research Campus         3 turns remaining  │
-│         ████████░░░░░░░░  (progress bar)           │
-│ [Demo]  Materials Mine          1 turn remaining   │
-│         ████████████████                           │
-└────────────────────────────────────────────────────┘
-```
-
-- Action type badge ("Build" / "Demo"), facility name, turns remaining, progress bar.
-- Hidden when queue is empty.
-- Mount in sidebar below Standing Actions panel.
-- Stretch: Cancel button for construction (refunds 50% of build cost); not available for demolition once started.
+- New `src/lib/components/OngoingActionsPanel.svelte`:
+  - Shows BUILD/DEMO colour-coded badge, facility name, progress bar, turns remaining.
+  - Only rendered when `queue.length > 0`.
+- Mounted in `src/routes/+page.svelte` below `StandingActions` inside a new `.left-actions` column wrapper.
+- `FacilityPicker` shows a "Construction/Demolition in progress…" panel (with hint text) when `tile.pendingActionId` is set, instead of the build list or occupied panel.
 
 ---
 
-## 7. Implementation Order (Remaining)
+## 7. Phase 15 Complete
 
-1. **Types** — Add `OngoingAction` to `types.ts`; add `constructionQueue` to `PlayerState`.
-2. **buildFacility queue path** — Update store method; set `pendingActionId` on tile.
-3. **Queue tick** — `tickConstructionQueue` in `facilities.ts`, wired into `executeWorldPhase`.
-4. **demolishFacility queue path** — Convert from instant to queued.
-5. **EarthScene visuals** — Scaffold pulse, demolition overlay, progress arc.
-6. **OngoingActionsPanel** — New Svelte component + mount point.
-7. **Tests** — `constructionQueue.test.ts`, update `turn.test.ts`.
+All planned sections implemented. Phase 15 is done.
 
 ---
 
@@ -207,8 +159,8 @@ New component `src/lib/components/OngoingActionsPanel.svelte`:
 | Milestone | Tests |
 |-----------|-------|
 | Phase 14 complete | 264 |
-| Phase 15 sections 1–4 | **307** |
-| Phase 15 complete (target) | ~330 |
+| Phase 15 sections 1–4 | 307 |
+| Phase 15 complete | **319** |
 
 ---
 
@@ -216,26 +168,22 @@ New component `src/lib/components/OngoingActionsPanel.svelte`:
 
 | File | Status | Notes |
 |------|--------|-------|
-| `src/engine/types.ts` | ✅ Done | `pendingActionId` on `MapTile`; `buildTime`/`deleteTime`/`canDelete` on `FacilityDef` |
-| `src/engine/facilities.ts` | ✅ Done | `computeHqBonus`, `getTileSummary`, `HqBonus`, `TileSummary` |
-| `src/engine/turn.ts` | ✅ Done | HQ bonus wired into World Phase |
+| `src/engine/types.ts` | ✅ Done | `pendingActionId` on `MapTile`; `buildTime`/`deleteTime`/`canDelete` on `FacilityDef`; `OngoingAction`; `constructionQueue` on `PlayerState` |
+| `src/engine/facilities.ts` | ✅ Done | `computeHqBonus`, `getTileSummary`, `tickConstructionQueue` |
+| `src/engine/turn.ts` | ✅ Done | HQ bonus + queue tick wired into World Phase |
+| `src/engine/state.ts` | ✅ Done | `constructionQueue: []` initialised |
 | `src/data/facilities.ts` | ✅ Done | HQ def; `buildTime`/`deleteTime`/`canDelete` on all defs |
 | `src/data/blocMaps.ts` | ✅ Done | **New** — 7 bloc tile layouts |
-| `src/lib/stores/game.svelte.ts` | ✅ Done | `generateEarthTilesForBloc`, HQ placement, `demolishFacility`, `hoveredTileKey` |
-| `src/phaser/EarthScene.ts` | ✅ Done | `onTileHover` callback; HQ gold visual; full facility colour palette |
-| `src/lib/components/FacilityPicker.svelte` | ✅ Done | Occupied panel with demolish; build time display; HQ excluded from build list |
+| `src/lib/stores/game.svelte.ts` | ✅ Done | `generateEarthTilesForBloc`, HQ placement, `demolishFacility`, `hoveredTileKey`, queue paths |
+| `src/phaser/EarthScene.ts` | ✅ Done | `onTileHover`, `getQueue` callbacks; HQ gold visual; facility colour palette; construction/demolition overlays |
+| `src/lib/components/FacilityPicker.svelte` | ✅ Done | Occupied panel with demolish; build time display; HQ excluded; pending panel |
 | `src/lib/components/TileTooltip.svelte` | ✅ Done | **New** — hover tooltip |
-| `src/lib/components/MapContainer.svelte` | ✅ Done | Tooltip mount, hover wiring, mouse tracking |
+| `src/lib/components/OngoingActionsPanel.svelte` | ✅ Done | **New** — construction queue UI |
+| `src/lib/components/MapContainer.svelte` | ✅ Done | Tooltip + `getQueue` callback mount, hover/mouse tracking, `onDemolish` wiring |
+| `src/routes/+page.svelte` | ✅ Done | `OngoingActionsPanel` mounted in `.left-actions` wrapper |
 | `src/engine/blocMaps.test.ts` | ✅ Done | **New** — 29 layout validity tests |
 | `src/engine/hq.test.ts` | ✅ Done | **New** — 14 HQ tests |
-| `src/engine/types.ts` | TODO | Add `OngoingAction` type; `constructionQueue` on `PlayerState` |
-| `src/engine/facilities.ts` | TODO | `tickConstructionQueue` |
-| `src/engine/turn.ts` | TODO | Wire `tickConstructionQueue` |
-| `src/lib/stores/game.svelte.ts` | TODO | Queue path for `buildFacility` and `demolishFacility` |
-| `src/phaser/EarthScene.ts` | TODO | Construction/demolition visuals, progress arc |
-| `src/lib/components/OngoingActionsPanel.svelte` | TODO | **New** — construction queue UI |
-| `src/routes/+page.svelte` | TODO | Mount `OngoingActionsPanel` |
-| `src/engine/constructionQueue.test.ts` | TODO | **New** |
+| `src/engine/constructionQueue.test.ts` | ✅ Done | **New** — 12 construction queue tests |
 
 ---
 
