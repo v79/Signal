@@ -21,7 +21,7 @@
 
   function eraUnlocked(requiredEra: Era | null): boolean {
     if (!requiredEra) return true;
-    return ERA_ORDER.indexOf(gameStore.state.era) >= ERA_ORDER.indexOf(requiredEra);
+    return ERA_ORDER.indexOf(gameStore.state!.era) >= ERA_ORDER.indexOf(requiredEra);
   }
 
   let container: HTMLDivElement;
@@ -43,7 +43,7 @@
 
   // Selected Earth tile for facility placement
   const selectedTile = $derived(
-    gameStore.selectedCoordKey != null
+    gameStore.selectedCoordKey != null && gameStore.state
       ? gameStore.state.map.earthTiles.find(
           t => `${t.coord.q},${t.coord.r}` === gameStore.selectedCoordKey,
         ) ?? null
@@ -78,8 +78,8 @@
     game.events.on('spaceSceneReady', () => {
       const space = game!.scene.getScene('SpaceScene') as SpaceSceneType;
       space.setCallbacks({
-        getNodes:        () => gameStore.state.map.spaceNodes,
-        getFacilities:   () => gameStore.state.player.facilities,
+        getNodes:        () => gameStore.state?.map.spaceNodes ?? [],
+        getFacilities:   () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
         onNodeClick:     (id: string) => {
           gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
@@ -91,9 +91,9 @@
     game.events.on('asteroidSceneReady', () => {
       const asteroid = game!.scene.getScene('AsteroidScene') as AsteroidSceneType;
       asteroid.setCallbacks({
-        getNodes:        () => gameStore.state.map.beltNodes,
-        getEdges:        () => gameStore.state.map.beltEdges,
-        getFacilities:   () => gameStore.state.player.facilities,
+        getNodes:        () => gameStore.state?.map.beltNodes ?? [],
+        getEdges:        () => gameStore.state?.map.beltEdges ?? [],
+        getFacilities:   () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedBeltNodeId,
         onNodeClick:     (id: string) => {
           gameStore.selectBeltNode(gameStore.selectedBeltNodeId === id ? null : id);
@@ -105,10 +105,10 @@
     game.events.once('ready', () => {
       const earth = game!.scene.getScene('EarthScene') as EarthSceneType;
       earth.setCallbacks({
-        getTiles:      () => gameStore.state.map.earthTiles,
-        getFacilities: () => gameStore.state.player.facilities,
+        getTiles:      () => gameStore.state?.map.earthTiles ?? [],
+        getFacilities: () => gameStore.state?.player.facilities ?? [],
         getSelected:   () => gameStore.selectedCoordKey,
-        getClimate:    () => gameStore.state.climatePressure,
+        getClimate:    () => gameStore.state?.climatePressure ?? 0,
         onTileClick:   (key: string) => {
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },
@@ -142,13 +142,6 @@
         {/if}
       </button>
     {/each}
-
-    <!-- Dev tool: advance era without landmark projects -->
-    {#if gameStore.state.era !== 'deepSpace'}
-      <button class="tab dev-era" onclick={() => gameStore.devAdvanceEra()}>
-        DEV &rsaquo; ERA
-      </button>
-    {/if}
   </div>
 
   <!-- Phaser canvas mount point -->
@@ -157,7 +150,7 @@
       <FacilityPicker
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
-        playerResources={gameStore.state.player.resources}
+        playerResources={gameStore.state!.player.resources}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onClose={() => gameStore.selectTile(null)}
       />
@@ -208,22 +201,6 @@
   .tab.locked {
     cursor: not-allowed;
     opacity: 0.4;
-  }
-
-  .tab.dev-era {
-    margin-left: auto;
-    color: #a07030;
-    font-size: 0.6rem;
-    border: 1px dashed #4a3010;
-    border-bottom: 2px solid transparent;
-    border-radius: 2px 2px 0 0;
-    padding: 2px 6px 3px;
-  }
-
-  .tab.dev-era:hover {
-    color: #c89040;
-    border-color: #6a4820;
-    border-bottom-color: transparent;
   }
 
   .lock {

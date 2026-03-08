@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import HUD             from '$lib/components/HUD.svelte';
   import EventZone       from '$lib/components/EventZone.svelte';
   import ResearchFeed    from '$lib/components/ResearchFeed.svelte';
@@ -17,103 +19,107 @@
   import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
 
+  // Redirect to /newgame if there is no active game state (cold start).
+  onMount(() => {
+    if (!gameStore.state) goto('/newgame');
+  });
+
   // Generate wormhole options once when the climax is reached (deterministic seed).
   const wormholeOptions = $derived(
-    isSignalClimax(gameStore.state.signal) ? gameStore.getWormholeOptions() : [],
+    gameStore.state && isSignalClimax(gameStore.state.signal) ? gameStore.getWormholeOptions() : [],
   );
 
   function handleStandingAction(id: string): void {
     if (id === 'build') {
-      // Prompt the player to click a tile on the map.
-      // If a tile is already selected, deselect it (toggle).
       if (gameStore.selectedCoordKey != null) {
         gameStore.selectTile(null);
       }
-      // Otherwise the player clicks a tile — EarthScene handles onTileClick.
     }
-    // Other actions (recruit, trade, survey, negotiate) wired in later phases.
   }
 </script>
 
-<div class="game-layout">
-  <!-- Top bar -->
-  <HUD
-    resources={gameStore.state.player.resources}
-    fields={gameStore.state.player.fields}
-    turn={gameStore.state.turn}
-    year={gameStore.state.year}
-    era={gameStore.state.era}
-    phase={gameStore.state.phase}
-    climatePressure={gameStore.state.climatePressure}
-    will={gameStore.state.player.will}
-    seed={gameStore.state.seed}
-    onExport={() => gameStore.exportSave()}
-    onImport={(file) => gameStore.importSaveFile(file)}
-  />
-
-  <!-- Middle row -->
-  <div class="middle-row">
-    <!-- Left: active events -->
-    <EventZone
-      events={gameStore.state.activeEvents}
-      eventDefs={EVENT_DEFS}
-      onMitigate={(id) => gameStore.mitigateEvent(id)}
-      onAccept={(id)   => gameStore.acceptEvent(id)}
-      onDecline={(id)  => gameStore.declineEvent(id)}
+{#if gameStore.state}
+  {@const gs = gameStore.state}
+  <div class="game-layout">
+    <!-- Top bar -->
+    <HUD
+      resources={gs.player.resources}
+      fields={gs.player.fields}
+      turn={gs.turn}
+      year={gs.year}
+      era={gs.era}
+      phase={gs.phase}
+      climatePressure={gs.climatePressure}
+      will={gs.player.will}
+      seed={gs.seed}
+      onExport={() => gameStore.exportSave()}
+      onImport={(file) => gameStore.importSaveFile(file)}
     />
 
-    <!-- Centre: Earth map (Phaser) -->
-    <MapContainer />
-
-    <!-- Right: research + board -->
-    <div class="right-column">
-      <ResearchFeed
-        fields={gameStore.state.player.fields}
-        newsFeed={gameStore.state.player.newsFeed}
-        signal={gameStore.state.signal}
-        {wormholeOptions}
-        onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
+    <!-- Middle row -->
+    <div class="middle-row">
+      <!-- Left: active events -->
+      <EventZone
+        events={gs.activeEvents}
+        eventDefs={EVENT_DEFS}
+        onMitigate={(id) => gameStore.mitigateEvent(id)}
+        onAccept={(id)   => gameStore.acceptEvent(id)}
+        onDecline={(id)  => gameStore.declineEvent(id)}
       />
-      <BoardPanel
-        board={gameStore.state.player.board}
-        boardDefs={BOARD_DEFS}
-        phase={gameStore.state.phase}
-        onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
-        onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
+
+      <!-- Centre: Earth map (Phaser) -->
+      <MapContainer />
+
+      <!-- Right: research + board -->
+      <div class="right-column">
+        <ResearchFeed
+          fields={gs.player.fields}
+          newsFeed={gs.player.newsFeed}
+          signal={gs.signal}
+          {wormholeOptions}
+          onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
+        />
+        <BoardPanel
+          board={gs.player.board}
+          boardDefs={BOARD_DEFS}
+          phase={gs.phase}
+          onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
+          onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
+        />
+      </div>
+    </div>
+
+    <!-- News ticker strip -->
+    <NewsTicker items={gs.player.newsFeed} />
+
+    <!-- Bottom row -->
+    <div class="bottom-row">
+      <StandingActions
+        actions={STANDING_ACTIONS}
+        restrictions={gs.player.activeEventRestrictions}
+        turn={gs.turn}
+        phase={gs.phase}
+        playerResources={gs.player.resources}
+        onAction={handleStandingAction}
+      />
+
+      <CardHand
+        cards={gs.player.cards}
+        cardDefs={CARD_DEFS}
+        phase={gs.phase}
+        onPlay={(id)   => gameStore.playCard(id)}
+        onBank={(id)   => gameStore.bankCard(id)}
+        onUnbank={(id) => gameStore.unbankCard(id)}
+      />
+
+      <PhaseControls
+        phase={gs.phase}
+        turn={gs.turn}
+        onAdvance={() => gameStore.advancePhase()}
       />
     </div>
   </div>
-
-  <!-- News ticker strip -->
-  <NewsTicker items={gameStore.state.player.newsFeed} />
-
-  <!-- Bottom row -->
-  <div class="bottom-row">
-    <StandingActions
-      actions={STANDING_ACTIONS}
-      restrictions={gameStore.state.player.activeEventRestrictions}
-      turn={gameStore.state.turn}
-      phase={gameStore.state.phase}
-      playerResources={gameStore.state.player.resources}
-      onAction={handleStandingAction}
-    />
-
-    <CardHand
-      cards={gameStore.state.player.cards}
-      cardDefs={CARD_DEFS}
-      phase={gameStore.state.phase}
-      onPlay={(id)   => gameStore.playCard(id)}
-      onBank={(id)   => gameStore.bankCard(id)}
-      onUnbank={(id) => gameStore.unbankCard(id)}
-    />
-
-    <PhaseControls
-      phase={gameStore.state.phase}
-      turn={gameStore.state.turn}
-      onAdvance={() => gameStore.advancePhase()}
-    />
-  </div>
-</div>
+{/if}
 
 <style>
   .game-layout {

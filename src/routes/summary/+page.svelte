@@ -1,8 +1,14 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { gameStore } from '$lib/stores/game.svelte';
   import type { VictoryCondition, LossCondition } from '../../engine/types';
 
-  const outcome = $derived(gameStore.state.outcome);
+  onMount(() => {
+    if (!gameStore.state) goto('/newgame');
+  });
+
+  const outcome = $derived(gameStore.state?.outcome);
   const state   = $derived(gameStore.state);
 
   // ---------------------------------------------------------------------------
@@ -71,6 +77,7 @@
   };
 </script>
 
+{#if state}
 <div class="summary-layout">
   <div class="summary-card">
     <!-- Outcome banner -->
@@ -125,12 +132,13 @@
 
     <!-- Actions -->
     <div class="actions">
-      <button class="btn-play-again" onclick={() => { gameStore.resetGame(); window.location.href = '/'; }}>
+      <button class="btn-play-again" onclick={() => gameStore.resetGame()}>
         PLAY AGAIN
       </button>
     </div>
   </div>
 </div>
+{/if}
 
 <style>
   :global(body) {

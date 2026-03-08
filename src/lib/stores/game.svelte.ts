@@ -9,7 +9,7 @@ import type {
   SpaceNode,
   BeltNode,
   BeltEdge,
-  Era,
+  PushFactor,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
@@ -114,89 +114,25 @@ export function generateBeltEdges(): BeltEdge[] {
 }
 
 // ---------------------------------------------------------------------------
-// Demo initial state
-// ---------------------------------------------------------------------------
-
-function createDemoState(): GameState {
-  const base = createGameState({
-    seed: 'signal-demo',
-    playerBlocDefId: 'eu',
-    pushFactor: 'climateChange',
-    startYear: 2025,
-    willProfile: 'democratic',
-    startingWill: 62,
-    startingResources: { funding: 85, materials: 40, politicalWill: 55 },
-    startingFields: { physics: 42, mathematics: 18, engineering: 65, computing: 38 } as Partial<FieldPoints>,
-  });
-
-  const earthTiles = generateEarthTiles(3);
-  const blocs = initialiseBlocStates([...BLOC_DEFS.values()]);
-
-  return {
-    ...base,
-    turn: 3,
-    year: 2028,
-    phase: 'action',
-    climatePressure: 12,
-    earthWelfareScore: 78,
-    player: {
-      ...base.player,
-      cards: [
-        { id: 'lobbying-1',             defId: 'lobbying',             zone: 'hand',  bankedSinceTurn: null },
-        { id: 'emergencyProcurement-1', defId: 'emergencyProcurement', zone: 'hand',  bankedSinceTurn: null },
-        { id: 'publicAppeal-1',         defId: 'publicAppeal',         zone: 'hand',  bankedSinceTurn: null },
-        { id: 'academicConference-1',   defId: 'academicConference',   zone: 'bank',  bankedSinceTurn: 2 },
-        { id: 'coalitionBuilding-1',    defId: 'coalitionBuilding',    zone: 'deck',  bankedSinceTurn: null },
-        { id: 'lobbying-2',             defId: 'lobbying',             zone: 'deck',  bankedSinceTurn: null },
-      ],
-      newsFeed: [
-        { id: 'news-1', turn: 1, text: 'Initial funding secured. Operations proceed as planned.' },
-        { id: 'news-2', turn: 2, text: 'Something new is stirring in the research community.' },
-        { id: 'news-3', turn: 3, text: 'Research into advanced engineering is showing concrete results.' },
-      ],
-      activeEventRestrictions: [
-        { actionId: 'build', expiresAfterTurn: 3 },
-      ],
-      board: {
-        chiefScientist: {
-          id: 'drRamirez-t1', defId: 'drRamirez', role: 'chiefScientist' as BoardRole,
-          age: 48, joinedTurn: 1, leftTurn: null, leftReason: null,
-        },
-        politicalLiaison: {
-          id: 'chairOsei-t1', defId: 'chairOsei', role: 'politicalLiaison' as BoardRole,
-          age: 55, joinedTurn: 1, leftTurn: null, leftReason: null,
-        },
-      },
-    },
-    blocs,
-    map: {
-      ...base.map,
-      earthTiles,
-      spaceNodes: generateSpaceNodes(),
-      beltNodes:  generateBeltNodes(),
-      beltEdges:  generateBeltEdges(),
-    },
-    activeEvents: [
-      { id: 'fundingCrisis-t1',      defId: 'fundingCrisis',      arrivedTurn: 1, countdownRemaining: 2, resolved: false, resolvedWith: null },
-      { id: 'diplomaticOverture-t3', defId: 'diplomaticOverture', arrivedTurn: 3, countdownRemaining: 1, resolved: false, resolvedWith: null },
-    ],
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Reactive game store (Svelte 5 runes — module-level $state)
 // ---------------------------------------------------------------------------
 
 const _savedState = autoLoad();
-let _state = $state<GameState>(_savedState ?? createDemoState());
+let _state = $state<GameState | null>(_savedState ?? null);
 
 /** UI-only: which hex coord key is currently selected for facility placement. */
 let _selectedCoordKey    = $state<string | null>(null);
 let _selectedSpaceNodeId = $state<string | null>(null);
 let _selectedBeltNodeId  = $state<string | null>(null);
 
+function resetSelections(): void {
+  _selectedCoordKey    = null;
+  _selectedSpaceNodeId = null;
+  _selectedBeltNodeId  = null;
+}
+
 export const gameStore = {
-  get state(): GameState { return _state; },
+  get state(): GameState | null { return _state; },
 
   /** The coord key of the currently selected tile (UI state, not game state). */
   get selectedCoordKey():    string | null { return _selectedCoordKey; },
@@ -207,16 +143,62 @@ export const gameStore = {
   selectSpaceNode(id: string | null): void { _selectedSpaceNodeId = id; },
   selectBeltNode(id: string | null): void { _selectedBeltNodeId = id; },
 
-  /** Dev helper: advance era without going through the full landmark project system. */
-  devAdvanceEra(): void {
-    const ERA_SEQUENCE: Era[] = ['earth', 'nearSpace', 'deepSpace'];
-    const idx = ERA_SEQUENCE.indexOf(_state.era);
-    if (idx < ERA_SEQUENCE.length - 1) {
-      _state = { ..._state, era: ERA_SEQUENCE[idx + 1] };
-    }
+  /**
+   * Initialise a fresh game run from the new-game setup screen.
+   * Replaces any existing save, builds the full initial state from the chosen
+   * bloc + push factor, deals the opening hand, then navigates to `/`.
+   */
+  startNewGame(seed: string, playerBlocDefId: string, pushFactor: PushFactor): void {
+    const bloc = BLOC_DEFS.get(playerBlocDefId);
+    if (!bloc) return;
+
+    const base = createGameState({
+      seed,
+      playerBlocDefId,
+      pushFactor,
+      startYear: 2025,
+      willProfile: bloc.willProfile,
+      startingWill: Math.round(bloc.willCeiling * 0.7),
+      startingResources: { ...bloc.startingResources },
+      startingFields: bloc.startingFields ? { ...bloc.startingFields } as Partial<FieldPoints> : undefined,
+    });
+
+    const starterCards: GameState['player']['cards'] = [
+      { id: 'lobbying-1',             defId: 'lobbying',             zone: 'deck', bankedSinceTurn: null },
+      { id: 'lobbying-2',             defId: 'lobbying',             zone: 'deck', bankedSinceTurn: null },
+      { id: 'publicAppeal-1',         defId: 'publicAppeal',         zone: 'deck', bankedSinceTurn: null },
+      { id: 'emergencyProcurement-1', defId: 'emergencyProcurement', zone: 'deck', bankedSinceTurn: null },
+      { id: 'coalitionBuilding-1',    defId: 'coalitionBuilding',    zone: 'deck', bankedSinceTurn: null },
+    ];
+
+    let next: GameState = {
+      ...base,
+      player: {
+        ...base.player,
+        cards: starterCards,
+      },
+      blocs: initialiseBlocStates([...BLOC_DEFS.values()]),
+      map: {
+        ...base.map,
+        earthTiles: generateEarthTiles(3),
+        spaceNodes: generateSpaceNodes(),
+        beltNodes:  generateBeltNodes(),
+        beltEdges:  generateBeltEdges(),
+      },
+    };
+
+    // Deal the opening hand using the seeded RNG.
+    const rng = createRng(`${seed}-t1`);
+    next = executeDrawPhase(next, rng);
+
+    clearSave();
+    _state = next;
+    resetSelections();
+    goto('/');
   },
 
   buildFacility(coordKey: string, defId: string): void {
+    if (!_state) return;
     const def = FACILITY_DEFS.get(defId);
     if (!def) return;
 
@@ -251,6 +233,7 @@ export const gameStore = {
   },
 
   mitigateEvent(eventId: string): void {
+    if (!_state) return;
     const event = _state.activeEvents.find(e => e.id === eventId);
     if (!event) return;
     const def = EVENT_DEFS.get(event.defId);
@@ -272,6 +255,7 @@ export const gameStore = {
   },
 
   acceptEvent(eventId: string): void {
+    if (!_state) return;
     const event = _state.activeEvents.find(e => e.id === eventId);
     if (!event) return;
     const def = EVENT_DEFS.get(event.defId);
@@ -293,6 +277,7 @@ export const gameStore = {
   },
 
   declineEvent(eventId: string): void {
+    if (!_state) return;
     _state = {
       ..._state,
       activeEvents: _state.activeEvents.map(e =>
@@ -302,6 +287,7 @@ export const gameStore = {
   },
 
   playCard(cardId: string): void {
+    if (!_state) return;
     const card = _state.player.cards.find(c => c.id === cardId);
     if (!card || card.zone !== 'hand') return;
     const def = CARD_DEFS.get(card.defId);
@@ -337,15 +323,17 @@ export const gameStore = {
   },
 
   bankCard(cardId: string): void {
+    if (!_state) return;
     const bankedCount = _state.player.cards.filter(c => c.zone === 'bank').length;
     if (bankedCount >= 2) return;
+    const turn = _state.turn;
     _state = {
       ..._state,
       player: {
         ..._state.player,
         cards: _state.player.cards.map(c =>
           c.id === cardId && c.zone === 'hand'
-            ? { ...c, zone: 'bank' as const, bankedSinceTurn: _state.turn }
+            ? { ...c, zone: 'bank' as const, bankedSinceTurn: turn }
             : c,
         ),
       },
@@ -353,6 +341,7 @@ export const gameStore = {
   },
 
   unbankCard(cardId: string): void {
+    if (!_state) return;
     _state = {
       ..._state,
       player: {
@@ -375,6 +364,7 @@ export const gameStore = {
    * happens automatically after state is updated.
    */
   advancePhase(): void {
+    if (!_state) return;
     if (_state.phase === 'action') {
       _state = { ..._state, phase: 'bank' };
       return;
@@ -403,17 +393,14 @@ export const gameStore = {
     }
   },
 
-  /** Reset the game to a fresh demo state. */
+  /** Navigate to the new-game setup screen. */
   resetGame(): void {
-    clearSave();
-    _state = createDemoState();
-    _selectedCoordKey    = null;
-    _selectedSpaceNodeId = null;
-    _selectedBeltNodeId  = null;
+    goto('/newgame');
   },
 
   /** Download the current game state as a JSON file. */
   exportSave(): void {
+    if (!_state) return;
     exportSave(_state);
   },
 
@@ -421,13 +408,12 @@ export const gameStore = {
   async importSaveFile(file: File): Promise<void> {
     const loaded = await importSave(file);
     _state = loaded;
-    _selectedCoordKey    = null;
-    _selectedSpaceNodeId = null;
-    _selectedBeltNodeId  = null;
+    resetSelections();
   },
 
   /** Recruit a board member. Deducts the recruit cost and adds the member to their role slot. */
   recruitMember(defId: string, startAge: number): void {
+    if (!_state) return;
     const def = BOARD_DEFS.get(defId);
     if (!def) return;
     if (!isBoardSlotVacant(_state.player.board, def.role)) return;
@@ -457,6 +443,7 @@ export const gameStore = {
 
   /** Remove a board member (resign or dismiss). */
   dismissMember(role: BoardRole): void {
+    if (!_state) return;
     const newBoard = removeBoardMember(_state.player.board, role, 'resigned', _state.turn);
     _state = {
       ..._state,
@@ -469,12 +456,14 @@ export const gameStore = {
    * Returns the options (caller should display them); does not mutate state.
    */
   getWormholeOptions(): SignalResponseOption[] {
+    if (!_state) return [];
     const rng = createRng(`${_state.seed}-wormhole`);
     return generateWormholeOptions(_state.signal, rng);
   },
 
   /** Commit the player's chosen wormhole response. */
   commitWormholeResponse(optionId: string, options: SignalResponseOption[]): void {
+    if (!_state) return;
     const newSignal = commitSignalResponse(_state.signal, optionId, options);
     const text = newSignal.wormholeActivated
       ? 'The resonance pathway is open. The wormhole is activated.'
