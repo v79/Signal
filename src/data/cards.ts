@@ -126,4 +126,93 @@ export const CARD_DEFS: Map<string, CardDef> = new Map([
     },
     upgradesFrom: 'lobbying',
   }],
+
+  // ---------------------------------------------------------------------------
+  // Cards unlocked by Era 1 technologies (Phase 14)
+  // ---------------------------------------------------------------------------
+
+  ['softwareGrant', {
+    id: 'softwareGrant',
+    name: 'Software Development Grant',
+    description: 'Fund a dedicated software research initiative.',
+    flavourText: 'Code is the new slide rule.',
+    era: 'earth',
+    effect: { fields: { computing: 10, mathematics: 5 } },
+    counterEffect: null,
+    upgradesFrom: null,
+  }],
+
+  ['globalBroadcast', {
+    id: 'globalBroadcast',
+    name: 'Global Broadcast',
+    description: 'Transmit programme achievements via satellite to a worldwide audience.',
+    flavourText: 'Every nation watches. Every parliament takes note.',
+    era: 'earth',
+    effect: { resources: { politicalWill: 10, funding: 8 } },
+    counterEffect: {
+      countersEventTag: 'interference',
+      additionalCost: { politicalWill: 8 },
+      fullNeutralise: false,
+    },
+    upgradesFrom: null,
+  }],
+
+  ['computerModellingRun', {
+    id: 'computerModellingRun',
+    name: 'Computer Modelling Run',
+    description: 'Run a large-scale simulation to accelerate theoretical research.',
+    flavourText: 'The machine works while the team sleeps.',
+    era: 'earth',
+    effect: { fields: { physics: 10, mathematics: 8, computing: 5 } },
+    counterEffect: null,
+    upgradesFrom: null,
+  }],
+
+  ['digitalCoordination', {
+    id: 'digitalCoordination',
+    name: 'Digital Coordination Network',
+    description: 'Link research teams across facilities via digital networks.',
+    flavourText: 'Shared data multiplies faster than any single laboratory could.',
+    era: 'earth',
+    effect: { fields: { computing: 8, socialScience: 6, mathematics: 4 } },
+    counterEffect: null,
+    upgradesFrom: null,
+  }],
+
+  ['biomedicalAdvance', {
+    id: 'biomedicalAdvance',
+    name: 'Biomedical Advance',
+    description: 'Apply sequencing breakthroughs to programme health and longevity research.',
+    flavourText: 'Keeping our people operational is also an engineering problem.',
+    era: 'earth',
+    effect: { fields: { biochemistry: 12, socialScience: 5 } },
+    counterEffect: null,
+    upgradesFrom: null,
+  }],
+
+  ['openSourceResearch', {
+    id: 'openSourceResearch',
+    name: 'Open-Source Research Platform',
+    description: 'Release non-classified findings to accelerate global scientific progress.',
+    flavourText: 'The signal affects everyone. The response should too.',
+    era: 'earth',
+    effect: { fields: { computing: 10, socialScience: 8, mathematics: 6 } },
+    counterEffect: null,
+    upgradesFrom: null,
+  }],
+
+  ['signalDeconvolution', {
+    id: 'signalDeconvolution',
+    name: 'Signal Deconvolution Run',
+    description: 'Apply digital telemetry techniques to isolate signal from background noise.',
+    flavourText: 'The pattern was always there. We simply lacked the tools to see it.',
+    era: 'earth',
+    effect: { signalProgress: 8, fields: { physics: 5, computing: 5 } },
+    counterEffect: {
+      countersEventTag: 'signal',
+      additionalCost: {},
+      fullNeutralise: false,
+    },
+    upgradesFrom: null,
+  }],
 ]);

@@ -4,6 +4,7 @@
   import FacilityPicker from './FacilityPicker.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS } from '../../data/facilities';
+  import { TECH_DEFS } from '../../data/technologies';
   import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
@@ -151,6 +152,8 @@
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
         playerResources={gameStore.state!.player.resources}
+        discoveredTechIds={new Set(gameStore.state!.player.techs.filter(t => t.stage === 'discovered').map(t => t.defId))}
+        techNames={new Map([...TECH_DEFS.values()].map(d => [d.id, d.name]))}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onClose={() => gameStore.selectTile(null)}
       />

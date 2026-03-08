@@ -28,6 +28,7 @@ const universityDef: FacilityDef = {
   ],
   adjacencyPenalties: [],
   depletes: false,
+  requiredTechId: null,
 };
 
 const researchLabDef: FacilityDef = {
@@ -45,6 +46,7 @@ const researchLabDef: FacilityDef = {
   ],
   adjacencyPenalties: [],
   depletes: false,
+  requiredTechId: null,
 };
 
 const militaryDef: FacilityDef = {
@@ -62,6 +64,7 @@ const militaryDef: FacilityDef = {
     { neighborDefId: 'university', fieldPenalty: { mathematics: 2, physics: 2 } },
   ],
   depletes: false,
+  requiredTechId: null,
 };
 
 const mineDef: FacilityDef = {
@@ -77,6 +80,7 @@ const mineDef: FacilityDef = {
   adjacencyBonuses: [],
   adjacencyPenalties: [],
   depletes: true,
+  requiredTechId: null,
 };
 
 const defs = new Map([

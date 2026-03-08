@@ -47,6 +47,7 @@ const ARRAY_DEF: FacilityDef = {
   adjacencyBonuses: [],
   adjacencyPenalties: [],
   depletes: false,
+  requiredTechId: null,
 };
 
 const DEFS: Map<string, FacilityDef> = new Map([['deepSpaceArray', ARRAY_DEF]]);

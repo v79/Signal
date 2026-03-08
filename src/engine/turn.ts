@@ -199,6 +199,7 @@ export function executeWorldPhase(
     techDefs,
     newFields,
     nextTurn,
+    state.signal.eraStrength,
   );
 
   // 7. Card upgrades from newly discovered techs

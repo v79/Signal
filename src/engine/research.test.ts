@@ -304,3 +304,63 @@ describe('checkResearchProgress', () => {
     expect(result.updatedTechs[0].stage).toBe('unknown');
   });
 });
+
+// ---------------------------------------------------------------------------
+// signalEraStrength gate for signal-derived techs
+// ---------------------------------------------------------------------------
+
+describe('checkResearchProgress — signalDerived gate', () => {
+  const signalDerivedDef: TechDef = {
+    id: 'signalPattern',
+    name: 'Signal Pattern Analysis',
+    rumourText: 'The transmission is not random.',
+    baseRecipe: { computing: 50, physics: 40 },
+    recipeVariance: 0.0,
+    requiresSimultaneous: true,
+    unlocksCards: [],
+    unlocksProjects: [],
+    unlocksFacilities: [],
+    signalDerived: true,
+  };
+
+  const signalDerivedMap = new Map([
+    ['signalPattern', signalDerivedDef],
+  ]);
+
+  const richFields = makeFields({ computing: 100, physics: 100 });
+
+  function makeSignalTech(stage: TechState['stage'] = 'unknown'): TechState {
+    return { defId: 'signalPattern', stage, recipe: { computing: 50, physics: 40 }, discoveredTurn: null };
+  }
+
+  it('keeps signal-derived tech unknown when signal is faint, even if fields meet threshold', () => {
+    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5, 'faint');
+    expect(result.updatedTechs[0].stage).toBe('unknown');
+    expect(result.newRumours).toHaveLength(0);
+  });
+
+  it('promotes signal-derived tech once signal reaches structured', () => {
+    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5, 'structured');
+    expect(result.updatedTechs[0].stage).toBe('discovered');
+    expect(result.newDiscoveries).toContain('signalPattern');
+  });
+
+  it('promotes signal-derived tech when signal is urgent', () => {
+    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5, 'urgent');
+    expect(result.updatedTechs[0].stage).toBe('discovered');
+  });
+
+  it('default signalEraStrength is faint — preserves backwards compatibility', () => {
+    // Called without the fifth argument (as existing tests do)
+    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5);
+    expect(result.updatedTechs[0].stage).toBe('unknown');
+  });
+
+  it('non-signal-derived techs are unaffected by signal strength parameter', () => {
+    const tech: TechState = { defId: 'orbitalMechanics', stage: 'unknown',
+      recipe: { physics: 40, mathematics: 30, engineering: 20 }, discoveredTurn: null };
+    const fields = makeFields({ physics: 40, mathematics: 30, engineering: 20 });
+    const result = checkResearchProgress([tech], defsMap, fields, 5, 'faint');
+    expect(result.updatedTechs[0].stage).toBe('discovered');
+  });
+});

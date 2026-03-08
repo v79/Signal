@@ -1,4 +1,4 @@
-import type { TechDef, TechState, TechRecipe, TechDiscoveryStage, FieldPoints } from './types';
+import type { TechDef, TechState, TechRecipe, TechDiscoveryStage, FieldPoints, SignalEraStrength } from './types';
 import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
@@ -126,14 +126,15 @@ export interface ResearchProgressResult {
  * conditions are met. Call at the end of the World Phase after field
  * points have been updated.
  *
- * Signal-derived techs are included in the check here; filtering them
- * by signal infrastructure investment is handled in Phase 9.
+ * Signal-derived techs remain 'unknown' while signalEraStrength === 'faint'.
+ * They enter the rumour pool once the signal reaches 'structured' (decodeProgress ≥ 30).
  */
 export function checkResearchProgress(
   techs: TechState[],
   techDefs: Map<string, TechDef>,
   fields: FieldPoints,
   turn: number,
+  signalEraStrength: SignalEraStrength = 'faint',
 ): ResearchProgressResult {
   const newDiscoveries: string[] = [];
   const newRumours: string[] = [];
@@ -144,6 +145,10 @@ export function checkResearchProgress(
     if (!tech.recipe) return tech;
 
     const def = techDefs.get(tech.defId);
+
+    // Signal-derived techs are locked until the signal becomes structured.
+    if (def?.signalDerived && signalEraStrength === 'faint') return tech;
+
     const requiresSimultaneous = def?.requiresSimultaneous ?? false;
 
     const newStage = getDiscoveryStage(fields, tech.recipe, requiresSimultaneous);

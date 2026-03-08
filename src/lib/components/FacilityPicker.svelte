@@ -5,22 +5,36 @@
     tile,
     facilityDefs,
     playerResources,
+    discoveredTechIds,
+    techNames,
     onBuild,
     onClose,
   }: {
     tile: MapTile;
     facilityDefs: Map<string, FacilityDef>;
     playerResources: Resources;
+    /** Set of tech def IDs the player has discovered. */
+    discoveredTechIds: ReadonlySet<string>;
+    /** Maps tech def ID → display name for locked-facility labels. */
+    techNames: ReadonlyMap<string, string>;
     onBuild: (defId: string) => void;
     onClose: () => void;
   } = $props();
 
-  const eligible = $derived(
+  function isTechUnlocked(def: FacilityDef): boolean {
+    return def.requiredTechId == null || discoveredTechIds.has(def.requiredTechId);
+  }
+
+  // Facilities whose tile type matches — split into unlocked and locked.
+  const tileEligible = $derived(
     [...facilityDefs.values()].filter(def =>
       def.allowedTileTypes.length === 0 ||
       def.allowedTileTypes.includes(tile.type),
     ),
   );
+
+  const eligible = $derived(tileEligible.filter(isTechUnlocked));
+  const locked   = $derived(tileEligible.filter(def => !isTechUnlocked(def)));
 
   function canAfford(cost: Partial<Resources>): boolean {
     return (
@@ -74,7 +88,7 @@
       <button class="close-btn" onclick={onClose}>✕</button>
     </div>
 
-    {#if eligible.length === 0}
+    {#if eligible.length === 0 && locked.length === 0}
       <div class="no-facilities">No facilities available for this tile type.</div>
     {:else}
       <div class="facility-list">
@@ -104,6 +118,20 @@
               >
                 {tile.facilityId != null ? 'OCCUPIED' : affordable ? 'BUILD' : 'AFFORD?'}
               </button>
+            </div>
+          </div>
+        {/each}
+
+        {#each locked as def}
+          <div class="facility-row locked-row">
+            <div class="facility-info">
+              <span class="facility-name locked-name">{def.name}</span>
+              <span class="facility-desc">{def.description}</span>
+            </div>
+            <div class="facility-action">
+              <div class="locked-label">
+                REQUIRES<br>{techNames.get(def.requiredTechId!) ?? def.requiredTechId}
+              </div>
             </div>
           </div>
         {/each}
@@ -258,5 +286,21 @@
     color: #2a3848;
     border-color: #1a2535;
     cursor: not-allowed;
+  }
+
+  .locked-row {
+    opacity: 0.4;
+  }
+
+  .locked-name {
+    color: #4a5868;
+  }
+
+  .locked-label {
+    font-size: 0.58rem;
+    color: #5a4a2a;
+    text-align: right;
+    line-height: 1.5;
+    letter-spacing: 0.05em;
   }
 </style>
