@@ -71,7 +71,25 @@ test('build facility — open picker, build, verify on map', async ({ page }) =>
 });
 
 // ---------------------------------------------------------------------------
-// Test 4 — Advance through phases to Turn 2
+// Test 4 — HUD menu opens and shows all three items
+// ---------------------------------------------------------------------------
+
+test('hud menu — opens with restart, new game, settings options', async ({ page }) => {
+  await startNewGame(page);
+
+  // Open the menu and wait for dropdown to appear in the DOM
+  await page.click('.menu-btn');
+  await page.waitForSelector('.menu-dropdown');
+  await page.screenshot({ path: 'screenshots/08-hud-menu-open.png', fullPage: true });
+
+  // Close by clicking backdrop, wait for dropdown to disappear
+  await page.click('.menu-backdrop');
+  await page.waitForSelector('.menu-dropdown', { state: 'hidden' });
+  await page.screenshot({ path: 'screenshots/09-hud-menu-closed.png', fullPage: true });
+});
+
+// ---------------------------------------------------------------------------
+// Test 5 — Advance through phases to Turn 2
 // ---------------------------------------------------------------------------
 
 test('phase advance — action → bank → turn 2', async ({ page }) => {
