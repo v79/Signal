@@ -131,6 +131,7 @@ export function simulateBlocs(
         id: `${turn}-elim-${bloc.defId}`,
         turn,
         text: `${def.name} has dissolved following ${reason}. The geopolitical map is redrawn.`,
+        category: 'bloc' as const,
       });
       continue;
     }
@@ -140,7 +141,7 @@ export function simulateBlocs(
     if (turn % 5 === phase) {
       const statusText = describeBloc(def.name, newWill, newResources.funding);
       if (statusText) {
-        newNewsItems.push({ id: `${turn}-status-${bloc.defId}`, turn, text: statusText });
+        newNewsItems.push({ id: `${turn}-status-${bloc.defId}`, turn, text: statusText, category: 'bloc' as const });
       }
     }
 
@@ -182,6 +183,7 @@ export function checkBlocMergers(
       id: `${turn}-merger-${a.defId}-${b.defId}`,
       turn,
       text: `Intelligence reports: ${defA.name} and ${defB.name} are exploring closer diplomatic ties.`,
+      category: 'bloc' as const,
     },
   ];
 }

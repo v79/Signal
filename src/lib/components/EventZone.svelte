@@ -1,21 +1,55 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { EventInstance, EventDef, Resources } from '../../engine/types';
 
   let {
     events,
     eventDefs,
+    currentTurn,
     onMitigate,
     onAccept,
-    onDecline,
   }: {
     events: EventInstance[];
     eventDefs: Map<string, EventDef>;
+    currentTurn: number;
     onMitigate: (eventId: string) => void;
     onAccept: (eventId: string) => void;
-    onDecline: (eventId: string) => void;
   } = $props();
 
   const activeEvents = $derived(events.filter((e) => !e.resolved));
+
+  // Events kept briefly after resolution so they can animate out
+  let leavingEvents = $state<EventInstance[]>([]);
+
+  // Non-reactive: cache event data and previous active set
+  const dataCache = new Map<string, EventInstance>();
+  let prevActiveIds = new Set<string>();
+
+  $effect(() => {
+    const current = activeEvents;
+    const currentIds = new Set(current.map((e) => e.id));
+
+    // Keep cache fresh so we have data when events leave
+    for (const e of current) dataCache.set(e.id, e);
+
+    // Detect events that just left the active list
+    const currentLeavingIds = new Set(untrack(() => leavingEvents).map((e) => e.id));
+    for (const id of prevActiveIds) {
+      if (!currentIds.has(id) && !currentLeavingIds.has(id)) {
+        const data = dataCache.get(id);
+        if (data) {
+          untrack(() => {
+            leavingEvents = [...leavingEvents, data];
+          });
+          setTimeout(() => {
+            leavingEvents = leavingEvents.filter((e) => e.id !== id);
+          }, 420);
+        }
+      }
+    }
+
+    prevActiveIds = new Set(currentIds);
+  });
 
   function urgencyClass(countdown: number): string {
     if (countdown <= 1) return 'urgent';
@@ -46,19 +80,23 @@
     if (cost.politicalWill != null) parts.push(`${cost.politicalWill} Will`);
     return parts.join(', ');
   }
+
+  const leavingIds = $derived(new Set(leavingEvents.map((e) => e.id)));
 </script>
 
 <aside class="event-zone">
   <div class="panel-title">EVENTS</div>
 
-  {#if activeEvents.length === 0}
+  {#if activeEvents.length === 0 && leavingEvents.length === 0}
     <div class="empty">No active events.</div>
   {/if}
 
-  {#each activeEvents as event (event.id)}
+  {#each [...activeEvents, ...leavingEvents] as event (event.id)}
     {@const def = eventDefs.get(event.defId)}
+    {@const isLeaving = leavingIds.has(event.id)}
+    {@const isNew = !isLeaving && event.arrivedTurn === currentTurn}
     {#if def}
-      <div class="event-card {urgencyClass(event.countdownRemaining)}">
+      <div class="event-card {urgencyClass(event.countdownRemaining)}" class:leaving={isLeaving}>
         <div class="event-header">
           <span class="event-name">{def.name}</span>
           <span class="countdown {urgencyClass(event.countdownRemaining)}">
@@ -66,14 +104,16 @@
           </span>
         </div>
 
-        <div class="event-tags">
-          {#each def.tags as tag}
-            <span class="tag">{tag}</span>
-          {/each}
-        </div>
+        {#if isNew}
+          <div class="event-tags">
+            {#each def.tags as tag}
+              <span class="tag">{tag}</span>
+            {/each}
+          </div>
 
-        <p class="event-desc">{def.description}</p>
-        <p class="event-flavour">{def.flavourText}</p>
+          <p class="event-desc">{def.description}</p>
+          <p class="event-flavour">{def.flavourText}</p>
+        {/if}
 
         <div class="effect-row negative">
           {formatEffect(def.negativeEffect)}
@@ -85,26 +125,20 @@
           </div>
         {/if}
 
-        <div class="event-actions">
-          {#if def.responseTier === 'partialMitigation' && def.mitigationCost}
-            <button class="btn btn-mitigate" onclick={() => onMitigate(event.id)}>
-              MITIGATE<br />
-              <span class="btn-cost">({formatCost(def.mitigationCost)})</span>
-            </button>
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}> IGNORE </button>
-          {:else if def.responseTier === 'noCounter' && def.positiveEffect}
-            <button class="btn btn-accept" onclick={() => onAccept(event.id)}> ACCEPT </button>
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}> DECLINE </button>
-          {:else if def.responseTier === 'noCounter'}
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}>
-              ACKNOWLEDGE
-            </button>
-          {:else}
-            <!-- fullCounter: card-based countering handled in CardHand -->
-            <span class="counter-hint">Counter with a matching card.</span>
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}> IGNORE </button>
-          {/if}
-        </div>
+        {#if !isLeaving}
+          <div class="event-actions">
+            {#if def.responseTier === 'partialMitigation' && def.mitigationCost}
+              <button class="btn btn-mitigate" onclick={() => onMitigate(event.id)}>
+                MITIGATE<br />
+                <span class="btn-cost">({formatCost(def.mitigationCost)})</span>
+              </button>
+            {:else if def.responseTier === 'noCounter' && def.positiveEffect}
+              <button class="btn btn-accept" onclick={() => onAccept(event.id)}> ACCEPT </button>
+            {:else if def.responseTier === 'fullCounter'}
+              <span class="counter-hint">Counter with a matching card.</span>
+            {/if}
+          </div>
+        {/if}
       </div>
     {/if}
   {/each}
@@ -155,6 +189,24 @@
   }
   .event-card.normal {
     border-color: #2a3545;
+  }
+
+  @keyframes slide-out-left {
+    to {
+      transform: translateX(-120%);
+      opacity: 0;
+      max-height: 0;
+      padding: 0;
+      margin: 0;
+      border-width: 0;
+      gap: 0;
+    }
+  }
+
+  .event-card.leaving {
+    animation: slide-out-left 380ms ease-in forwards;
+    pointer-events: none;
+    overflow: hidden;
   }
 
   .event-header {
@@ -259,14 +311,6 @@
   }
   .btn-accept:hover {
     background: #0a2018;
-  }
-
-  .btn-ignore {
-    color: #5a6878;
-    border-color: #2a3545;
-  }
-  .btn-ignore:hover {
-    background: #15202a;
   }
 
   .btn-cost {

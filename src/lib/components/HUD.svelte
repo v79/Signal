@@ -216,7 +216,7 @@
     >
       <div class="resource">
         <span class="res-label">FUND</span>
-        <span class="res-value fund">{fmt(resources.funding)}</span>
+        <span class="res-value fund" class:fund-negative={resources.funding < 0}>{fmt(resources.funding)}</span>
       </div>
     </Tooltip>
     <Tooltip
@@ -453,6 +453,9 @@
 
   .fund {
     color: #c8d050;
+  }
+  .fund-negative {
+    color: #d46a4a;
   }
   .mat {
     color: #8b5e3c;

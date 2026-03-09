@@ -162,7 +162,7 @@ export function applyEventEffect(
     updatedPlayer = {
       ...updatedPlayer,
       resources: {
-        funding: Math.max(0, player.resources.funding + (r.funding ?? 0)),
+        funding: player.resources.funding + (r.funding ?? 0),
         materials: Math.max(0, player.resources.materials + (r.materials ?? 0)),
         politicalWill: Math.max(0, player.resources.politicalWill + (r.politicalWill ?? 0)),
       },
@@ -225,6 +225,33 @@ export function getEffectForResolution(
     case 'expired':
       return def.negativeEffect;
   }
+}
+
+// ---------------------------------------------------------------------------
+// News text helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Summarise an EventEffect as a compact human-readable string for the news feed.
+ * e.g. "Materials -35" or "Funding -10, Political Will -25"
+ */
+export function formatEffectForNews(effect: EventEffect): string {
+  const parts: string[] = [];
+  if (effect.resources) {
+    const r = effect.resources;
+    if (r.funding != null && r.funding !== 0)
+      parts.push(`Funding ${r.funding > 0 ? '+' : ''}${r.funding}`);
+    if (r.materials != null && r.materials !== 0)
+      parts.push(`Materials ${r.materials > 0 ? '+' : ''}${r.materials}`);
+    if (r.politicalWill != null && r.politicalWill !== 0)
+      parts.push(`Political Will ${r.politicalWill > 0 ? '+' : ''}${r.politicalWill}`);
+  }
+  if (effect.fields) {
+    const total = Object.values(effect.fields).reduce((s, v) => s + (v ?? 0), 0);
+    if (total > 0) parts.push('research fields +');
+    else if (total < 0) parts.push('research fields −');
+  }
+  return parts.length > 0 ? parts.join(', ') : 'no immediate effect';
 }
 
 // ---------------------------------------------------------------------------

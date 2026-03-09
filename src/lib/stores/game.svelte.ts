@@ -30,6 +30,11 @@ import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../eng
 import { initialiseTechs } from '../../engine/research';
 import { CARD_DEFS } from '../../data/cards';
 import { EVENT_DEFS } from '../../data/events';
+import {
+  applyEventEffect,
+  getEffectForResolution,
+  formatEffectForNews,
+} from '../../engine/events';
 import { FACILITY_DEFS } from '../../data/facilities';
 import { BLOC_DEFS } from '../../data/blocs';
 import { BOARD_DEFS } from '../../data/board';
@@ -437,7 +442,7 @@ export const gameStore = {
 
     // Deduct build cost up-front regardless of whether construction is instant.
     const newResources = {
-      funding: Math.max(0, _state.player.resources.funding - (def.buildCost.funding ?? 0)),
+      funding: _state.player.resources.funding - (def.buildCost.funding ?? 0),
       materials: Math.max(0, _state.player.resources.materials - (def.buildCost.materials ?? 0)),
       politicalWill: Math.max(
         0,
@@ -555,19 +560,48 @@ export const gameStore = {
     const event = _state.activeEvents.find((e) => e.id === eventId);
     if (!event) return;
     const def = EVENT_DEFS.get(event.defId);
-    const cost = def?.mitigationCost ?? {};
+    if (!def) return;
+
+    // Deduct the mitigation cost from resources
+    const cost = def.mitigationCost ?? {};
+    let playerAfterCost = {
+      ..._state.player,
+      resources: {
+        funding: Math.max(0, _state.player.resources.funding - (cost.funding ?? 0)),
+        materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
+        politicalWill: Math.max(
+          0,
+          _state.player.resources.politicalWill - (cost.politicalWill ?? 0),
+        ),
+      },
+    };
+
+    // Apply the residual (mitigated) negative effect
+    const residualEffect = getEffectForResolution(def, 'mitigation');
+    let updatedTiles = _state.map.earthTiles;
+    if (residualEffect) {
+      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn);
+      playerAfterCost = result.player;
+      updatedTiles = result.mapTiles;
+    }
+
+    // News item
+    const costParts: string[] = [];
+    if (cost.funding) costParts.push(`Funding -${cost.funding}`);
+    if (cost.materials) costParts.push(`Materials -${cost.materials}`);
+    if (cost.politicalWill) costParts.push(`Political Will -${cost.politicalWill}`);
+    const residualSummary = residualEffect ? ` — residual: ${formatEffectForNews(residualEffect)}` : '';
+    const newsText = `${def.name} mitigated (cost: ${costParts.join(', ')})${residualSummary}.`;
+
     _state = {
       ..._state,
+      map: { ..._state.map, earthTiles: updatedTiles },
       player: {
-        ..._state.player,
-        resources: {
-          funding: Math.max(0, _state.player.resources.funding - (cost.funding ?? 0)),
-          materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
-          politicalWill: Math.max(
-            0,
-            _state.player.resources.politicalWill - (cost.politicalWill ?? 0),
-          ),
-        },
+        ...playerAfterCost,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          { id: `event-mitigated-${eventId}-t${_state.turn}`, turn: _state.turn, text: newsText, category: 'event-neutral' as const },
+        ],
       },
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'mitigation' as const } : e,
@@ -580,19 +614,32 @@ export const gameStore = {
     const event = _state.activeEvents.find((e) => e.id === eventId);
     if (!event) return;
     const def = EVENT_DEFS.get(event.defId);
-    const gain = def?.positiveEffect?.resources ?? {};
+    if (!def) return;
+
+    const effect = getEffectForResolution(def, 'accepted');
+    let updatedPlayer = _state.player;
+    let updatedTiles = _state.map.earthTiles;
+    if (effect) {
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn);
+      updatedPlayer = result.player;
+      updatedTiles = result.mapTiles;
+    }
+
+    const summary = effect ? formatEffectForNews(effect) : 'no effect';
     _state = {
       ..._state,
+      map: { ..._state.map, earthTiles: updatedTiles },
       player: {
-        ..._state.player,
-        resources: {
-          funding: Math.max(0, _state.player.resources.funding + (gain.funding ?? 0)),
-          materials: Math.max(0, _state.player.resources.materials + (gain.materials ?? 0)),
-          politicalWill: Math.max(
-            0,
-            _state.player.resources.politicalWill + (gain.politicalWill ?? 0),
-          ),
-        },
+        ...updatedPlayer,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          {
+            id: `event-accepted-${eventId}-t${_state.turn}`,
+            turn: _state.turn,
+            text: `${def.name} accepted — ${summary}.`,
+            category: 'event-gain' as const,
+          },
+        ],
       },
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
@@ -602,8 +649,37 @@ export const gameStore = {
 
   declineEvent(eventId: string): void {
     if (!_state) return;
+    const event = _state.activeEvents.find((e) => e.id === eventId);
+    if (!event) return;
+    const def = EVENT_DEFS.get(event.defId);
+    if (!def) return;
+
+    // Apply the full negative effect immediately (player chose not to act)
+    const effect = getEffectForResolution(def, 'expired');
+    let updatedPlayer = _state.player;
+    let updatedTiles = _state.map.earthTiles;
+    if (effect) {
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn);
+      updatedPlayer = result.player;
+      updatedTiles = result.mapTiles;
+    }
+
+    const summary = effect ? formatEffectForNews(effect) : 'no effect';
     _state = {
       ..._state,
+      map: { ..._state.map, earthTiles: updatedTiles },
+      player: {
+        ...updatedPlayer,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          {
+            id: `event-declined-${eventId}-t${_state.turn}`,
+            turn: _state.turn,
+            text: `${def.name} — consequence applied: ${summary}.`,
+            category: 'event-loss' as const,
+          },
+        ],
+      },
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'expired' as const } : e,
       ),
@@ -621,7 +697,7 @@ export const gameStore = {
     if (def.effect.resources) {
       const r = def.effect.resources;
       resources = {
-        funding: Math.max(0, resources.funding + (r.funding ?? 0)),
+        funding: resources.funding + (r.funding ?? 0),
         materials: Math.max(0, resources.materials + (r.materials ?? 0)),
         politicalWill: Math.max(0, resources.politicalWill + (r.politicalWill ?? 0)),
       };

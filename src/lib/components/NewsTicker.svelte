@@ -41,7 +41,7 @@
     </div>
     <div class="popup-list">
       {#each recent as item (item.id)}
-        <div class="popup-item">
+        <div class="popup-item cat-{item.category ?? 'default'}">
           <span class="popup-turn">T{item.turn}</span>
           <span class="popup-text">{item.text}</span>
         </div>
@@ -117,7 +117,7 @@
     color: #7a9eb8;
     letter-spacing: 0.05em;
     padding-left: 100%;
-    animation: ticker-scroll 60s linear infinite;
+    animation: ticker-scroll 90s linear infinite;
   }
 
   @keyframes ticker-scroll {
@@ -189,6 +189,8 @@
     gap: 0.5rem;
     font-size: 0.68rem;
     line-height: 1.45;
+    padding: 0.15rem 0.25rem;
+    border-radius: 2px;
   }
 
   .popup-turn {
@@ -203,6 +205,62 @@
     color: #7a8a98;
     flex: 1;
     min-width: 0;
+  }
+
+  /* Category colour overrides */
+  .cat-event-loss {
+    background: #180a0a;
+  }
+  .cat-event-loss .popup-text {
+    color: #d47070;
+  }
+  .cat-event-loss .popup-turn {
+    color: #8a3a3a;
+  }
+
+  .cat-event-gain {
+    background: #0a1810;
+  }
+  .cat-event-gain .popup-text {
+    color: #5ab880;
+  }
+  .cat-event-gain .popup-turn {
+    color: #2a6040;
+  }
+
+  .cat-event-neutral .popup-text {
+    color: #c8a040;
+  }
+  .cat-event-neutral .popup-turn {
+    color: #6a5820;
+  }
+
+  .cat-discovery {
+    background: #080e18;
+  }
+  .cat-discovery .popup-text {
+    color: #6ab0d8;
+  }
+  .cat-discovery .popup-turn {
+    color: #2a5070;
+  }
+
+  .cat-research .popup-text {
+    color: #7a9ab8;
+  }
+
+  .cat-signal .popup-text {
+    color: #c8a040;
+  }
+  .cat-signal .popup-turn {
+    color: #6a5820;
+  }
+
+  .cat-board .popup-text {
+    color: #a07ad8;
+  }
+  .cat-board .popup-turn {
+    color: #503870;
   }
 
   .popup-empty {
