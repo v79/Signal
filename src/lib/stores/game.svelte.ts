@@ -791,7 +791,7 @@ export const gameStore = {
         ..._state.player,
         cards: _state.player.cards.map((c) =>
           c.id === cardId && c.zone === 'bank'
-            ? { ...c, zone: 'discard' as const, bankedSinceTurn: null }
+            ? { ...c, zone: 'hand' as const, bankedSinceTurn: null }
             : c,
         ),
       },

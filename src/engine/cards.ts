@@ -122,12 +122,13 @@ export function bankCard(
 }
 
 /**
- * Remove a card from the bank back to discard (e.g. to make room for another).
+ * Return a card from the bank to the hand.
+ * Called during the action or bank phase when the player wants to retrieve a banked card.
  */
 export function unbankCard(cards: CardInstance[], cardId: string): CardInstance[] {
   return cards.map((c) =>
     c.id === cardId && c.zone === 'bank'
-      ? { ...c, zone: 'discard' as const, bankedSinceTurn: null }
+      ? { ...c, zone: 'hand' as const, bankedSinceTurn: null }
       : c,
   );
 }
