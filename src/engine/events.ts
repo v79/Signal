@@ -59,7 +59,9 @@ export function selectNewEvents(
   const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds);
   if (eligible.length === 0) return [];
 
-  const count = rng.nextInt(0, Math.min(MAX_NEW_EVENTS_PER_TURN, eligible.length));
+  const rawCount = rng.nextInt(0, Math.min(MAX_NEW_EVENTS_PER_TURN, eligible.length));
+  // Limit to at most 1 event in the first 5 turns so the player can establish a base.
+  const count = arrivedTurn <= 5 ? Math.min(rawCount, 1) : rawCount;
   const selected: EventDef[] = [];
   const remaining = [...eligible];
 

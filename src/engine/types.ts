@@ -40,8 +40,8 @@ export type PushFactor = 'climateChange' | 'geopoliticalTension';
 /** Will volatility model — differs by bloc type. */
 export type WillProfile = 'democratic' | 'authoritarian';
 
-/** The five turn phases, in order. */
-export type TurnPhase = 'event' | 'draw' | 'action' | 'bank' | 'world';
+/** The four turn phases, in order. */
+export type TurnPhase = 'event' | 'draw' | 'action' | 'world';
 
 // ---------------------------------------------------------------------------
 // Hex map (Era 1 — Earth)
@@ -705,4 +705,8 @@ export interface GameState {
    * schedule and Earth welfare decay.
    */
   climatePressure: number;
+  /** Number of card plays used so far this action phase. Reset to 0 on draw. */
+  actionsThisTurn: number;
+  /** Maximum card plays allowed per action phase (default 3). Board members may modify. */
+  maxActionsPerTurn: number;
 }

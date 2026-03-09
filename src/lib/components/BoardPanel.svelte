@@ -89,7 +89,7 @@
                   <div class="modifier debuff">− {debuff.description}</div>
                 {/each}
               </div>
-              {#if phase === 'action' || phase === 'bank'}
+              {#if phase === 'action'}
                 <button class="action-btn dismiss-btn" onclick={() => onDismiss(role)}>
                   Dismiss
                 </button>
@@ -111,7 +111,7 @@
                         <div class="modifier debuff">− {debuff.description}</div>
                       {/each}
                     </div>
-                    {#if phase === 'action' || phase === 'bank'}
+                    {#if phase === 'action'}
                       <button
                         class="action-btn recruit-btn"
                         onclick={() => onRecruit(candidate.id)}

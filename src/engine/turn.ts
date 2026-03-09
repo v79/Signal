@@ -152,6 +152,7 @@ export function executeDrawPhase(state: GameState, rng: Rng): GameState {
   return {
     ...state,
     phase: 'action',
+    actionsThisTurn: 0,
     player: { ...state.player, cards: newCards },
   };
 }
@@ -165,10 +166,10 @@ export function executeDrawPhase(state: GameState, rng: Rng): GameState {
 // ---------------------------------------------------------------------------
 
 /**
- * Transition out of the Bank Phase: discard all remaining hand cards
- * and advance phase to 'world'. Called by the UI when the player is done.
+ * Transition out of the Action Phase: discard all remaining hand cards
+ * and advance phase to 'world'. Called by the UI when the player ends their turn.
  */
-export function endBankPhase(state: GameState): GameState {
+export function endActionPhase(state: GameState): GameState {
   const discarded = state.player.cards.map((c) =>
     c.zone === 'hand' ? { ...c, zone: 'discard' as const } : c,
   );

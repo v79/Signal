@@ -124,9 +124,11 @@ describe('applyResourceDeltas', () => {
     expect(result.materials).toBe(60);
   });
 
-  it('subtracts bank decay from Funding', () => {
-    const result = applyResourceDeltas(base, ZERO_RESOURCES, 3, ZERO_RESOURCES);
-    expect(result.funding).toBe(97);
+  it('subtracts bank decay from Will (not Funding)', () => {
+    const withWill: Resources = { funding: 100, materials: 50, politicalWill: 20 };
+    const result = applyResourceDeltas(withWill, ZERO_RESOURCES, 3, ZERO_RESOURCES);
+    expect(result.politicalWill).toBe(17);
+    expect(result.funding).toBe(100); // funding unaffected by bank decay
   });
 
   it('subtracts project upkeep from all resources', () => {
@@ -139,11 +141,17 @@ describe('applyResourceDeltas', () => {
 
   it('allows funding to go negative (deficit spending)', () => {
     const small: Resources = { funding: 1, materials: 1, politicalWill: 0 };
-    const largeDecay = 100;
-    const result = applyResourceDeltas(small, ZERO_RESOURCES, largeDecay, ZERO_RESOURCES);
+    const negDelta: Resources = { funding: -100, materials: 0, politicalWill: 0 };
+    const result = applyResourceDeltas(small, negDelta, 0, ZERO_RESOURCES);
 
     expect(result.funding).toBe(1 - 100); // -99: deficit allowed
-    expect(result.materials).toBe(1); // unaffected by funding decay
+    expect(result.materials).toBe(1); // unaffected
+  });
+
+  it('clamps Will at 0 when bank decay exceeds it', () => {
+    const result = applyResourceDeltas(base, ZERO_RESOURCES, 100, ZERO_RESOURCES);
+    expect(result.politicalWill).toBe(0); // clamped, not negative
+    expect(result.funding).toBe(100); // funding unaffected by bank decay
   });
 
   it('clamps materials at 0 (cannot go negative)', () => {
@@ -162,8 +170,8 @@ describe('applyResourceDeltas', () => {
 
     const result = applyResourceDeltas(current, facilityDelta, bankDecay, upkeep);
 
-    expect(result.funding).toBe(100 + 30 - 10 - 2); // 118
+    expect(result.funding).toBe(100 + 30 - 10); // 120 (bank decay no longer hits Funding)
     expect(result.materials).toBe(40 + 20 - 5); // 55
-    expect(result.politicalWill).toBe(5); // 0 + 5
+    expect(result.politicalWill).toBe(5 - 2); // 3 (facilityDelta.will - bankDecay)
   });
 });

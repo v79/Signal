@@ -62,8 +62,8 @@ export function tickWill(will: number, config: WillConfig): number {
 // ---------------------------------------------------------------------------
 
 /**
- * Cost in Funding of holding cards in the bank for one turn.
- * 1 Funding per banked card (GDD §13.3).
+ * Cost in Political Will of holding cards in the bank for one turn.
+ * 1 Will per banked card (GDD §13.3).
  */
 export function computeBankDecay(cards: CardInstance[]): number {
   return cards.filter((c) => c.zone === 'bank').length;
@@ -88,13 +88,13 @@ export function applyFieldDeltas(current: FieldPoints, delta: FieldPoints): Fiel
 /**
  * Apply all resource changes for one World Phase tick:
  *   + facilityDelta (net output from all facilities, already includes upkeep)
- *   - bankDecay (Funding cost of banked cards)
+ *   - bankDecay (Will cost of banked cards — 1 Will per card per turn)
  *   - projectUpkeep (running cost of active projects)
  *
- * Funding is clamped at 0. Materials and PoliticalWill are also clamped at 0.
+ * Funding can go negative (running a deficit is allowed; bankruptcy is a loss condition).
+ * Materials and PoliticalWill are clamped at 0.
  * PoliticalWill is managed separately via tickWill — this function handles
- * only resource-denominated Will effects (e.g. from facilities that generate
- * small amounts of Will).
+ * only resource-denominated Will effects (e.g. from facilities or bank decay).
  */
 export function applyResourceDeltas(
   current: Resources,
@@ -104,11 +104,12 @@ export function applyResourceDeltas(
 ): Resources {
   return {
     // Funding can go negative (running a deficit is possible; bankruptcy is a loss condition).
-    funding: current.funding + facilityDelta.funding - bankDecay - projectUpkeep.funding,
+    funding: current.funding + facilityDelta.funding - projectUpkeep.funding,
     materials: Math.max(0, current.materials + facilityDelta.materials - projectUpkeep.materials),
+    // Bank decay costs 1 Will per banked card per turn; makes banking a Will trade-off.
     politicalWill: Math.max(
       0,
-      current.politicalWill + facilityDelta.politicalWill - projectUpkeep.politicalWill,
+      current.politicalWill + facilityDelta.politicalWill - bankDecay - projectUpkeep.politicalWill,
     ),
   };
 }

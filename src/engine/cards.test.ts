@@ -215,11 +215,11 @@ describe('bankCard', () => {
 });
 
 describe('unbankCard', () => {
-  it('returns a banked card to discard', () => {
+  it('returns a banked card to hand', () => {
     const cards = [{ ...makeCard('c1', 'academic', 'bank'), bankedSinceTurn: 3 }];
     const result = unbankCard(cards, 'c1');
     const card = result.find((c) => c.id === 'c1')!;
-    expect(card.zone).toBe('discard');
+    expect(card.zone).toBe('hand');
     expect(card.bankedSinceTurn).toBeNull();
   });
 });

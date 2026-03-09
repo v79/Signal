@@ -1,11 +1,14 @@
 <script lang="ts">
-  import type { CardInstance, CardDef, FieldPoints, Resources } from '../../engine/types';
+  import type { CardInstance, CardDef, FieldPoints } from '../../engine/types';
   import { BANK_LIMIT } from '../../engine/cards';
 
   let {
     cards,
     cardDefs,
     phase,
+    activeEventTags,
+    actionsThisTurn,
+    maxActionsPerTurn,
     onPlay,
     onBank,
     onUnbank,
@@ -13,6 +16,9 @@
     cards: CardInstance[];
     cardDefs: Map<string, CardDef>;
     phase: string;
+    activeEventTags: string[];
+    actionsThisTurn: number;
+    maxActionsPerTurn: number;
     onPlay: (cardId: string) => void;
     onBank: (cardId: string) => void;
     onUnbank: (cardId: string) => void;
@@ -22,6 +28,14 @@
   const bankedCards = $derived(cards.filter((c) => c.zone === 'bank'));
   const bankFull = $derived(bankedCards.length >= BANK_LIMIT);
   const inAction = $derived(phase === 'action');
+  const atActionCap = $derived(actionsThisTurn >= maxActionsPerTurn);
+  const canPlay = $derived(inAction && !atActionCap);
+
+  function canCounter(def: CardDef): boolean {
+    return (
+      !!def.counterEffect && activeEventTags.includes(def.counterEffect.countersEventTag)
+    );
+  }
 
   function formatEffect(def: CardDef): string[] {
     const lines: string[] = [];
@@ -64,7 +78,7 @@
 </script>
 
 <div class="card-hand">
-  <!-- Banked cards -->
+  <!-- Bank column (left, only when cards are banked) -->
   {#if bankedCards.length > 0}
     <div class="bank-section">
       <span class="zone-label">BANK ({bankedCards.length}/{BANK_LIMIT})</span>
@@ -91,32 +105,42 @@
                 <div class="counter-info">Counter: {def.counterEffect.countersEventTag}</div>
               {/if}
               <div class="card-actions">
-                <button
-                  class="btn btn-unbank"
-                  onclick={() => onUnbank(card.id)}
-                  title="Return to discard pile"
-                >
+                <button class="btn btn-unbank" onclick={() => onUnbank(card.id)}>
                   UNBANK
                 </button>
               </div>
               {#if card.bankedSinceTurn != null}
-                <div class="bank-since">Banked T{card.bankedSinceTurn} · −1 Fund/turn</div>
+                <div class="bank-since">Banked T{card.bankedSinceTurn} · −1 Will/turn</div>
               {/if}
             </div>
           {/if}
         {/each}
       </div>
     </div>
+    <div class="bank-divider"></div>
   {/if}
 
-  <!-- Hand cards -->
+  <!-- Hand column (right) -->
   <div class="hand-section">
-    <span class="zone-label">HAND ({handCards.length})</span>
+    <div class="hand-header">
+      <span class="zone-label">HAND ({handCards.length})</span>
+      {#if inAction}
+        <span class="action-counter" class:at-cap={atActionCap}>
+          ACTIONS {actionsThisTurn}/{maxActionsPerTurn}
+        </span>
+      {:else}
+        <span class="phase-hint">Cards available during Action phase.</span>
+      {/if}
+    </div>
     <div class="card-row">
       {#each handCards as card (card.id)}
         {@const def = cardDefs.get(card.defId)}
         {#if def}
-          <div class="card hand">
+          {@const isCounter = canCounter(def)}
+          <div class="card hand" class:can-counter={isCounter}>
+            {#if isCounter}
+              <div class="counter-badge">COUNTER AVAILABLE</div>
+            {/if}
             <div class="card-header">
               <span class="card-name">{def.name}</span>
               {#if def.counterEffect}
@@ -137,9 +161,10 @@
             <div class="card-actions">
               <button
                 class="btn btn-play"
-                class:disabled={!inAction}
-                disabled={!inAction}
+                class:disabled={!canPlay}
+                disabled={!canPlay}
                 onclick={() => onPlay(card.id)}
+                title={atActionCap ? 'Action limit reached this turn' : !inAction ? 'Not the action phase' : ''}
               >
                 PLAY
               </button>
@@ -148,7 +173,7 @@
                 class:disabled={!inAction || bankFull}
                 disabled={!inAction || bankFull}
                 onclick={() => onBank(card.id)}
-                title={bankFull ? 'Bank is full' : 'Hold for next turn'}
+                title={bankFull ? 'Bank is full' : 'Hold for next turn (costs 1 Will/turn)'}
               >
                 BANK
               </button>
@@ -167,8 +192,9 @@
 <style>
   .card-hand {
     display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
     padding: 0.5rem 0.75rem;
     border-top: 1px solid #1e2530;
     background: #090d14;
@@ -186,9 +212,46 @@
 
   .bank-section {
     flex-shrink: 0;
+    padding-right: 0.75rem;
   }
+
+  .bank-divider {
+    width: 1px;
+    background: #1e2530;
+    margin: 0 0.75rem;
+    flex-shrink: 0;
+  }
+
   .hand-section {
     flex-shrink: 0;
+    flex: 1;
+  }
+
+  .hand-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .hand-header .zone-label {
+    margin-bottom: 0;
+  }
+
+  .action-counter {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: #4a8ab4;
+  }
+
+  .action-counter.at-cap {
+    color: #c84a4a;
+  }
+
+  .phase-hint {
+    font-size: 0.6rem;
+    color: #2a3848;
+    font-style: italic;
   }
 
   .card-row {
@@ -206,6 +269,7 @@
     width: 11rem;
     flex-shrink: 0;
     font-size: 0.7rem;
+    position: relative;
   }
 
   .card.hand {
@@ -215,6 +279,23 @@
   .card.banked {
     border-color: #4a3a10;
     background: #181008;
+    width: 9.5rem;
+  }
+
+  .card.can-counter {
+    border-color: #7a6a10;
+    background: #111008;
+  }
+
+  .counter-badge {
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: #c8a040;
+    background: #1a1400;
+    border: 1px solid #5a4a10;
+    padding: 0.1rem 0.3rem;
+    text-align: center;
+    margin-bottom: 0.1rem;
   }
 
   .card-header {

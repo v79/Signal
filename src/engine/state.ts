@@ -112,6 +112,8 @@ export function createGameState(config: GameConfig): GameState {
     outcome: null,
     earthWelfareScore: 75,
     climatePressure: 10,
+    actionsThisTurn: 0,
+    maxActionsPerTurn: 3,
   };
 }
 

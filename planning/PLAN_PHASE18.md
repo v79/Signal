@@ -331,22 +331,23 @@ No changes to Phaser scenes. No new test files needed (add tests to existing fil
 
 ## Acceptance Checklist
 
-- [ ] Playing a scandal card while a Procurement Scandal event is active resolves the event
-- [ ] Playing an interference card while Signal Interference is active resolves it
-- [ ] Counter cards in hand display a visible badge when a matching fullCounter event is active
-- [ ] EventZone counter hint names the required card tag (e.g. "Counter with a SCANDAL card")
-- [ ] Event counter is recorded in the news feed with `category: 'event-gain'`
-- [ ] Card play is limited to 3 per turn; play buttons disabled after cap reached
-- [ ] Action counter `{used}/{max}` visible in card hand area
-- [ ] Counter resets to 0 on each new draw phase
-- [ ] Banking a card costs 1 Will/turn (not Funding)
-- [ ] CardHand displays "−1 Will/turn" on banked cards
-- [ ] Phase description line visible in PhaseControls
-- [ ] Card hand shows explanatory message when phase is not 'action'
-- [ ] Emergency Appeal standing action available; costs 20 Will, yields 30 Funding
-- [ ] Early turns (1–5) see noticeably fewer negative events
-- [ ] `npm run lint` — 0 errors
-- [ ] `npm run test:run` — all tests pass
+- [x] Playing a scandal card while a Procurement Scandal event is active resolves the event
+- [x] Playing an interference card while Signal Interference is active resolves it
+- [x] Counter cards in hand display a visible badge when a matching fullCounter event is active
+- [x] EventZone counter hint names the required card tag (e.g. "Counter with a SCANDAL card")
+- [x] Event counter is recorded in the news feed with `category: 'event-gain'`
+- [x] Card play is limited to 3 per turn; play buttons disabled after cap reached
+- [x] Action counter `{used}/{max}` visible in card hand area
+- [x] Counter resets to 0 on each new draw phase
+- [x] Banking a card costs 1 Will/turn (not Funding)
+- [x] CardHand displays "−1 Will/turn" on banked cards
+- [x] Phase description line visible in PhaseControls
+- [x] Card hand shows explanatory message when phase is not 'action'
+- [x] Emergency Appeal standing action available; costs 20 Will, yields 30 Funding
+- [x] Early turns (1–5) see noticeably fewer negative events
+- [x] `npm run lint` — 0 errors
+- [x] `npm run test:run` — all tests pass
+- [x] `npm run test:e2e` — all tests pass
 
 ---
 

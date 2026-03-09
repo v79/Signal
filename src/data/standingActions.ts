@@ -41,4 +41,11 @@ export const STANDING_ACTIONS: StandingActionDef[] = [
     cost: { funding: 10, politicalWill: 8 },
     actionKey: 'negotiate',
   },
+  {
+    id: 'emergencyAppeal',
+    name: 'Emergency Appeal',
+    description: 'Burn political capital for emergency operational funding. Spend 20 Will, gain 30 Funding.',
+    cost: { politicalWill: 20 },
+    actionKey: 'emergencyAppeal',
+  },
 ];

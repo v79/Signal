@@ -115,7 +115,7 @@ describe('validateSave — valid inputs', () => {
   });
 
   it('accepts all valid phase values', () => {
-    for (const phase of ['event', 'draw', 'action', 'bank', 'world'] as const) {
+    for (const phase of ['event', 'draw', 'action', 'world'] as const) {
       const result = validateSave(makeState({ phase }));
       expect(result.valid).toBe(true);
     }

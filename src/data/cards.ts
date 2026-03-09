@@ -296,4 +296,22 @@ export const CARD_DEFS: Map<string, CardDef> = new Map([
       upgradesFrom: null,
     },
   ],
+
+  [
+    'backChannelNegotiation',
+    {
+      id: 'backChannelNegotiation',
+      name: 'Back-Channel Negotiation',
+      description: 'Quiet diplomacy to resolve a supply dispute through unofficial channels.',
+      flavourText: 'Some agreements are best left unwritten.',
+      era: 'earth',
+      effect: { resources: { politicalWill: -5, materials: 10 } },
+      counterEffect: {
+        countersEventTag: 'diplomatic',
+        additionalCost: {},
+        fullNeutralise: true,
+      },
+      upgradesFrom: null,
+    },
+  ],
 ]);

@@ -62,7 +62,6 @@
     event: 'EVENT',
     draw: 'DRAW',
     action: 'ACTION',
-    bank: 'BANK',
     world: 'WORLD',
   };
 

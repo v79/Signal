@@ -55,11 +55,24 @@
 
   let rightTab = $state<'research' | 'board'>('research');
 
+  // Tags of active fullCounter events — used to highlight matching counter cards in hand.
+  const counterableTags = $derived(
+    gameStore.state
+      ? gameStore.state.activeEvents
+          .filter(
+            (e) => !e.resolved && EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter',
+          )
+          .flatMap((e) => EVENT_DEFS.get(e.defId)?.tags ?? [])
+      : [],
+  );
+
   function handleStandingAction(id: string): void {
     if (id === 'build') {
       if (gameStore.selectedCoordKey != null) {
         gameStore.selectTile(null);
       }
+    } else if (id === 'emergencyAppeal') {
+      gameStore.emergencyAppeal();
     }
   }
 </script>
@@ -164,6 +177,9 @@
         cards={gs.player.cards}
         cardDefs={CARD_DEFS}
         phase={gs.phase}
+        activeEventTags={counterableTags}
+        actionsThisTurn={gs.actionsThisTurn ?? 0}
+        maxActionsPerTurn={gs.maxActionsPerTurn ?? 3}
         onPlay={(id) => gameStore.playCard(id)}
         onBank={(id) => gameStore.bankCard(id)}
         onUnbank={(id) => gameStore.unbankCard(id)}
