@@ -79,7 +79,7 @@
   }
 
   // Net resource output = resourceOutput - upkeep
-  const netResources = $derived<Partial<Resources>>(() => {
+  const netResources = $derived.by<Partial<Resources>>(() => {
     if (!def) return {};
     const out: Partial<Resources> = { ...def.resourceOutput };
     for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {

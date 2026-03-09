@@ -61,7 +61,8 @@
     font-size: 0.6rem;
     padding: 0.25rem 0.5rem;
     border-radius: 3px;
-    white-space: nowrap;
+    white-space: pre-wrap;
+    max-width: 18rem;
     pointer-events: none;
     transition: opacity 0.15s;
     border: 1px solid #2a3a56;

@@ -19,6 +19,11 @@
   import { BOARD_DEFS } from '../data/board';
   import { FACILITY_DEFS } from '../data/facilities';
   import { TECH_DEFS } from '../data/technologies';
+  import {
+    computeAdjacencyEffects,
+    computeResourceBreakdown,
+    type ResourceBreakdown,
+  } from '../engine/facilities';
   import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
 
@@ -26,6 +31,21 @@
   onMount(() => {
     if (!gameStore.state) goto('/newgame');
   });
+
+  const resourceBreakdown = $derived<ResourceBreakdown>(
+    gameStore.state
+      ? computeResourceBreakdown(
+          gameStore.state.player.facilities,
+          FACILITY_DEFS,
+          computeAdjacencyEffects(
+            gameStore.state.player.facilities,
+            FACILITY_DEFS,
+            gameStore.state.map.earthTiles,
+          ),
+          gameStore.state.map.earthTiles,
+        )
+      : { funding: [], materials: [], politicalWill: [] },
+  );
 
   // Generate wormhole options once when the climax is reached (deterministic seed).
   const wormholeOptions = $derived(
@@ -55,6 +75,7 @@
       climatePressure={gs.climatePressure}
       will={gs.player.will}
       seed={gs.seed}
+      {resourceBreakdown}
       onExport={() => gameStore.exportSave()}
       onImport={(file) => gameStore.importSaveFile(file)}
       onRestart={() => gameStore.startNewGame(gs.seed, gs.player.blocDefId, gs.pushFactor)}

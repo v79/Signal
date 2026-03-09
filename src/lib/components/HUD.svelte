@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Resources, FieldPoints, Era, TurnPhase } from '../../engine/types';
+  import type { ResourceBreakdown } from '../../engine/facilities';
   import SaveControls from './SaveControls.svelte';
   import Tooltip from './Tooltip.svelte';
 
@@ -13,6 +14,7 @@
     climatePressure,
     will,
     seed,
+    resourceBreakdown,
     onExport,
     onImport,
     onRestart,
@@ -33,6 +35,7 @@
     onRestart: () => void;
     onNewGame: () => void;
     onSettings: () => void;
+    resourceBreakdown: ResourceBreakdown;
   } = $props();
 
   let menuOpen = $state(false);
@@ -97,6 +100,18 @@
 
   function fmt(n: number): string {
     return Math.round(n).toLocaleString();
+  }
+
+  function breakdownTooltip(
+    lines: ResourceBreakdown['funding'],
+    header: string,
+    fallback: string,
+  ): string {
+    if (lines.length === 0) return fallback;
+    const total = lines.reduce((s, l) => s + l.amount, 0);
+    const sign = total >= 0 ? '+' : '';
+    const rows = lines.map((l) => `  ${l.label}: ${l.amount >= 0 ? '+' : ''}${l.amount}/turn`);
+    return `${header} (${sign}${total}/turn)\n${rows.join('\n')}`;
   }
 </script>
 
@@ -191,20 +206,38 @@
   </div>
 
   <div class="hud-right">
-    <Tooltip text="Current funding. Gained from funding facilities and cards." direction="below">
+    <Tooltip
+      text={breakdownTooltip(
+        resourceBreakdown.funding,
+        'Funding',
+        'Current funding. Gained from funding facilities and cards.',
+      )}
+      direction="below"
+    >
       <div class="resource">
         <span class="res-label">FUND</span>
         <span class="res-value fund">{fmt(resources.funding)}</span>
       </div>
     </Tooltip>
-    <Tooltip text="Raw materials. Gained from mines and industrial zones." direction="below">
+    <Tooltip
+      text={breakdownTooltip(
+        resourceBreakdown.materials,
+        'Materials',
+        'Raw materials. Gained from mines and industrial zones.',
+      )}
+      direction="below"
+    >
       <div class="resource">
         <span class="res-label">MAT</span>
         <span class="res-value mat">{fmt(resources.materials)}</span>
       </div>
     </Tooltip>
     <Tooltip
-      text="Political will. Volatile in democracies; stable but fragile in authoritarian blocs."
+      text={breakdownTooltip(
+        resourceBreakdown.politicalWill,
+        'Political Will',
+        'Political will. Volatile in democracies; stable but fragile in authoritarian blocs.',
+      )}
       direction="below"
     >
       <div class="resource">

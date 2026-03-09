@@ -3,12 +3,7 @@
 This is a list of future requirements for the game but they are not to be implemented until a specific plan is created. This list is not ordered.
 
 - UI rework:
-  - clean up the Next turn interface, it doesn't need to show the turn number as that's shown elsewhere.
-  - Rounding of resource numbers
-  - Materials should be brown, not blue
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
-  - Hover tooltips for most UI elements
-  - We may need collapsable panels as the interface gets busier and busier
 - Standing actions need fleshing out with an updated UI:
   - Actions may take multiple turns to complete
   - Smaller, multi-row panel for standing actions

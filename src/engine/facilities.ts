@@ -202,6 +202,92 @@ export function computeFacilityOutput(
 }
 
 // ---------------------------------------------------------------------------
+// Per-facility resource breakdown (for HUD tooltips)
+// ---------------------------------------------------------------------------
+
+export interface ResourceBreakdownEntry {
+  label: string;
+  /** Net contribution this turn (positive = income, negative = cost). */
+  amount: number;
+}
+
+export interface ResourceBreakdown {
+  funding: ResourceBreakdownEntry[];
+  materials: ResourceBreakdownEntry[];
+  politicalWill: ResourceBreakdownEntry[];
+}
+
+/**
+ * Returns a per-facility-name breakdown of net resource contributions for the
+ * current turn. Facilities of the same type are grouped and their amounts
+ * summed. Adjacency bonuses are included.
+ */
+export function computeResourceBreakdown(
+  facilities: FacilityInstance[],
+  facilityDefs: Map<string, FacilityDef>,
+  adjacencyEffects: AdjacencyEffect[],
+  earthTiles: MapTile[],
+): ResourceBreakdown {
+  const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
+
+  const tileProductivity = new Map<string, number>();
+  for (const tile of earthTiles) {
+    if (tile.facilityId && tile.destroyedStatus === null) {
+      tileProductivity.set(coordKey(tile.coord), tile.productivity);
+    }
+  }
+
+  // Accumulate net per facility def name
+  const nameToNet = new Map<string, Partial<Resources>>();
+
+  for (const facility of facilities) {
+    const def = facilityDefs.get(facility.defId);
+    if (!def) continue;
+
+    const scale = facility.condition * (tileProductivity.get(facility.locationKey) ?? 1);
+    const net: Partial<Resources> = {};
+
+    for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
+      if (v) net[k] = (net[k] ?? 0) + v * scale;
+    }
+    for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
+      if (v) net[k] = (net[k] ?? 0) - v;
+    }
+    const adj = adjById.get(facility.id);
+    if (adj) {
+      for (const [k, v] of Object.entries(adj.resourceBonus) as [keyof Resources, number][]) {
+        if (v) net[k] = (net[k] ?? 0) + v;
+      }
+    }
+
+    const existing = nameToNet.get(def.name);
+    if (existing) {
+      for (const [k, v] of Object.entries(net) as [keyof Resources, number][]) {
+        existing[k] = (existing[k] ?? 0) + (v as number);
+      }
+    } else {
+      nameToNet.set(def.name, { ...net });
+    }
+  }
+
+  const result: ResourceBreakdown = { funding: [], materials: [], politicalWill: [] };
+  const resourceKeys: (keyof Resources)[] = ['funding', 'materials', 'politicalWill'];
+
+  for (const [name, net] of nameToNet) {
+    for (const key of resourceKeys) {
+      const amount = Math.round(net[key] ?? 0);
+      if (amount !== 0) result[key].push({ label: name, amount });
+    }
+  }
+
+  for (const key of resourceKeys) {
+    result[key].sort((a, b) => b.amount - a.amount);
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // Mine depletion
 // ---------------------------------------------------------------------------
 
