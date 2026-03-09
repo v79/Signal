@@ -66,7 +66,7 @@ export function tickWill(will: number, config: WillConfig): number {
  * 1 Funding per banked card (GDD §13.3).
  */
 export function computeBankDecay(cards: CardInstance[]): number {
-  return cards.filter(c => c.zone === 'bank').length;
+  return cards.filter((c) => c.zone === 'bank').length;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,10 +107,7 @@ export function applyResourceDeltas(
       0,
       current.funding + facilityDelta.funding - bankDecay - projectUpkeep.funding,
     ),
-    materials: Math.max(
-      0,
-      current.materials + facilityDelta.materials - projectUpkeep.materials,
-    ),
+    materials: Math.max(0, current.materials + facilityDelta.materials - projectUpkeep.materials),
     politicalWill: Math.max(
       0,
       current.politicalWill + facilityDelta.politicalWill - projectUpkeep.politicalWill,

@@ -133,33 +133,33 @@ describe('getEligibleEvents', () => {
   it('returns events matching era, push factor, and bloc', () => {
     const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', new Set());
     // fundingCrisis, diplomaticOpportunity, euFragmentation — not sabotage (geopoliticalTension only)
-    expect(eligible.map(e => e.id)).toContain('fundingCrisis');
-    expect(eligible.map(e => e.id)).toContain('diplomaticOpportunity');
-    expect(eligible.map(e => e.id)).toContain('euFragmentation');
-    expect(eligible.map(e => e.id)).not.toContain('sabotage');
+    expect(eligible.map((e) => e.id)).toContain('fundingCrisis');
+    expect(eligible.map((e) => e.id)).toContain('diplomaticOpportunity');
+    expect(eligible.map((e) => e.id)).toContain('euFragmentation');
+    expect(eligible.map((e) => e.id)).not.toContain('sabotage');
   });
 
   it('includes push-factor-specific events when push factor matches', () => {
     const eligible = getEligibleEvents(pool, 'earth', 'geopoliticalTension', 'eu', new Set());
-    expect(eligible.map(e => e.id)).toContain('sabotage');
+    expect(eligible.map((e) => e.id)).toContain('sabotage');
   });
 
   it('excludes bloc-specific events for non-matching blocs', () => {
     const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'northAmerica', new Set());
-    expect(eligible.map(e => e.id)).not.toContain('euFragmentation');
+    expect(eligible.map((e) => e.id)).not.toContain('euFragmentation');
   });
 
   it('excludes already-active events', () => {
     const active = new Set(['fundingCrisis']);
     const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', active);
-    expect(eligible.map(e => e.id)).not.toContain('fundingCrisis');
+    expect(eligible.map((e) => e.id)).not.toContain('fundingCrisis');
   });
 
   it('excludes events not valid for the current era', () => {
     // sabotage is earth-only; test in nearSpace
     const eligible = getEligibleEvents(pool, 'nearSpace', 'geopoliticalTension', 'eu', new Set());
-    expect(eligible.map(e => e.id)).not.toContain('sabotage');
-    expect(eligible.map(e => e.id)).toContain('diplomaticOpportunity'); // era: earth + nearSpace
+    expect(eligible.map((e) => e.id)).not.toContain('sabotage');
+    expect(eligible.map((e) => e.id)).toContain('diplomaticOpportunity'); // era: earth + nearSpace
   });
 });
 
@@ -171,7 +171,7 @@ describe('selectNewEvents', () => {
   it('returns deterministic results for the same seed', () => {
     const r1 = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev1'), 5);
     const r2 = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev1'), 5);
-    expect(r1.map(e => e.defId)).toEqual(r2.map(e => e.defId));
+    expect(r1.map((e) => e.defId)).toEqual(r2.map((e) => e.defId));
   });
 
   it('returns events with correct arrivedTurn and countdown', () => {
@@ -190,7 +190,7 @@ describe('selectNewEvents', () => {
 
   it('generates unique event IDs', () => {
     const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ids'), 3);
-    const ids = events.map(e => e.id);
+    const ids = events.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 });
@@ -228,7 +228,11 @@ describe('tickEventCountdowns', () => {
 
 describe('getJustExpiredEvents', () => {
   it('returns events that expired this tick', () => {
-    const expired = { ...makeEventInstance('fundingCrisis', 1, 0), resolved: true, resolvedWith: 'expired' as const };
+    const expired = {
+      ...makeEventInstance('fundingCrisis', 1, 0),
+      resolved: true,
+      resolvedWith: 'expired' as const,
+    };
     const active = makeEventInstance('sabotage', 1, 2);
     const result = getJustExpiredEvents([expired, active]);
     expect(result).toHaveLength(1);
@@ -249,10 +253,7 @@ describe('resolveEvent', () => {
   });
 
   it('does not affect other events', () => {
-    const events = [
-      makeEventInstance('fundingCrisis', 1, 2),
-      makeEventInstance('sabotage', 1, 2),
-    ];
+    const events = [makeEventInstance('fundingCrisis', 1, 2), makeEventInstance('sabotage', 1, 2)];
     const result = resolveEvent(events, 'fundingCrisis-t1', 'mitigation');
     expect(result[1].resolved).toBe(false);
   });

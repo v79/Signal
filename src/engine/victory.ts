@@ -19,11 +19,11 @@ import type { GameState, GameOutcome, VictoryCondition, LossCondition } from './
 /** earthWelfareScore below this at any victory triggers the AbandonedEarth outcome. */
 const ABANDONED_EARTH_THRESHOLD = 40;
 
-const ECO_WELFARE_MIN   = 88;
-const ECO_CLIMATE_MAX   = 25;
-const ECON_FUNDING_MIN  = 500;
+const ECO_WELFARE_MIN = 88;
+const ECO_CLIMATE_MAX = 25;
+const ECON_FUNDING_MIN = 500;
 const ECON_MATERIAL_MIN = 300;
-const POLITICAL_WILL_MIN = 5;   // will AND politicalWill must both be ≤ this
+const POLITICAL_WILL_MIN = 5; // will AND politicalWill must both be ≤ this
 
 // ---------------------------------------------------------------------------
 // Individual victory checks
@@ -38,10 +38,7 @@ export function checkWormholeVictory(state: GameState): boolean {
  * Requires high Earth welfare AND low climate pressure.
  */
 export function checkEcologicalRestorationVictory(state: GameState): boolean {
-  return (
-    state.earthWelfareScore >= ECO_WELFARE_MIN &&
-    state.climatePressure   <= ECO_CLIMATE_MAX
-  );
+  return state.earthWelfareScore >= ECO_WELFARE_MIN && state.climatePressure <= ECO_CLIMATE_MAX;
 }
 
 /**
@@ -49,7 +46,7 @@ export function checkEcologicalRestorationVictory(state: GameState): boolean {
  */
 export function checkEconomicHegemonyVictory(state: GameState): boolean {
   return (
-    state.player.resources.funding   >= ECON_FUNDING_MIN &&
+    state.player.resources.funding >= ECON_FUNDING_MIN &&
     state.player.resources.materials >= ECON_MATERIAL_MIN
   );
 }
@@ -62,7 +59,7 @@ export function checkEconomicHegemonyVictory(state: GameState): boolean {
 export function checkTerraformingVictory(state: GameState): boolean {
   return (
     (state.era === 'nearSpace' || state.era === 'deepSpace') &&
-    state.map.spaceNodes.some(n => n.id === 'lunarSurface' && n.facilityId !== null)
+    state.map.spaceNodes.some((n) => n.id === 'lunarSurface' && n.facilityId !== null)
   );
 }
 
@@ -86,10 +83,7 @@ export function checkSignalMisinterpretationLoss(state: GameState): boolean {
  * Political Collapse: Will has bottomed out and political capital is gone.
  */
 export function checkPoliticalCollapseLoss(state: GameState): boolean {
-  return (
-    state.player.will             <= POLITICAL_WILL_MIN &&
-    state.player.resources.politicalWill <= 0
-  );
+  return state.player.will <= POLITICAL_WILL_MIN && state.player.resources.politicalWill <= 0;
 }
 
 /**
@@ -97,8 +91,8 @@ export function checkPoliticalCollapseLoss(state: GameState): boolean {
  */
 export function checkResourceExhaustionLoss(state: GameState): boolean {
   return (
-    state.player.resources.funding       <= 0 &&
-    state.player.resources.materials     <= 0 &&
+    state.player.resources.funding <= 0 &&
+    state.player.resources.materials <= 0 &&
     state.player.resources.politicalWill <= 0
   );
 }
@@ -128,8 +122,8 @@ export function tickEarthWelfare(state: GameState): number {
 
   const climateDecay = (climatePressure / 100) * 0.8;
 
-  const earthFacilityCount = player.facilities.filter(f =>
-    map.earthTiles.some(t => `${t.coord.q},${t.coord.r}` === f.locationKey),
+  const earthFacilityCount = player.facilities.filter((f) =>
+    map.earthTiles.some((t) => `${t.coord.q},${t.coord.r}` === f.locationKey),
   ).length;
   const facilityRecovery = Math.min(0.4, earthFacilityCount * 0.05);
 
@@ -150,10 +144,10 @@ export function tickEarthWelfare(state: GameState): number {
  */
 export function checkVictoryConditions(state: GameState): GameOutcome | null {
   const lossConds: [() => boolean, LossCondition][] = [
-    [() => checkClimateCollapseLoss(state),         'climateCollapse'],
+    [() => checkClimateCollapseLoss(state), 'climateCollapse'],
     [() => checkSignalMisinterpretationLoss(state), 'signalMisinterpretation'],
-    [() => checkPoliticalCollapseLoss(state),       'politicalCollapse'],
-    [() => checkResourceExhaustionLoss(state),      'resourceExhaustion'],
+    [() => checkPoliticalCollapseLoss(state), 'politicalCollapse'],
+    [() => checkResourceExhaustionLoss(state), 'resourceExhaustion'],
   ];
 
   for (const [check, condition] of lossConds) {
@@ -163,10 +157,10 @@ export function checkVictoryConditions(state: GameState): GameOutcome | null {
   }
 
   const victConds: [() => boolean, VictoryCondition][] = [
-    [() => checkWormholeVictory(state),              'wormhole'],
+    [() => checkWormholeVictory(state), 'wormhole'],
     [() => checkEcologicalRestorationVictory(state), 'ecologicalRestoration'],
-    [() => checkEconomicHegemonyVictory(state),      'economicHegemony'],
-    [() => checkTerraformingVictory(state),          'terraforming'],
+    [() => checkEconomicHegemonyVictory(state), 'economicHegemony'],
+    [() => checkTerraformingVictory(state), 'terraforming'],
   ];
 
   for (const [check, condition] of victConds) {

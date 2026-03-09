@@ -2,9 +2,17 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import type {
-    TechState, TechDef, FieldPoints, SignalState, CardDef, FacilityDef,
+    TechState,
+    TechDef,
+    FieldPoints,
+    SignalState,
+    CardDef,
+    FacilityDef,
   } from '../../engine/types';
-  import type { TechTreeScene as TechTreeSceneType, TechTreeSceneData } from '../../phaser/TechTreeScene';
+  import type {
+    TechTreeScene as TechTreeSceneType,
+    TechTreeSceneData,
+  } from '../../phaser/TechTreeScene';
 
   let {
     techs,
@@ -15,13 +23,13 @@
     facilityDefs,
     onClose,
   }: {
-    techs:        TechState[];
-    techDefs:     Map<string, TechDef>;
-    fields:       FieldPoints;
-    signal:       SignalState;
-    cardDefs:     Map<string, CardDef>;
+    techs: TechState[];
+    techDefs: Map<string, TechDef>;
+    fields: FieldPoints;
+    signal: SignalState;
+    cardDefs: Map<string, CardDef>;
     facilityDefs: Map<string, FacilityDef>;
-    onClose:      () => void;
+    onClose: () => void;
   } = $props();
 
   let containerEl: HTMLDivElement;
@@ -44,18 +52,18 @@
     const sceneInstance = new TechTreeScene();
 
     game = new Phaser.Game({
-      type:            Phaser.AUTO,
-      parent:          containerEl,
-      width:           containerEl.clientWidth  || 900,
-      height:          containerEl.clientHeight || 560,
+      type: Phaser.AUTO,
+      parent: containerEl,
+      width: containerEl.clientWidth || 900,
+      height: containerEl.clientHeight || 560,
       backgroundColor: '#050a10',
       // Match the display's pixel density so text renders crisply on HiDPI screens.
       // Phaser doubles the canvas buffer while keeping game coordinates the same,
       // so all font sizes and positions are unchanged.
       // (resolution is a valid Phaser config key; the @types/phaser package omits it)
       ...({ resolution: window.devicePixelRatio || 1 } as object),
-      scene:           sceneInstance,
-      banner:          false,
+      scene: sceneInstance,
+      banner: false,
     });
 
     game.events.once('ready', () => {
@@ -67,7 +75,7 @@
 
   onDestroy(() => {
     game?.destroy(true);
-    game  = null;
+    game = null;
     scene = null;
   });
 
@@ -85,17 +93,23 @@
   }
 
   // Discovered tech count for header status
-  const discoveredCount = $derived(techs.filter(t => t.stage === 'discovered').length);
-  const totalCount      = $derived(techs.length);
+  const discoveredCount = $derived(techs.filter((t) => t.stage === 'discovered').length);
+  const totalCount = $derived(techs.length);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="backdrop" onclick={handleBackdropClick} role="dialog" tabindex="-1" aria-modal="true" aria-label="Tech Tree">
+<div
+  class="backdrop"
+  onclick={handleBackdropClick}
+  role="dialog"
+  tabindex="-1"
+  aria-modal="true"
+  aria-label="Tech Tree"
+>
   <div class="modal-box">
-
     <div class="modal-header">
       <div class="header-left">
         <span class="classify-badge">RESTRICTED</span>
@@ -120,12 +134,16 @@
         </div>
       {/if}
       <div class="zoom-controls" aria-label="Zoom controls">
-        <button class="zoom-btn" onclick={() => scene?.zoomIn()}    aria-label="Zoom in">+</button>
-        <button class="zoom-btn zoom-reset" onclick={() => scene?.resetZoom()} aria-label="Reset zoom" title="Reset zoom">⊙</button>
-        <button class="zoom-btn" onclick={() => scene?.zoomOut()}   aria-label="Zoom out">−</button>
+        <button class="zoom-btn" onclick={() => scene?.zoomIn()} aria-label="Zoom in">+</button>
+        <button
+          class="zoom-btn zoom-reset"
+          onclick={() => scene?.resetZoom()}
+          aria-label="Reset zoom"
+          title="Reset zoom">⊙</button
+        >
+        <button class="zoom-btn" onclick={() => scene?.zoomOut()} aria-label="Zoom out">−</button>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -263,7 +281,10 @@
     cursor: pointer;
     font-family: monospace;
     border-radius: 1px;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
     line-height: 1;
   }
 
@@ -334,9 +355,16 @@
   }
 
   @keyframes blink {
-    0%, 100% { opacity: 1; }
-    33%       { opacity: 0.2; }
-    66%       { opacity: 0.6; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    33% {
+      opacity: 0.2;
+    }
+    66% {
+      opacity: 0.6;
+    }
   }
 
   .zoom-controls {
@@ -363,7 +391,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
   }
 
   .zoom-btn:hover {

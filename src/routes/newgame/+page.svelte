@@ -29,23 +29,27 @@
   let pushFactor = $state<PushFactor>('climateChange');
 
   const PUSH_LABELS: Record<PushFactor, string> = {
-    climateChange:       'CLIMATE CHANGE',
+    climateChange: 'CLIMATE CHANGE',
     geopoliticalTension: 'GEOPOLITICAL TENSION',
   };
 
   const PUSH_DESCRIPTIONS: Record<PushFactor, string> = {
-    climateChange:        'Rising temperatures and ecological instability drive global urgency.',
-    geopoliticalTension:  'Superpower rivalry and resource competition dominate world affairs.',
+    climateChange: 'Rising temperatures and ecological instability drive global urgency.',
+    geopoliticalTension: 'Superpower rivalry and resource competition dominate world affairs.',
   };
 
   // ---------------------------------------------------------------------------
   // Resource bar helper
   // ---------------------------------------------------------------------------
 
-  const RESOURCE_BAR_DEFS: Array<{ label: string; key: 'funding' | 'materials' | 'politicalWill'; cls: string }> = [
-    { label: 'FND', key: 'funding',       cls: 'funding'   },
-    { label: 'MAT', key: 'materials',     cls: 'materials' },
-    { label: 'PWL', key: 'politicalWill', cls: 'will'      },
+  const RESOURCE_BAR_DEFS: Array<{
+    label: string;
+    key: 'funding' | 'materials' | 'politicalWill';
+    cls: string;
+  }> = [
+    { label: 'FND', key: 'funding', cls: 'funding' },
+    { label: 'MAT', key: 'materials', cls: 'materials' },
+    { label: 'PWL', key: 'politicalWill', cls: 'will' },
   ];
 
   function barWidth(value: number, max = 100): string {
@@ -63,7 +67,6 @@
 
 <div class="newgame-layout">
   <div class="setup-card">
-
     <!-- Header -->
     <div class="header">
       <div class="signal-glyph">⬡</div>
@@ -86,7 +89,13 @@
           autocomplete="off"
           placeholder="8-char hex string"
         />
-        <button class="btn-refresh" onclick={() => { seed = generateSeed(); }} title="Generate new seed">
+        <button
+          class="btn-refresh"
+          onclick={() => {
+            seed = generateSeed();
+          }}
+          title="Generate new seed"
+        >
           ↺
         </button>
       </div>
@@ -101,20 +110,34 @@
           <button
             class="bloc-card"
             class:selected={selectedBlocKey === key}
-            onclick={() => { selectedBlocKey = key; }}
+            onclick={() => {
+              selectedBlocKey = key;
+            }}
           >
             <div class="bloc-name">{def.name}</div>
-            <div class="will-badge" class:democratic={def.willProfile === 'democratic'} class:authoritarian={def.willProfile === 'authoritarian'}>
+            <div
+              class="will-badge"
+              class:democratic={def.willProfile === 'democratic'}
+              class:authoritarian={def.willProfile === 'authoritarian'}
+            >
               {def.willProfile.toUpperCase()}
             </div>
-            <div class="victory-bias">→ {def.victoryBias.replace(/([A-Z])/g, ' $1').trim().toUpperCase()}</div>
+            <div class="victory-bias">
+              → {def.victoryBias
+                .replace(/([A-Z])/g, ' $1')
+                .trim()
+                .toUpperCase()}
+            </div>
 
             <div class="resource-bars">
               {#each RESOURCE_BAR_DEFS as bar}
                 <div class="bar-row">
                   <span class="bar-label">{bar.label}</span>
                   <div class="bar-track">
-                    <div class="bar-fill {bar.cls}" style="width: {barWidth(def.startingResources[bar.key])}"></div>
+                    <div
+                      class="bar-fill {bar.cls}"
+                      style="width: {barWidth(def.startingResources[bar.key])}"
+                    ></div>
                   </div>
                 </div>
               {/each}
@@ -128,11 +151,13 @@
     <section class="section">
       <div class="section-label">PUSH FACTOR</div>
       <div class="push-row">
-        {#each (['climateChange', 'geopoliticalTension'] as PushFactor[]) as pf}
+        {#each ['climateChange', 'geopoliticalTension'] as PushFactor[] as pf}
           <button
             class="push-btn"
             class:active={pushFactor === pf}
-            onclick={() => { pushFactor = pf; }}
+            onclick={() => {
+              pushFactor = pf;
+            }}
           >
             <div class="push-label">{PUSH_LABELS[pf]}</div>
             <div class="push-desc">{PUSH_DESCRIPTIONS[pf]}</div>
@@ -143,11 +168,8 @@
 
     <!-- Begin -->
     <div class="begin-row">
-      <button class="btn-begin" onclick={beginMission}>
-        BEGIN MISSION &rsaquo;
-      </button>
+      <button class="btn-begin" onclick={beginMission}> BEGIN MISSION &rsaquo; </button>
     </div>
-
   </div>
 </div>
 
@@ -168,8 +190,7 @@
     box-sizing: border-box;
     background:
       radial-gradient(ellipse at 15% 60%, rgba(20, 40, 80, 0.3) 0%, transparent 50%),
-      radial-gradient(ellipse at 85% 20%, rgba(10, 30, 60, 0.2) 0%, transparent 50%),
-      #060a10;
+      radial-gradient(ellipse at 85% 20%, rgba(10, 30, 60, 0.2) 0%, transparent 50%), #060a10;
   }
 
   .setup-card {
@@ -258,7 +279,9 @@
     padding: 0.35rem 0.6rem;
     border-radius: 3px;
     line-height: 1;
-    transition: color 0.15s, border-color 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
   }
 
   .btn-refresh:hover {
@@ -287,7 +310,9 @@
     cursor: pointer;
     text-align: left;
     font-family: monospace;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
   }
 
   .bloc-card:hover {
@@ -369,9 +394,15 @@
     transition: width 0.2s;
   }
 
-  .bar-fill.funding   { background: #4a90c0; }
-  .bar-fill.materials { background: #60a860; }
-  .bar-fill.will      { background: #9060c0; }
+  .bar-fill.funding {
+    background: #4a90c0;
+  }
+  .bar-fill.materials {
+    background: #60a860;
+  }
+  .bar-fill.will {
+    background: #9060c0;
+  }
 
   /* Push factor */
   .push-row {
@@ -388,7 +419,9 @@
     cursor: pointer;
     font-family: monospace;
     text-align: left;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
   }
 
   .push-btn:hover {
@@ -432,7 +465,10 @@
     letter-spacing: 0.1em;
     padding: 0.7rem 2.5rem;
     border-radius: 3px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
   }
 
   .btn-begin:hover {

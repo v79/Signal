@@ -9,11 +9,11 @@ technologies.
 
 ### Full game timeline (all three eras)
 
-| Era | Years | Turns | Content phase |
-|-----|-------|-------|---------------|
-| Era 1 — Earth | 1970–2010 | 1–40 | **Phase 14** (this document) |
-| Era 2 — Near Space (LEO) | ~2010–2055 | 41–85 | Phase 15 (future) |
-| Era 3 — Asteroid Belt | ~2055–2100 | 86–130 | Phase 16 (future) |
+| Era                      | Years      | Turns  | Content phase                |
+| ------------------------ | ---------- | ------ | ---------------------------- |
+| Era 1 — Earth            | 1970–2010  | 1–40   | **Phase 14** (this document) |
+| Era 2 — Near Space (LEO) | ~2010–2055 | 41–85  | Phase 15 (future)            |
+| Era 3 — Asteroid Belt    | ~2055–2100 | 86–130 | Phase 16 (future)            |
 
 The full game, start to wormhole climax, spans roughly 130 turns / 130 years. Victory or loss can
 cut it short in any era.
@@ -24,14 +24,14 @@ cut it short in any era.
 
 `turn.ts` advances `year` by 1 each World Phase. Setting `startYear: 1970` gives:
 
-| Turn | Year | Approximate milestone |
-|------|------|-----------------------|
-| 1    | 1970 | Game start — Apollo era, early space race |
-| 2    | 1971 | Signal first detected (news item) |
-| 10   | 1979 | Tier 1 techs discoverable; first computing facilities |
-| 20   | 1989 | Tier 2 techs; personal computing arrives |
-| 30   | 1999 | Tier 3 techs; internet protocols, signal pattern work |
-| 38–40 | 2007–2009 | `orbitalMechanics` breakthrough — Era 2 gate opens |
+| Turn  | Year      | Approximate milestone                                 |
+| ----- | --------- | ----------------------------------------------------- |
+| 1     | 1970      | Game start — Apollo era, early space race             |
+| 2     | 1971      | Signal first detected (news item)                     |
+| 10    | 1979      | Tier 1 techs discoverable; first computing facilities |
+| 20    | 1989      | Tier 2 techs; personal computing arrives              |
+| 30    | 1999      | Tier 3 techs; internet protocols, signal pattern work |
+| 38–40 | 2007–2009 | `orbitalMechanics` breakthrough — Era 2 gate opens    |
 
 ---
 
@@ -79,15 +79,15 @@ starts at `decodeProgress: 0` as normal. The news items are narrative framing on
 Adjust `startingFields` to reflect 1970s-era knowledge baselines. Computing was nascent; physics
 and engineering dominated the space-race powers. Resources stay roughly the same (abstract units).
 
-| Bloc | Old startingFields | New startingFields |
-|------|-------------------|--------------------|
-| northAmerica | engineering: 20, computing: 15 | physics: 15, engineering: 20 |
-| eastAsia | engineering: 25, mathematics: 10 | engineering: 25, physics: 8 |
-| southAmerica | biochemistry: 15, socialScience: 10 | biochemistry: 12, socialScience: 10 |
-| africaCoalition | socialScience: 12, biochemistry: 8 | socialScience: 10, biochemistry: 6 |
-| eurozone | socialScience: 18, physics: 12, mathematics: 10 | physics: 18, mathematics: 12, socialScience: 8 |
-| southAsia | mathematics: 20, computing: 14 | mathematics: 15, engineering: 10 |
-| middleEast | engineering: 15, computing: 10 | engineering: 12, physics: 5 |
+| Bloc            | Old startingFields                              | New startingFields                             |
+| --------------- | ----------------------------------------------- | ---------------------------------------------- |
+| northAmerica    | engineering: 20, computing: 15                  | physics: 15, engineering: 20                   |
+| eastAsia        | engineering: 25, mathematics: 10                | engineering: 25, physics: 8                    |
+| southAmerica    | biochemistry: 15, socialScience: 10             | biochemistry: 12, socialScience: 10            |
+| africaCoalition | socialScience: 12, biochemistry: 8              | socialScience: 10, biochemistry: 6             |
+| eurozone        | socialScience: 18, physics: 12, mathematics: 10 | physics: 18, mathematics: 12, socialScience: 8 |
+| southAsia       | mathematics: 20, computing: 14                  | mathematics: 15, engineering: 10               |
+| middleEast      | engineering: 15, computing: 10                  | engineering: 12, physics: 5                    |
 
 ---
 
@@ -98,14 +98,14 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 
 ### Field accumulation reference (rough per-turn rates with active facilities)
 
-| Field | Main facility | Rate with 1 facility | Rate with 2 |
-|-------|--------------|----------------------|-------------|
-| physics | researchLab (3) + deepSpaceArray (5) | 3–5 | 8–13 |
-| mathematics | researchLab (2), computingHub (3), publicUniversity (2) | 2–3 | 5–8 |
-| engineering | engineeringWorks (4) | 4 | 8 |
-| computing | computingHub (6) | 6 | 12 |
-| biochemistry | bioResearchCentre (5) | 5 | — |
-| socialScience | publicUniversity (3), bioResearchCentre (2) | 3–5 | — |
+| Field         | Main facility                                           | Rate with 1 facility | Rate with 2 |
+| ------------- | ------------------------------------------------------- | -------------------- | ----------- |
+| physics       | researchLab (3) + deepSpaceArray (5)                    | 3–5                  | 8–13        |
+| mathematics   | researchLab (2), computingHub (3), publicUniversity (2) | 2–3                  | 5–8         |
+| engineering   | engineeringWorks (4)                                    | 4                    | 8           |
+| computing     | computingHub (6)                                        | 6                    | 12          |
+| biochemistry  | bioResearchCentre (5)                                   | 5                    | —           |
+| socialScience | publicUniversity (3), bioResearchCentre (2)             | 3–5                  | —           |
 
 **Signal decode rate:** `0.25 + (physics + mathematics) / 50 + deepSpaceArrayCount × 3`
 `'structured'` threshold: 30 decode pts. With early deepSpaceArray investment, reachable ~turn 8–15.
@@ -122,6 +122,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 ### Tier 1 — Foundation Technologies (1975–1982)
 
 **`integratedCircuits`**
+
 - name: "Integrated Circuit Arrays"
 - rumourText: "Miniaturised components are being tested that may replace entire banks of discrete transistors."
 - baseRecipe: `{ engineering: 40, computing: 25 }`
@@ -132,6 +133,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`rocketGuidanceSystems`**
+
 - name: "Precision Rocket Guidance"
 - rumourText: "Navigation accuracy beyond the atmosphere may soon allow reliable orbital insertion on first attempt."
 - baseRecipe: `{ physics: 35, mathematics: 30, engineering: 40 }`
@@ -142,6 +144,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`satelliteCommunications`**
+
 - name: "Satellite Communications"
 - rumourText: "A relay station in orbit could link every ground facility on the globe simultaneously."
 - baseRecipe: `{ physics: 45, engineering: 50 }`
@@ -152,6 +155,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`microprocessors`**
+
 - name: "Microprocessor Architecture"
 - rumourText: "A single chip carrying a complete instruction set has been demonstrated in prototype form."
 - baseRecipe: `{ computing: 55, mathematics: 40 }`
@@ -166,6 +170,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 ### Tier 2 — Orbital Era Technologies (1982–1992)
 
 **`personalComputing`**
+
 - name: "Personal Computing"
 - rumourText: "Desktop machines with sufficient power for scientific calculation may reach civilian researchers within years."
 - baseRecipe: `{ computing: 80, socialScience: 45 }`
@@ -176,6 +181,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`geneticSequencing`**
+
 - name: "Genetic Sequencing Technology"
 - rumourText: "The chemical language of DNA is almost legible — automated reading may be possible within a decade."
 - baseRecipe: `{ biochemistry: 75, computing: 55 }`
@@ -186,6 +192,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`globalPositioningNetwork`**
+
 - name: "Global Positioning Network"
 - rumourText: "A constellation of precision timing satellites could yield metre-accuracy navigation across the entire planet."
 - baseRecipe: `{ mathematics: 85, physics: 65, computing: 60 }`
@@ -196,6 +203,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`roboticsAutomation`**
+
 - name: "Robotics and Remote Automation"
 - rumourText: "Articulated machines capable of sustained remote operation in hostile environments have passed field trials."
 - baseRecipe: `{ engineering: 90, computing: 70 }`
@@ -204,13 +212,14 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - unlocksCards: `[]`
 - unlocksFacilities: `[]`
 - signalDerived: false
-- *Note: full facility unlocks (asteroid miners) deferred to Phase 15/16 when those eras are in scope.*
+- _Note: full facility unlocks (asteroid miners) deferred to Phase 15/16 when those eras are in scope._
 
 ---
 
 ### Tier 3 — Digital Age & Signal Foundations (1992–2004)
 
 **`internetProtocols`**
+
 - name: "Global Internetwork Protocols"
 - rumourText: "A common packet-routing standard may allow every research facility on Earth to share data in real time."
 - baseRecipe: `{ computing: 130, mathematics: 95 }`
@@ -221,6 +230,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`digitisedTelemetry`**
+
 - name: "Digitised Space Telemetry"
 - rumourText: "Standardised digital transmission formats for deep-space probes would dramatically improve the precision of signal analysis."
 - baseRecipe: `{ physics: 120, computing: 100, mathematics: 85 }`
@@ -231,6 +241,7 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - signalDerived: false
 
 **`signalPatternAnalysis`** ← signal-derived
+
 - name: "Signal Pattern Analysis"
 - rumourText: "The transmission is not random. The interval structure repeats at a period inconsistent with any known pulsar or natural source."
 - baseRecipe: `{ computing: 150, mathematics: 125, physics: 100 }`
@@ -239,14 +250,15 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - unlocksCards: `[]`
 - unlocksFacilities: `[]`
 - signalDerived: **true**
-- *Only enters the rumour pool once `signal.eraStrength >= 'structured'` (decodeProgress ≥ 30).*
-- *With a deepSpaceArray and physics investment, 'structured' is reachable around turns 8–15 — this tech enters the pool early but its field thresholds mean discovery is still a late-game achievement.*
+- _Only enters the rumour pool once `signal.eraStrength >= 'structured'` (decodeProgress ≥ 30)._
+- _With a deepSpaceArray and physics investment, 'structured' is reachable around turns 8–15 — this tech enters the pool early but its field thresholds mean discovery is still a late-game achievement._
 
 ---
 
 ### Tier 4 — Era Gate (2000–2010)
 
 **`orbitalMechanics`**
+
 - name: "Applied Orbital Mechanics"
 - rumourText: "Sustained human habitation in low orbit is within theoretical reach — the mathematics now; the engineering must follow."
 - baseRecipe: `{ physics: 200, mathematics: 140 }`
@@ -255,12 +267,12 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 - unlocksCards: `[]`
 - unlocksFacilities: `['orbitalPlatform']`
 - signalDerived: false
-- *This is the Era 2 gate tech. Discovering it makes the orbitalPlatform facility available,*
-  *signalling that Near Space operations are within reach. The player will still need a landmark*
-  *project (Phase 15 scope) to formally transition the era.*
-- *Threshold design: physics 200 (achievable ~turn 20+ with deepSpaceArray) and mathematics 140*
-  *(achievable ~turn 28–35 with computingHub + researchLab). The simultaneous requirement means*
-  *the player must invest in both fields, not neglect mathematics for physics.*
+- _This is the Era 2 gate tech. Discovering it makes the orbitalPlatform facility available,_
+  _signalling that Near Space operations are within reach. The player will still need a landmark_
+  _project (Phase 15 scope) to formally transition the era._
+- _Threshold design: physics 200 (achievable ~turn 20+ with deepSpaceArray) and mathematics 140_
+  _(achievable ~turn 28–35 with computingHub + researchLab). The simultaneous requirement means_
+  _the player must invest in both fields, not neglect mathematics for physics._
 
 ---
 
@@ -268,15 +280,15 @@ Technologies for Near Space and Asteroid Belt are deferred to Phase 15 and Phase
 
 **File:** `src/data/cards.ts` — append these 7 entries to `CARD_DEFS`. All `era: 'earth'`.
 
-| id | name | effect | counterEffect | unlocked by |
-|----|------|--------|---------------|-------------|
-| `softwareGrant` | Software Development Grant | fields: { computing: 10, mathematics: 5 } | null | integratedCircuits |
-| `globalBroadcast` | Global Broadcast | resources: { politicalWill: 10, funding: 8 } | countersEventTag: 'interference', cost: { politicalWill: 8 }, fullNeutralise: false | satelliteCommunications |
-| `computerModellingRun` | Computer Modelling Run | fields: { physics: 10, mathematics: 8, computing: 5 } | null | microprocessors |
-| `digitalCoordination` | Digital Coordination Network | fields: { computing: 8, socialScience: 6, mathematics: 4 } | null | personalComputing |
-| `biomedicalAdvance` | Biomedical Advance | fields: { biochemistry: 12, socialScience: 5 } | null | geneticSequencing |
-| `openSourceResearch` | Open-Source Research Platform | fields: { computing: 10, socialScience: 8, mathematics: 6 } | null | internetProtocols |
-| `signalDeconvolution` | Signal Deconvolution Run | signalProgress: 8, fields: { physics: 5, computing: 5 } | countersEventTag: 'signal', additionalCost: {}, fullNeutralise: false | digitisedTelemetry |
+| id                     | name                          | effect                                                      | counterEffect                                                                       | unlocked by             |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------- |
+| `softwareGrant`        | Software Development Grant    | fields: { computing: 10, mathematics: 5 }                   | null                                                                                | integratedCircuits      |
+| `globalBroadcast`      | Global Broadcast              | resources: { politicalWill: 10, funding: 8 }                | countersEventTag: 'interference', cost: { politicalWill: 8 }, fullNeutralise: false | satelliteCommunications |
+| `computerModellingRun` | Computer Modelling Run        | fields: { physics: 10, mathematics: 8, computing: 5 }       | null                                                                                | microprocessors         |
+| `digitalCoordination`  | Digital Coordination Network  | fields: { computing: 8, socialScience: 6, mathematics: 4 }  | null                                                                                | personalComputing       |
+| `biomedicalAdvance`    | Biomedical Advance            | fields: { biochemistry: 12, socialScience: 5 }              | null                                                                                | geneticSequencing       |
+| `openSourceResearch`   | Open-Source Research Platform | fields: { computing: 10, socialScience: 8, mathematics: 6 } | null                                                                                | internetProtocols       |
+| `signalDeconvolution`  | Signal Deconvolution Run      | signalProgress: 8, fields: { physics: 5, computing: 5 }     | countersEventTag: 'signal', additionalCost: {}, fullNeutralise: false               | digitisedTelemetry      |
 
 Flavour text and descriptions to be written at implementation time, consistent with the cold, technical tone of the game.
 
@@ -309,6 +321,7 @@ next = executeDrawPhase(next, drawRng);
 ```
 
 Add a comment in `turn.ts`'s PRNG call-order section:
+
 ```
 // Seed initialisation (startNewGame only, not per-turn):
 //   1. createRng(`${seed}-techs`)  → tech recipe generation
@@ -342,11 +355,12 @@ export function checkResearchProgress(
   techDefs: Map<string, TechDef>,
   currentFields: FieldPoints,
   currentTurn: number,
-  signalEraStrength: SignalEraStrength = 'faint',  // default preserves all existing tests
-): { updatedTechs, newDiscoveries, newRumours, newProgressTechs }
+  signalEraStrength: SignalEraStrength = 'faint', // default preserves all existing tests
+): { updatedTechs; newDiscoveries; newRumours; newProgressTechs };
 ```
 
 Inside the `unknown → rumour` promotion logic:
+
 ```typescript
 const def = techDefs.get(tech.defId);
 if (def?.signalDerived && signalEraStrength === 'faint') continue;
@@ -359,14 +373,14 @@ if (def?.signalDerived && signalEraStrength === 'faint') continue;
 
 ## 8. File Map
 
-| File | Change |
-|------|--------|
-| `src/data/technologies.ts` | **NEW** — 12 TechDef entries, Era 1 only |
-| `src/data/cards.ts` | Add 7 new CardDef entries (all `era: 'earth'`) |
-| `src/data/blocs.ts` | Adjust `startingFields` to 1970 baseline |
+| File                            | Change                                                                                                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/data/technologies.ts`      | **NEW** — 12 TechDef entries, Era 1 only                                                                                                              |
+| `src/data/cards.ts`             | Add 7 new CardDef entries (all `era: 'earth'`)                                                                                                        |
+| `src/data/blocs.ts`             | Adjust `startingFields` to 1970 baseline                                                                                                              |
 | `src/lib/stores/game.svelte.ts` | Change `startYear` to 1970; wire `initialiseTechs` with dedicated RNG slice; pass `TECH_DEFS` to `executeWorldPhase`; add signal narrative news items |
-| `src/engine/research.ts` | Add `signalEraStrength` param (default `'faint'`) to `checkResearchProgress` |
-| `src/engine/turn.ts` | Pass `state.signal.eraStrength` to `checkResearchProgress`; update PRNG call-order comment |
+| `src/engine/research.ts`        | Add `signalEraStrength` param (default `'faint'`) to `checkResearchProgress`                                                                          |
+| `src/engine/turn.ts`            | Pass `state.signal.eraStrength` to `checkResearchProgress`; update PRNG call-order comment                                                            |
 
 ---
 

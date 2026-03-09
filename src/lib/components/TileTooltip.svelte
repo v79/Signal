@@ -1,5 +1,11 @@
 <script lang="ts">
-  import type { MapTile, FacilityInstance, FacilityDef, FieldPoints, Resources } from '../../engine/types';
+  import type {
+    MapTile,
+    FacilityInstance,
+    FacilityDef,
+    FieldPoints,
+    Resources,
+  } from '../../engine/types';
 
   let {
     tile,
@@ -21,30 +27,37 @@
 
   const TOOLTIP_W = 200;
   const TOOLTIP_H = 130; // approximate, used for clamping
-  const OFFSET_X  = 16;
-  const OFFSET_Y  = 8;
+  const OFFSET_X = 16;
+  const OFFSET_Y = 8;
 
-  const left = $derived(Math.min(x + OFFSET_X, containerWidth  - TOOLTIP_W - 4));
-  const top  = $derived(Math.min(y + OFFSET_Y, containerHeight - TOOLTIP_H - 4));
+  const left = $derived(Math.min(x + OFFSET_X, containerWidth - TOOLTIP_W - 4));
+  const top = $derived(Math.min(y + OFFSET_Y, containerHeight - TOOLTIP_H - 4));
 
   const facility = $derived(
-    tile?.facilityId != null
-      ? facilities.find(f => f.id === tile.facilityId) ?? null
-      : null,
+    tile?.facilityId != null ? (facilities.find((f) => f.id === tile.facilityId) ?? null) : null,
   );
 
-  const def = $derived(facility ? facilityDefs.get(facility.defId) ?? null : null);
+  const def = $derived(facility ? (facilityDefs.get(facility.defId) ?? null) : null);
 
   const tileLabel: Record<string, string> = {
-    urban: 'Urban', industrial: 'Industrial', coastal: 'Coastal',
-    highland: 'Highland', forested: 'Forested', arid: 'Arid', agricultural: 'Agricultural',
+    urban: 'Urban',
+    industrial: 'Industrial',
+    coastal: 'Coastal',
+    highland: 'Highland',
+    forested: 'Forested',
+    arid: 'Arid',
+    agricultural: 'Agricultural',
   };
 
   function formatFields(f: Partial<FieldPoints>): string[] {
     const lines: string[] = [];
     const labels: Record<string, string> = {
-      physics: 'PHY', mathematics: 'MATH', engineering: 'ENG',
-      biochemistry: 'BIO', computing: 'COMP', socialScience: 'SOC',
+      physics: 'PHY',
+      mathematics: 'MATH',
+      engineering: 'ENG',
+      biochemistry: 'BIO',
+      computing: 'COMP',
+      socialScience: 'SOC',
     };
     for (const [k, v] of Object.entries(f)) {
       if (v && v !== 0) lines.push(`${v > 0 ? '+' : ''}${v} ${labels[k] ?? k}`);
@@ -54,7 +67,11 @@
 
   function formatResources(r: Partial<Resources>): string[] {
     const lines: string[] = [];
-    const labels: Record<string, string> = { funding: 'Fund', materials: 'Mat', politicalWill: 'Will' };
+    const labels: Record<string, string> = {
+      funding: 'Fund',
+      materials: 'Mat',
+      politicalWill: 'Will',
+    };
     for (const [k, v] of Object.entries(r)) {
       if (v && v !== 0) lines.push(`${v > 0 ? '+' : ''}${v} ${labels[k] ?? k}`);
     }
@@ -113,8 +130,12 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .tile-type {

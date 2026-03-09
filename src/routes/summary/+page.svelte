@@ -9,24 +9,24 @@
   });
 
   const outcome = $derived(gameStore.state?.outcome);
-  const state   = $derived(gameStore.state);
+  const state = $derived(gameStore.state);
 
   // ---------------------------------------------------------------------------
   // Condition copy
   // ---------------------------------------------------------------------------
 
   const VICTORY_TITLES: Record<VictoryCondition, string> = {
-    wormhole:               'WORMHOLE CONTACT',
-    ecologicalRestoration:  'ECOLOGICAL RESTORATION',
-    economicHegemony:       'ECONOMIC HEGEMONY',
-    terraforming:           'LUNAR PRESENCE',
+    wormhole: 'WORMHOLE CONTACT',
+    ecologicalRestoration: 'ECOLOGICAL RESTORATION',
+    economicHegemony: 'ECONOMIC HEGEMONY',
+    terraforming: 'LUNAR PRESENCE',
   };
 
   const VICTORY_TEXT: Record<VictoryCondition, string> = {
     wormhole:
       'The resonance pathway opened. Humanity answered the signal correctly and stands at the threshold of first contact. A new era begins.',
     ecologicalRestoration:
-      'Through careful stewardship and deliberate restraint, the Earth\'s ecosystems were brought back from the edge. Humanity found a way forward without sacrificing its home.',
+      "Through careful stewardship and deliberate restraint, the Earth's ecosystems were brought back from the edge. Humanity found a way forward without sacrificing its home.",
     economicHegemony:
       'Through superior resource acquisition and strategic dominance, the programme secured control over the critical infrastructure of a transitioning world.',
     terraforming:
@@ -34,15 +34,15 @@
   };
 
   const LOSS_TITLES: Record<LossCondition, string> = {
-    climateCollapse:          'CLIMATE COLLAPSE',
-    signalMisinterpretation:  'SIGNAL MISINTERPRETATION',
-    politicalCollapse:        'POLITICAL COLLAPSE',
-    resourceExhaustion:       'RESOURCE EXHAUSTION',
+    climateCollapse: 'CLIMATE COLLAPSE',
+    signalMisinterpretation: 'SIGNAL MISINTERPRETATION',
+    politicalCollapse: 'POLITICAL COLLAPSE',
+    resourceExhaustion: 'RESOURCE EXHAUSTION',
   };
 
   const LOSS_TEXT: Record<LossCondition, string> = {
     climateCollapse:
-      'Climate pressure exceeded critical thresholds. The cascading feedback loops overwhelmed the programme\'s ability to respond. Operations ceased.',
+      "Climate pressure exceeded critical thresholds. The cascading feedback loops overwhelmed the programme's ability to respond. Operations ceased.",
     signalMisinterpretation:
       'The wormhole response was incorrect. The signal locked closed. Whatever awaited on the other side, humanity will not reach it on this path.',
     politicalCollapse:
@@ -68,76 +68,100 @@
   );
 
   const FIELD_LABELS: Record<string, string> = {
-    physics:      'Physics',
-    mathematics:  'Mathematics',
-    engineering:  'Engineering',
+    physics: 'Physics',
+    mathematics: 'Mathematics',
+    engineering: 'Engineering',
     biochemistry: 'Biochemistry',
-    computing:    'Computing',
-    socialScience:'Social Sci.',
+    computing: 'Computing',
+    socialScience: 'Social Sci.',
   };
 </script>
 
 {#if state}
-<div class="summary-layout">
-  <div class="summary-card">
-    <!-- Outcome banner -->
-    <div class="banner" class:victory={isVictory} class:loss={!isVictory}>
-      <span class="banner-glyph">{isVictory ? '⬡' : '✕'}</span>
-      <span class="banner-label">{isVictory ? 'VICTORY' : 'MISSION FAILED'}</span>
-    </div>
+  <div class="summary-layout">
+    <div class="summary-card">
+      <!-- Outcome banner -->
+      <div class="banner" class:victory={isVictory} class:loss={!isVictory}>
+        <span class="banner-glyph">{isVictory ? '⬡' : '✕'}</span>
+        <span class="banner-label">{isVictory ? 'VICTORY' : 'MISSION FAILED'}</span>
+      </div>
 
-    <h1 class="condition-title">{title}</h1>
-    <p class="condition-body">{body}</p>
+      <h1 class="condition-title">{title}</h1>
+      <p class="condition-body">{body}</p>
 
-    <!-- Abandoned Earth moral outcome -->
-    {#if outcome?.moralOutcome === 'abandonedEarth'}
-      <div class="moral-warning">
-        <span class="moral-glyph">⚠</span>
-        <div>
-          <strong>ABANDONED EARTH</strong>
-          <p>Victory was achieved, but the Earth was left behind. Earth welfare fell below critical levels as attention turned to the stars. History will weigh this cost.</p>
+      <!-- Abandoned Earth moral outcome -->
+      {#if outcome?.moralOutcome === 'abandonedEarth'}
+        <div class="moral-warning">
+          <span class="moral-glyph">⚠</span>
+          <div>
+            <strong>ABANDONED EARTH</strong>
+            <p>
+              Victory was achieved, but the Earth was left behind. Earth welfare fell below critical
+              levels as attention turned to the stars. History will weigh this cost.
+            </p>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-block">
+          <div class="stat-section-label">MISSION RECORD</div>
+          <div class="stat-row"><span>Turn</span><span>{outcome?.turn ?? state.turn}</span></div>
+          <div class="stat-row"><span>Year</span><span>{state.year}</span></div>
+          <div class="stat-row">
+            <span>Era</span><span class="era-badge"
+              >{state.era
+                .toUpperCase()
+                .replace('NEARSPACE', 'NEAR SPACE')
+                .replace('DEEPSPACE', 'DEEP SPACE')}</span
+            >
+          </div>
+          <div class="stat-row">
+            <span>Climate Pressure</span><span class:danger={state.climatePressure >= 80}
+              >{Math.round(state.climatePressure)}%</span
+            >
+          </div>
+          <div class="stat-row">
+            <span>Earth Welfare</span><span class:danger={state.earthWelfareScore < 40}
+              >{Math.round(state.earthWelfareScore)}%</span
+            >
+          </div>
+        </div>
+
+        <div class="stat-block">
+          <div class="stat-section-label">FINAL RESOURCES</div>
+          <div class="stat-row">
+            <span>Funding</span><span>{Math.round(state.player.resources.funding)}</span>
+          </div>
+          <div class="stat-row">
+            <span>Materials</span><span>{Math.round(state.player.resources.materials)}</span>
+          </div>
+          <div class="stat-row">
+            <span>Political Will</span><span
+              >{Math.round(state.player.resources.politicalWill)}</span
+            >
+          </div>
+          <div class="stat-row"><span>Will</span><span>{Math.round(state.player.will)}</span></div>
+        </div>
+
+        <div class="stat-block">
+          <div class="stat-section-label">RESEARCH FIELDS</div>
+          {#each Object.entries(state.player.fields) as [field, pts]}
+            <div class="stat-row">
+              <span>{FIELD_LABELS[field] ?? field}</span>
+              <span>{Math.round(pts)}</span>
+            </div>
+          {/each}
         </div>
       </div>
-    {/if}
 
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-block">
-        <div class="stat-section-label">MISSION RECORD</div>
-        <div class="stat-row"><span>Turn</span><span>{outcome?.turn ?? state.turn}</span></div>
-        <div class="stat-row"><span>Year</span><span>{state.year}</span></div>
-        <div class="stat-row"><span>Era</span><span class="era-badge">{state.era.toUpperCase().replace('NEARSPACE', 'NEAR SPACE').replace('DEEPSPACE', 'DEEP SPACE')}</span></div>
-        <div class="stat-row"><span>Climate Pressure</span><span class:danger={state.climatePressure >= 80}>{Math.round(state.climatePressure)}%</span></div>
-        <div class="stat-row"><span>Earth Welfare</span><span class:danger={state.earthWelfareScore < 40}>{Math.round(state.earthWelfareScore)}%</span></div>
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn-play-again" onclick={() => gameStore.resetGame()}> PLAY AGAIN </button>
       </div>
-
-      <div class="stat-block">
-        <div class="stat-section-label">FINAL RESOURCES</div>
-        <div class="stat-row"><span>Funding</span><span>{Math.round(state.player.resources.funding)}</span></div>
-        <div class="stat-row"><span>Materials</span><span>{Math.round(state.player.resources.materials)}</span></div>
-        <div class="stat-row"><span>Political Will</span><span>{Math.round(state.player.resources.politicalWill)}</span></div>
-        <div class="stat-row"><span>Will</span><span>{Math.round(state.player.will)}</span></div>
-      </div>
-
-      <div class="stat-block">
-        <div class="stat-section-label">RESEARCH FIELDS</div>
-        {#each Object.entries(state.player.fields) as [field, pts]}
-          <div class="stat-row">
-            <span>{FIELD_LABELS[field] ?? field}</span>
-            <span>{Math.round(pts)}</span>
-          </div>
-        {/each}
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="actions">
-      <button class="btn-play-again" onclick={() => gameStore.resetGame()}>
-        PLAY AGAIN
-      </button>
     </div>
   </div>
-</div>
 {/if}
 
 <style>
@@ -157,8 +181,7 @@
     box-sizing: border-box;
     background:
       radial-gradient(ellipse at 20% 50%, rgba(20, 40, 80, 0.3) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(10, 30, 60, 0.2) 0%, transparent 50%),
-      #060a10;
+      radial-gradient(ellipse at 80% 20%, rgba(10, 30, 60, 0.2) 0%, transparent 50%), #060a10;
   }
 
   .summary-card {
@@ -297,7 +320,10 @@
     letter-spacing: 0.1em;
     padding: 0.6rem 2rem;
     border-radius: 3px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
   }
   .btn-play-again:hover {
     background: rgba(30, 70, 120, 0.3);

@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
-  let { text, direction = 'above', children }: {
+  let {
+    text,
+    direction = 'above',
+    children,
+  }: {
     text: string;
     direction?: 'above' | 'below';
     children: Snippet;
@@ -17,22 +21,20 @@
   function handleMouseEnter() {
     if (!hostEl || !bubbleEl) return;
 
-    const host   = hostEl.getBoundingClientRect();
+    const host = hostEl.getBoundingClientRect();
     const bubble = bubbleEl.getBoundingClientRect();
     const margin = 6;
-    const gap    = 4;
+    const gap = 4;
 
     // Preferred vertical position
-    let top = direction === 'below'
-      ? host.bottom + gap
-      : host.top - bubble.height - gap;
+    let top = direction === 'below' ? host.bottom + gap : host.top - bubble.height - gap;
 
     // Preferred horizontal centre-align
     let left = host.left + host.width / 2 - bubble.width / 2;
 
     // Clamp to viewport
-    left = Math.max(margin, Math.min(left, window.innerWidth  - bubble.width  - margin));
-    top  = Math.max(margin, Math.min(top,  window.innerHeight - bubble.height - margin));
+    left = Math.max(margin, Math.min(left, window.innerWidth - bubble.width - margin));
+    top = Math.max(margin, Math.min(top, window.innerHeight - bubble.height - margin));
 
     bubbleStyle = `position:fixed;left:${left}px;top:${top}px;bottom:auto`;
   }

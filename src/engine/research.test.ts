@@ -54,7 +54,7 @@ const signalResonanceDef: TechDef = {
 };
 
 const allDefs = [orbitalMechanicsDef, lifeSupport, signalResonanceDef];
-const defsMap = new Map(allDefs.map(d => [d.id, d]));
+const defsMap = new Map(allDefs.map((d) => [d.id, d]));
 
 function makeFields(overrides: Partial<FieldPoints> = {}): FieldPoints {
   return { ...ZERO_FIELDS, ...overrides };
@@ -86,7 +86,7 @@ describe('generateTechRecipes', () => {
     const r1 = generateTechRecipes(allDefs, createRng('seed-a'));
     const r2 = generateTechRecipes(allDefs, createRng('seed-b'));
     // At least one recipe should differ
-    const anyDiffers = allDefs.some(def => {
+    const anyDiffers = allDefs.some((def) => {
       const rec1 = r1.get(def.id);
       const rec2 = r2.get(def.id);
       return JSON.stringify(rec1) !== JSON.stringify(rec2);
@@ -125,7 +125,9 @@ describe('generateTechRecipes', () => {
     const rng = createRng('fields-test');
     const recipes = generateTechRecipes([orbitalMechanicsDef], rng);
     const recipe = recipes.get('orbitalMechanics')!;
-    expect(Object.keys(recipe)).toEqual(expect.arrayContaining(['physics', 'mathematics', 'engineering']));
+    expect(Object.keys(recipe)).toEqual(
+      expect.arrayContaining(['physics', 'mathematics', 'engineering']),
+    );
     expect(Object.keys(recipe)).not.toContain('biochemistry');
     expect(Object.keys(recipe)).not.toContain('computing');
   });
@@ -229,8 +231,8 @@ describe('getDiscoveryStage (simultaneous breakthrough)', () => {
 
   it('contrast: standard tech would give rumour from single field at 30%', () => {
     const fields = makeFields({ physics: 18 }); // only physics at 30%
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('rumour');  // standard: yes
-    expect(getDiscoveryStage(fields, recipe, true)).toBe('unknown');  // simultaneous: no
+    expect(getDiscoveryStage(fields, recipe, false)).toBe('rumour'); // standard: yes
+    expect(getDiscoveryStage(fields, recipe, true)).toBe('unknown'); // simultaneous: no
   });
 });
 
@@ -299,7 +301,12 @@ describe('checkResearchProgress', () => {
   });
 
   it('skips techs with null recipe', () => {
-    const tech: TechState = { defId: 'orbitalMechanics', stage: 'unknown', recipe: null, discoveredTurn: null };
+    const tech: TechState = {
+      defId: 'orbitalMechanics',
+      stage: 'unknown',
+      recipe: null,
+      discoveredTurn: null,
+    };
     const result = checkResearchProgress([tech], defsMap, makeFields({ physics: 100 }), 1);
     expect(result.updatedTechs[0].stage).toBe('unknown');
   });
@@ -323,30 +330,51 @@ describe('checkResearchProgress — signalDerived gate', () => {
     signalDerived: true,
   };
 
-  const signalDerivedMap = new Map([
-    ['signalPattern', signalDerivedDef],
-  ]);
+  const signalDerivedMap = new Map([['signalPattern', signalDerivedDef]]);
 
   const richFields = makeFields({ computing: 100, physics: 100 });
 
   function makeSignalTech(stage: TechState['stage'] = 'unknown'): TechState {
-    return { defId: 'signalPattern', stage, recipe: { computing: 50, physics: 40 }, discoveredTurn: null };
+    return {
+      defId: 'signalPattern',
+      stage,
+      recipe: { computing: 50, physics: 40 },
+      discoveredTurn: null,
+    };
   }
 
   it('keeps signal-derived tech unknown when signal is faint, even if fields meet threshold', () => {
-    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5, 'faint');
+    const result = checkResearchProgress(
+      [makeSignalTech()],
+      signalDerivedMap,
+      richFields,
+      5,
+      'faint',
+    );
     expect(result.updatedTechs[0].stage).toBe('unknown');
     expect(result.newRumours).toHaveLength(0);
   });
 
   it('promotes signal-derived tech once signal reaches structured', () => {
-    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5, 'structured');
+    const result = checkResearchProgress(
+      [makeSignalTech()],
+      signalDerivedMap,
+      richFields,
+      5,
+      'structured',
+    );
     expect(result.updatedTechs[0].stage).toBe('discovered');
     expect(result.newDiscoveries).toContain('signalPattern');
   });
 
   it('promotes signal-derived tech when signal is urgent', () => {
-    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5, 'urgent');
+    const result = checkResearchProgress(
+      [makeSignalTech()],
+      signalDerivedMap,
+      richFields,
+      5,
+      'urgent',
+    );
     expect(result.updatedTechs[0].stage).toBe('discovered');
   });
 
@@ -357,8 +385,12 @@ describe('checkResearchProgress — signalDerived gate', () => {
   });
 
   it('non-signal-derived techs are unaffected by signal strength parameter', () => {
-    const tech: TechState = { defId: 'orbitalMechanics', stage: 'unknown',
-      recipe: { physics: 40, mathematics: 30, engineering: 20 }, discoveredTurn: null };
+    const tech: TechState = {
+      defId: 'orbitalMechanics',
+      stage: 'unknown',
+      recipe: { physics: 40, mathematics: 30, engineering: 20 },
+      discoveredTurn: null,
+    };
     const fields = makeFields({ physics: 40, mathematics: 30, engineering: 20 });
     const result = checkResearchProgress([tech], defsMap, fields, 5, 'faint');
     expect(result.updatedTechs[0].stage).toBe('discovered');

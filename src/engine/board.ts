@@ -102,9 +102,18 @@ export function applyBoardResourceMultipliers(
     return resources;
   }
   return {
-    funding:       resources.funding       > 0 ? Math.round(resources.funding       * (modifier.resourceMultipliers.funding       ?? 1)) : resources.funding,
-    materials:     resources.materials     > 0 ? Math.round(resources.materials     * (modifier.resourceMultipliers.materials     ?? 1)) : resources.materials,
-    politicalWill: resources.politicalWill > 0 ? Math.round(resources.politicalWill * (modifier.resourceMultipliers.politicalWill ?? 1)) : resources.politicalWill,
+    funding:
+      resources.funding > 0
+        ? Math.round(resources.funding * (modifier.resourceMultipliers.funding ?? 1))
+        : resources.funding,
+    materials:
+      resources.materials > 0
+        ? Math.round(resources.materials * (modifier.resourceMultipliers.materials ?? 1))
+        : resources.materials,
+    politicalWill:
+      resources.politicalWill > 0
+        ? Math.round(resources.politicalWill * (modifier.resourceMultipliers.politicalWill ?? 1))
+        : resources.politicalWill,
   };
 }
 
@@ -217,6 +226,7 @@ export function isBoardSlotVacant(board: BoardSlots, role: BoardRole): boolean {
 
 /** Return all currently active board members (leftTurn === null). */
 export function getActiveMembers(board: BoardSlots): BoardMemberInstance[] {
-  return (Object.values(board) as (BoardMemberInstance | undefined)[])
-    .filter((m): m is BoardMemberInstance => !!m && m.leftTurn === null);
+  return (Object.values(board) as (BoardMemberInstance | undefined)[]).filter(
+    (m): m is BoardMemberInstance => !!m && m.leftTurn === null,
+  );
 }

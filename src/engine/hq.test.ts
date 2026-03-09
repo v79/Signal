@@ -67,13 +67,21 @@ describe('computeHqBonus', () => {
 describe('generateEarthTilesForBloc', () => {
   it('places HQ tile at origin (0,0) as urban', () => {
     const tiles = generateEarthTilesForBloc('northAmerica');
-    const origin = tiles.find(t => t.coord.q === 0 && t.coord.r === 0);
+    const origin = tiles.find((t) => t.coord.q === 0 && t.coord.r === 0);
     expect(origin).toBeDefined();
     expect(origin?.type).toBe('urban');
   });
 
   it('generates tiles for all known blocs', () => {
-    const knownBlocs = ['northAmerica', 'eastAsia', 'southAmerica', 'africaCoalition', 'eurozone', 'southAsia', 'middlewEast'];
+    const knownBlocs = [
+      'northAmerica',
+      'eastAsia',
+      'southAmerica',
+      'africaCoalition',
+      'eurozone',
+      'southAsia',
+      'middlewEast',
+    ];
     for (const blocId of knownBlocs) {
       const tiles = generateEarthTilesForBloc(blocId);
       expect(tiles.length, `${blocId} should have tiles`).toBeGreaterThan(0);

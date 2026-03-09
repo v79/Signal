@@ -37,7 +37,7 @@ export interface BlocSimResult {
  * Blocs start at 70% of their will ceiling.
  */
 export function initialiseBlocStates(blocDefs: BlocDef[]): BlocState[] {
-  return blocDefs.map(def => ({
+  return blocDefs.map((def) => ({
     defId: def.id,
     resources: { ...def.startingResources },
     fields: { ...ZERO_FIELDS, ...def.startingFields },
@@ -88,23 +88,23 @@ export function simulateBlocs(
 
     // 1. Passive resource income
     const newResources = {
-      funding:       Math.max(0, bloc.resources.funding   + PASSIVE_INCOME.funding),
-      materials:     Math.max(0, bloc.resources.materials + PASSIVE_INCOME.materials),
+      funding: Math.max(0, bloc.resources.funding + PASSIVE_INCOME.funding),
+      materials: Math.max(0, bloc.resources.materials + PASSIVE_INCOME.materials),
       politicalWill: bloc.resources.politicalWill,
     };
 
     // 2. Will drift — map BlocDef's willCollapsThreshold (typo in type) to WillConfig field
     const newWill = tickWill(bloc.will, {
-      willProfile:            def.willProfile,
-      willCeiling:            def.willCeiling,
-      willCollapseThreshold:  def.willCollapsThreshold,
+      willProfile: def.willProfile,
+      willCeiling: def.willCeiling,
+      willCollapseThreshold: def.willCollapsThreshold,
     });
 
     // 3. Passive field accumulation (integer, scaled by will)
     const willFactor = newWill / 100;
     const newFields = {
       ...bloc.fields,
-      physics:     bloc.fields.physics     + Math.round(PASSIVE_FIELDS.physics     * willFactor),
+      physics: bloc.fields.physics + Math.round(PASSIVE_FIELDS.physics * willFactor),
       mathematics: bloc.fields.mathematics + Math.round(PASSIVE_FIELDS.mathematics * willFactor),
     };
 
@@ -169,7 +169,7 @@ export function checkBlocMergers(
   blocDefs: Map<string, BlocDef>,
   turn: number,
 ): NewsItem[] {
-  const weak = blocs.filter(b => !b.eliminated && b.will < 30 && b.resources.funding < 25);
+  const weak = blocs.filter((b) => !b.eliminated && b.will < 30 && b.resources.funding < 25);
   if (weak.length < 2) return [];
 
   const [a, b] = weak;
@@ -177,11 +177,13 @@ export function checkBlocMergers(
   const defB = blocDefs.get(b.defId);
   if (!defA || !defB) return [];
 
-  return [{
-    id: `${turn}-merger-${a.defId}-${b.defId}`,
-    turn,
-    text: `Intelligence reports: ${defA.name} and ${defB.name} are exploring closer diplomatic ties.`,
-  }];
+  return [
+    {
+      id: `${turn}-merger-${a.defId}-${b.defId}`,
+      turn,
+      text: `Intelligence reports: ${defA.name} and ${defB.name} are exploring closer diplomatic ties.`,
+    },
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -190,8 +192,9 @@ export function checkBlocMergers(
 
 function describeBloc(name: string, will: number, funding: number): string | null {
   if (will > 70 && funding > 60) return null; // no news when stable
-  if (will < 20)   return `${name} is in political turmoil. Stability cannot be guaranteed.`;
-  if (funding < 15) return `${name} faces a severe funding shortfall. International observers are concerned.`;
-  if (will < 40)   return `${name} reports declining public support for its current leadership.`;
+  if (will < 20) return `${name} is in political turmoil. Stability cannot be guaranteed.`;
+  if (funding < 15)
+    return `${name} faces a severe funding shortfall. International observers are concerned.`;
+  if (will < 40) return `${name} reports declining public support for its current leadership.`;
   return null;
 }

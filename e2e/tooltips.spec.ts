@@ -82,7 +82,9 @@ test.describe('HUD resource tooltips', () => {
   test('WILL resource tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.tooltip-host:has(.res-label:text("WILL"))');
     const text = await assertTooltipInViewport(page, host);
-    expect(text).toBe('Political will. Volatile in democracies; stable but fragile in authoritarian blocs.');
+    expect(text).toBe(
+      'Political will. Volatile in democracies; stable but fragile in authoritarian blocs.',
+    );
   });
 });
 
@@ -96,12 +98,12 @@ test.describe('HUD research field tooltips', () => {
   });
 
   const FIELD_CASES: Array<[label: string, expectedText: string]> = [
-    ['PHY',  'Physics — drives signal detection and propulsion research.'],
+    ['PHY', 'Physics — drives signal detection and propulsion research.'],
     ['MATH', 'Mathematics — underpins cryptography, navigation, and signal decoding.'],
-    ['ENG',  'Engineering — enables facility construction and hardware projects.'],
-    ['BIO',  'Biochemistry — supports life sciences, habitat, and medical research.'],
+    ['ENG', 'Engineering — enables facility construction and hardware projects.'],
+    ['BIO', 'Biochemistry — supports life sciences, habitat, and medical research.'],
     ['COMP', 'Computing — accelerates all research; essential for signal analysis.'],
-    ['SOC',  'Social Science — improves Political Will generation and diplomacy.'],
+    ['SOC', 'Social Science — improves Political Will generation and diplomacy.'],
   ];
 
   for (const [label, expectedText] of FIELD_CASES) {

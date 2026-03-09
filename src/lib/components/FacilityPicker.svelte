@@ -30,27 +30,28 @@
   // Facilities whose tile type matches — split into unlocked and locked.
   // HQ is excluded: it is placed automatically at game start, never built by the player.
   const tileEligible = $derived(
-    [...facilityDefs.values()].filter(def =>
-      def.id !== 'hq' &&
-      (def.allowedTileTypes.length === 0 || def.allowedTileTypes.includes(tile.type)),
+    [...facilityDefs.values()].filter(
+      (def) =>
+        def.id !== 'hq' &&
+        (def.allowedTileTypes.length === 0 || def.allowedTileTypes.includes(tile.type)),
     ),
   );
 
   const eligible = $derived(tileEligible.filter(isTechUnlocked));
-  const locked   = $derived(tileEligible.filter(def => !isTechUnlocked(def)));
+  const locked = $derived(tileEligible.filter((def) => !isTechUnlocked(def)));
 
   function canAfford(cost: Partial<Resources>): boolean {
     return (
-      (cost.funding       == null || playerResources.funding       >= cost.funding)       &&
-      (cost.materials     == null || playerResources.materials     >= cost.materials)     &&
+      (cost.funding == null || playerResources.funding >= cost.funding) &&
+      (cost.materials == null || playerResources.materials >= cost.materials) &&
       (cost.politicalWill == null || playerResources.politicalWill >= cost.politicalWill)
     );
   }
 
   function formatCost(cost: Partial<Resources>): string {
     const p: string[] = [];
-    if (cost.funding       != null) p.push(`${cost.funding}F`);
-    if (cost.materials     != null) p.push(`${cost.materials}M`);
+    if (cost.funding != null) p.push(`${cost.funding}F`);
+    if (cost.materials != null) p.push(`${cost.materials}M`);
     if (cost.politicalWill != null) p.push(`${cost.politicalWill}W`);
     return p.join(' · ');
   }
@@ -71,14 +72,19 @@
   }
 
   const tileLabel: Record<string, string> = {
-    urban: 'Urban', industrial: 'Industrial', coastal: 'Coastal',
-    highland: 'Highland', forested: 'Forested', arid: 'Arid', agricultural: 'Agricultural',
+    urban: 'Urban',
+    industrial: 'Industrial',
+    coastal: 'Coastal',
+    highland: 'Highland',
+    forested: 'Forested',
+    arid: 'Arid',
+    agricultural: 'Agricultural',
   };
 
   /** The facility def currently on this tile, if any (and not being demolished). */
   const occupyingDef = $derived(
     tile.facilityId != null && tile.pendingActionId == null
-      ? [...facilityDefs.values()].find(d => tile.facilityId?.startsWith(d.id)) ?? null
+      ? ([...facilityDefs.values()].find((d) => tile.facilityId?.startsWith(d.id)) ?? null)
       : null,
   );
 
@@ -86,7 +92,13 @@
   const isPending = $derived(tile.pendingActionId != null);
 </script>
 
-<div class="picker-backdrop" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()} role="none" tabindex="-1">
+<div
+  class="picker-backdrop"
+  onclick={onClose}
+  onkeydown={(e) => e.key === 'Escape' && onClose()}
+  role="none"
+  tabindex="-1"
+>
   <div
     class="picker"
     onclick={(e) => e.stopPropagation()}
@@ -97,7 +109,9 @@
   >
     <div class="picker-header">
       <span class="picker-title">BUILD FACILITY</span>
-      <span class="tile-type">{tileLabel[tile.type] ?? tile.type} · ({tile.coord.q},{tile.coord.r})</span>
+      <span class="tile-type"
+        >{tileLabel[tile.type] ?? tile.type} · ({tile.coord.q},{tile.coord.r})</span
+      >
       <button class="close-btn" onclick={onClose}>✕</button>
     </div>
 
@@ -126,9 +140,7 @@
         <div class="upkeep">Upkeep: {formatCost(occupyingDef.upkeepCost) || 'Free'}</div>
         <div class="demolish-row">
           {#if occupyingDef.canDelete}
-            <button class="demolish-btn" onclick={onDemolish}>
-              DEMOLISH
-            </button>
+            <button class="demolish-btn" onclick={onDemolish}> DEMOLISH </button>
           {:else}
             <span class="no-demolish">Cannot be demolished</span>
           {/if}
@@ -153,18 +165,18 @@
                 Upkeep: {formatCost(def.upkeepCost) || 'Free'}
               </div>
               <div class="build-time">
-                Build time: {def.buildTime === 0 ? 'Instant' : def.buildTime === 1 ? '1 turn' : `${def.buildTime} turns`}
+                Build time: {def.buildTime === 0
+                  ? 'Instant'
+                  : def.buildTime === 1
+                    ? '1 turn'
+                    : `${def.buildTime} turns`}
               </div>
             </div>
             <div class="facility-action">
               <div class="build-cost" class:cant-afford={!affordable}>
                 {formatCost(def.buildCost) || 'Free'}
               </div>
-              <button
-                class="build-btn"
-                disabled={!affordable}
-                onclick={() => onBuild(def.id)}
-              >
+              <button class="build-btn" disabled={!affordable} onclick={() => onBuild(def.id)}>
                 {affordable ? 'BUILD' : 'AFFORD?'}
               </button>
             </div>
@@ -179,7 +191,7 @@
             </div>
             <div class="facility-action">
               <div class="locked-label">
-                REQUIRES<br>{techNames.get(def.requiredTechId!) ?? def.requiredTechId}
+                REQUIRES<br />{techNames.get(def.requiredTechId!) ?? def.requiredTechId}
               </div>
             </div>
           </div>
@@ -239,7 +251,9 @@
     cursor: pointer;
     padding: 0 0.2rem;
   }
-  .close-btn:hover { color: #c8d0d8; }
+  .close-btn:hover {
+    color: #c8d0d8;
+  }
 
   .no-facilities {
     padding: 1rem;
@@ -262,8 +276,12 @@
     align-items: flex-start;
   }
 
-  .facility-row:hover { background: #101825; }
-  .facility-row.unaffordable { opacity: 0.55; }
+  .facility-row:hover {
+    background: #101825;
+  }
+  .facility-row.unaffordable {
+    opacity: 0.55;
+  }
 
   .facility-info {
     flex: 1;
@@ -321,7 +339,9 @@
     text-align: right;
   }
 
-  .build-cost.cant-afford { color: #9b4a4a; }
+  .build-cost.cant-afford {
+    color: #9b4a4a;
+  }
 
   .build-btn {
     font-family: inherit;
@@ -335,7 +355,9 @@
     transition: background 0.15s;
     white-space: nowrap;
   }
-  .build-btn:hover:not(:disabled) { background: #0a2018; }
+  .build-btn:hover:not(:disabled) {
+    background: #0a2018;
+  }
   .build-btn:disabled {
     color: #2a3848;
     border-color: #1a2535;
@@ -401,7 +423,9 @@
     cursor: pointer;
     transition: background 0.15s;
   }
-  .demolish-btn:hover { background: #200808; }
+  .demolish-btn:hover {
+    background: #200808;
+  }
 
   .no-demolish {
     font-size: 0.6rem;

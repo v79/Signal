@@ -23,7 +23,7 @@ describe('BLOC_MAPS', () => {
       });
 
       it('has exactly one tile at origin (0,0) of type urban', () => {
-        const origins = layout.filter(t => t.q === 0 && t.r === 0);
+        const origins = layout.filter((t) => t.q === 0 && t.r === 0);
         expect(origins).toHaveLength(1);
         expect(origins[0].type).toBe('urban');
       });
@@ -38,7 +38,15 @@ describe('BLOC_MAPS', () => {
       });
 
       it('uses only valid tile types', () => {
-        const valid = new Set(['urban', 'industrial', 'coastal', 'highland', 'forested', 'arid', 'agricultural']);
+        const valid = new Set([
+          'urban',
+          'industrial',
+          'coastal',
+          'highland',
+          'forested',
+          'arid',
+          'agricultural',
+        ]);
         for (const tile of layout) {
           expect(valid.has(tile.type), `Invalid tile type '${tile.type}' in ${blocId}`).toBe(true);
         }

@@ -45,6 +45,7 @@ The game has three distinct map layers that unlock progressively. Each has its o
 **Technology discovery:** Three visibility stages — Unknown (hidden), Rumour (vague flavour hint in feed), Progress (named with progress bar visible). Cross-field breakthroughs require multiple fields simultaneously above threshold.
 
 **Card system:** Three zones per turn:
+
 1. **Standing Actions** — persistent toolbar (Build Facility, Initiate Project, etc.); always available, never drawn
 2. **Action Hand** — drawn each turn (4–5 cards); opportunity cards, powerful one-offs
 3. **Event Zone** — incoming world events with countdown timers; some have counter cards, some have partial mitigation, some must simply be absorbed

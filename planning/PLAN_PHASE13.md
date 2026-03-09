@@ -13,6 +13,7 @@ The game currently has no way to start a fresh run. Every session either loads a
 A setup screen before the main game, following the Signal dark-monospace aesthetic.
 
 Sections:
+
 1. **Seed** — Pre-filled with a random 8-char hex string (generated from `Date.now()` + `Math.random()`). Editable text input. Refresh button to regenerate. Paste-friendly for sharing seeded runs.
 2. **Bloc selection** — Horizontal cards (or stacked list) for each entry in `BLOC_DEFS`. Each card shows: name, willProfile badge (DEMOCRATIC / AUTHORITARIAN), victoryBias, and starting resource levels as small bars. One bloc is selected at a time (click to select, highlighted border).
 3. **Push factor** — Two toggle buttons: `CLIMATE CHANGE` and `GEOPOLITICAL TENSION` with brief description lines.
@@ -23,6 +24,7 @@ No form validation beyond requiring a bloc and push factor to be selected (both 
 ### Modified: `src/lib/stores/game.svelte.ts` ✓
 
 **Add `startNewGame(seed, playerBlocDefId, pushFactor)`:** ✓
+
 - Looks up the chosen bloc from `BLOC_DEFS`
 - Builds a `GameConfig` from bloc fields: `willProfile`, `startingWill` (70% of `willCeiling`), `startingResources`, `startingFields`
 - Calls `createGameState(config)` for the base state
@@ -41,6 +43,7 @@ No form validation beyond requiring a bloc and push factor to be selected (both 
 **Update `resetGame()`** ✓ — instead of loading demo state, call `goto('/newgame')`.
 
 **Update store initialisation:** ✓
+
 ```typescript
 // Before:
 const _savedState = autoLoad();
@@ -50,6 +53,7 @@ let _state = $state<GameState>(_savedState ?? createDemoState());
 const _savedState = autoLoad();
 let _state = $state<GameState | null>(_savedState ?? null);
 ```
+
 `state` getter returns `GameState | null`. The main page handles the null case.
 
 ### Modified: `src/routes/+page.svelte` ✓
@@ -69,6 +73,7 @@ Remove the `DEV › ERA` button that calls `devAdvanceEra()`.
 ## Starter Deck
 
 For every new game, the player receives these 5 cards (all zone `'deck'`):
+
 - `lobbying` × 2
 - `publicAppeal` × 1
 - `emergencyProcurement` × 1
@@ -80,13 +85,13 @@ IDs are generated as `${defId}-1`, `${defId}-2` etc. The first `executeDrawPhase
 
 ## File Map
 
-| File | Change |
-|---|---|
-| `src/routes/newgame/+page.svelte` | ✓ **NEW** — setup screen |
-| `src/lib/stores/game.svelte.ts` | ✓ Add `startNewGame`; remove `createDemoState` + `devAdvanceEra`; update `resetGame`; update init |
-| `src/routes/+page.svelte` | ✓ Add null-state redirect to `/newgame` on mount |
-| `src/routes/summary/+page.svelte` | ✓ "PLAY AGAIN" → `/newgame` |
-| `src/lib/components/MapContainer.svelte` | ✓ Remove DEV ERA button |
+| File                                     | Change                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `src/routes/newgame/+page.svelte`        | ✓ **NEW** — setup screen                                                                          |
+| `src/lib/stores/game.svelte.ts`          | ✓ Add `startNewGame`; remove `createDemoState` + `devAdvanceEra`; update `resetGame`; update init |
+| `src/routes/+page.svelte`                | ✓ Add null-state redirect to `/newgame` on mount                                                  |
+| `src/routes/summary/+page.svelte`        | ✓ "PLAY AGAIN" → `/newgame`                                                                       |
+| `src/lib/components/MapContainer.svelte` | ✓ Remove DEV ERA button                                                                           |
 
 ---
 

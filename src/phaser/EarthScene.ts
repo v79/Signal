@@ -1,5 +1,11 @@
 import Phaser from 'phaser';
-import type { MapTile, FacilityInstance, TileType, TileDestroyedStatus, OngoingAction } from '../engine/types';
+import type {
+  MapTile,
+  FacilityInstance,
+  TileType,
+  TileDestroyedStatus,
+  OngoingAction,
+} from '../engine/types';
 
 // ---------------------------------------------------------------------------
 // Tile visual constants
@@ -10,46 +16,46 @@ const HEX_SIZE = 42;
 
 /** Base fill colours per tile type (flat-top hex). */
 const TILE_FILL: Record<TileType, number> = {
-  urban:        0x1e2d40,
-  industrial:   0x2d1e10,
-  coastal:      0x0f2840,
-  highland:     0x1e2d1e,
-  forested:     0x0f2d18,
-  arid:         0x2d221a,
+  urban: 0x1e2d40,
+  industrial: 0x2d1e10,
+  coastal: 0x0f2840,
+  highland: 0x1e2d1e,
+  forested: 0x0f2d18,
+  arid: 0x2d221a,
   agricultural: 0x182d0f,
 };
 
 /** Stroke (edge) colours — slightly lighter. */
 const TILE_STROKE: Record<TileType, number> = {
-  urban:        0x3a5878,
-  industrial:   0x5a3820,
-  coastal:      0x1a4870,
-  highland:     0x3a5838,
-  forested:     0x1a5830,
-  arid:         0x5a4428,
-  highland2:    0x3a5838, // alias (unused, for safety)
+  urban: 0x3a5878,
+  industrial: 0x5a3820,
+  coastal: 0x1a4870,
+  highland: 0x3a5838,
+  forested: 0x1a5830,
+  arid: 0x5a4428,
+  highland2: 0x3a5838, // alias (unused, for safety)
   agricultural: 0x2a5818,
 } as Record<TileType, number>;
 
 /** Overlay colour when a tile is destroyed. */
 const DESTROYED_FILL: Record<TileDestroyedStatus, number> = {
-  flooded:    0x0a1848,
-  dustbowl:   0x482810,
+  flooded: 0x0a1848,
+  dustbowl: 0x482810,
   irradiated: 0x183010,
 };
 
 /** Facility indicator colours by defId. */
 const FACILITY_COLORS: Record<string, number> = {
-  hq:                0xd4a820,
-  researchLab:       0x6aaad8,
-  mine:              0xb06030,
-  solarFarm:         0xd8c840,
-  offshoreWindFarm:  0x40c8d8,
-  publicUniversity:  0xa070d8,
-  engineeringWorks:  0xd87840,
+  hq: 0xd4a820,
+  researchLab: 0x6aaad8,
+  mine: 0xb06030,
+  solarFarm: 0xd8c840,
+  offshoreWindFarm: 0x40c8d8,
+  publicUniversity: 0xa070d8,
+  engineeringWorks: 0xd87840,
   bioResearchCentre: 0x50c878,
-  deepSpaceArray:    0x4060d8,
-  computingHub:      0x20d0a0,
+  deepSpaceArray: 0x4060d8,
+  computingHub: 0x20d0a0,
 };
 
 // ---------------------------------------------------------------------------
@@ -58,13 +64,13 @@ const FACILITY_COLORS: Record<string, number> = {
 // ---------------------------------------------------------------------------
 
 export interface EarthSceneCallbacks {
-  getTiles:      () => MapTile[];
+  getTiles: () => MapTile[];
   getFacilities: () => FacilityInstance[];
-  getQueue:      () => OngoingAction[];
-  getSelected:   () => string | null;
-  getClimate:    () => number;
-  onTileClick:   (coordKey: string) => void;
-  onTileHover:   (coordKey: string | null) => void;
+  getQueue: () => OngoingAction[];
+  getSelected: () => string | null;
+  getClimate: () => number;
+  onTileClick: (coordKey: string) => void;
+  onTileHover: (coordKey: string | null) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,7 +99,7 @@ export class EarthScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.setBackgroundColor(0x060a10);
 
-    this.tileGfx    = this.add.graphics();
+    this.tileGfx = this.add.graphics();
     this.overlayGfx = this.add.graphics();
 
     // Hover tracking
@@ -124,11 +130,11 @@ export class EarthScene extends Phaser.Scene {
 
   /** World position of the centre of a flat-top hex at axial (q, r). */
   private hexCenter(q: number, r: number): { x: number; y: number } {
-    const cx = this.scale.width  / 2;
+    const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
     return {
-      x: cx + HEX_SIZE * (1.5  * q),
-      y: cy + HEX_SIZE * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r),
+      x: cx + HEX_SIZE * (1.5 * q),
+      y: cy + HEX_SIZE * ((Math.sqrt(3) / 2) * q + Math.sqrt(3) * r),
     };
   }
 
@@ -151,12 +157,12 @@ export class EarthScene extends Phaser.Scene {
    */
   private hitTest(px: number, py: number): string | null {
     if (!this.cb) return null;
-    const cx = px - this.scale.width  / 2;
+    const cx = px - this.scale.width / 2;
     const cy = py - this.scale.height / 2;
 
     // Inverse of the flat-top hex formula
-    const fq =  (2 / 3 * cx) / HEX_SIZE;
-    const fr = (-1 / 3 * cx + Math.sqrt(3) / 3 * cy) / HEX_SIZE;
+    const fq = ((2 / 3) * cx) / HEX_SIZE;
+    const fr = ((-1 / 3) * cx + (Math.sqrt(3) / 3) * cy) / HEX_SIZE;
     const fs = -fq - fr;
 
     let q = Math.round(fq);
@@ -167,12 +173,12 @@ export class EarthScene extends Phaser.Scene {
     const dr = Math.abs(r - fr);
     const ds = Math.abs(s - fs);
 
-    if (dq > dr && dq > ds)      q = -r - s;
-    else if (dr > ds)            r = -q - s;
+    if (dq > dr && dq > ds) q = -r - s;
+    else if (dr > ds) r = -q - s;
 
     const key = `${q},${r}`;
     const tiles = this.cb.getTiles();
-    return tiles.some(t => t.coord.q === q && t.coord.r === r) ? key : null;
+    return tiles.some((t) => t.coord.q === q && t.coord.r === r) ? key : null;
   }
 
   // ---------------------------------------------------------------------------
@@ -185,22 +191,22 @@ export class EarthScene extends Phaser.Scene {
     this.tileGfx.clear();
     this.overlayGfx.clear();
 
-    const tiles      = this.cb.getTiles();
+    const tiles = this.cb.getTiles();
     const facilities = this.cb.getFacilities();
-    const queue      = this.cb.getQueue();
-    const selected   = this.cb.getSelected();
-    const climate    = this.cb.getClimate(); // 0–100
+    const queue = this.cb.getQueue();
+    const selected = this.cb.getSelected();
+    const climate = this.cb.getClimate(); // 0–100
 
-    const facilityMap = new Map(facilities.map(f => [f.locationKey, f]));
-    const queueMap    = new Map(queue.map(a => [a.coordKey, a]));
+    const facilityMap = new Map(facilities.map((f) => [f.locationKey, f]));
+    const queueMap = new Map(queue.map((a) => [a.coordKey, a]));
 
     for (const tile of tiles) {
       const key = `${tile.coord.q},${tile.coord.r}`;
       const { x, y } = this.hexCenter(tile.coord.q, tile.coord.r);
       const verts = this.hexVertices(x, y);
-      const facility  = facilityMap.get(key) ?? null;
-      const action    = queueMap.get(key) ?? null;
-      const isHovered  = key === this.hoveredKey;
+      const facility = facilityMap.get(key) ?? null;
+      const action = queueMap.get(key) ?? null;
+      const isHovered = key === this.hoveredKey;
       const isSelected = key === selected;
 
       this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate);
@@ -218,11 +224,11 @@ export class EarthScene extends Phaser.Scene {
     action: OngoingAction | null,
     climate: number,
   ): void {
-    const baseFill   = TILE_FILL[tile.type]   ?? 0x1e2d40;
+    const baseFill = TILE_FILL[tile.type] ?? 0x1e2d40;
     const baseStroke = TILE_STROKE[tile.type] ?? 0x3a5878;
 
     // Productivity darkening: 0.4 at min productivity
-    const prodAlpha  = 0.4 + tile.productivity * 0.6;
+    const prodAlpha = 0.4 + tile.productivity * 0.6;
 
     // Draw hex fill
     this.tileGfx.fillStyle(baseFill, prodAlpha);
@@ -244,7 +250,7 @@ export class EarthScene extends Phaser.Scene {
     // Stroke
     const strokeAlpha = selected ? 1.0 : hovered ? 0.85 : 0.4;
     const strokeColor = selected ? 0x88c8ff : hovered ? 0x6aaad8 : baseStroke;
-    const strokeW     = selected ? 2.5 : hovered ? 1.5 : 1.0;
+    const strokeW = selected ? 2.5 : hovered ? 1.5 : 1.0;
     this.tileGfx.lineStyle(strokeW, strokeColor, strokeAlpha);
     this.tileGfx.strokePoints(verts, true);
 
@@ -274,12 +280,12 @@ export class EarthScene extends Phaser.Scene {
     // Construction / demolition overlay
     if (action) {
       const progress = (action.totalTurns - action.turnsRemaining) / action.totalTurns;
-      const arcEnd   = Phaser.Math.DegToRad(-90 + 360 * progress);
+      const arcEnd = Phaser.Math.DegToRad(-90 + 360 * progress);
 
       if (action.type === 'construct') {
         // Scaffold: dashed-look ring in facility's colour, pulsed opacity
-        const fColor   = FACILITY_COLORS[action.facilityDefId] ?? 0xaaaaaa;
-        const pulse    = 0.45 + 0.3 * Math.sin(this.time.now * 0.004);
+        const fColor = FACILITY_COLORS[action.facilityDefId] ?? 0xaaaaaa;
+        const pulse = 0.45 + 0.3 * Math.sin(this.time.now * 0.004);
         this.overlayGfx.lineStyle(2, fColor, pulse);
         this.overlayGfx.strokeCircle(cx, cy, HEX_SIZE * 0.28);
         // Progress arc (fills clockwise from top)

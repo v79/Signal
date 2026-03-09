@@ -18,13 +18,13 @@
   } = $props();
 
   function isRestricted(actionId: string): boolean {
-    return restrictions.some(r => r.actionId === actionId && r.expiresAfterTurn >= turn);
+    return restrictions.some((r) => r.actionId === actionId && r.expiresAfterTurn >= turn);
   }
 
   function canAfford(cost: Partial<Resources>): boolean {
     return (
-      (cost.funding       == null || playerResources.funding       >= cost.funding)       &&
-      (cost.materials     == null || playerResources.materials     >= cost.materials)     &&
+      (cost.funding == null || playerResources.funding >= cost.funding) &&
+      (cost.materials == null || playerResources.materials >= cost.materials) &&
       (cost.politicalWill == null || playerResources.politicalWill >= cost.politicalWill)
     );
   }
@@ -35,8 +35,8 @@
 
   function formatCost(cost: Partial<Resources>): string {
     const parts: string[] = [];
-    if (cost.funding       != null) parts.push(`${cost.funding}F`);
-    if (cost.materials     != null) parts.push(`${cost.materials}M`);
+    if (cost.funding != null) parts.push(`${cost.funding}F`);
+    if (cost.materials != null) parts.push(`${cost.materials}M`);
     if (cost.politicalWill != null) parts.push(`${cost.politicalWill}W`);
     return parts.join(' ');
   }
@@ -111,7 +111,9 @@
     flex-direction: column;
     align-items: center;
     gap: 0.1rem;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
     min-width: 4.5rem;
   }
 

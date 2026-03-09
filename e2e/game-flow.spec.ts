@@ -29,8 +29,8 @@ test('setup screen — select bloc and push factor', async ({ page }) => {
   await page.screenshot({ path: 'screenshots/01-setup-default.png', fullPage: true });
 
   // Select a different bloc and push factor, then screenshot
-  await page.locator('.bloc-card').nth(2).click();  // South American Union
-  await page.locator('.push-btn').nth(1).click();   // Geopolitical Tension
+  await page.locator('.bloc-card').nth(2).click(); // South American Union
+  await page.locator('.push-btn').nth(1).click(); // Geopolitical Tension
   await page.screenshot({ path: 'screenshots/02-setup-configured.png', fullPage: true });
 });
 

@@ -52,15 +52,16 @@ A pure HTML/CSS implementation would require an awkward SVG overlay to draw depe
 The plan specified thresholds of < 80 / 80–130 / 130–200 / > 200. These did not match the actual `technologies.ts` recipe values. After checking all 12 Era 1 tech recipes the thresholds were recalibrated to produce the intended 3 / 4 / 2 / 3 distribution:
 
 | Tier | Threshold (sum of baseRecipe) | Count |
-|------|-------------------------------|-------|
-| 1 | ≤ 100 | 3 |
-| 2 | ≤ 165 | 4 |
-| 3 | ≤ 255 | 2 |
-| 4 | > 255 | 3 |
+| ---- | ----------------------------- | ----- |
+| 1    | ≤ 100                         | 3     |
+| 2    | ≤ 165                         | 4     |
+| 3    | ≤ 255                         | 2     |
+| 4    | > 255                         | 3     |
 
 ### Camera / scroll architecture
 
 Two Phaser Graphics layers:
+
 - `worldGfx` — scrolls with the camera (all node content, dot-grid background, column dividers).
 - `uiGfx` — `setScrollFactor(0)` (legend strip, scroll hint); always pinned to the screen.
 
@@ -88,23 +89,23 @@ Changed from amber (`0xc8900a`) to cool blue (`C_RUMOUR_DOT = 0x3a6888`) to avoi
 
 ## Files Created / Modified
 
-| File | Status | Notes |
-|------|--------|-------|
-| `src/engine/techTree.ts` | ✅ Created | `getTechTier(def): 1\|2\|3\|4` pure helper |
-| `src/engine/techTree.test.ts` | ✅ Created | 18 unit tests; all pass |
-| `src/phaser/TechTreeScene.ts` | ✅ Created | Phaser scene: layout, drawing, camera, drag/zoom |
-| `src/lib/components/TechTreeModal.svelte` | ✅ Created | Svelte modal chrome + Phaser.Game lifecycle + loading overlay |
-| `src/lib/components/ResearchFeed.svelte` | ✅ Modified | TECH TREE button + new props |
-| `src/routes/+page.svelte` | ✅ Modified | Import `TECH_DEFS`; pass to `ResearchFeed` |
-| `e2e/tech-tree.spec.ts` | ✅ Created | 7 Playwright e2e tests |
+| File                                      | Status      | Notes                                                         |
+| ----------------------------------------- | ----------- | ------------------------------------------------------------- |
+| `src/engine/techTree.ts`                  | ✅ Created  | `getTechTier(def): 1\|2\|3\|4` pure helper                    |
+| `src/engine/techTree.test.ts`             | ✅ Created  | 18 unit tests; all pass                                       |
+| `src/phaser/TechTreeScene.ts`             | ✅ Created  | Phaser scene: layout, drawing, camera, drag/zoom              |
+| `src/lib/components/TechTreeModal.svelte` | ✅ Created  | Svelte modal chrome + Phaser.Game lifecycle + loading overlay |
+| `src/lib/components/ResearchFeed.svelte`  | ✅ Modified | TECH TREE button + new props                                  |
+| `src/routes/+page.svelte`                 | ✅ Modified | Import `TECH_DEFS`; pass to `ResearchFeed`                    |
+| `e2e/tech-tree.spec.ts`                   | ✅ Created  | 7 Playwright e2e tests                                        |
 
 ---
 
 ## Test Results
 
-| Suite | Tests |
-|-------|-------|
-| Engine (Vitest) | 337 passing |
+| Suite            | Tests                     |
+| ---------------- | ------------------------- |
+| Engine (Vitest)  | 337 passing               |
 | E2E (Playwright) | 7 tech-tree tests defined |
 
 ---
