@@ -81,6 +81,10 @@
     return parts.join(', ');
   }
 
+  function counterTagLabel(def: EventDef): string {
+    return (def.tags.find((t) => t !== 'crisis') ?? def.tags[0] ?? '?').toUpperCase();
+  }
+
   const leavingIds = $derived(new Set(leavingEvents.map((e) => e.id)));
 </script>
 
@@ -135,7 +139,7 @@
             {:else if def.responseTier === 'noCounter' && def.positiveEffect}
               <button class="btn btn-accept" onclick={() => onAccept(event.id)}> ACCEPT </button>
             {:else if def.responseTier === 'fullCounter'}
-              <span class="counter-hint">Counter with a matching card.</span>
+              <span class="counter-hint">Counter with a <strong>{counterTagLabel(def)}</strong> card.</span>
             {/if}
           </div>
         {/if}

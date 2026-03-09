@@ -11,6 +11,7 @@ import type {
   BeltEdge,
   PushFactor,
   OngoingAction,
+  NewsItem,
 } from '../../engine/types';
 import { BLOC_MAPS } from '../../data/blocMaps';
 import { initialiseBlocStates } from '../../engine/blocs';
@@ -688,6 +689,10 @@ export const gameStore = {
 
   playCard(cardId: string): void {
     if (!_state) return;
+    // Enforce per-turn action cap (old saves default to 3 if field missing)
+    const cap = _state.maxActionsPerTurn ?? 3;
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
     const card = _state.player.cards.find((c) => c.id === cardId);
     if (!card || card.zone !== 'hand') return;
     const def = CARD_DEFS.get(card.defId);
@@ -709,12 +714,50 @@ export const gameStore = {
         fields[k] = Math.max(0, (fields[k] ?? 0) + (f[k] ?? 0));
       }
     }
+
+    // Check if this card counters an active fullCounter event
+    let activeEvents = [..._state.activeEvents];
+    let newsFeed = [..._state.player.newsFeed];
+    if (def.counterEffect) {
+      const tag = def.counterEffect.countersEventTag;
+      const matchIdx = activeEvents.findIndex(
+        (e) =>
+          !e.resolved &&
+          EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter' &&
+          (EVENT_DEFS.get(e.defId)?.tags ?? []).includes(tag),
+      );
+      if (matchIdx !== -1) {
+        // Deduct additional counter cost
+        const addl = def.counterEffect.additionalCost;
+        resources = {
+          funding: resources.funding - (addl.funding ?? 0),
+          materials: Math.max(0, resources.materials - (addl.materials ?? 0)),
+          politicalWill: Math.max(0, resources.politicalWill - (addl.politicalWill ?? 0)),
+        };
+        const matched = activeEvents[matchIdx];
+        activeEvents = activeEvents.map((e) =>
+          e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'counter' as const } : e,
+        );
+        const eventName = EVENT_DEFS.get(matched.defId)?.name ?? matched.defId;
+        const counterNews: NewsItem = {
+          id: crypto.randomUUID(),
+          turn: _state.turn,
+          text: `${eventName} countered by ${def.name}.`,
+          category: 'event-gain',
+        };
+        newsFeed = [...newsFeed, counterNews];
+      }
+    }
+
     _state = {
       ..._state,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      activeEvents,
       player: {
         ..._state.player,
         resources,
         fields,
+        newsFeed,
         cards: _state.player.cards.map((c) =>
           c.id === cardId ? { ...c, zone: 'discard' as const } : c,
         ),
@@ -751,6 +794,31 @@ export const gameStore = {
             ? { ...c, zone: 'discard' as const, bankedSinceTurn: null }
             : c,
         ),
+      },
+    };
+  },
+
+  /** Emergency Appeal standing action: spend 20 Will, gain 30 Funding. */
+  emergencyAppeal(): void {
+    if (!_state || _state.phase !== 'action') return;
+    const will = _state.player.resources.politicalWill;
+    if (will < 20) return;
+    const news: NewsItem = {
+      id: crypto.randomUUID(),
+      turn: _state.turn,
+      text: 'Emergency Appeal launched — 30 Funding secured at cost of 20 Political Will.',
+      category: 'event-neutral',
+    };
+    _state = {
+      ..._state,
+      player: {
+        ..._state.player,
+        resources: {
+          ..._state.player.resources,
+          funding: _state.player.resources.funding + 30,
+          politicalWill: will - 20,
+        },
+        newsFeed: [..._state.player.newsFeed, news],
       },
     };
   },

@@ -14,6 +14,18 @@
   );
 
   const canAdvance = $derived(phase === 'action' || phase === 'bank');
+
+  const phaseDesc = $derived(
+    phase === 'event'
+      ? 'New events arriving.'
+      : phase === 'draw'
+        ? 'Drawing cards…'
+        : phase === 'action'
+          ? 'Play cards or use standing actions.'
+          : phase === 'bank'
+            ? 'Bank up to 2 cards for next turn.'
+            : 'Processing…',
+  );
 </script>
 
 <div class="phase-controls">
@@ -25,6 +37,7 @@
   >
     {label}
   </button>
+  <span class="phase-desc">{phaseDesc}</span>
 </div>
 
 <style>
@@ -77,5 +90,12 @@
   .advance-btn:disabled {
     opacity: 0.35;
     cursor: not-allowed;
+  }
+
+  .phase-desc {
+    font-size: 0.6rem;
+    color: #3a4858;
+    letter-spacing: 0.05em;
+    font-style: italic;
   }
 </style>
