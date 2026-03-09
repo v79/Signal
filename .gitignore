@@ -8,7 +8,7 @@ dist/
 *.local
 /test-results/
 /playwright-report/
-screenshots/.last-run.json
+/screenshots/
 infra/terraform.tfvars
 
 # OpenTofu / Terraform
