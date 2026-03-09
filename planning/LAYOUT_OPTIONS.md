@@ -9,6 +9,7 @@ The current layout is running out of vertical space on laptop screens (~900px or
 2. **Card hand scrollbar** — the bottom row is capped at `max-height: 14rem` (224px). StandingActions (5 wrapped buttons) takes ~100–120px. Cards are ~150–160px tall. The card hand is vertically clipped before a single full card fits.
 
 ### Current layout structure
+
 ```
 ┌─────────────────────────────────────────────────┐  ~2rem  HUD
 ├──────────┬──────────────────────┬───────────────┤
@@ -32,6 +33,7 @@ The current layout is running out of vertical space on laptop screens (~900px or
 **Also:** Increase `max-height` on `.bottom-row` from 14rem → 18rem to give cards more room.
 
 **Impact on layout:**
+
 ```
 Right column: [RESEARCH][BOARD] tabs
               full height → one panel
@@ -116,12 +118,12 @@ This is purely a numbers + tabs change in `+page.svelte` and right-column CSS �
 
 ## Files affected (for whichever option is chosen)
 
-| File | Change |
-|---|---|
-| `src/routes/+page.svelte` | Column sizing, layout structure, tab state |
-| `src/lib/components/ResearchFeed.svelte` | Remove internal news panel if news moves; tab integration |
-| `src/lib/components/BoardPanel.svelte` | Tab integration |
-| `src/lib/components/EventZone.svelte` | Height management if left column changes |
-| `src/lib/components/StandingActions.svelte` | If moved to left sidebar |
-| `src/lib/components/PhaseControls.svelte` | If moved to left sidebar |
-| `src/lib/components/CardHand.svelte` | Height constraints / drawer behaviour |
+| File                                        | Change                                                    |
+| ------------------------------------------- | --------------------------------------------------------- |
+| `src/routes/+page.svelte`                   | Column sizing, layout structure, tab state                |
+| `src/lib/components/ResearchFeed.svelte`    | Remove internal news panel if news moves; tab integration |
+| `src/lib/components/BoardPanel.svelte`      | Tab integration                                           |
+| `src/lib/components/EventZone.svelte`       | Height management if left column changes                  |
+| `src/lib/components/StandingActions.svelte` | If moved to left sidebar                                  |
+| `src/lib/components/PhaseControls.svelte`   | If moved to left sidebar                                  |
+| `src/lib/components/CardHand.svelte`        | Height constraints / drawer behaviour                     |
