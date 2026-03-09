@@ -78,7 +78,7 @@ Tighten the button label copy:
 
 ---
 
-### 17.4 — Hover tooltips for HUD elements
+### 17.4 — Hover tooltips for HUD elements ✅ COMPLETE
 
 **Approach:** Use a lightweight Svelte tooltip component (CSS-only, no library). Create `src/lib/components/Tooltip.svelte`.
 
