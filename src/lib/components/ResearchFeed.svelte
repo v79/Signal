@@ -4,6 +4,7 @@
     TechState, TechDef, CardDef, FacilityDef,
   } from '../../engine/types';
   import TechTreeModal from './TechTreeModal.svelte';
+    import Tooltip from './Tooltip.svelte';
 
   let {
     fields,
@@ -108,7 +109,9 @@
 
   <div class="panel-title">SIGNAL TRACK</div>
   <div class="signal-row">
+  <Tooltip text="Progress decoding the alien signal. Unlocks new techs and events as it advances." direction="below">
     <span class="signal-label" style="color: {signalColor(signal)}">{signalLabel(signal)}</span>
+    </Tooltip>
     <div class="signal-track">
       <div
         class="signal-fill"

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Resources, FieldPoints, Era, TurnPhase } from '../../engine/types';
   import SaveControls from './SaveControls.svelte';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     resources,
@@ -71,6 +72,15 @@
 
   const FIELD_KEYS = Object.keys(FIELD_LABELS) as (keyof FieldPoints)[];
 
+  const FIELD_TOOLTIPS: Record<keyof FieldPoints, string> = {
+    physics:      'Physics — drives signal detection and propulsion research.',
+    mathematics:  'Mathematics — underpins cryptography, navigation, and signal decoding.',
+    engineering:  'Engineering — enables facility construction and hardware projects.',
+    biochemistry: 'Biochemistry — supports life sciences, habitat, and medical research.',
+    computing:    'Computing — accelerates all research; essential for signal analysis.',
+    socialScience:'Social Science — improves Political Will generation and diplomacy.',
+  };
+
   function climateColor(p: number): string {
     if (p < 30) return '#4a9b7a';
     if (p < 60) return '#c8a040';
@@ -91,9 +101,11 @@
 <header class="hud">
   <div class="hud-left">
     <div class="menu-wrapper">
+    <Tooltip text="Game menu" direction="below">
       <button class="menu-btn" onclick={(e) => toggleMenu(e)} aria-label="Game menu" aria-expanded={menuOpen}>
         ≡
       </button>
+      </Tooltip>
       {#if menuOpen}
         <div class="menu-backdrop" onclick={closeMenu} role="none" tabindex="-1" onkeydown={() => {}}></div>
         <div class="menu-dropdown" style="top: {dropdownPos.top}px; left: {dropdownPos.left}px;">
@@ -121,7 +133,9 @@
   </div>
 
   <div class="hud-center">
-    <span class="label">CLIMATE</span>
+    <Tooltip text="Earth climate index. Rises as you industrialise; affects event probabilities." direction="below">
+      <span class="label">CLIMATE</span>
+    </Tooltip>
     <div class="bar-track climate-track">
       <div
         class="bar-fill"
@@ -130,7 +144,9 @@
     </div>
     <span class="value" style="color: {climateColor(climatePressure)}">{climatePressure.toFixed(0)}%</span>
 
-    <span class="label" style="margin-left: 1rem">WILL</span>
+    <Tooltip text="Global political will level." direction="below">
+      <span class="label" style="margin-left: 1rem">WILL</span>
+    </Tooltip>
     <div class="bar-track will-track">
       <div
         class="bar-fill"
@@ -141,24 +157,32 @@
   </div>
 
   <div class="hud-right">
-    <div class="resource">
-      <span class="res-label">FUND</span>
-      <span class="res-value fund">{fmt(resources.funding)}</span>
-    </div>
-    <div class="resource">
-      <span class="res-label">MAT</span>
-      <span class="res-value mat">{fmt(resources.materials)}</span>
-    </div>
-    <div class="resource">
-      <span class="res-label">WILL</span>
-      <span class="res-value will">{fmt(resources.politicalWill)}</span>
-    </div>
+    <Tooltip text="Current funding. Gained from funding facilities and cards." direction="below">
+      <div class="resource">
+        <span class="res-label">FUND</span>
+        <span class="res-value fund">{fmt(resources.funding)}</span>
+      </div>
+    </Tooltip>
+    <Tooltip text="Raw materials. Gained from mines and industrial zones." direction="below">
+      <div class="resource">
+        <span class="res-label">MAT</span>
+        <span class="res-value mat">{fmt(resources.materials)}</span>
+      </div>
+    </Tooltip>
+    <Tooltip text="Political will. Volatile in democracies; stable but fragile in authoritarian blocs." direction="below">
+      <div class="resource">
+        <span class="res-label">WILL</span>
+        <span class="res-value will">{fmt(resources.politicalWill)}</span>
+      </div>
+    </Tooltip>
     <span class="divider">│</span>
     {#each FIELD_KEYS as key}
-      <div class="field-mini" title={key}>
-        <span class="field-label">{FIELD_LABELS[key]}</span>
-        <span class="field-value">{fields[key]}</span>
-      </div>
+      <Tooltip text={FIELD_TOOLTIPS[key]} direction="below">
+        <div class="field-mini">
+          <span class="field-label">{FIELD_LABELS[key]}</span>
+          <span class="field-value">{fields[key]}</span>
+        </div>
+      </Tooltip>
     {/each}
   </div>
 </header>

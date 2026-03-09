@@ -10,6 +10,7 @@
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
   import type { Era } from '../../engine/types';
+    import Tooltip from './Tooltip.svelte';
 
   type SceneTab = 'earth' | 'space' | 'belt';
 
@@ -138,6 +139,7 @@
   <!-- Scene tab bar -->
   <div class="tab-bar">
     {#each TABS as tab}
+    <Tooltip text={eraUnlocked(tab.requiredEra) ? `Switch to ${tab.label} view` : `Unlock the ${tab.label} era to access this view`} direction="below">
       <button
         class="tab"
         class:active={activeTab === tab.id}
@@ -150,6 +152,7 @@
           <span class="lock">&#x1F512;</span>
         {/if}
       </button>
+      </Tooltip>
     {/each}
   </div>
 
