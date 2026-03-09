@@ -202,7 +202,7 @@
     <div class="bar-track will-track">
       <div class="bar-fill" style="width: {will}%; background: {willColor(will)}"></div>
     </div>
-    <span class="value" style="color: {willColor(will)}">{will}</span>
+    <span class="value" style="color: {willColor(will)}">{Math.round(will)}</span>
   </div>
 
   <div class="hud-right">

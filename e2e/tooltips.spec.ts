@@ -70,7 +70,9 @@ test.describe('HUD resource tooltips', () => {
   test('FUND tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.tooltip-host:has(.res-label:text("FUND"))');
     const text = await assertTooltipInViewport(page, host);
-    expect(text).toBe('Current funding. Gained from funding facilities and cards.');
+    // HQ provides +5 funding/turn from game start, so the breakdown format is always shown.
+    expect(text).toContain('Funding');
+    expect(text).toContain('Headquarters');
   });
 
   test('MAT tooltip is visible and on screen', async ({ page }) => {

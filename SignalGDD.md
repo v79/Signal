@@ -427,7 +427,7 @@ _(For reference when beginning implementation)_
 - **Testing:** Vitest (game logic, research field calculations, event system)
 - **Hosting:** AWS S3 + CloudFront (static assets; no server required for single-player)
 - **Save system:** JSON snapshot to browser storage or file download — no account system required
-- **Map authoring:** Tiled (exports to Phaser-compatible format; hex grid support built in)
+- **Map authoring:** Tile layouts defined in code (`src/data/blocMaps.ts`); rendered directly via Phaser's graphics API
 
 ---
 
@@ -481,7 +481,7 @@ The Earth map uses a hex tile grid rather than a square grid or isometric view. 
 
 **Aesthetic direction:** Clean and atmospheric rather than richly illustrated. Dark backgrounds with hex tiles that shift colour and saturation based on type and state — coastal tiles in deep blue-green, industrial tiles in warm amber, depleted or climate-damaged tiles desaturated and visually degraded. Functional and readable, with atmosphere carried by colour and state rather than detailed art assets. This is achievable for a small team and leaves room for the systems and narrative to carry the experience.
 
-Phaser has solid hex grid support. Tiled (the map authoring tool) also supports hex grids natively and exports in a Phaser-compatible format.
+Phaser has solid hex grid support. Tile layouts are defined as coordinate arrays in code and rendered directly via Phaser's graphics API — no external map authoring tool is used.
 
 The node/network map used for the asteroid belt (Era 3) is visually distinct — sparse, dark, with glowing nodes and transit lines — reinforcing that the player has left the terrestrial world behind.
 

@@ -5,6 +5,7 @@
   import EventZone from '$lib/components/EventZone.svelte';
   import ResearchFeed from '$lib/components/ResearchFeed.svelte';
   import BoardPanel from '$lib/components/BoardPanel.svelte';
+  import SignalTrack from '$lib/components/SignalTrack.svelte';
   import StandingActions from '$lib/components/StandingActions.svelte';
   import OngoingActionsPanel from '$lib/components/OngoingActionsPanel.svelte';
   import CardHand from '$lib/components/CardHand.svelte';
@@ -52,6 +53,8 @@
     gameStore.state && isSignalClimax(gameStore.state.signal) ? gameStore.getWormholeOptions() : [],
   );
 
+  let rightTab = $state<'research' | 'board'>('research');
+
   function handleStandingAction(id: string): void {
     if (id === 'build') {
       if (gameStore.selectedCoordKey != null) {
@@ -85,47 +88,20 @@
 
     <!-- Middle row -->
     <div class="middle-row">
-      <!-- Left: active events -->
-      <EventZone
-        events={gs.activeEvents}
-        eventDefs={EVENT_DEFS}
-        onMitigate={(id) => gameStore.mitigateEvent(id)}
-        onAccept={(id) => gameStore.acceptEvent(id)}
-        onDecline={(id) => gameStore.declineEvent(id)}
-      />
-
-      <!-- Centre: Earth map (Phaser) -->
-      <MapContainer />
-
-      <!-- Right: research + board -->
-      <div class="right-column">
-        <ResearchFeed
-          fields={gs.player.fields}
-          newsFeed={gs.player.newsFeed}
-          signal={gs.signal}
-          techs={gs.player.techs}
-          techDefs={TECH_DEFS}
-          cardDefs={CARD_DEFS}
-          facilityDefs={FACILITY_DEFS}
-          {wormholeOptions}
-          onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
+      <!-- Left column: events + ongoing construction + standing actions -->
+      <div class="left-column">
+        <EventZone
+          events={gs.activeEvents}
+          eventDefs={EVENT_DEFS}
+          onMitigate={(id) => gameStore.mitigateEvent(id)}
+          onAccept={(id) => gameStore.acceptEvent(id)}
+          onDecline={(id) => gameStore.declineEvent(id)}
         />
-        <BoardPanel
-          board={gs.player.board}
-          boardDefs={BOARD_DEFS}
-          phase={gs.phase}
-          onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
-          onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
-        />
-      </div>
-    </div>
 
-    <!-- News ticker strip -->
-    <NewsTicker items={gs.player.newsFeed} />
+        {#if gs.player.constructionQueue.length > 0}
+          <OngoingActionsPanel queue={gs.player.constructionQueue} facilityDefs={FACILITY_DEFS} />
+        {/if}
 
-    <!-- Bottom row -->
-    <div class="bottom-row">
-      <div class="left-actions">
         <StandingActions
           actions={STANDING_ACTIONS}
           restrictions={gs.player.activeEventRestrictions}
@@ -134,9 +110,56 @@
           playerResources={gs.player.resources}
           onAction={handleStandingAction}
         />
-        <OngoingActionsPanel queue={gs.player.constructionQueue} facilityDefs={FACILITY_DEFS} />
       </div>
 
+      <!-- Centre: Earth map (Phaser) -->
+      <MapContainer />
+
+      <!-- Right column: signal track + tabbed research/board -->
+      <div class="right-column">
+        <SignalTrack signal={gs.signal} />
+
+        <div class="panel-tabs">
+          <button
+            class="tab-btn"
+            class:active={rightTab === 'research'}
+            onclick={() => (rightTab = 'research')}>RESEARCH</button
+          >
+          <button
+            class="tab-btn"
+            class:active={rightTab === 'board'}
+            onclick={() => (rightTab = 'board')}>BOARD</button
+          >
+        </div>
+
+        {#if rightTab === 'research'}
+          <ResearchFeed
+            fields={gs.player.fields}
+            signal={gs.signal}
+            techs={gs.player.techs}
+            techDefs={TECH_DEFS}
+            cardDefs={CARD_DEFS}
+            facilityDefs={FACILITY_DEFS}
+            {wormholeOptions}
+            onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
+          />
+        {:else}
+          <BoardPanel
+            board={gs.player.board}
+            boardDefs={BOARD_DEFS}
+            phase={gs.phase}
+            onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
+            onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
+          />
+        {/if}
+      </div>
+    </div>
+
+    <!-- News ticker strip (click to open popup) -->
+    <NewsTicker items={gs.player.newsFeed} />
+
+    <!-- Bottom row: card hand + phase controls -->
+    <div class="bottom-row">
       <CardHand
         cards={gs.player.cards}
         cardDefs={CARD_DEFS}
@@ -162,31 +185,70 @@
 
   .middle-row {
     display: grid;
-    grid-template-columns: 17rem 1fr 16rem;
+    grid-template-columns: 17rem 1fr 20rem;
     flex: 1;
     min-height: 0;
     overflow: hidden;
   }
 
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid #1e2530;
+    min-height: 0;
+  }
+
   .right-column {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     min-height: 0;
   }
 
-  .bottom-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    border-top: 1px solid #1e2530;
+  .panel-tabs {
+    display: flex;
     flex-shrink: 0;
-    max-height: 14rem;
-    overflow: hidden;
+    border-bottom: 1px solid #1e2530;
+    background: #0c1018;
+    border-left: 1px solid #1e2530;
   }
 
-  .left-actions {
-    display: flex;
-    flex-direction: column;
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-right: 1px solid #1e2530;
+    color: #4a6070;
+    font-family: monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    padding: 0.4rem 0;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .tab-btn:last-child {
+    border-right: none;
+  }
+
+  .tab-btn:hover {
+    color: #8aacca;
+    background: #0f1820;
+  }
+
+  .tab-btn.active {
+    color: #8aacca;
+    background: #0a1420;
+    border-bottom: 2px solid #2a6090;
+  }
+
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-top: 1px solid #1e2530;
+    flex-shrink: 0;
+    max-height: 16rem;
     overflow: hidden;
   }
 </style>
