@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {
     FieldPoints,
-    NewsItem,
     SignalState,
     SignalResponseOption,
     TechState,
@@ -10,11 +9,9 @@
     FacilityDef,
   } from '../../engine/types';
   import TechTreeModal from './TechTreeModal.svelte';
-  import Tooltip from './Tooltip.svelte';
 
   let {
     fields,
-    newsFeed,
     signal,
     techs = [],
     techDefs = new Map(),
@@ -24,7 +21,6 @@
     onCommitWormholeResponse,
   }: {
     fields: FieldPoints;
-    newsFeed: NewsItem[];
     signal: SignalState;
     techs?: TechState[];
     techDefs?: Map<string, TechDef>;
@@ -60,21 +56,6 @@
     return Math.min(100, (val / FIELD_SCALE) * 100);
   }
 
-  const recentNews = $derived([...newsFeed].reverse().slice(0, 10));
-
-  function signalLabel(s: SignalState): string {
-    if (s.decodeProgress >= 100) return 'DECODED';
-    if (s.eraStrength === 'urgent') return 'URGENT';
-    if (s.eraStrength === 'structured') return 'STRUCTURED';
-    return 'FAINT';
-  }
-
-  function signalColor(s: SignalState): string {
-    if (s.decodeProgress >= 100) return '#4a9b7a';
-    if (s.eraStrength === 'urgent') return '#c84a4a';
-    if (s.eraStrength === 'structured') return '#c8a040';
-    return '#4a6878';
-  }
 </script>
 
 {#if showTechTree}
@@ -118,27 +99,6 @@
     {/each}
   </div>
 
-  <div class="section-divider"></div>
-
-  <div class="panel-title">SIGNAL TRACK</div>
-  <div class="signal-row">
-    <Tooltip
-      text="Progress decoding the alien signal. Unlocks new techs and events as it advances."
-      direction="below"
-    >
-      <span class="signal-label" style="color: {signalColor(signal)}">{signalLabel(signal)}</span>
-    </Tooltip>
-    <div class="signal-track">
-      <div
-        class="signal-fill"
-        style="width: {signal.decodeProgress}%; background: {signalColor(signal)}"
-      ></div>
-    </div>
-    <span class="signal-pct" style="color: {signalColor(signal)}"
-      >{signal.decodeProgress.toFixed(0)}%</span
-    >
-  </div>
-
   {#if isClimax && wormholeOptions.length > 0}
     <div class="section-divider"></div>
     <div class="climax-section">
@@ -176,20 +136,6 @@
     </div>
   {/if}
 
-  <div class="section-divider"></div>
-
-  <div class="panel-title">NEWS FEED</div>
-  <div class="news-list">
-    {#each recentNews as item (item.id)}
-      <div class="news-item">
-        <span class="news-turn">T{item.turn}</span>
-        <span class="news-text">{item.text}</span>
-      </div>
-    {/each}
-    {#if newsFeed.length === 0}
-      <div class="empty">No dispatches yet.</div>
-    {/if}
-  </div>
 </aside>
 
 <style>
@@ -288,75 +234,6 @@
     font-variant-numeric: tabular-nums;
     font-size: 0.68rem;
     flex-shrink: 0;
-  }
-
-  .signal-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.7rem;
-  }
-
-  .signal-label {
-    width: 5.5rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    flex-shrink: 0;
-  }
-
-  .signal-track {
-    flex: 1;
-    height: 6px;
-    background: #1a2030;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .signal-fill {
-    height: 100%;
-    transition: width 0.4s ease;
-  }
-
-  .signal-pct {
-    width: 2.5rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    font-size: 0.68rem;
-    flex-shrink: 0;
-  }
-
-  .news-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    overflow-y: auto;
-  }
-
-  .news-item {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 0.68rem;
-    line-height: 1.45;
-  }
-
-  .news-turn {
-    color: #4a6878;
-    font-size: 0.62rem;
-    flex-shrink: 0;
-    padding-top: 0.05rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .news-text {
-    color: #7a8a98;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .empty {
-    color: #3a4050;
-    font-size: 0.68rem;
-    font-style: italic;
   }
 
   .climax-section {
