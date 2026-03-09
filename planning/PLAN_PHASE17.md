@@ -157,7 +157,7 @@ Currently uses the native `title` attribute. Replace with the new `Tooltip.svelt
 
 ---
 
-### 17.7 — Standing actions: compact multi-row layout
+### 17.7 — Standing actions: compact multi-row layout ✅ COMPLETE (new design implemented)
 
 **File:** `src/lib/components/StandingActions.svelte`
 
@@ -174,7 +174,7 @@ New layout:
 
 ---
 
-### 17.8 — Card bank: side layout
+### 17.8 — Card bank: side layout ~~REJECTED~~ (return later)
 
 **File:** `src/lib/components/CardHand.svelte`
 
@@ -252,10 +252,10 @@ No engine files (`src/engine/`) change. No new tests needed (pure UI); manual sm
 - [x] Materials resource label and value are brown in HUD
 - [x] Resource values display with comma separators for large numbers
 - [x] PhaseControls shows no separate turn number
-- [ ] Hovering a resource value shows a descriptive tooltip
+- [x] Hovering a resource value shows a descriptive tooltip
 - [ ] Hovering a research field abbreviation shows the full field name
 - ~~[ ] ResearchFeed, BoardPanel, and OngoingActionsPanel each have a working collapse toggle~~ _(17.6 rejected)_
-- [ ] Standing actions render in a compact ≤3-row grid; all 5 actions visible without scrolling
+- [x] Standing actions render in a compact ≤3-row grid; all 5 actions visible without scrolling
 - [ ] Hovering a disabled action shows why it is disabled
 - [ ] Banked cards appear to the left of hand cards with a divider
 - [ ] Playing a card triggers a slide-up/fade animation
