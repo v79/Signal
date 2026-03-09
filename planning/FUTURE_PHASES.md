@@ -36,3 +36,5 @@ This is a list of future requirements for the game but they are not to be implem
 - News feed & ticker rework
   - The ticker is cute but not very functional
   - The news feed does not have enough space on smaller screens
+- Debug view and logs
+  - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging

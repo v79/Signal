@@ -93,9 +93,9 @@
         <EventZone
           events={gs.activeEvents}
           eventDefs={EVENT_DEFS}
+          currentTurn={gs.turn}
           onMitigate={(id) => gameStore.mitigateEvent(id)}
           onAccept={(id) => gameStore.acceptEvent(id)}
-          onDecline={(id) => gameStore.declineEvent(id)}
         />
 
         {#if gs.player.constructionQueue.length > 0}
