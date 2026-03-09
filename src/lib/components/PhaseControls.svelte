@@ -9,11 +9,9 @@
     onAdvance: () => void;
   } = $props();
 
-  const label = $derived(
-    phase === 'action' ? 'END ACTION →' : phase === 'bank' ? 'END TURN ⟳' : phase.toUpperCase(),
-  );
+  const label = $derived(phase === 'action' ? 'END TURN ⟳' : phase.toUpperCase());
 
-  const canAdvance = $derived(phase === 'action' || phase === 'bank');
+  const canAdvance = $derived(phase === 'action');
 
   const phaseDesc = $derived(
     phase === 'event'
@@ -21,30 +19,28 @@
       : phase === 'draw'
         ? 'Drawing cards…'
         : phase === 'action'
-          ? 'Play cards or use standing actions.'
-          : phase === 'bank'
-            ? 'Bank up to 2 cards for next turn.'
-            : 'Processing…',
+          ? 'Play or bank cards, then end your turn.'
+          : 'Processing…',
   );
 </script>
 
 <div class="phase-controls">
   <button
-    class="advance-btn"
-    class:end-turn={phase === 'bank'}
+    class="advance-btn end-turn"
     disabled={!canAdvance}
     onclick={onAdvance}
   >
     {label}
   </button>
-  <span class="phase-desc">{phaseDesc}</span>
+  <div class="phase-desc">{phaseDesc}</div>
 </div>
 
 <style>
   .phase-controls {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
     padding: 0.5rem 1rem;
     background: #070b12;
     border-left: 1px solid #1e2530;

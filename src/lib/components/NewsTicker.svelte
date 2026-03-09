@@ -117,7 +117,7 @@
     color: #7a9eb8;
     letter-spacing: 0.05em;
     padding-left: 100%;
-    animation: ticker-scroll 90s linear infinite;
+    animation: ticker-scroll 140s linear infinite;
   }
 
   @keyframes ticker-scroll {

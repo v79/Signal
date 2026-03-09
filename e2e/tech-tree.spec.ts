@@ -128,8 +128,8 @@ test('tech tree — game phase controls still work after closing modal', async (
   await openTechTree(page);
   await page.click('.close-btn');
 
-  // Should still be able to advance phases
-  await page.getByText('END ACTION →').click();
-  await page.waitForTimeout(300);
+  // Should still be able to advance the turn
+  await page.getByText('END TURN ⟳').click();
+  await page.waitForTimeout(800);
   await expect(page.getByText('END TURN ⟳')).toBeVisible();
 });

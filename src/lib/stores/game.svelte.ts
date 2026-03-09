@@ -19,7 +19,7 @@ import { createGameState } from '../../engine/state';
 import { createRng } from '../../engine/rng';
 import { goto } from '$app/navigation';
 import {
-  endBankPhase,
+  endActionPhase,
   executeWorldPhase,
   executeEventPhase,
   executeDrawPhase,
@@ -825,8 +825,7 @@ export const gameStore = {
 
   /**
    * Advance the game phase.
-   *  action → bank  (instant, no engine calls)
-   *  bank   → event → draw → action  (full World Phase + automated phases)
+   *  action → world → event → draw → action  (full World Phase + automated phases)
    *
    * If the World Phase triggers a victory or loss, navigation to /summary
    * happens automatically after state is updated.
@@ -834,13 +833,9 @@ export const gameStore = {
   advancePhase(): void {
     if (!_state) return;
     if (_state.phase === 'action') {
-      _state = { ..._state, phase: 'bank' };
-      return;
-    }
-    if (_state.phase === 'bank') {
       // Each turn gets its own deterministic RNG slice derived from seed + turn number.
       const rng = createRng(`${_state.seed}-t${_state.turn}`);
-      let next = endBankPhase(_state);
+      let next = endActionPhase(_state);
       next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS);
       // If the game ended, skip the remaining automated phases and navigate.
       if (next.outcome) {

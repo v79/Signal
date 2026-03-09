@@ -97,15 +97,10 @@ test('hud menu — opens with restart, new game, settings options', async ({ pag
 // Test 5 — Advance through phases to Turn 2
 // ---------------------------------------------------------------------------
 
-test('phase advance — action → bank → turn 2', async ({ page }) => {
+test('phase advance — action → turn 2', async ({ page }) => {
   await startNewGame(page);
 
-  // Action phase: click END ACTION
-  await page.getByText('END ACTION →').click();
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: 'screenshots/06-bank-phase.png', fullPage: true });
-
-  // Bank phase: click END TURN (triggers World Phase, then next turn begins)
+  // Action phase: click END TURN (triggers World Phase, then next turn begins)
   await page.getByText('END TURN ⟳').click();
 
   // World phase processes synchronously; wait briefly for re-render

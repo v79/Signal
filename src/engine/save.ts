@@ -12,7 +12,7 @@ export const SAVE_KEY = 'signal-autosave';
 export const SAVE_FORMAT_VERSION = 1;
 
 const VALID_ERAS: Era[] = ['earth', 'nearSpace', 'deepSpace'];
-const VALID_PHASES: TurnPhase[] = ['event', 'draw', 'action', 'bank', 'world'];
+const VALID_PHASES: TurnPhase[] = ['event', 'draw', 'action', 'world'];
 
 // ---------------------------------------------------------------------------
 // Envelope

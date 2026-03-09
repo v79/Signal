@@ -40,8 +40,8 @@ export type PushFactor = 'climateChange' | 'geopoliticalTension';
 /** Will volatility model — differs by bloc type. */
 export type WillProfile = 'democratic' | 'authoritarian';
 
-/** The five turn phases, in order. */
-export type TurnPhase = 'event' | 'draw' | 'action' | 'bank' | 'world';
+/** The four turn phases, in order. */
+export type TurnPhase = 'event' | 'draw' | 'action' | 'world';
 
 // ---------------------------------------------------------------------------
 // Hex map (Era 1 — Earth)

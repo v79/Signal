@@ -4,10 +4,6 @@ This is a list of future requirements for the game but they are not to be implem
 
 - UI visual flare:
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
-- Actions rework:
-  - What is the point of the draw/action/bank phases?
-  - There should be a cap on actions taken in a turn
-  - How are Events countered? By playing the action card or by pressing a button on the event? (Doesn't seem to be working)
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
@@ -18,6 +14,7 @@ This is a list of future requirements for the game but they are not to be implem
   - What do the progress bars on the science fields mean?
   - How are research fields 'spent' to progress unlocking Technologies
   - It should not be possible to decode the Signal until the Asteroid era!
+  - When a technology is researched, a narrative popup should be shown on the main game screen, with information on the new cards, facilities or actions it unlocks and those it obsoletes
 - Further Earth era content
   - Funding is hard to come by
   - Negative events happen to frequently
@@ -33,7 +30,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Most technologies will have prerequisite technologies that must be researched first
   - Draw connecting lines between discovered technologies and progressing technologies
   - Clicking on a discovered or in progress technology in the tech tree should show more information
-  - When a technology is researched, a narrative popup should be shown on the main game screen
   - Unlocked technologies may provide a passive resource gain (but may not, and may be restricted to the current era)
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
 - Interface for narrative story elements

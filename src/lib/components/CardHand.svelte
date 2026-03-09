@@ -78,7 +78,7 @@
 </script>
 
 <div class="card-hand">
-  <!-- Banked cards -->
+  <!-- Bank column (left, only when cards are banked) -->
   {#if bankedCards.length > 0}
     <div class="bank-section">
       <span class="zone-label">BANK ({bankedCards.length}/{BANK_LIMIT})</span>
@@ -105,11 +105,7 @@
                 <div class="counter-info">Counter: {def.counterEffect.countersEventTag}</div>
               {/if}
               <div class="card-actions">
-                <button
-                  class="btn btn-unbank"
-                  onclick={() => onUnbank(card.id)}
-                  title="Return to discard pile"
-                >
+                <button class="btn btn-unbank" onclick={() => onUnbank(card.id)}>
                   UNBANK
                 </button>
               </div>
@@ -121,9 +117,10 @@
         {/each}
       </div>
     </div>
+    <div class="bank-divider"></div>
   {/if}
 
-  <!-- Hand cards -->
+  <!-- Hand column (right) -->
   <div class="hand-section">
     <div class="hand-header">
       <span class="zone-label">HAND ({handCards.length})</span>
@@ -195,8 +192,9 @@
 <style>
   .card-hand {
     display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
     padding: 0.5rem 0.75rem;
     border-top: 1px solid #1e2530;
     background: #090d14;
@@ -214,9 +212,19 @@
 
   .bank-section {
     flex-shrink: 0;
+    padding-right: 0.75rem;
   }
+
+  .bank-divider {
+    width: 1px;
+    background: #1e2530;
+    margin: 0 0.75rem;
+    flex-shrink: 0;
+  }
+
   .hand-section {
     flex-shrink: 0;
+    flex: 1;
   }
 
   .hand-header {
@@ -271,6 +279,7 @@
   .card.banked {
     border-color: #4a3a10;
     background: #181008;
+    width: 9.5rem;
   }
 
   .card.can-counter {
