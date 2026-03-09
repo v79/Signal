@@ -143,6 +143,7 @@ export function tickBoardAges(
         id: `retire-${member.id}-t${turn}`,
         turn,
         text: `Board member ${member.id} has retired after a long and distinguished career.`,
+        category: 'board' as const,
       });
     } else {
       updatedBoard[role] = { ...member, age: newAge };

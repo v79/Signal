@@ -137,13 +137,21 @@ describe('applyResourceDeltas', () => {
     expect(result.materials).toBe(45);
   });
 
-  it('clamps resources at 0 (never goes negative)', () => {
+  it('allows funding to go negative (deficit spending)', () => {
     const small: Resources = { funding: 1, materials: 1, politicalWill: 0 };
     const largeDecay = 100;
     const result = applyResourceDeltas(small, ZERO_RESOURCES, largeDecay, ZERO_RESOURCES);
 
-    expect(result.funding).toBe(0);
+    expect(result.funding).toBe(1 - 100); // -99: deficit allowed
     expect(result.materials).toBe(1); // unaffected by funding decay
+  });
+
+  it('clamps materials at 0 (cannot go negative)', () => {
+    const small: Resources = { funding: 100, materials: 5, politicalWill: 0 };
+    const upkeep: Resources = { funding: 0, materials: 50, politicalWill: 0 };
+    const result = applyResourceDeltas(small, ZERO_RESOURCES, 0, upkeep);
+
+    expect(result.materials).toBe(0);
   });
 
   it('combines all effects correctly', () => {

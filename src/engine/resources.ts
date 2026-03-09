@@ -103,10 +103,8 @@ export function applyResourceDeltas(
   projectUpkeep: Resources,
 ): Resources {
   return {
-    funding: Math.max(
-      0,
-      current.funding + facilityDelta.funding - bankDecay - projectUpkeep.funding,
-    ),
+    // Funding can go negative (running a deficit is possible; bankruptcy is a loss condition).
+    funding: current.funding + facilityDelta.funding - bankDecay - projectUpkeep.funding,
     materials: Math.max(0, current.materials + facilityDelta.materials - projectUpkeep.materials),
     politicalWill: Math.max(
       0,

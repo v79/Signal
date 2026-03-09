@@ -32,6 +32,7 @@ import {
   getJustExpiredEvents,
   applyEventEffect,
   getEffectForResolution,
+  formatEffectForNews,
 } from './events';
 import { simulateBlocs, checkBlocMergers } from './blocs';
 import {
@@ -90,6 +91,7 @@ export function executeEventPhase(
   let updatedPlayer = { ...player };
   let updatedTiles = [...state.map.earthTiles];
   const expired = getJustExpiredEvents(tickedEvents);
+  const expiryNews: NewsItem[] = [];
 
   for (const event of expired) {
     const def = eventDefs.get(event.defId);
@@ -99,6 +101,13 @@ export function executeEventPhase(
     const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn);
     updatedPlayer = result.player;
     updatedTiles = result.mapTiles;
+    const summary = formatEffectForNews(effect);
+    expiryNews.push({
+      id: `event-expired-${event.id}-t${state.turn}`,
+      turn: state.turn,
+      text: `${def.name} expired — ${summary}.`,
+      category: 'event-loss',
+    });
   }
 
   // 3. Expire standing action restrictions
@@ -120,9 +129,13 @@ export function executeEventPhase(
   return {
     ...state,
     phase: 'draw',
-    activeEvents: [...tickedEvents, ...newEvents],
+    activeEvents: [...tickedEvents.filter((e) => !e.resolved), ...newEvents],
     map: { ...state.map, earthTiles: updatedTiles },
-    player: { ...updatedPlayer, activeEventRestrictions: activeRestrictions },
+    player: {
+      ...updatedPlayer,
+      activeEventRestrictions: activeRestrictions,
+      newsFeed: [...updatedPlayer.newsFeed, ...expiryNews],
+    },
   };
 }
 
@@ -270,16 +283,19 @@ export function executeWorldPhase(
       turn: nextTurn,
       text:
         techDefs.get(defId)?.rumourText ?? 'Something new is stirring in the research community.',
+      category: 'research' as const,
     })),
     ...newProgressTechs.map((defId) => ({
       id: `${nextTurn}-progress-${defId}`,
       turn: nextTurn,
       text: `Research into ${techDefs.get(defId)?.name ?? 'an unknown field'} is showing concrete results.`,
+      category: 'research' as const,
     })),
     ...newDiscoveries.map((defId) => ({
       id: `${nextTurn}-discovery-${defId}`,
       turn: nextTurn,
       text: `Breakthrough: ${techDefs.get(defId)?.name ?? 'Unknown technology'} has been achieved.`,
+      category: 'discovery' as const,
     })),
   ];
 
@@ -312,6 +328,7 @@ export function executeWorldPhase(
           id: `signal-${nextTurn}`,
           turn: nextTurn,
           text: signalProgressNewsText(newSignal.decodeProgress, nextTurn),
+          category: 'signal' as const,
         },
       ]
     : [];

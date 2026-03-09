@@ -654,10 +654,21 @@ export interface PlayerState {
   constructionQueue: OngoingAction[];
 }
 
+export type NewsCategory =
+  | 'event-loss'     // event expired/declined with negative effect
+  | 'event-gain'     // opportunity event accepted
+  | 'event-neutral'  // mitigated or no direct resource change
+  | 'discovery'      // tech breakthrough
+  | 'research'       // rumour or research progress
+  | 'signal'         // signal track milestone
+  | 'board'          // board member event
+  | 'bloc';          // NPC bloc status
+
 export interface NewsItem {
   id: string;
   turn: number;
   text: string;
+  category?: NewsCategory;
 }
 
 export interface MapState {

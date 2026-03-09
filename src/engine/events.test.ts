@@ -7,6 +7,7 @@ import {
   resolveEvent,
   applyEventEffect,
   getEffectForResolution,
+  formatEffectForNews,
 } from './events';
 import { createRng } from './rng';
 import type { EventDef, EventInstance, PlayerState } from './types';
@@ -297,10 +298,11 @@ describe('applyEventEffect', () => {
     expect(player.resources.materials).toBe(60);
   });
 
-  it('clamps resources at 0', () => {
-    const effect = { resources: { funding: -999 } };
-    const { player } = applyEventEffect(effect, basePlayer, [], 5);
-    expect(player.resources.funding).toBe(0);
+  it('allows funding to go negative; clamps materials at 0', () => {
+    const { player: p1 } = applyEventEffect({ resources: { funding: -999 } }, basePlayer, [], 5);
+    expect(p1.resources.funding).toBe(basePlayer.resources.funding - 999); // deficit allowed
+    const { player: p2 } = applyEventEffect({ resources: { materials: -999 } }, basePlayer, [], 5);
+    expect(p2.resources.materials).toBe(0); // materials cannot go negative
   });
 
   it('applies field delta to player', () => {
@@ -325,5 +327,36 @@ describe('applyEventEffect', () => {
     const effect = {};
     const { player } = applyEventEffect(effect, basePlayer, [], 5);
     expect(player.resources).toEqual(basePlayer.resources);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatEffectForNews
+// ---------------------------------------------------------------------------
+
+describe('formatEffectForNews', () => {
+  it('formats negative resource changes', () => {
+    const text = formatEffectForNews({ resources: { materials: -35 } });
+    expect(text).toBe('Materials -35');
+  });
+
+  it('formats positive resource changes', () => {
+    const text = formatEffectForNews({ resources: { materials: 25 } });
+    expect(text).toBe('Materials +25');
+  });
+
+  it('formats multiple resources', () => {
+    const text = formatEffectForNews({ resources: { funding: -10, politicalWill: -25 } });
+    expect(text).toBe('Funding -10, Political Will -25');
+  });
+
+  it('returns no immediate effect for empty effect', () => {
+    expect(formatEffectForNews({})).toBe('no immediate effect');
+    expect(formatEffectForNews({ resources: {} })).toBe('no immediate effect');
+  });
+
+  it('omits zero-value entries', () => {
+    const text = formatEffectForNews({ resources: { funding: 0, materials: -20 } });
+    expect(text).toBe('Materials -20');
   });
 });
