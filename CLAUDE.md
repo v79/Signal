@@ -14,7 +14,7 @@ Always create a new branch before implementing any feature or significant change
 - **UI framework:** SvelteKit — for HUD, card hand, event zone overlays on top of the Phaser canvas
 - **Build tooling:** Vite (native to SvelteKit; also works standalone with Phaser)
 - **Testing:** Vitest (game logic, research field calculations, event system)
-- **Map authoring:** Tiled (hex grid, exports Phaser-compatible format)
+- **Map authoring:** Tile layouts defined in code (`src/data/blocMaps.ts`); rendered directly via Phaser's graphics API
 - **Hosting target:** AWS S3 + CloudFront (static; no server needed)
 - **Save system:** JSON snapshot to browser localStorage or file download — no account system
 
@@ -32,7 +32,7 @@ npm run lint       # Type-check and lint
 
 The game has three distinct map layers that unlock progressively. Each has its own rendering approach:
 
-- **Era 1 — Earth:** Hex tile grid (Phaser + Tiled). Tiles have types (urban, industrial, coastal, etc.) with adjacency bonuses/penalties between facilities.
+- **Era 1 — Earth:** Hex tile grid rendered via Phaser's graphics API. Tiles have types (urban, industrial, coastal, etc.) with adjacency bonuses/penalties between facilities.
 - **Era 2 — Near Space:** Second Phaser scene/layer. Distance and launch cost replace geographic adjacency.
 - **Era 3 — Asteroid Belt:** Node/network graph (not a tile grid). Sparse, dark aesthetic with glowing nodes and transit lines.
 
