@@ -1,5 +1,5 @@
 # SIGNAL — Game Design Document
-*Version 0.6 — Working Draft*
+*Version 0.7 — Working Draft*
 
 ---
 
@@ -15,7 +15,7 @@
 
 ### Concept Summary
 
-Signal is a turn-based strategy game in which the player manages a state-sponsored corporation representing a major geopolitical bloc — the EU, North America, China, or others. The game is set in the near future, driven by a **push factor** (climate change or geopolitical conflict) and a **pull factor** (a mysterious signal from the outer solar system). The player builds facilities, pursues projects, and — without directing research explicitly — unlocks technologies organically through their actions.
+Signal is a turn-based strategy game in which the player manages a state-sponsored corporation representing a major geopolitical bloc — the EU, North America, China, or others. The game is set in a alternative history, starting in 1970 after the USA first lands on the moon and ending in approximately 2100. The story is driven by a **push factor** (climate change or geopolitical conflict) and a **pull factor** (a mysterious signal from the outer solar system). The player builds facilities, pursues projects, and — without directing research explicitly — unlocks technologies organically through their actions.
 
 The game progresses across three eras: Earth, Near Space, and Deep Space. Earth slowly degrades as a productive base. The ultimate goal is to respond to the signal, though multiple victory conditions are available.
 
@@ -23,7 +23,7 @@ The game progresses across three eras: Earth, Near Space, and Deep Space. Earth 
 
 ## 2. Setting & Tone
 
-### Near-Future Earth
+### Alt-history setting
 Climate change is measurable and visible. Sea levels are rising. Certain regions are becoming economically marginal. Geopolitical blocs are in competition and occasional cooperation. The world still functions — society has not collapsed — but the pressure is real and growing.
 
 ### The Signal

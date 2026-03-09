@@ -29,7 +29,7 @@ Out of scope for Phase 17 (covered in later phases):
 
 ## Tasks
 
-### 17.1 — Materials colour (trivial) ✓ COMPLETE
+### 17.1 — Materials colour (trivial) ✅ COMPLETE
 
 **File:** `src/lib/components/HUD.svelte`
 
@@ -41,7 +41,7 @@ Out of scope for Phase 17 (covered in later phases):
 
 ---
 
-### 17.2 — Round resource numbers ✓ COMPLETE
+### 17.2 — Round resource numbers ✅ COMPLETE
 
 **File:** `src/lib/components/HUD.svelte`
 
@@ -61,7 +61,7 @@ Use `{fmt(resources.funding)}` etc. in the template.
 
 ---
 
-### 17.3 — Clean up PhaseControls (remove redundant turn number) ✓ COMPLETE
+### 17.3 — Clean up PhaseControls (remove redundant turn number) ✅ COMPLETE
 
 **File:** `src/lib/components/PhaseControls.svelte`
 
@@ -131,29 +131,9 @@ Currently uses the native `title` attribute. Replace with the new `Tooltip.svelt
 
 ---
 
-### 17.6 — Collapsible panels
+### 17.6 — Collapsible panels ~~REJECTED~~
 
-Add a collapse toggle to `ResearchFeed.svelte`, `BoardPanel.svelte`, and `OngoingActionsPanel.svelte`. Each panel gets a `▾ / ▸` toggle button in its header that toggles a `collapsed` local `$state` boolean. When collapsed, only the header row is visible (saves vertical space on busy screens).
-
-Implementation pattern (same for each panel):
-
-```svelte
-<script lang="ts">
-  let collapsed = $state(false);
-</script>
-
-<div class="panel" class:collapsed>
-  <div class="panel-header" onclick={() => collapsed = !collapsed}>
-    <span class="panel-title">RESEARCH</span>
-    <span class="collapse-toggle">{collapsed ? '▸' : '▾'}</span>
-  </div>
-  {#if !collapsed}
-    <!-- panel body -->
-  {/if}
-</div>
-```
-
-**Files:** `ResearchFeed.svelte`, `BoardPanel.svelte`, `OngoingActionsPanel.svelte`.
+> **Rejected.** This approach is no longer considered correct. A new panel layout/navigation design will be specified in a separate future phase. Do not implement.
 
 ---
 
@@ -252,7 +232,7 @@ No engine files (`src/engine/`) change. No new tests needed (pure UI); manual sm
 - [x] PhaseControls shows no separate turn number
 - [ ] Hovering a resource value shows a descriptive tooltip
 - [ ] Hovering a research field abbreviation shows the full field name
-- [ ] ResearchFeed, BoardPanel, and OngoingActionsPanel each have a working collapse toggle
+- ~~[ ] ResearchFeed, BoardPanel, and OngoingActionsPanel each have a working collapse toggle~~ *(17.6 rejected)*
 - [ ] Standing actions render in a compact ≤3-row grid; all 5 actions visible without scrolling
 - [ ] Hovering a disabled action shows why it is disabled
 - [ ] Banked cards appear to the left of hand cards with a divider

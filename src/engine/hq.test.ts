@@ -26,8 +26,8 @@ describe('HQ FacilityDef', () => {
     expect(hqDef?.buildCost).toEqual({});
   });
 
-  it('has no upkeep', () => {
-    expect(hqDef?.upkeepCost).toEqual({});
+  it('has a negative funding upkeep (acts as income)', () => {
+    expect(hqDef?.upkeepCost).toEqual({ funding: -5 });
   });
 
   it('is restricted to urban tiles', () => {
