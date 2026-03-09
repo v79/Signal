@@ -2,15 +2,26 @@
 
 This is a list of future requirements for the game but they are not to be implemented until a specific plan is created. This list is not ordered.
 
-- UI rework:
+- UI visual flare:
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
-- Standing actions need fleshing out with an updated UI:
-  - Actions may take multiple turns to complete
-  - Smaller, multi-row panel for standing actions
+- Actions rework:
+  - What is the point of the draw/action/bank phases?
+  - There should be a cap on actions taken in a turn
+  - How are Events countered? By playing the action card or by pressing a button on the event? (Doesn't seem to be working)
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
   - A better bank, shown to the side of the cards
+  - Bank can store up to two cards, at a cost of Will (not Funding)
+  - There is no limit to the number of cards that can be played, given sufficient resources.
+- Research work
+  - What do the progress bars on the science fields mean?
+  - How are research fields 'spent' to progress unlocking Technologies
+  - It should not be possible to decode the Signal until the Asteroid era!
+- Further Earth era content
+  - Funding is hard to come by
+  - Negative events happen to frequently
+  - There's no way of recovering from a funding/materials death spiral - maybe burn Will to build a cheap strip mine?
 - LEO technology content pass
 - Asteriod era technology content pass
 - Game art:
