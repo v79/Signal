@@ -11,11 +11,11 @@
     events: EventInstance[];
     eventDefs: Map<string, EventDef>;
     onMitigate: (eventId: string) => void;
-    onAccept:   (eventId: string) => void;
-    onDecline:  (eventId: string) => void;
+    onAccept: (eventId: string) => void;
+    onDecline: (eventId: string) => void;
   } = $props();
 
-  const activeEvents = $derived(events.filter(e => !e.resolved));
+  const activeEvents = $derived(events.filter((e) => !e.resolved));
 
   function urgencyClass(countdown: number): string {
     if (countdown <= 1) return 'urgent';
@@ -28,9 +28,10 @@
     const parts: string[] = [];
     if (effect.resources) {
       const r = effect.resources;
-      if (r.funding       != null) parts.push(`${r.funding > 0 ? '+' : ''}${r.funding} Fund`);
-      if (r.materials     != null) parts.push(`${r.materials > 0 ? '+' : ''}${r.materials} Mat`);
-      if (r.politicalWill != null) parts.push(`${r.politicalWill > 0 ? '+' : ''}${r.politicalWill} Will`);
+      if (r.funding != null) parts.push(`${r.funding > 0 ? '+' : ''}${r.funding} Fund`);
+      if (r.materials != null) parts.push(`${r.materials > 0 ? '+' : ''}${r.materials} Mat`);
+      if (r.politicalWill != null)
+        parts.push(`${r.politicalWill > 0 ? '+' : ''}${r.politicalWill} Will`);
     }
     if (effect.restrictActions?.length) {
       parts.push(`Restricts: ${effect.restrictActions.join(', ')}`);
@@ -40,8 +41,8 @@
 
   function formatCost(cost: Partial<Resources>): string {
     const parts: string[] = [];
-    if (cost.funding       != null) parts.push(`${cost.funding} Fund`);
-    if (cost.materials     != null) parts.push(`${cost.materials} Mat`);
+    if (cost.funding != null) parts.push(`${cost.funding} Fund`);
+    if (cost.materials != null) parts.push(`${cost.materials} Mat`);
     if (cost.politicalWill != null) parts.push(`${cost.politicalWill} Will`);
     return parts.join(', ');
   }
@@ -86,23 +87,14 @@
 
         <div class="event-actions">
           {#if def.responseTier === 'partialMitigation' && def.mitigationCost}
-            <button
-              class="btn btn-mitigate"
-              onclick={() => onMitigate(event.id)}
-            >
-              MITIGATE<br/>
+            <button class="btn btn-mitigate" onclick={() => onMitigate(event.id)}>
+              MITIGATE<br />
               <span class="btn-cost">({formatCost(def.mitigationCost)})</span>
             </button>
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}>
-              IGNORE
-            </button>
+            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}> IGNORE </button>
           {:else if def.responseTier === 'noCounter' && def.positiveEffect}
-            <button class="btn btn-accept" onclick={() => onAccept(event.id)}>
-              ACCEPT
-            </button>
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}>
-              DECLINE
-            </button>
+            <button class="btn btn-accept" onclick={() => onAccept(event.id)}> ACCEPT </button>
+            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}> DECLINE </button>
           {:else if def.responseTier === 'noCounter'}
             <button class="btn btn-ignore" onclick={() => onDecline(event.id)}>
               ACKNOWLEDGE
@@ -110,9 +102,7 @@
           {:else}
             <!-- fullCounter: card-based countering handled in CardHand -->
             <span class="counter-hint">Counter with a matching card.</span>
-            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}>
-              IGNORE
-            </button>
+            <button class="btn btn-ignore" onclick={() => onDecline(event.id)}> IGNORE </button>
           {/if}
         </div>
       </div>
@@ -157,9 +147,15 @@
     font-size: 0.72rem;
   }
 
-  .event-card.urgent  { border-color: #7a2a2a; }
-  .event-card.warning { border-color: #7a5a1a; }
-  .event-card.normal  { border-color: #2a3545; }
+  .event-card.urgent {
+    border-color: #7a2a2a;
+  }
+  .event-card.warning {
+    border-color: #7a5a1a;
+  }
+  .event-card.normal {
+    border-color: #2a3545;
+  }
 
   .event-header {
     display: flex;
@@ -178,9 +174,15 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .countdown.urgent  { color: #c84a4a; }
-  .countdown.warning { color: #c8a040; }
-  .countdown.normal  { color: #5a6878; }
+  .countdown.urgent {
+    color: #c84a4a;
+  }
+  .countdown.warning {
+    color: #c8a040;
+  }
+  .countdown.normal {
+    color: #5a6878;
+  }
 
   .event-tags {
     display: flex;
@@ -247,19 +249,25 @@
     color: #c8a040;
     border-color: #7a5a1a;
   }
-  .btn-mitigate:hover { background: #2a1a05; }
+  .btn-mitigate:hover {
+    background: #2a1a05;
+  }
 
   .btn-accept {
     color: #4a9b7a;
     border-color: #2a6050;
   }
-  .btn-accept:hover { background: #0a2018; }
+  .btn-accept:hover {
+    background: #0a2018;
+  }
 
   .btn-ignore {
     color: #5a6878;
     border-color: #2a3545;
   }
-  .btn-ignore:hover { background: #15202a; }
+  .btn-ignore:hover {
+    background: #15202a;
+  }
 
   .btn-cost {
     font-size: 0.58rem;

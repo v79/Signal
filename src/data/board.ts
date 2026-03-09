@@ -6,121 +6,191 @@
 import type { BoardMemberDef, BoardRole } from '../engine/types';
 
 export const BOARD_DEFS: Map<string, BoardMemberDef> = new Map([
-  ['drRamirez', {
-    id: 'drRamirez',
-    name: 'Dr. Elena Ramirez',
-    role: 'chiefScientist' as BoardRole,
-    buffs: [
-      { description: '+20% Physics output per turn', fieldMultipliers: { physics: 1.2 } },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['ingMarkov', {
-    id: 'ingMarkov',
-    name: 'Ing. Pavel Markov',
-    role: 'directorOfEngineering' as BoardRole,
-    buffs: [
-      { description: '+15% Materials income from facilities', resourceMultipliers: { materials: 1.15 } },
-      { description: 'Auto-counters industrial accident events', autoCountersEventTag: 'industrial' },
-    ],
-    debuffs: [
-      { description: '-10% Funding income (bureaucratic friction)', resourceMultipliers: { funding: 0.9 } },
-    ],
-    isAI: false,
-  }],
-  ['chairOsei', {
-    id: 'chairOsei',
-    name: 'Chair Abena Osei',
-    role: 'politicalLiaison' as BoardRole,
-    buffs: [
-      { description: '+10% Political Will income', resourceMultipliers: { politicalWill: 1.1 } },
-      { description: 'Auto-counters diplomatic interference', autoCountersEventTag: 'interference' },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['drKowalski', {
-    id: 'drKowalski',
-    name: 'Dr. Tomasz Kowalski',
-    role: 'headOfFinance' as BoardRole,
-    buffs: [
-      { description: '+25% Funding income from facilities', resourceMultipliers: { funding: 1.25 } },
-    ],
-    debuffs: [
-      { description: '-5% Materials income (cost controls)', resourceMultipliers: { materials: 0.95 } },
-    ],
-    isAI: false,
-  }],
-  ['dirBristow', {
-    id: 'dirBristow',
-    name: 'Director J. Bristow',
-    role: 'securityDirector' as BoardRole,
-    buffs: [
-      { description: 'Auto-counters security threat events', autoCountersEventTag: 'security' },
-      { description: '+10% Computing field output', fieldMultipliers: { computing: 1.1 } },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['drOkonkwo', {
-    id: 'drOkonkwo',
-    name: 'Dr. Chidi Okonkwo',
-    role: 'signalAnalyst' as BoardRole,
-    buffs: [
-      { description: '+20% Mathematics output per turn', fieldMultipliers: { mathematics: 1.2 } },
-      { description: '+15% Physics output per turn', fieldMultipliers: { physics: 1.15 } },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['mgChen', {
-    id: 'mgChen',
-    name: 'Manager Liwei Chen',
-    role: 'directorOfOperations' as BoardRole,
-    buffs: [
-      { description: '+10% all facility resource output', resourceMultipliers: { funding: 1.1, materials: 1.1 } },
-    ],
-    debuffs: [],
-    isAI: false,
-  }],
-  ['drNakamura', {
-    id: 'drNakamura',
-    name: 'Dr. Yuki Nakamura',
-    role: 'chiefScientist' as BoardRole,
-    buffs: [
-      { description: '+15% Computing and Mathematics output', fieldMultipliers: { computing: 1.15, mathematics: 1.15 } },
-    ],
-    debuffs: [
-      { description: '-10% Social Science output (tunnel vision)', fieldMultipliers: { socialScience: 0.9 } },
-    ],
-    isAI: false,
-  }],
-  ['drAkintunde', {
-    id: 'drAkintunde',
-    name: 'Prof. Funmi Akintunde',
-    role: 'headOfFinance' as BoardRole,
-    buffs: [
-      { description: '+15% Funding income', resourceMultipliers: { funding: 1.15 } },
-      { description: '+10% Political Will income (public trust)', resourceMultipliers: { politicalWill: 1.1 } },
-    ],
-    debuffs: [
-      { description: '-8% Materials output (conservative procurement)', resourceMultipliers: { materials: 0.92 } },
-    ],
-    isAI: false,
-  }],
-  ['aiSynthesis', {
-    id: 'aiSynthesis',
-    name: 'SYNTHESIS-7',
-    role: 'signalAnalyst' as BoardRole,
-    buffs: [
-      { description: '+30% Mathematics output — AI-accelerated signal analysis', fieldMultipliers: { mathematics: 1.3 } },
-      { description: '+20% Computing output', fieldMultipliers: { computing: 1.2 } },
-      { description: 'Auto-counters signal interference events', autoCountersEventTag: 'interference' },
-    ],
-    debuffs: [
-      { description: '-15% Political Will income — public unease with AI governance', resourceMultipliers: { politicalWill: 0.85 } },
-    ],
-    isAI: true,
-  }],
+  [
+    'drRamirez',
+    {
+      id: 'drRamirez',
+      name: 'Dr. Elena Ramirez',
+      role: 'chiefScientist' as BoardRole,
+      buffs: [{ description: '+20% Physics output per turn', fieldMultipliers: { physics: 1.2 } }],
+      debuffs: [],
+      isAI: false,
+    },
+  ],
+  [
+    'ingMarkov',
+    {
+      id: 'ingMarkov',
+      name: 'Ing. Pavel Markov',
+      role: 'directorOfEngineering' as BoardRole,
+      buffs: [
+        {
+          description: '+15% Materials income from facilities',
+          resourceMultipliers: { materials: 1.15 },
+        },
+        {
+          description: 'Auto-counters industrial accident events',
+          autoCountersEventTag: 'industrial',
+        },
+      ],
+      debuffs: [
+        {
+          description: '-10% Funding income (bureaucratic friction)',
+          resourceMultipliers: { funding: 0.9 },
+        },
+      ],
+      isAI: false,
+    },
+  ],
+  [
+    'chairOsei',
+    {
+      id: 'chairOsei',
+      name: 'Chair Abena Osei',
+      role: 'politicalLiaison' as BoardRole,
+      buffs: [
+        { description: '+10% Political Will income', resourceMultipliers: { politicalWill: 1.1 } },
+        {
+          description: 'Auto-counters diplomatic interference',
+          autoCountersEventTag: 'interference',
+        },
+      ],
+      debuffs: [],
+      isAI: false,
+    },
+  ],
+  [
+    'drKowalski',
+    {
+      id: 'drKowalski',
+      name: 'Dr. Tomasz Kowalski',
+      role: 'headOfFinance' as BoardRole,
+      buffs: [
+        {
+          description: '+25% Funding income from facilities',
+          resourceMultipliers: { funding: 1.25 },
+        },
+      ],
+      debuffs: [
+        {
+          description: '-5% Materials income (cost controls)',
+          resourceMultipliers: { materials: 0.95 },
+        },
+      ],
+      isAI: false,
+    },
+  ],
+  [
+    'dirBristow',
+    {
+      id: 'dirBristow',
+      name: 'Director J. Bristow',
+      role: 'securityDirector' as BoardRole,
+      buffs: [
+        { description: 'Auto-counters security threat events', autoCountersEventTag: 'security' },
+        { description: '+10% Computing field output', fieldMultipliers: { computing: 1.1 } },
+      ],
+      debuffs: [],
+      isAI: false,
+    },
+  ],
+  [
+    'drOkonkwo',
+    {
+      id: 'drOkonkwo',
+      name: 'Dr. Chidi Okonkwo',
+      role: 'signalAnalyst' as BoardRole,
+      buffs: [
+        { description: '+20% Mathematics output per turn', fieldMultipliers: { mathematics: 1.2 } },
+        { description: '+15% Physics output per turn', fieldMultipliers: { physics: 1.15 } },
+      ],
+      debuffs: [],
+      isAI: false,
+    },
+  ],
+  [
+    'mgChen',
+    {
+      id: 'mgChen',
+      name: 'Manager Liwei Chen',
+      role: 'directorOfOperations' as BoardRole,
+      buffs: [
+        {
+          description: '+10% all facility resource output',
+          resourceMultipliers: { funding: 1.1, materials: 1.1 },
+        },
+      ],
+      debuffs: [],
+      isAI: false,
+    },
+  ],
+  [
+    'drNakamura',
+    {
+      id: 'drNakamura',
+      name: 'Dr. Yuki Nakamura',
+      role: 'chiefScientist' as BoardRole,
+      buffs: [
+        {
+          description: '+15% Computing and Mathematics output',
+          fieldMultipliers: { computing: 1.15, mathematics: 1.15 },
+        },
+      ],
+      debuffs: [
+        {
+          description: '-10% Social Science output (tunnel vision)',
+          fieldMultipliers: { socialScience: 0.9 },
+        },
+      ],
+      isAI: false,
+    },
+  ],
+  [
+    'drAkintunde',
+    {
+      id: 'drAkintunde',
+      name: 'Prof. Funmi Akintunde',
+      role: 'headOfFinance' as BoardRole,
+      buffs: [
+        { description: '+15% Funding income', resourceMultipliers: { funding: 1.15 } },
+        {
+          description: '+10% Political Will income (public trust)',
+          resourceMultipliers: { politicalWill: 1.1 },
+        },
+      ],
+      debuffs: [
+        {
+          description: '-8% Materials output (conservative procurement)',
+          resourceMultipliers: { materials: 0.92 },
+        },
+      ],
+      isAI: false,
+    },
+  ],
+  [
+    'aiSynthesis',
+    {
+      id: 'aiSynthesis',
+      name: 'SYNTHESIS-7',
+      role: 'signalAnalyst' as BoardRole,
+      buffs: [
+        {
+          description: '+30% Mathematics output — AI-accelerated signal analysis',
+          fieldMultipliers: { mathematics: 1.3 },
+        },
+        { description: '+20% Computing output', fieldMultipliers: { computing: 1.2 } },
+        {
+          description: 'Auto-counters signal interference events',
+          autoCountersEventTag: 'interference',
+        },
+      ],
+      debuffs: [
+        {
+          description: '-15% Political Will income — public unease with AI governance',
+          resourceMultipliers: { politicalWill: 0.85 },
+        },
+      ],
+      isAI: true,
+    },
+  ],
 ]);

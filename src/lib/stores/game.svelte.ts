@@ -53,9 +53,18 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
   const layout = BLOC_MAPS[blocDefId];
   if (!layout) {
     // Fallback: single urban tile at origin (should not happen in practice)
-    return [{ coord: { q: 0, r: 0 }, type: 'urban', destroyedStatus: null, productivity: 1.0, facilityId: null, pendingActionId: null }];
+    return [
+      {
+        coord: { q: 0, r: 0 },
+        type: 'urban',
+        destroyedStatus: null,
+        productivity: 1.0,
+        facilityId: null,
+        pendingActionId: null,
+      },
+    ];
   }
-  return layout.map(entry => ({
+  return layout.map((entry) => ({
     coord: { q: entry.q, r: entry.r },
     type: entry.type,
     destroyedStatus: null,
@@ -68,12 +77,28 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
 // Keep the old name as an alias for backward compatibility with tests
 export function generateEarthTiles(radius = 3): MapTile[] {
   // Legacy procedural generation — used only in tests that haven't been updated yet
-  const TILE_TYPES: TileType[] = ['urban', 'industrial', 'coastal', 'highland', 'forested', 'arid', 'agricultural'];
-  const EDGE_TYPES: TileType[] = ['coastal', 'coastal', 'forested', 'arid', 'highland', 'forested', 'coastal'];
+  const TILE_TYPES: TileType[] = [
+    'urban',
+    'industrial',
+    'coastal',
+    'highland',
+    'forested',
+    'arid',
+    'agricultural',
+  ];
+  const EDGE_TYPES: TileType[] = [
+    'coastal',
+    'coastal',
+    'forested',
+    'arid',
+    'highland',
+    'forested',
+    'coastal',
+  ];
   function tileTypeForCoord(q: number, r: number): TileType {
     if (q === 0 && r === 0) return 'urban';
     const dist = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
-    const h = ((q * 374761393 + r * 1073741827) ^ ((q * r) * 31337)) >>> 0;
+    const h = ((q * 374761393 + r * 1073741827) ^ (q * r * 31337)) >>> 0;
     if (dist >= 3) return EDGE_TYPES[h % EDGE_TYPES.length];
     return TILE_TYPES[h % TILE_TYPES.length];
   }
@@ -101,35 +126,138 @@ export function generateEarthTiles(radius = 3): MapTile[] {
 
 export function generateSpaceNodes(): SpaceNode[] {
   return [
-    { id: 'leo',          type: 'lowEarthOrbit', label: 'LEO',           launchCost: 10, facilityId: null },
-    { id: 'l1',           type: 'lagrangePoint', label: 'L1',            launchCost: 20, facilityId: null },
-    { id: 'l2',           type: 'lagrangePoint', label: 'L2',            launchCost: 20, facilityId: null },
-    { id: 'lunarOrbit',   type: 'lunarOrbit',    label: 'Lunar Orbit',   launchCost: 30, facilityId: null },
-    { id: 'lunarSurface', type: 'lunarSurface',  label: 'Lunar Surface', launchCost: 45, facilityId: null },
+    { id: 'leo', type: 'lowEarthOrbit', label: 'LEO', launchCost: 10, facilityId: null },
+    { id: 'l1', type: 'lagrangePoint', label: 'L1', launchCost: 20, facilityId: null },
+    { id: 'l2', type: 'lagrangePoint', label: 'L2', launchCost: 20, facilityId: null },
+    {
+      id: 'lunarOrbit',
+      type: 'lunarOrbit',
+      label: 'Lunar Orbit',
+      launchCost: 30,
+      facilityId: null,
+    },
+    {
+      id: 'lunarSurface',
+      type: 'lunarSurface',
+      label: 'Lunar Surface',
+      launchCost: 45,
+      facilityId: null,
+    },
   ];
 }
 
 export function generateBeltNodes(): BeltNode[] {
   return [
-    { id: 'ceres',      type: 'asteroid',     label: 'Ceres',      prospected: true,  materialYield: 12,   facilityId: null },
-    { id: 'vesta',      type: 'asteroid',     label: 'Vesta',      prospected: false, materialYield: null, facilityId: null },
-    { id: 'psyche',     type: 'asteroid',     label: 'Psyche',     prospected: false, materialYield: null, facilityId: null },
-    { id: 'europa',     type: 'jovianMoon',   label: 'Europa',     prospected: false, materialYield: null, facilityId: null },
-    { id: 'ganymede',   type: 'jovianMoon',   label: 'Ganymede',   prospected: false, materialYield: null, facilityId: null },
-    { id: 'trojans',    type: 'transitPoint', label: 'Trojans',    prospected: false, materialYield: null, facilityId: null },
-    { id: 'heliopause', type: 'heliopause',   label: 'Heliopause', prospected: false, materialYield: null, facilityId: null },
+    {
+      id: 'ceres',
+      type: 'asteroid',
+      label: 'Ceres',
+      prospected: true,
+      materialYield: 12,
+      facilityId: null,
+    },
+    {
+      id: 'vesta',
+      type: 'asteroid',
+      label: 'Vesta',
+      prospected: false,
+      materialYield: null,
+      facilityId: null,
+    },
+    {
+      id: 'psyche',
+      type: 'asteroid',
+      label: 'Psyche',
+      prospected: false,
+      materialYield: null,
+      facilityId: null,
+    },
+    {
+      id: 'europa',
+      type: 'jovianMoon',
+      label: 'Europa',
+      prospected: false,
+      materialYield: null,
+      facilityId: null,
+    },
+    {
+      id: 'ganymede',
+      type: 'jovianMoon',
+      label: 'Ganymede',
+      prospected: false,
+      materialYield: null,
+      facilityId: null,
+    },
+    {
+      id: 'trojans',
+      type: 'transitPoint',
+      label: 'Trojans',
+      prospected: false,
+      materialYield: null,
+      facilityId: null,
+    },
+    {
+      id: 'heliopause',
+      type: 'heliopause',
+      label: 'Heliopause',
+      prospected: false,
+      materialYield: null,
+      facilityId: null,
+    },
   ];
 }
 
 export function generateBeltEdges(): BeltEdge[] {
   return [
-    { id: 'e-ceres-vesta',        fromNodeId: 'ceres',    toNodeId: 'vesta',      active: false, establishCost: 15 },
-    { id: 'e-ceres-psyche',       fromNodeId: 'ceres',    toNodeId: 'psyche',     active: false, establishCost: 15 },
-    { id: 'e-ceres-ganymede',     fromNodeId: 'ceres',    toNodeId: 'ganymede',   active: false, establishCost: 25 },
-    { id: 'e-vesta-europa',       fromNodeId: 'vesta',    toNodeId: 'europa',     active: false, establishCost: 20 },
-    { id: 'e-psyche-trojans',     fromNodeId: 'psyche',   toNodeId: 'trojans',    active: false, establishCost: 20 },
-    { id: 'e-psyche-heliopause',  fromNodeId: 'psyche',   toNodeId: 'heliopause', active: false, establishCost: 35 },
-    { id: 'e-ganymede-heliopause',fromNodeId: 'ganymede', toNodeId: 'heliopause', active: false, establishCost: 30 },
+    {
+      id: 'e-ceres-vesta',
+      fromNodeId: 'ceres',
+      toNodeId: 'vesta',
+      active: false,
+      establishCost: 15,
+    },
+    {
+      id: 'e-ceres-psyche',
+      fromNodeId: 'ceres',
+      toNodeId: 'psyche',
+      active: false,
+      establishCost: 15,
+    },
+    {
+      id: 'e-ceres-ganymede',
+      fromNodeId: 'ceres',
+      toNodeId: 'ganymede',
+      active: false,
+      establishCost: 25,
+    },
+    {
+      id: 'e-vesta-europa',
+      fromNodeId: 'vesta',
+      toNodeId: 'europa',
+      active: false,
+      establishCost: 20,
+    },
+    {
+      id: 'e-psyche-trojans',
+      fromNodeId: 'psyche',
+      toNodeId: 'trojans',
+      active: false,
+      establishCost: 20,
+    },
+    {
+      id: 'e-psyche-heliopause',
+      fromNodeId: 'psyche',
+      toNodeId: 'heliopause',
+      active: false,
+      establishCost: 35,
+    },
+    {
+      id: 'e-ganymede-heliopause',
+      fromNodeId: 'ganymede',
+      toNodeId: 'heliopause',
+      active: false,
+      establishCost: 30,
+    },
   ];
 }
 
@@ -141,31 +269,49 @@ const _savedState = autoLoad();
 let _state = $state<GameState | null>(_savedState ?? null);
 
 /** UI-only: which hex coord key is currently selected for facility placement. */
-let _selectedCoordKey    = $state<string | null>(null);
+let _selectedCoordKey = $state<string | null>(null);
 let _selectedSpaceNodeId = $state<string | null>(null);
-let _selectedBeltNodeId  = $state<string | null>(null);
+let _selectedBeltNodeId = $state<string | null>(null);
 /** UI-only: the coord key of the tile currently under the mouse cursor. */
-let _hoveredTileKey      = $state<string | null>(null);
+let _hoveredTileKey = $state<string | null>(null);
 
 function resetSelections(): void {
-  _selectedCoordKey    = null;
+  _selectedCoordKey = null;
   _selectedSpaceNodeId = null;
-  _selectedBeltNodeId  = null;
+  _selectedBeltNodeId = null;
 }
 
 export const gameStore = {
-  get state(): GameState | null { return _state; },
+  get state(): GameState | null {
+    return _state;
+  },
 
   /** The coord key of the currently selected tile (UI state, not game state). */
-  get selectedCoordKey():    string | null { return _selectedCoordKey; },
-  get selectedSpaceNodeId(): string | null { return _selectedSpaceNodeId; },
-  get selectedBeltNodeId():  string | null { return _selectedBeltNodeId; },
-  get hoveredTileKey():      string | null { return _hoveredTileKey; },
+  get selectedCoordKey(): string | null {
+    return _selectedCoordKey;
+  },
+  get selectedSpaceNodeId(): string | null {
+    return _selectedSpaceNodeId;
+  },
+  get selectedBeltNodeId(): string | null {
+    return _selectedBeltNodeId;
+  },
+  get hoveredTileKey(): string | null {
+    return _hoveredTileKey;
+  },
 
-  selectTile(key: string | null): void { _selectedCoordKey = key; },
-  selectSpaceNode(id: string | null): void { _selectedSpaceNodeId = id; },
-  selectBeltNode(id: string | null): void { _selectedBeltNodeId = id; },
-  setHoveredTile(key: string | null): void { _hoveredTileKey = key; },
+  selectTile(key: string | null): void {
+    _selectedCoordKey = key;
+  },
+  selectSpaceNode(id: string | null): void {
+    _selectedSpaceNodeId = id;
+  },
+  selectBeltNode(id: string | null): void {
+    _selectedBeltNodeId = id;
+  },
+  setHoveredTile(key: string | null): void {
+    _hoveredTileKey = key;
+  },
 
   /**
    * Initialise a fresh game run from the new-game setup screen.
@@ -184,15 +330,27 @@ export const gameStore = {
       willProfile: bloc.willProfile,
       startingWill: Math.round(bloc.willCeiling * 0.7),
       startingResources: { ...bloc.startingResources },
-      startingFields: bloc.startingFields ? { ...bloc.startingFields } as Partial<FieldPoints> : undefined,
+      startingFields: bloc.startingFields
+        ? ({ ...bloc.startingFields } as Partial<FieldPoints>)
+        : undefined,
     });
 
     const starterCards: GameState['player']['cards'] = [
-      { id: 'lobbying-1',             defId: 'lobbying',             zone: 'deck', bankedSinceTurn: null },
-      { id: 'lobbying-2',             defId: 'lobbying',             zone: 'deck', bankedSinceTurn: null },
-      { id: 'publicAppeal-1',         defId: 'publicAppeal',         zone: 'deck', bankedSinceTurn: null },
-      { id: 'emergencyProcurement-1', defId: 'emergencyProcurement', zone: 'deck', bankedSinceTurn: null },
-      { id: 'coalitionBuilding-1',    defId: 'coalitionBuilding',    zone: 'deck', bankedSinceTurn: null },
+      { id: 'lobbying-1', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
+      { id: 'lobbying-2', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
+      { id: 'publicAppeal-1', defId: 'publicAppeal', zone: 'deck', bankedSinceTurn: null },
+      {
+        id: 'emergencyProcurement-1',
+        defId: 'emergencyProcurement',
+        zone: 'deck',
+        bankedSinceTurn: null,
+      },
+      {
+        id: 'coalitionBuilding-1',
+        defId: 'coalitionBuilding',
+        zone: 'deck',
+        bankedSinceTurn: null,
+      },
     ];
 
     // Tech recipes are generated with a dedicated RNG slice so they are
@@ -228,7 +386,7 @@ export const gameStore = {
       condition: 1.0,
       builtTurn: 0,
     };
-    const tilesWithHq = earthTiles.map(t =>
+    const tilesWithHq = earthTiles.map((t) =>
       t.coord.q === 0 && t.coord.r === 0 ? { ...t, facilityId: hqFacilityId } : t,
     );
 
@@ -246,8 +404,8 @@ export const gameStore = {
         ...base.map,
         earthTiles: tilesWithHq,
         spaceNodes: generateSpaceNodes(),
-        beltNodes:  generateBeltNodes(),
-        beltEdges:  generateBeltEdges(),
+        beltNodes: generateBeltNodes(),
+        beltEdges: generateBeltEdges(),
       },
     };
 
@@ -272,23 +430,30 @@ export const gameStore = {
     // Tech gate: refuse if the required technology has not been discovered.
     if (def.requiredTechId != null) {
       const techDiscovered = _state.player.techs.some(
-        t => t.defId === def.requiredTechId && t.stage === 'discovered',
+        (t) => t.defId === def.requiredTechId && t.stage === 'discovered',
       );
       if (!techDiscovered) return;
     }
 
     // Deduct build cost up-front regardless of whether construction is instant.
     const newResources = {
-      funding:       Math.max(0, _state.player.resources.funding       - (def.buildCost.funding       ?? 0)),
-      materials:     Math.max(0, _state.player.resources.materials     - (def.buildCost.materials     ?? 0)),
-      politicalWill: Math.max(0, _state.player.resources.politicalWill - (def.buildCost.politicalWill ?? 0)),
+      funding: Math.max(0, _state.player.resources.funding - (def.buildCost.funding ?? 0)),
+      materials: Math.max(0, _state.player.resources.materials - (def.buildCost.materials ?? 0)),
+      politicalWill: Math.max(
+        0,
+        _state.player.resources.politicalWill - (def.buildCost.politicalWill ?? 0),
+      ),
     };
 
     if (def.buildTime === 0) {
       // Instant build
       const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
       const newFacility: FacilityInstance = {
-        id: facilityId, defId, locationKey: coordKey, condition: 1.0, builtTurn: _state.turn,
+        id: facilityId,
+        defId,
+        locationKey: coordKey,
+        condition: 1.0,
+        builtTurn: _state.turn,
       };
       _state = {
         ..._state,
@@ -299,7 +464,7 @@ export const gameStore = {
         },
         map: {
           ..._state.map,
-          earthTiles: _state.map.earthTiles.map(t =>
+          earthTiles: _state.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId } : t,
           ),
         },
@@ -324,7 +489,7 @@ export const gameStore = {
         },
         map: {
           ..._state.map,
-          earthTiles: _state.map.earthTiles.map(t =>
+          earthTiles: _state.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
           ),
         },
@@ -335,9 +500,9 @@ export const gameStore = {
 
   demolishFacility(coordKey: string): void {
     if (!_state) return;
-    const tile = _state.map.earthTiles.find(t => `${t.coord.q},${t.coord.r}` === coordKey);
+    const tile = _state.map.earthTiles.find((t) => `${t.coord.q},${t.coord.r}` === coordKey);
     if (!tile?.facilityId) return;
-    const facility = _state.player.facilities.find(f => f.id === tile.facilityId);
+    const facility = _state.player.facilities.find((f) => f.id === tile.facilityId);
     if (!facility) return;
     const def = FACILITY_DEFS.get(facility.defId);
     if (!def?.canDelete) return;
@@ -348,11 +513,11 @@ export const gameStore = {
         ..._state,
         player: {
           ..._state.player,
-          facilities: _state.player.facilities.filter(f => f.id !== facility.id),
+          facilities: _state.player.facilities.filter((f) => f.id !== facility.id),
         },
         map: {
           ..._state.map,
-          earthTiles: _state.map.earthTiles.map(t =>
+          earthTiles: _state.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId: null } : t,
           ),
         },
@@ -376,7 +541,7 @@ export const gameStore = {
         },
         map: {
           ..._state.map,
-          earthTiles: _state.map.earthTiles.map(t =>
+          earthTiles: _state.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
           ),
         },
@@ -387,7 +552,7 @@ export const gameStore = {
 
   mitigateEvent(eventId: string): void {
     if (!_state) return;
-    const event = _state.activeEvents.find(e => e.id === eventId);
+    const event = _state.activeEvents.find((e) => e.id === eventId);
     if (!event) return;
     const def = EVENT_DEFS.get(event.defId);
     const cost = def?.mitigationCost ?? {};
@@ -396,12 +561,15 @@ export const gameStore = {
       player: {
         ..._state.player,
         resources: {
-          funding:       Math.max(0, _state.player.resources.funding       - (cost.funding       ?? 0)),
-          materials:     Math.max(0, _state.player.resources.materials     - (cost.materials     ?? 0)),
-          politicalWill: Math.max(0, _state.player.resources.politicalWill - (cost.politicalWill ?? 0)),
+          funding: Math.max(0, _state.player.resources.funding - (cost.funding ?? 0)),
+          materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
+          politicalWill: Math.max(
+            0,
+            _state.player.resources.politicalWill - (cost.politicalWill ?? 0),
+          ),
         },
       },
-      activeEvents: _state.activeEvents.map(e =>
+      activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'mitigation' as const } : e,
       ),
     };
@@ -409,7 +577,7 @@ export const gameStore = {
 
   acceptEvent(eventId: string): void {
     if (!_state) return;
-    const event = _state.activeEvents.find(e => e.id === eventId);
+    const event = _state.activeEvents.find((e) => e.id === eventId);
     if (!event) return;
     const def = EVENT_DEFS.get(event.defId);
     const gain = def?.positiveEffect?.resources ?? {};
@@ -418,12 +586,15 @@ export const gameStore = {
       player: {
         ..._state.player,
         resources: {
-          funding:       Math.max(0, _state.player.resources.funding       + (gain.funding       ?? 0)),
-          materials:     Math.max(0, _state.player.resources.materials     + (gain.materials     ?? 0)),
-          politicalWill: Math.max(0, _state.player.resources.politicalWill + (gain.politicalWill ?? 0)),
+          funding: Math.max(0, _state.player.resources.funding + (gain.funding ?? 0)),
+          materials: Math.max(0, _state.player.resources.materials + (gain.materials ?? 0)),
+          politicalWill: Math.max(
+            0,
+            _state.player.resources.politicalWill + (gain.politicalWill ?? 0),
+          ),
         },
       },
-      activeEvents: _state.activeEvents.map(e =>
+      activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
       ),
     };
@@ -433,7 +604,7 @@ export const gameStore = {
     if (!_state) return;
     _state = {
       ..._state,
-      activeEvents: _state.activeEvents.map(e =>
+      activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'expired' as const } : e,
       ),
     };
@@ -441,7 +612,7 @@ export const gameStore = {
 
   playCard(cardId: string): void {
     if (!_state) return;
-    const card = _state.player.cards.find(c => c.id === cardId);
+    const card = _state.player.cards.find((c) => c.id === cardId);
     if (!card || card.zone !== 'hand') return;
     const def = CARD_DEFS.get(card.defId);
     if (!def) return;
@@ -450,8 +621,8 @@ export const gameStore = {
     if (def.effect.resources) {
       const r = def.effect.resources;
       resources = {
-        funding:       Math.max(0, resources.funding       + (r.funding       ?? 0)),
-        materials:     Math.max(0, resources.materials     + (r.materials     ?? 0)),
+        funding: Math.max(0, resources.funding + (r.funding ?? 0)),
+        materials: Math.max(0, resources.materials + (r.materials ?? 0)),
         politicalWill: Math.max(0, resources.politicalWill + (r.politicalWill ?? 0)),
       };
     }
@@ -468,7 +639,7 @@ export const gameStore = {
         ..._state.player,
         resources,
         fields,
-        cards: _state.player.cards.map(c =>
+        cards: _state.player.cards.map((c) =>
           c.id === cardId ? { ...c, zone: 'discard' as const } : c,
         ),
       },
@@ -477,14 +648,14 @@ export const gameStore = {
 
   bankCard(cardId: string): void {
     if (!_state) return;
-    const bankedCount = _state.player.cards.filter(c => c.zone === 'bank').length;
+    const bankedCount = _state.player.cards.filter((c) => c.zone === 'bank').length;
     if (bankedCount >= 2) return;
     const turn = _state.turn;
     _state = {
       ..._state,
       player: {
         ..._state.player,
-        cards: _state.player.cards.map(c =>
+        cards: _state.player.cards.map((c) =>
           c.id === cardId && c.zone === 'hand'
             ? { ...c, zone: 'bank' as const, bankedSinceTurn: turn }
             : c,
@@ -499,7 +670,7 @@ export const gameStore = {
       ..._state,
       player: {
         ..._state.player,
-        cards: _state.player.cards.map(c =>
+        cards: _state.player.cards.map((c) =>
           c.id === cardId && c.zone === 'bank'
             ? { ...c, zone: 'discard' as const, bankedSinceTurn: null }
             : c,
@@ -533,12 +704,7 @@ export const gameStore = {
         goto('/summary');
         return;
       }
-      next = executeEventPhase(
-        next,
-        EVENT_DEFS,
-        [...EVENT_DEFS.values()],
-        rng,
-      );
+      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], rng);
       next = executeDrawPhase(next, rng);
       _state = next;
       // Auto-save after each completed World Phase.
@@ -582,13 +748,17 @@ export const gameStore = {
         ..._state.player,
         resources: {
           ..._state.player.resources,
-          funding:       _state.player.resources.funding       - RECRUIT_COST.funding,
+          funding: _state.player.resources.funding - RECRUIT_COST.funding,
           politicalWill: _state.player.resources.politicalWill - RECRUIT_COST.politicalWill,
         },
         board: newBoard,
         newsFeed: [
           ..._state.player.newsFeed,
-          { id: `recruit-${defId}-t${_state.turn}`, turn: _state.turn, text: `${def.name} has joined the board as ${def.role}.` },
+          {
+            id: `recruit-${defId}-t${_state.turn}`,
+            turn: _state.turn,
+            text: `${def.name} has joined the board as ${def.role}.`,
+          },
         ],
       },
     };
@@ -626,7 +796,10 @@ export const gameStore = {
       signal: newSignal,
       player: {
         ..._state.player,
-        newsFeed: [..._state.player.newsFeed, { id: `wormhole-t${_state.turn}`, turn: _state.turn, text }],
+        newsFeed: [
+          ..._state.player.newsFeed,
+          { id: `wormhole-t${_state.turn}`, turn: _state.turn, text },
+        ],
       },
     };
   },

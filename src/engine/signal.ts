@@ -50,9 +50,9 @@ const ARRAY_BONUS = 3;
 
 /** Thresholds (decodeProgress) at which era strength upgrades. */
 const STRENGTH_THRESHOLD: Record<SignalEraStrength, number> = {
-  faint:      0,
+  faint: 0,
   structured: 30,
-  urgent:     70,
+  urgent: 70,
 };
 
 /**
@@ -64,7 +64,7 @@ export function computeSignalProgressDelta(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
 ): number {
-  const arrayCount = facilities.filter(f => {
+  const arrayCount = facilities.filter((f) => {
     const def = facilityDefs.get(f.defId);
     return def !== undefined && DEEP_SPACE_ARRAY_DEF_IDS.has(def.id);
   }).length;
@@ -79,7 +79,7 @@ export function computeSignalProgressDelta(
  * only driver, letting fast investment unlock 'urgent' early.
  */
 export function computeEraStrength(progress: number): SignalEraStrength {
-  if (progress >= STRENGTH_THRESHOLD.urgent)     return 'urgent';
+  if (progress >= STRENGTH_THRESHOLD.urgent) return 'urgent';
   if (progress >= STRENGTH_THRESHOLD.structured) return 'structured';
   return 'faint';
 }
@@ -129,15 +129,11 @@ export function isSignalClimax(signal: SignalState): boolean {
  * Exactly one option is correct; its index is chosen with rng so the
  * position varies between seeds and reruns.
  */
-export function generateWormholeOptions(
-  signal: SignalState,
-  rng: Rng,
-): SignalResponseOption[] {
+export function generateWormholeOptions(signal: SignalState, rng: Rng): SignalResponseOption[] {
   const count = signal.decodeProgress >= 70 ? 3 : 2;
 
   const correctHint: SignalResponseOption['confidenceHint'] =
-    signal.decodeProgress >= 90 ? 'high'   :
-    signal.decodeProgress >= 70 ? 'medium' : 'low';
+    signal.decodeProgress >= 90 ? 'high' : signal.decodeProgress >= 70 ? 'medium' : 'low';
 
   // Seeded correct-answer position
   const correctIndex = Math.floor(rng.next() * count);
@@ -153,7 +149,7 @@ export function generateWormholeOptions(
     return {
       id: `wormhole-opt-${i}`,
       label: LABELS[i],
-      confidenceHint: isCorrect ? correctHint : (rng.next() > 0.5 ? 'low' : null),
+      confidenceHint: isCorrect ? correctHint : rng.next() > 0.5 ? 'low' : null,
       correct: isCorrect,
     };
   });
@@ -169,7 +165,7 @@ export function commitSignalResponse(
   optionId: string,
   options: SignalResponseOption[],
 ): SignalState {
-  const chosen = options.find(o => o.id === optionId);
+  const chosen = options.find((o) => o.id === optionId);
   if (!chosen) return signal;
 
   return {
@@ -208,6 +204,6 @@ export function signalProgressNewsText(progress: number, turn: number): string {
 export function didCrossStrengthThreshold(previous: number, current: number): boolean {
   return (
     (previous < STRENGTH_THRESHOLD.structured && current >= STRENGTH_THRESHOLD.structured) ||
-    (previous < STRENGTH_THRESHOLD.urgent     && current >= STRENGTH_THRESHOLD.urgent)
+    (previous < STRENGTH_THRESHOLD.urgent && current >= STRENGTH_THRESHOLD.urgent)
   );
 }

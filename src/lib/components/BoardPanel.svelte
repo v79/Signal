@@ -12,13 +12,13 @@
   ];
 
   const ROLE_LABELS: Record<BoardRole, string> = {
-    chiefScientist:        'Chief Scientist',
+    chiefScientist: 'Chief Scientist',
     directorOfEngineering: 'Dir. Engineering',
-    headOfFinance:         'Head of Finance',
-    politicalLiaison:      'Political Liaison',
-    directorOfOperations:  'Dir. Operations',
-    securityDirector:      'Security Director',
-    signalAnalyst:         'Signal Analyst',
+    headOfFinance: 'Head of Finance',
+    politicalLiaison: 'Political Liaison',
+    directorOfOperations: 'Dir. Operations',
+    securityDirector: 'Security Director',
+    signalAnalyst: 'Signal Analyst',
   };
 
   let {
@@ -37,7 +37,7 @@
 
   /** Members available to recruit for a given role (slot must be vacant). */
   function availableForRole(role: BoardRole): BoardMemberDef[] {
-    return [...boardDefs.values()].filter(d => d.role === role);
+    return [...boardDefs.values()].filter((d) => d.role === role);
   }
 
   /** True if the role slot holds an active (non-departed) member. */
@@ -62,7 +62,11 @@
       {@const def = active ? boardDefs.get(member!.defId) : null}
 
       <div class="slot" class:occupied={active} class:vacant={!active}>
-        <button class="slot-header" onclick={() => toggleExpand(role)} aria-expanded={expandedRole === role}>
+        <button
+          class="slot-header"
+          onclick={() => toggleExpand(role)}
+          aria-expanded={expandedRole === role}
+        >
           <span class="role-label">{ROLE_LABELS[role]}</span>
           {#if active && member}
             <span class="member-name">{def?.name ?? member.defId}</span>
@@ -108,7 +112,10 @@
                       {/each}
                     </div>
                     {#if phase === 'action' || phase === 'bank'}
-                      <button class="action-btn recruit-btn" onclick={() => onRecruit(candidate.id)}>
+                      <button
+                        class="action-btn recruit-btn"
+                        onclick={() => onRecruit(candidate.id)}
+                      >
                         Recruit <span class="cost">15F · 10W</span>
                       </button>
                     {/if}
@@ -229,8 +236,14 @@
     line-height: 1.4;
     padding-left: 0.25rem;
   }
-  .buff   { color: #4a9a6a; border-left: 2px solid #1a5030; }
-  .debuff { color: #9a5a4a; border-left: 2px solid #502020; }
+  .buff {
+    color: #4a9a6a;
+    border-left: 2px solid #1a5030;
+  }
+  .debuff {
+    color: #9a5a4a;
+    border-left: 2px solid #502020;
+  }
 
   .no-candidates {
     font-size: 0.6rem;

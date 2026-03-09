@@ -19,6 +19,7 @@ This phase covers the first bullet in `FUTURE_PHASES.md`:
 Plus the standing actions layout improvement and card bank repositioning, which are tightly coupled to the layout changes here.
 
 Out of scope for Phase 17 (covered in later phases):
+
 - More cards / card gating by tech
 - LEO / Asteroid era content passes
 - Game art / building icons / board portraits
@@ -29,7 +30,7 @@ Out of scope for Phase 17 (covered in later phases):
 
 ## Tasks
 
-### 17.1 — Materials colour (trivial) ✓ COMPLETE
+### 17.1 — Materials colour (trivial) ✅ COMPLETE
 
 **File:** `src/lib/components/HUD.svelte`
 
@@ -41,13 +42,14 @@ Out of scope for Phase 17 (covered in later phases):
 
 ---
 
-### 17.2 — Round resource numbers ✓ COMPLETE
+### 17.2 — Round resource numbers ✅ COMPLETE
 
 **File:** `src/lib/components/HUD.svelte`
 
 Resources (`funding`, `materials`, `politicalWill`) are raw integers today. Display them rounded to the nearest integer — they are already integers from the engine, but future-proof the display by using `Math.round()` in the template expression. Also add a `toLocaleString()` call so large numbers (>999) show commas (e.g. `1,250`).
 
 Implementation:
+
 ```ts
 // helper (add to <script> block)
 function fmt(n: number): string {
@@ -61,13 +63,14 @@ Use `{fmt(resources.funding)}` etc. in the template.
 
 ---
 
-### 17.3 — Clean up PhaseControls (remove redundant turn number) ✓ COMPLETE
+### 17.3 — Clean up PhaseControls (remove redundant turn number) ✅ COMPLETE
 
 **File:** `src/lib/components/PhaseControls.svelte`
 
 The `.turn-label` div showing "Turn {turn}" is redundant — the turn number is already visible in the HUD. Remove it. The `turn` prop can be removed from the component interface too; verify no other logic in the component depends on it.
 
 Tighten the button label copy:
+
 - Current: `"END ACTION →"` / `"END TURN ⟳"` / phase name
 - Proposed: keep phase-state labels as-is but remove the outer wrapper div that contains the turn label.
 
@@ -91,29 +94,45 @@ Tighten the button label copy:
 </span>
 
 <style>
-  .tooltip-host { position: relative; display: inline-block; }
-  .tooltip-bubble {
-    visibility: hidden; opacity: 0;
-    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
-    background: #1a2236; color: #c8d8f0; font-size: 0.6rem;
-    padding: 0.25rem 0.5rem; border-radius: 3px; white-space: nowrap;
-    pointer-events: none; transition: opacity 0.15s;
-    border: 1px solid #2a3a56; z-index: 100;
+  .tooltip-host {
+    position: relative;
+    display: inline-block;
   }
-  .tooltip-host:hover .tooltip-bubble { visibility: visible; opacity: 1; }
+  .tooltip-bubble {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a2236;
+    color: #c8d8f0;
+    font-size: 0.6rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    border: 1px solid #2a3a56;
+    z-index: 100;
+  }
+  .tooltip-host:hover .tooltip-bubble {
+    visibility: visible;
+    opacity: 1;
+  }
 </style>
 ```
 
 Apply tooltips to:
 
-| Element | Tooltip text |
-|---|---|
-| Funding value | "Current funding. Gained from funding facilities and cards." |
-| Materials value | "Raw materials. Gained from mines and industrial zones." |
-| PoliticalWill value | "Political will. Volatile in democracies; stable but fragile in authoritarian blocs." |
-| Each research field abbreviation (PHY, MTH, etc.) | Full field name + short description |
-| Climate bar | "Earth climate index. Falls as you industrialise; affects event probabilities." |
-| Will bar | "Global political will level." |
+| Element                                           | Tooltip text                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Funding value                                     | "Current funding. Gained from funding facilities and cards."                          |
+| Materials value                                   | "Raw materials. Gained from mines and industrial zones."                              |
+| PoliticalWill value                               | "Political will. Volatile in democracies; stable but fragile in authoritarian blocs." |
+| Each research field abbreviation (PHY, MTH, etc.) | Full field name + short description                                                   |
+| Climate bar                                       | "Earth climate index. Falls as you industrialise; affects event probabilities."       |
+| Will bar                                          | "Global political will level."                                                        |
 
 **Files affected:** `HUD.svelte`, new `Tooltip.svelte`.
 
@@ -124,6 +143,7 @@ Apply tooltips to:
 **File:** `src/lib/components/StandingActions.svelte`
 
 Currently uses the native `title` attribute. Replace with the new `Tooltip.svelte` wrapper on each action button. The tooltip should show:
+
 - Action description (already available as `action.description`)
 - Cost breakdown (already shown on button but tooltip should repeat it for disabled state clarity)
 - If disabled due to phase: "Not available during [phase] phase"
@@ -131,29 +151,9 @@ Currently uses the native `title` attribute. Replace with the new `Tooltip.svelt
 
 ---
 
-### 17.6 — Collapsible panels
+### 17.6 — Collapsible panels ~~REJECTED~~
 
-Add a collapse toggle to `ResearchFeed.svelte`, `BoardPanel.svelte`, and `OngoingActionsPanel.svelte`. Each panel gets a `▾ / ▸` toggle button in its header that toggles a `collapsed` local `$state` boolean. When collapsed, only the header row is visible (saves vertical space on busy screens).
-
-Implementation pattern (same for each panel):
-
-```svelte
-<script lang="ts">
-  let collapsed = $state(false);
-</script>
-
-<div class="panel" class:collapsed>
-  <div class="panel-header" onclick={() => collapsed = !collapsed}>
-    <span class="panel-title">RESEARCH</span>
-    <span class="collapse-toggle">{collapsed ? '▸' : '▾'}</span>
-  </div>
-  {#if !collapsed}
-    <!-- panel body -->
-  {/if}
-</div>
-```
-
-**Files:** `ResearchFeed.svelte`, `BoardPanel.svelte`, `OngoingActionsPanel.svelte`.
+> **Rejected.** This approach is no longer considered correct. A new panel layout/navigation design will be specified in a separate future phase. Do not implement.
 
 ---
 
@@ -164,6 +164,7 @@ Implementation pattern (same for each panel):
 Current layout: one `flex-wrap` row of buttons ~`4.5rem` min-width each.
 
 New layout:
+
 - Remove `min-width` on buttons; let them size to content with `padding: 0.3rem 0.5rem`.
 - Grid layout: `grid-template-columns: repeat(3, auto)` so actions wrap into a 3-column grid naturally.
 - Cost badge: move cost from button label into a small subscript badge below the button name, styled in the resource colour.
@@ -206,16 +207,17 @@ Bank cards should be slightly narrower (`9rem`) than hand cards (`11rem`) and us
 
 Add brief CSS animations triggered when the player performs significant actions:
 
-| Trigger | Effect |
-|---|---|
-| Build facility | Hex tile flashes green (handled in `EarthScene.ts` — Phaser tween) |
-| Play card | Card slides up and fades out before being removed from hand |
-| Bank card | Card slides left toward the bank column |
-| New turn draw | Cards deal in from the right with a stagger delay |
-| Resource tick (positive) | Resource value briefly highlights green |
-| Resource tick (negative) | Resource value briefly highlights red |
+| Trigger                  | Effect                                                             |
+| ------------------------ | ------------------------------------------------------------------ |
+| Build facility           | Hex tile flashes green (handled in `EarthScene.ts` — Phaser tween) |
+| Play card                | Card slides up and fades out before being removed from hand        |
+| Bank card                | Card slides left toward the bank column                            |
+| New turn draw            | Cards deal in from the right with a stagger delay                  |
+| Resource tick (positive) | Resource value briefly highlights green                            |
+| Resource tick (negative) | Resource value briefly highlights red                              |
 
 **Implementation:**
+
 - Card animations: CSS `@keyframes` in `CardHand.svelte`; trigger by binding a per-card `animating` class to a `$state` set.
 - Hex flash: Phaser tween in `EarthScene.ts`, fired via the `worldPhaseComplete` event or a new `facilityBuilt` custom event dispatched from the store.
 - Resource highlight: `HUD.svelte` watches previous vs current resource values in a `$derived`; applies `.flash-up` / `.flash-down` class for 600ms.
@@ -228,18 +230,18 @@ For the card reshuffle (new hand drawn each turn): when `hand` prop changes leng
 
 ## File Change Summary
 
-| File | Change |
-|---|---|
-| `src/lib/components/HUD.svelte` | Brown Materials colour; `fmt()` helper; resource tooltips; field tooltips; flash animations |
-| `src/lib/components/PhaseControls.svelte` | Remove turn label; remove `turn` prop |
-| `src/lib/components/StandingActions.svelte` | Grid layout; compact buttons; Tooltip.svelte wrappers |
-| `src/lib/components/CardHand.svelte` | Side-by-side bank layout; deal-in animation; card play/bank animations |
-| `src/lib/components/ResearchFeed.svelte` | Collapsible header toggle |
-| `src/lib/components/BoardPanel.svelte` | Collapsible header toggle |
-| `src/lib/components/OngoingActionsPanel.svelte` | Collapsible header toggle |
-| `src/lib/components/Tooltip.svelte` | **New file** — lightweight CSS tooltip wrapper |
-| `src/phaser/EarthScene.ts` | Hex flash tween on facility build event |
-| `src/routes/+page.svelte` | Relax bottom-row `max-height` from `14rem` → `16rem` |
+| File                                            | Change                                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `src/lib/components/HUD.svelte`                 | Brown Materials colour; `fmt()` helper; resource tooltips; field tooltips; flash animations |
+| `src/lib/components/PhaseControls.svelte`       | Remove turn label; remove `turn` prop                                                       |
+| `src/lib/components/StandingActions.svelte`     | Grid layout; compact buttons; Tooltip.svelte wrappers                                       |
+| `src/lib/components/CardHand.svelte`            | Side-by-side bank layout; deal-in animation; card play/bank animations                      |
+| `src/lib/components/ResearchFeed.svelte`        | Collapsible header toggle                                                                   |
+| `src/lib/components/BoardPanel.svelte`          | Collapsible header toggle                                                                   |
+| `src/lib/components/OngoingActionsPanel.svelte` | Collapsible header toggle                                                                   |
+| `src/lib/components/Tooltip.svelte`             | **New file** — lightweight CSS tooltip wrapper                                              |
+| `src/phaser/EarthScene.ts`                      | Hex flash tween on facility build event                                                     |
+| `src/routes/+page.svelte`                       | Relax bottom-row `max-height` from `14rem` → `16rem`                                        |
 
 No engine files (`src/engine/`) change. No new tests needed (pure UI); manual smoke-test checklist in Acceptance section below.
 
@@ -252,7 +254,7 @@ No engine files (`src/engine/`) change. No new tests needed (pure UI); manual sm
 - [x] PhaseControls shows no separate turn number
 - [ ] Hovering a resource value shows a descriptive tooltip
 - [ ] Hovering a research field abbreviation shows the full field name
-- [ ] ResearchFeed, BoardPanel, and OngoingActionsPanel each have a working collapse toggle
+- ~~[ ] ResearchFeed, BoardPanel, and OngoingActionsPanel each have a working collapse toggle~~ _(17.6 rejected)_
 - [ ] Standing actions render in a compact ≤3-row grid; all 5 actions visible without scrolling
 - [ ] Hovering a disabled action shows why it is disabled
 - [ ] Banked cards appear to the left of hand cards with a divider

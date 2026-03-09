@@ -18,7 +18,11 @@
       {@const def = facilityDefs.get(action.facilityDefId)}
       {@const progress = (action.totalTurns - action.turnsRemaining) / action.totalTurns}
       <div class="action-row">
-        <span class="badge" class:build={action.type === 'construct'} class:demo={action.type === 'demolish'}>
+        <span
+          class="badge"
+          class:build={action.type === 'construct'}
+          class:demo={action.type === 'demolish'}
+        >
           {action.type === 'construct' ? 'BUILD' : 'DEMO'}
         </span>
         <div class="action-body">

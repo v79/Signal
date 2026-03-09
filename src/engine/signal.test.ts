@@ -10,7 +10,13 @@ import {
   signalProgressNewsText,
 } from './signal';
 import { createRng } from './rng';
-import type { SignalState, FieldPoints, FacilityInstance, FacilityDef, SignalResponseOption } from './types';
+import type {
+  SignalState,
+  FieldPoints,
+  FacilityInstance,
+  FacilityDef,
+  SignalResponseOption,
+} from './types';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -25,13 +31,21 @@ const BASE_SIGNAL: SignalState = {
 };
 
 const ZERO_FIELDS: FieldPoints = {
-  physics: 0, mathematics: 0, engineering: 0,
-  biochemistry: 0, computing: 0, socialScience: 0,
+  physics: 0,
+  mathematics: 0,
+  engineering: 0,
+  biochemistry: 0,
+  computing: 0,
+  socialScience: 0,
 };
 
 const HIGH_FIELDS: FieldPoints = {
-  physics: 100, mathematics: 100, engineering: 0,
-  biochemistry: 0, computing: 0, socialScience: 0,
+  physics: 100,
+  mathematics: 100,
+  engineering: 0,
+  biochemistry: 0,
+  computing: 0,
+  socialScience: 0,
 };
 
 const ARRAY_DEF: FacilityDef = {
@@ -42,7 +56,9 @@ const ARRAY_DEF: FacilityDef = {
   allowedTileTypes: [],
   buildCost: {},
   upkeepCost: {},
-  buildTime: 3, deleteTime: 2, canDelete: true,
+  buildTime: 3,
+  deleteTime: 2,
+  canDelete: true,
   fieldOutput: { physics: 5, computing: 3 },
   resourceOutput: {},
   adjacencyBonuses: [],
@@ -55,8 +71,11 @@ const DEFS: Map<string, FacilityDef> = new Map([['deepSpaceArray', ARRAY_DEF]]);
 
 function makeArray(n = 1): FacilityInstance[] {
   return Array.from({ length: n }, (_, i) => ({
-    id: `dsa-${i}`, defId: 'deepSpaceArray',
-    locationKey: `0,${i}`, condition: 1, builtTurn: 1,
+    id: `dsa-${i}`,
+    defId: 'deepSpaceArray',
+    locationKey: `0,${i}`,
+    condition: 1,
+    builtTurn: 1,
   }));
 }
 
@@ -82,7 +101,9 @@ describe('computeSignalProgressDelta', () => {
   });
 
   it('ignores non-array facilities', () => {
-    const other: FacilityInstance[] = [{ id: 'r1', defId: 'researchLab', locationKey: '0,0', condition: 1, builtTurn: 1 }];
+    const other: FacilityInstance[] = [
+      { id: 'r1', defId: 'researchLab', locationKey: '0,0', condition: 1, builtTurn: 1 },
+    ];
     const delta = computeSignalProgressDelta(ZERO_FIELDS, other, DEFS);
     expect(delta).toBeCloseTo(0.25);
   });
@@ -185,28 +206,28 @@ describe('generateWormholeOptions', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 80 };
     for (const seed of ['a', 'b', 'c', 'signal-demo', 'xyz']) {
       const opts = generateWormholeOptions(signal, createRng(seed));
-      expect(opts.filter(o => o.correct)).toHaveLength(1);
+      expect(opts.filter((o) => o.correct)).toHaveLength(1);
     }
   });
 
   it('correct option gets high hint when progress >= 90', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 95 };
     const opts = generateWormholeOptions(signal, createRng('test'));
-    const correct = opts.find(o => o.correct)!;
+    const correct = opts.find((o) => o.correct)!;
     expect(correct.confidenceHint).toBe('high');
   });
 
   it('correct option gets medium hint when progress 70–89', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 75 };
     const opts = generateWormholeOptions(signal, createRng('test'));
-    const correct = opts.find(o => o.correct)!;
+    const correct = opts.find((o) => o.correct)!;
     expect(correct.confidenceHint).toBe('medium');
   });
 
   it('correct option gets low hint when progress < 70', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 50 };
     const opts = generateWormholeOptions(signal, createRng('test'));
-    const correct = opts.find(o => o.correct)!;
+    const correct = opts.find((o) => o.correct)!;
     expect(correct.confidenceHint).toBe('low');
   });
 
@@ -214,7 +235,7 @@ describe('generateWormholeOptions', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 80 };
     const a = generateWormholeOptions(signal, createRng('same-seed'));
     const b = generateWormholeOptions(signal, createRng('same-seed'));
-    expect(a.map(o => o.correct)).toEqual(b.map(o => o.correct));
+    expect(a.map((o) => o.correct)).toEqual(b.map((o) => o.correct));
   });
 
   it('correct option position varies by seed', () => {
@@ -222,7 +243,7 @@ describe('generateWormholeOptions', () => {
     const positions = new Set<number>();
     for (let i = 0; i < 20; i++) {
       const opts = generateWormholeOptions(signal, createRng(`seed-${i}`));
-      positions.add(opts.findIndex(o => o.correct));
+      positions.add(opts.findIndex((o) => o.correct));
     }
     // Should see at least 2 different positions across 20 seeds
     expect(positions.size).toBeGreaterThanOrEqual(2);

@@ -155,7 +155,7 @@ describe('applyResourceDeltas', () => {
     const result = applyResourceDeltas(current, facilityDelta, bankDecay, upkeep);
 
     expect(result.funding).toBe(100 + 30 - 10 - 2); // 118
-    expect(result.materials).toBe(40 + 20 - 5);      // 55
-    expect(result.politicalWill).toBe(5);             // 0 + 5
+    expect(result.materials).toBe(40 + 20 - 5); // 55
+    expect(result.politicalWill).toBe(5); // 0 + 5
   });
 });

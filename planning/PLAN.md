@@ -30,29 +30,30 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 
 ## Module plan (`src/engine/`)
 
-| Module | Responsibility |
-|---|---|
-| `types.ts` | All TypeScript interfaces — `GameState`, `Facility`, `Technology`, `Card`, `Event`, `Bloc`, `BoardMember`, etc. |
-| `rng.ts` | Seedable PRNG; `createRng(seed)` returns a stateful generator |
-| `state.ts` | `createGameState(config)` factory; root state shape |
-| `resources.ts` | Resource tick: Funding, Materials, Will; bloc-type Will modifiers |
-| `research.ts` | Field accumulation from facilities + played cards; recipe checking; discovery stage transitions; cross-field breakthrough detection |
-| `cards.ts` | Deck management; draw; bank (with decay); counter resolution; standing action restriction state |
-| `events.ts` | Event pool management; countdown tick; event resolution tiers |
-| `facilities.ts` | Facility effect computation; adjacency bonus/penalty table; mine depletion |
-| `projects.ts` | Project availability checks; completion reward application; landmark project era gates |
-| `map.ts` | Hex tile state; adjacency lookup (pre-computed); climate degradation scheduling and application |
-| `blocs.ts` | NPC bloc simulation step; decline/elimination; merger event generation |
-| `board.ts` | Character lifecycle (age, retire, resign, die); buff/debuff application pipeline |
-| `signal.ts` | Decoding progress track; era signal strength; wormhole climax option generation |
-| `victory.ts` | All victory and loss condition checks; Abandoned Earth metric |
-| `turn.ts` | Five-phase orchestrator: calls each subsystem in order |
+| Module          | Responsibility                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `types.ts`      | All TypeScript interfaces — `GameState`, `Facility`, `Technology`, `Card`, `Event`, `Bloc`, `BoardMember`, etc.                     |
+| `rng.ts`        | Seedable PRNG; `createRng(seed)` returns a stateful generator                                                                       |
+| `state.ts`      | `createGameState(config)` factory; root state shape                                                                                 |
+| `resources.ts`  | Resource tick: Funding, Materials, Will; bloc-type Will modifiers                                                                   |
+| `research.ts`   | Field accumulation from facilities + played cards; recipe checking; discovery stage transitions; cross-field breakthrough detection |
+| `cards.ts`      | Deck management; draw; bank (with decay); counter resolution; standing action restriction state                                     |
+| `events.ts`     | Event pool management; countdown tick; event resolution tiers                                                                       |
+| `facilities.ts` | Facility effect computation; adjacency bonus/penalty table; mine depletion                                                          |
+| `projects.ts`   | Project availability checks; completion reward application; landmark project era gates                                              |
+| `map.ts`        | Hex tile state; adjacency lookup (pre-computed); climate degradation scheduling and application                                     |
+| `blocs.ts`      | NPC bloc simulation step; decline/elimination; merger event generation                                                              |
+| `board.ts`      | Character lifecycle (age, retire, resign, die); buff/debuff application pipeline                                                    |
+| `signal.ts`     | Decoding progress track; era signal strength; wormhole climax option generation                                                     |
+| `victory.ts`    | All victory and loss condition checks; Abandoned Earth metric                                                                       |
+| `turn.ts`       | Five-phase orchestrator: calls each subsystem in order                                                                              |
 
 ---
 
 ## Implementation phases
 
 ### Phase 1 — Foundation ✅
+
 - Scaffold SvelteKit + Vite project ✅
 - Add Phaser as a client-only dynamic import (`MapContainer.svelte`) ✅
 - Configure Vitest ✅
@@ -61,18 +62,21 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - Implement `state.ts` factory (`createGameState`, `serialise/deserialise`) ✅
 
 ### Phase 2 — Engine core (no rendering) ✅
+
 - `resources.ts`: resource tick, Will volatility model (democratic vs authoritarian drift rates, ceilings) ✅
 - `facilities.ts`: facility output scaled by condition + tile productivity, hex adjacency computation, mine depletion ✅
 - `turn.ts`: World Phase orchestrator (facilities → resources → Will → depletion → climate pressure) ✅
 - 34 tests across `facilities.test.ts` and `resources.test.ts` (44 total) ✅
 
 ### Phase 3 — Research system ✅
+
 - `research.ts`: seeded recipe generation (base ± variance), discovery stage transitions (unknown → rumour → progress → discovered), cross-field breakthrough detection ✅
 - `requiresSimultaneous` distinction: breakthrough techs require ALL fields at 30% for rumour vs ANY field for standard techs ✅
 - Research check wired into `turn.ts` World Phase; news feed entries generated for rumours, progress, and discoveries ✅
 - 27 tests in `research.test.ts`; recipe seeding determinism and breakthrough detection verified ✅ (71 total)
 
 ### Phase 4 — Card system ✅
+
 - `cards.ts`: drawCards (seeded shuffle + discard recycle), playCardFromHand, playCardAsCounter, bankCard/unbankCard (BANK_LIMIT=2), discardHand, addCardsToDeck, upgradeCard (zone-preserving), getActiveRestrictions/isActionRestricted ✅
 - `events.ts`: getEligibleEvents (era/pushFactor/bloc filter), selectNewEvents (0–2/turn via RNG), tickEventCountdowns (auto-expire at 0), resolveEvent, applyEventEffect (resources/fields/restrictions), getEffectForResolution (mitigation scaling, counter nullification) ✅
 - Full five-phase turn loop in `turn.ts`: executeEventPhase, executeDrawPhase, endBankPhase; Action+Bank phases are player-driven primitives ✅
@@ -80,7 +84,9 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - 51 new tests across `cards.test.ts` and `events.test.ts` (122 total) ✅
 
 ### Phase 6 — Svelte UI ✅
+
 > Implemented before Phase 5 (no impact — the two phases are independent layers).
+
 - `game.svelte.ts`: Svelte 5 rune-based game store; stub card/event/standing-action defs; full action handlers (playCard, bankCard, unbankCard, mitigateEvent, acceptEvent, declineEvent) ✅
 - `HUD.svelte`: top bar — resources (Funding/Materials/Will), all six research fields, turn/year, era badge, phase badge, climate pressure bar, Will bar ✅
 - `EventZone.svelte`: left panel — active events with countdown urgency colouring, response buttons per tier (mitigate/accept/decline/counter-hint), effect previews ✅
@@ -90,6 +96,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `+page.svelte`: CSS grid layout (EventZone | map | ResearchFeed) + bottom row (StandingActions | CardHand) ✅
 
 ### Phase 5 — Earth map (Phaser) ✅
+
 - `EarthScene.ts`: procedural flat-top hex grid (radius 3, 37 tiles), rendered with Phaser Graphics; type-based fill/stroke palette; productivity darkening; climate pressure red tint ✅
 - Tile hit-testing via axial cube-rounding (accurate pixel → hex coordinate); hover highlight; click-to-select ✅
 - Facility indicator: per-defId coloured circle; condition ring when degraded ✅
@@ -100,6 +107,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `+page.svelte`: map-placeholder replaced by `<MapContainer>`; `build` standing action toggles tile selection ✅
 
 ### Phase 7 — Bloc simulation ✅
+
 - `blocs.ts`: `initialiseBlocStates`, `simulateBlocs` (passive income, will drift via tickWill, field accumulation proportional to will, elimination checks), `checkBlocMergers` (news items when two blocs are weakened) ✅
 - Elimination conditions: authoritarian will < willCollapsThreshold, universal will < 5, or resource exhaustion; news item generated on elimination ✅
 - Periodic status news staggered per bloc (every 5 turns, offset by defId hash) ✅
@@ -109,6 +117,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - 14 tests in `blocs.test.ts` (136 total) ✅
 
 ### Phase 8 — Board system ✅
+
 - `board.ts`: `computeBoardModifiers`, `applyBoardFieldMultipliers`, `applyBoardResourceMultipliers` (multiplicative compounding across all active members) ✅
 - `tickBoardAges` (retirement at 70, news item generated), `recruitBoardMember`, `removeBoardMember`, `getBoardAutoCounterTags`, `isBoardSlotVacant`, `getActiveMembers` ✅
 - Board multipliers wired into `executeWorldPhase` (step 3 — applied to facility output before resource/field accumulation) ✅
@@ -119,6 +128,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - 25 tests in `board.test.ts` (147 total) ✅
 
 ### Phase 9 — Signal track ✅
+
 - `signal.ts`: `computeSignalProgressDelta` (base + (physics+math)/50 + deepSpaceArrayCount×3), `computeEraStrength` (faint/structured/urgent by progress threshold), `tickSignalProgress`, `isSignalClimax` ✅
 - `generateWormholeOptions`: 2 options if progress < 70, 3 if >= 70; correct option confidence hint scales with investment; seeded position via RNG ✅
 - `commitSignalResponse`: locks state, sets `wormholeActivated` on correct answer; `didCrossStrengthThreshold` for news generation ✅
@@ -129,6 +139,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - 30 tests in `signal.test.ts` (191 total) ✅
 
 ### Phase 10 — Near Space & Asteroid Belt ✅
+
 - `SpaceScene.ts`: second Phaser scene; fixed node topology (LEO, L1, L2, Lunar Orbit, Lunar Surface); transit lines; Earth circle; same callback/hit-zone pattern as EarthScene ✅
 - `AsteroidScene.ts`: node-graph renderer; 7 nodes (asteroid/jovianMoon/transitPoint/heliopause); unprospected nodes render as dim "?"; active/potential transit edges; dense star field ✅
 - Scene switching via `game.scene.stop/start`; one Phaser Game instance holds all three scenes; each emits its own ready event for callback wiring ✅
@@ -136,6 +147,7 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - `generateSpaceNodes()`, `generateBeltNodes()`, `generateBeltEdges()` in game store; `devAdvanceEra()`, `selectSpaceNode()`, `selectBeltNode()` actions; demo state populates all three map layers ✅
 
 ### Phase 11 — Victory & loss ✅
+
 - `victory.ts`: checkers for all four victories (wormhole, ecologicalRestoration, economicHegemony, terraforming) and four loss conditions (climateCollapse, signalMisinterpretation, politicalCollapse, resourceExhaustion) ✅
 - `checkVictoryConditions` wired into `executeWorldPhase` step 16 (after all state updates); losses take priority over simultaneous victories ✅
 - `tickEarthWelfare` wired into World Phase step 15; decays with climate pressure, recovers with Earth-based facilities ✅
@@ -146,12 +158,14 @@ A `mulberry32` PRNG initialised from the seed hash drives all randomness: tech r
 - 37 tests in `victory.test.ts` (228 total) ✅
 
 ### Phase 12 — Save system & seeded runs ✅
+
 - `GameState` serializes to JSON with `JSON.stringify` (no special handling needed if types are designed correctly) ✅
 - `localStorage` auto-save on every World Phase ✅
 - Export to file / import from file ✅
 - Seed display on HUD; shareable seed string ✅
 
 ### Content pass (parallel with phases 2–12) ✅
+
 - All facility definitions in `src/data/facilities.ts` ✅
 - Technology list with base recipe shapes in `src/data/technologies.ts` — deferred (no TechDef content yet)
 - Card definitions (normal use + counter use) in `src/data/cards.ts` ✅

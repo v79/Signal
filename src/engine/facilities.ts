@@ -28,7 +28,7 @@ export function coordKey(coord: HexCoord): string {
 }
 
 function neighborKeys(coord: HexCoord): string[] {
-  return HEX_DIRECTIONS.map(d => coordKey({ q: coord.q + d.q, r: coord.r + d.r }));
+  return HEX_DIRECTIONS.map((d) => coordKey({ q: coord.q + d.q, r: coord.r + d.r }));
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ export function computeAdjacencyEffects(
   const keyToFacility = new Map<string, FacilityInstance>();
   for (const tile of earthTiles) {
     if (!tile.facilityId || tile.destroyedStatus !== null) continue;
-    const facility = facilities.find(f => f.id === tile.facilityId);
+    const facility = facilities.find((f) => f.id === tile.facilityId);
     if (facility) keyToFacility.set(coordKey(tile.coord), facility);
   }
 
@@ -160,7 +160,7 @@ export function computeFacilityOutput(
   const totalFields: FieldPoints = { ...ZERO_FIELDS };
   const totalResources: Resources = { ...ZERO_RESOURCES };
 
-  const adjById = new Map(adjacencyEffects.map(e => [e.facilityInstanceId, e]));
+  const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
 
   // Tile productivity by locationKey (coord string) for Earth facilities
   const tileProductivity = new Map<string, number>();
@@ -219,7 +219,7 @@ export function tickMineDepletion(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
 ): FacilityInstance[] {
-  return facilities.map(facility => {
+  return facilities.map((facility) => {
     const def = facilityDefs.get(facility.defId);
     if (!def?.depletes) return facility;
     return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
@@ -281,7 +281,7 @@ export function getTileSummary(
   adjacencyEffects: AdjacencyEffect[],
 ): TileSummary {
   const key = coordKey(tile.coord);
-  const facility = facilities.find(f => f.locationKey === key) ?? null;
+  const facility = facilities.find((f) => f.locationKey === key) ?? null;
 
   if (!facility) {
     return {
@@ -313,7 +313,7 @@ export function getTileSummary(
   const resourceOutput: Partial<Resources> = { ...def.resourceOutput };
 
   // Apply adjacency bonus for this facility
-  const adj = adjacencyEffects.find(e => e.facilityInstanceId === facility.id);
+  const adj = adjacencyEffects.find((e) => e.facilityInstanceId === facility.id);
   if (adj) {
     for (const k of Object.keys(adj.fieldBonus) as (keyof FieldPoints)[]) {
       if (adj.fieldBonus[k]) {
@@ -394,17 +394,15 @@ export function tickConstructionQueue(
         builtTurn: completedTurn,
       };
       updatedFacilities = [...updatedFacilities, newInstance];
-      updatedTiles = updatedTiles.map(t =>
-        coordKey(t.coord) === action.coordKey
-          ? { ...t, facilityId, pendingActionId: null }
-          : t,
+      updatedTiles = updatedTiles.map((t) =>
+        coordKey(t.coord) === action.coordKey ? { ...t, facilityId, pendingActionId: null } : t,
       );
     } else {
       // demolish
       updatedFacilities = updatedFacilities.filter(
-        f => !(f.defId === action.facilityDefId && f.locationKey === action.coordKey),
+        (f) => !(f.defId === action.facilityDefId && f.locationKey === action.coordKey),
       );
-      updatedTiles = updatedTiles.map(t =>
+      updatedTiles = updatedTiles.map((t) =>
         coordKey(t.coord) === action.coordKey
           ? { ...t, facilityId: null, pendingActionId: null }
           : t,

@@ -10,9 +10,7 @@
   } = $props();
 
   const label = $derived(
-    phase === 'action' ? 'END ACTION →' :
-    phase === 'bank'   ? 'END TURN ⟳'  :
-                         phase.toUpperCase(),
+    phase === 'action' ? 'END ACTION →' : phase === 'bank' ? 'END TURN ⟳' : phase.toUpperCase(),
   );
 
   const canAdvance = $derived(phase === 'action' || phase === 'bank');
@@ -52,7 +50,10 @@
     border-radius: 2px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
   }
 
   .advance-btn:hover:not(:disabled) {

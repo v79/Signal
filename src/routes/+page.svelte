@@ -1,16 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import HUD             from '$lib/components/HUD.svelte';
-  import EventZone       from '$lib/components/EventZone.svelte';
-  import ResearchFeed    from '$lib/components/ResearchFeed.svelte';
-  import BoardPanel      from '$lib/components/BoardPanel.svelte';
-  import StandingActions      from '$lib/components/StandingActions.svelte';
-  import OngoingActionsPanel  from '$lib/components/OngoingActionsPanel.svelte';
-  import CardHand        from '$lib/components/CardHand.svelte';
-  import MapContainer    from '$lib/components/MapContainer.svelte';
-  import NewsTicker      from '$lib/components/NewsTicker.svelte';
-  import PhaseControls   from '$lib/components/PhaseControls.svelte';
+  import HUD from '$lib/components/HUD.svelte';
+  import EventZone from '$lib/components/EventZone.svelte';
+  import ResearchFeed from '$lib/components/ResearchFeed.svelte';
+  import BoardPanel from '$lib/components/BoardPanel.svelte';
+  import StandingActions from '$lib/components/StandingActions.svelte';
+  import OngoingActionsPanel from '$lib/components/OngoingActionsPanel.svelte';
+  import CardHand from '$lib/components/CardHand.svelte';
+  import MapContainer from '$lib/components/MapContainer.svelte';
+  import NewsTicker from '$lib/components/NewsTicker.svelte';
+  import PhaseControls from '$lib/components/PhaseControls.svelte';
 
   import { gameStore } from '$lib/stores/game.svelte';
   import { CARD_DEFS } from '../data/cards';
@@ -69,8 +69,8 @@
         events={gs.activeEvents}
         eventDefs={EVENT_DEFS}
         onMitigate={(id) => gameStore.mitigateEvent(id)}
-        onAccept={(id)   => gameStore.acceptEvent(id)}
-        onDecline={(id)  => gameStore.declineEvent(id)}
+        onAccept={(id) => gameStore.acceptEvent(id)}
+        onDecline={(id) => gameStore.declineEvent(id)}
       />
 
       <!-- Centre: Earth map (Phaser) -->
@@ -113,25 +113,19 @@
           playerResources={gs.player.resources}
           onAction={handleStandingAction}
         />
-        <OngoingActionsPanel
-          queue={gs.player.constructionQueue}
-          facilityDefs={FACILITY_DEFS}
-        />
+        <OngoingActionsPanel queue={gs.player.constructionQueue} facilityDefs={FACILITY_DEFS} />
       </div>
 
       <CardHand
         cards={gs.player.cards}
         cardDefs={CARD_DEFS}
         phase={gs.phase}
-        onPlay={(id)   => gameStore.playCard(id)}
-        onBank={(id)   => gameStore.bankCard(id)}
+        onPlay={(id) => gameStore.playCard(id)}
+        onBank={(id) => gameStore.bankCard(id)}
         onUnbank={(id) => gameStore.unbankCard(id)}
       />
 
-      <PhaseControls
-        phase={gs.phase}
-        onAdvance={() => gameStore.advancePhase()}
-      />
+      <PhaseControls phase={gs.phase} onAdvance={() => gameStore.advancePhase()} />
     </div>
   </div>
 {/if}

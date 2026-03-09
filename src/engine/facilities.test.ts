@@ -21,12 +21,12 @@ const universityDef: FacilityDef = {
   allowedTileTypes: ['urban'],
   buildCost: { funding: 50 },
   upkeepCost: { funding: 5 },
-  buildTime: 2, deleteTime: 1, canDelete: true,
+  buildTime: 2,
+  deleteTime: 1,
+  canDelete: true,
   fieldOutput: { mathematics: 10, physics: 5 },
   resourceOutput: {},
-  adjacencyBonuses: [
-    { neighborDefId: 'researchLab', fieldBonus: { physics: 3, mathematics: 3 } },
-  ],
+  adjacencyBonuses: [{ neighborDefId: 'researchLab', fieldBonus: { physics: 3, mathematics: 3 } }],
   adjacencyPenalties: [],
   depletes: false,
   requiredTechId: null,
@@ -40,12 +40,12 @@ const researchLabDef: FacilityDef = {
   allowedTileTypes: ['urban', 'industrial'],
   buildCost: { funding: 40 },
   upkeepCost: { funding: 4 },
-  buildTime: 2, deleteTime: 1, canDelete: true,
+  buildTime: 2,
+  deleteTime: 1,
+  canDelete: true,
   fieldOutput: { physics: 8, computing: 5 },
   resourceOutput: {},
-  adjacencyBonuses: [
-    { neighborDefId: 'university', fieldBonus: { physics: 3, mathematics: 3 } },
-  ],
+  adjacencyBonuses: [{ neighborDefId: 'university', fieldBonus: { physics: 3, mathematics: 3 } }],
   adjacencyPenalties: [],
   depletes: false,
   requiredTechId: null,
@@ -59,7 +59,9 @@ const militaryDef: FacilityDef = {
   allowedTileTypes: ['urban', 'highland'],
   buildCost: { funding: 60 },
   upkeepCost: { funding: 8 },
-  buildTime: 1, deleteTime: 1, canDelete: true,
+  buildTime: 1,
+  deleteTime: 1,
+  canDelete: true,
   fieldOutput: { engineering: 5 },
   resourceOutput: {},
   adjacencyBonuses: [],
@@ -78,7 +80,9 @@ const mineDef: FacilityDef = {
   allowedTileTypes: ['highland', 'arid'],
   buildCost: { funding: 30 },
   upkeepCost: { funding: 2 },
-  buildTime: 1, deleteTime: 1, canDelete: true,
+  buildTime: 1,
+  deleteTime: 1,
+  canDelete: true,
   fieldOutput: {},
   resourceOutput: { materials: 20 },
   adjacencyBonuses: [],
@@ -148,8 +152,8 @@ describe('computeAdjacencyEffects', () => {
 
     const effects = computeAdjacencyEffects([uFacility, rFacility], defs, tiles);
 
-    const uEffect = effects.find(e => e.facilityInstanceId === 'u1')!;
-    const rEffect = effects.find(e => e.facilityInstanceId === 'r1')!;
+    const uEffect = effects.find((e) => e.facilityInstanceId === 'u1')!;
+    const rEffect = effects.find((e) => e.facilityInstanceId === 'r1')!;
 
     // University gets bonus from Research Lab neighbour
     expect(uEffect.fieldBonus.physics).toBe(3);
@@ -168,7 +172,7 @@ describe('computeAdjacencyEffects', () => {
 
     const effects = computeAdjacencyEffects([uFacility, rFacility], defs, tiles);
 
-    const uEffect = effects.find(e => e.facilityInstanceId === 'u1')!;
+    const uEffect = effects.find((e) => e.facilityInstanceId === 'u1')!;
     expect(uEffect.fieldBonus.physics).toBe(0);
     expect(uEffect.fieldBonus.mathematics).toBe(0);
   });
@@ -180,7 +184,7 @@ describe('computeAdjacencyEffects', () => {
 
     const effects = computeAdjacencyEffects([mFacility, uFacility], defs, tiles);
 
-    const mEffect = effects.find(e => e.facilityInstanceId === 'm1')!;
+    const mEffect = effects.find((e) => e.facilityInstanceId === 'm1')!;
     expect(mEffect.fieldBonus.mathematics).toBe(-2);
     expect(mEffect.fieldBonus.physics).toBe(-2);
   });
@@ -196,7 +200,7 @@ describe('computeAdjacencyEffects', () => {
     const effects = computeAdjacencyEffects([uFacility, rFacility], defs, tiles);
 
     // Flooded tile is excluded from adjacency — University gets no bonus
-    const uEffect = effects.find(e => e.facilityInstanceId === 'u1');
+    const uEffect = effects.find((e) => e.facilityInstanceId === 'u1');
     expect(uEffect?.fieldBonus.physics ?? 0).toBe(0);
   });
 });
@@ -217,12 +221,9 @@ describe('computeFacilityOutput', () => {
     const tile = makeTile(0, 0, 'u1');
     const adjacency = computeAdjacencyEffects([facility], defs, [tile]);
 
-    const { totalFields, totalResources } = computeFacilityOutput(
-      [facility],
-      defs,
-      adjacency,
-      [tile],
-    );
+    const { totalFields, totalResources } = computeFacilityOutput([facility], defs, adjacency, [
+      tile,
+    ]);
 
     expect(totalFields.mathematics).toBe(10);
     expect(totalFields.physics).toBe(5);
@@ -237,8 +238,8 @@ describe('computeFacilityOutput', () => {
 
     const { totalFields } = computeFacilityOutput([facility], defs, adjacency, [tile]);
 
-    expect(totalFields.mathematics).toBe(5);  // 10 * 0.5
-    expect(totalFields.physics).toBe(2.5);    // 5 * 0.5
+    expect(totalFields.mathematics).toBe(5); // 10 * 0.5
+    expect(totalFields.physics).toBe(2.5); // 5 * 0.5
   });
 
   it('scales output by facility condition', () => {
@@ -259,12 +260,7 @@ describe('computeFacilityOutput', () => {
     const tiles = [makeTile(0, 0, 'u1'), makeTile(1, 0, 'r1')];
     const adjacency = computeAdjacencyEffects([uFacility, rFacility], defs, tiles);
 
-    const { totalFields } = computeFacilityOutput(
-      [uFacility, rFacility],
-      defs,
-      adjacency,
-      tiles,
-    );
+    const { totalFields } = computeFacilityOutput([uFacility, rFacility], defs, adjacency, tiles);
 
     // University: 5 physics base + 3 adjacency bonus
     // Research Lab: 8 physics base + 3 adjacency bonus

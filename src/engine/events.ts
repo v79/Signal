@@ -30,7 +30,7 @@ export function getEligibleEvents(
   playerBlocId: string,
   activeEventDefIds: Set<string>,
 ): EventDef[] {
-  return pool.filter(def => {
+  return pool.filter((def) => {
     if (activeEventDefIds.has(def.id)) return false;
     if (!def.eras.includes(era)) return false;
     if (def.pushFactors !== null && !def.pushFactors.includes(pushFactor)) return false;
@@ -55,7 +55,7 @@ export function selectNewEvents(
   rng: Rng,
   arrivedTurn: number,
 ): EventInstance[] {
-  const activeDefIds = new Set(activeEvents.map(e => e.defId));
+  const activeDefIds = new Set(activeEvents.map((e) => e.defId));
   const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds);
   if (eligible.length === 0) return [];
 
@@ -70,7 +70,7 @@ export function selectNewEvents(
     remaining.splice(idx, 1);
   }
 
-  return selected.map(def => ({
+  return selected.map((def) => ({
     id: `${def.id}-t${arrivedTurn}`,
     defId: def.id,
     arrivedTurn,
@@ -90,7 +90,7 @@ export function selectNewEvents(
  * Their effects are applied separately by `applyExpiredEventEffects`.
  */
 export function tickEventCountdowns(events: EventInstance[]): EventInstance[] {
-  return events.map(event => {
+  return events.map((event) => {
     if (event.resolved) return event;
     const newCountdown = event.countdownRemaining - 1;
     if (newCountdown <= 0) {
@@ -102,7 +102,9 @@ export function tickEventCountdowns(events: EventInstance[]): EventInstance[] {
 
 /** Return events that expired this tick (countdown just reached 0). */
 export function getJustExpiredEvents(events: EventInstance[]): EventInstance[] {
-  return events.filter(e => e.resolved && e.resolvedWith === 'expired' && e.countdownRemaining === 0);
+  return events.filter(
+    (e) => e.resolved && e.resolvedWith === 'expired' && e.countdownRemaining === 0,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +120,7 @@ export function resolveEvent(
   eventId: string,
   resolution: Exclude<EventInstance['resolvedWith'], null>,
 ): EventInstance[] {
-  return events.map(e =>
+  return events.map((e) =>
     e.id === eventId ? { ...e, resolved: true, resolvedWith: resolution } : e,
   );
 }
@@ -180,7 +182,7 @@ export function applyEventEffect(
   // Standing action restrictions
   if (effect.restrictActions && effect.restrictActions.length > 0) {
     const duration = effect.restrictionDuration ?? 1;
-    const newRestrictions: StandingActionRestriction[] = effect.restrictActions.map(actionId => ({
+    const newRestrictions: StandingActionRestriction[] = effect.restrictActions.map((actionId) => ({
       actionId,
       expiresAfterTurn: currentTurn + duration - 1,
     }));

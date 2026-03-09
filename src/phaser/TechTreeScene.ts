@@ -29,11 +29,11 @@ import { getTechTier } from '../engine/techTree';
 // ---------------------------------------------------------------------------
 
 export interface TechTreeSceneData {
-  techs:        TechState[];
-  techDefs:     Map<string, TechDef>;
-  fields:       FieldPoints;
-  signal:       SignalState;
-  cardDefs:     Map<string, CardDef>;
+  techs: TechState[];
+  techDefs: Map<string, TechDef>;
+  fields: FieldPoints;
+  signal: SignalState;
+  cardDefs: Map<string, CardDef>;
   facilityDefs: Map<string, FacilityDef>;
 }
 
@@ -42,29 +42,29 @@ export interface TechTreeSceneData {
 // ---------------------------------------------------------------------------
 
 export const FIELD_COLOURS: Record<string, number> = {
-  physics:       0x6a9fd8,
-  mathematics:   0x8a70c8,
-  engineering:   0xc87840,
-  biochemistry:  0x58a870,
-  computing:     0x60b8a0,
+  physics: 0x6a9fd8,
+  mathematics: 0x8a70c8,
+  engineering: 0xc87840,
+  biochemistry: 0x58a870,
+  computing: 0x60b8a0,
   socialScience: 0xc86080,
 };
 
 const FIELD_COLOURS_CSS: Record<string, string> = {
-  physics:       '#6a9fd8',
-  mathematics:   '#8a70c8',
-  engineering:   '#c87840',
-  biochemistry:  '#58a870',
-  computing:     '#60b8a0',
+  physics: '#6a9fd8',
+  mathematics: '#8a70c8',
+  engineering: '#c87840',
+  biochemistry: '#58a870',
+  computing: '#60b8a0',
   socialScience: '#c86080',
 };
 
 const FIELD_ABBR: Record<string, string> = {
-  physics:       'PHY',
-  mathematics:   'MAT',
-  engineering:   'ENG',
-  biochemistry:  'BIO',
-  computing:     'COM',
+  physics: 'PHY',
+  mathematics: 'MAT',
+  engineering: 'ENG',
+  biochemistry: 'BIO',
+  computing: 'COM',
   socialScience: 'SOC',
 };
 
@@ -72,25 +72,25 @@ const FIELD_ABBR: Record<string, string> = {
 // Layout constants
 // ---------------------------------------------------------------------------
 
-const TOP_MARGIN    = 52;   // space above first node (tier headers live here)
-const LEGEND_H      = 40;   // fixed legend strip at bottom of screen
-const NODE_W        = 188;
-const NODE_H        = 160;
-const NODE_GAP      = 14;
-const WORLD_PAD_BOT = 24;   // extra padding below last node in the world
-const CORNER_R      = 3;
-const NODE_PAD      = 13;
-const BAR_H         = 14;
-const BAR_ROW_H     = 22;   // bar height + gap above next label
-const LABEL_W       = 32;   // width reserved for field abbreviation label
-const DOT_GRID_SPC  = 26;   // dot-grid spacing in px
+const TOP_MARGIN = 52; // space above first node (tier headers live here)
+const LEGEND_H = 40; // fixed legend strip at bottom of screen
+const NODE_W = 188;
+const NODE_H = 160;
+const NODE_GAP = 14;
+const WORLD_PAD_BOT = 24; // extra padding below last node in the world
+const CORNER_R = 3;
+const NODE_PAD = 13;
+const BAR_H = 14;
+const BAR_ROW_H = 22; // bar height + gap above next label
+const LABEL_W = 32; // width reserved for field abbreviation label
+const DOT_GRID_SPC = 26; // dot-grid spacing in px
 
 // ---------------------------------------------------------------------------
 // Zoom constants
 // ---------------------------------------------------------------------------
 
-const MIN_ZOOM  = 0.5;
-const MAX_ZOOM  = 2.5;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 0.15;
 
 // ---------------------------------------------------------------------------
@@ -98,45 +98,45 @@ const ZOOM_STEP = 0.15;
 // ---------------------------------------------------------------------------
 
 // Scene background & structure
-const C_BG_FILL        = 0x050a10; // deep space canvas fill
-const C_BG_DOT         = 0x0f1e2a; // dot-grid dots
-const C_COL_DIVIDER    = 0x0d1e2a; // vertical column dividers
-const C_HEADER_LINE    = 0x1a3040; // tier header underline
-const C_LEGEND_FILL    = 0x040810; // legend strip background
-const C_LEGEND_SEP     = 0x0e1c28; // legend separator line
+const C_BG_FILL = 0x050a10; // deep space canvas fill
+const C_BG_DOT = 0x0f1e2a; // dot-grid dots
+const C_COL_DIVIDER = 0x0d1e2a; // vertical column dividers
+const C_HEADER_LINE = 0x1a3040; // tier header underline
+const C_LEGEND_FILL = 0x040810; // legend strip background
+const C_LEGEND_SEP = 0x0e1c28; // legend separator line
 
 // Node fills (by discovery stage)
-const C_NODE_SIGNAL    = 0x060d18; // signal-hidden
-const C_NODE_UNKNOWN   = 0x080d14; // unknown
-const C_NODE_RUMOUR    = 0x0c1828; // rumour
-const C_NODE_PROGRESS  = 0x0a1722; // in progress
-const C_NODE_DISC      = 0x0c1c14; // discovered
+const C_NODE_SIGNAL = 0x060d18; // signal-hidden
+const C_NODE_UNKNOWN = 0x080d14; // unknown
+const C_NODE_RUMOUR = 0x0c1828; // rumour
+const C_NODE_PROGRESS = 0x0a1722; // in progress
+const C_NODE_DISC = 0x0c1c14; // discovered
 
 // Node borders (by discovery stage)
-const C_BORDER_SIGNAL  = 0x183650; // signal-hidden
+const C_BORDER_SIGNAL = 0x183650; // signal-hidden
 const C_BORDER_UNKNOWN = 0x14222e; // unknown  (also legend dot for Unknown)
-const C_BORDER_RUMOUR  = 0x2a4460; // rumour   (also legend dot for Rumoured)
+const C_BORDER_RUMOUR = 0x2a4460; // rumour   (also legend dot for Rumoured)
 
 // Key accent colours
-const C_GOLD           = 0xd4a820; // discovered — border, glow, top accent, legend dot
-const C_RUMOUR_DOT     = 0x3a6888; // rumour indicator dot (cool blue — distinct from gold)
+const C_GOLD = 0xd4a820; // discovered — border, glow, top accent, legend dot
+const C_RUMOUR_DOT = 0x3a6888; // rumour indicator dot (cool blue — distinct from gold)
 
 // Content chrome
-const C_BAR_TRACK      = 0x141e2a; // field bar track background
-const C_REDACT_BAR     = 0x141e28; // unknown redaction bars
-const C_SEP_RUMOUR     = 0x1e3448; // name separator in rumour nodes
-const C_SEP_PROGRESS   = 0x1e3040; // name separator in progress nodes
-const C_SEP_DISC       = 0x2a3c1a; // name separator in discovered nodes
+const C_BAR_TRACK = 0x141e2a; // field bar track background
+const C_REDACT_BAR = 0x141e28; // unknown redaction bars
+const C_SEP_RUMOUR = 0x1e3448; // name separator in rumour nodes
+const C_SEP_PROGRESS = 0x1e3040; // name separator in progress nodes
+const C_SEP_DISC = 0x2a3c1a; // name separator in discovered nodes
 const C_FIELD_FALLBACK = 0x4a6880; // field colour when field key is unrecognised
 
 // Signal-hidden waveform
-const C_WAVE_DIM       = 0x204060; // back wave
-const C_WAVE_MID       = 0x2a5880; // middle wave
-const C_WAVE_BRIGHT    = 0x3a7098; // front wave
-const C_WAVE_DOTS      = 0x2a5070; // zero-crossing dots
+const C_WAVE_DIM = 0x204060; // back wave
+const C_WAVE_MID = 0x2a5880; // middle wave
+const C_WAVE_BRIGHT = 0x3a7098; // front wave
+const C_WAVE_DOTS = 0x2a5070; // zero-crossing dots
 
 // Legend indicator dots (In Progress has no matching node border colour)
-const C_LEGEND_INPROG  = 0x4a8090;
+const C_LEGEND_INPROG = 0x4a8090;
 
 // ---------------------------------------------------------------------------
 // Font sizes — edit these to rescale all text in one place
@@ -145,13 +145,13 @@ const C_LEGEND_INPROG  = 0x4a8090;
 /** Column headers ("TIER I", "TIER II" …) */
 const FS_TIER_HEADER = '14px';
 /** Technology names inside nodes (known stages). */
-const FS_NODE_NAME   = '13px';
+const FS_NODE_NAME = '13px';
 /** Field abbreviation labels next to progress bars. */
 const FS_FIELD_LABEL = '12px';
 /** Legend entries at the bottom of the canvas. */
-const FS_LEGEND      = '13px';
+const FS_LEGEND = '13px';
 /** Secondary text: rumour descriptions, stage badges, signal labels, unlock list. */
-const FS_SECONDARY   = '11px';
+const FS_SECONDARY = '11px';
 
 // ---------------------------------------------------------------------------
 // Scene
@@ -165,14 +165,14 @@ export class TechTreeScene extends Phaser.Scene {
   private uiGfx!: Phaser.GameObjects.Graphics;
 
   private worldTextObjs: Phaser.GameObjects.Text[] = [];
-  private uiTextObjs:    Phaser.GameObjects.Text[] = [];
+  private uiTextObjs: Phaser.GameObjects.Text[] = [];
 
-  private ready       = false;
-  private isDragging  = false;
-  private dragX       = 0;
-  private dragY       = 0;
+  private ready = false;
+  private isDragging = false;
+  private dragX = 0;
+  private dragY = 0;
   private currentZoom = 1;
-  private worldH      = 600; // updated each redraw
+  private worldH = 600; // updated each redraw
 
   constructor() {
     super({ key: 'TechTreeScene' });
@@ -251,12 +251,7 @@ export class TechTreeScene extends Phaser.Scene {
     // Mouse-wheel zoom (deltaY > 0 = scroll down = zoom out)
     this.input.on(
       'wheel',
-      (
-        _p: Phaser.Input.Pointer,
-        _gameObjects: unknown,
-        _deltaX: number,
-        deltaY: number,
-      ) => {
+      (_p: Phaser.Input.Pointer, _gameObjects: unknown, _deltaX: number, deltaY: number) => {
         this.adjustZoom(deltaY > 0 ? -1 : +1);
       },
     );
@@ -265,11 +260,7 @@ export class TechTreeScene extends Phaser.Scene {
   }
 
   private adjustZoom(dir: 1 | -1): void {
-    this.currentZoom = Phaser.Math.Clamp(
-      this.currentZoom + dir * ZOOM_STEP,
-      MIN_ZOOM,
-      MAX_ZOOM,
-    );
+    this.currentZoom = Phaser.Math.Clamp(this.currentZoom + dir * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM);
     this.cameras.main.setZoom(this.currentZoom);
     // Re-apply bounds so Phaser clamps scroll correctly at new zoom level
     this.cameras.main.setBounds(0, 0, this.scale.width, this.worldH);
@@ -289,7 +280,12 @@ export class TechTreeScene extends Phaser.Scene {
     this.clearAllTexts();
 
     // Group techs by tier (preserving TECH_DEFS insertion order within tier)
-    const tierGroups = new Map<number, TechState[]>([[1, []], [2, []], [3, []], [4, []]]);
+    const tierGroups = new Map<number, TechState[]>([
+      [1, []],
+      [2, []],
+      [3, []],
+      [4, []],
+    ]);
     for (const tech of d.techs) {
       const def = d.techDefs.get(tech.defId);
       if (!def) continue;
@@ -297,7 +293,7 @@ export class TechTreeScene extends Phaser.Scene {
     }
 
     // Compute world height from the tier with the most nodes
-    const maxNodes = Math.max(...[...tierGroups.values()].map(g => g.length), 1);
+    const maxNodes = Math.max(...[...tierGroups.values()].map((g) => g.length), 1);
     const contentH = maxNodes * NODE_H + Math.max(0, maxNodes - 1) * NODE_GAP;
     this.worldH = TOP_MARGIN + contentH + WORLD_PAD_BOT;
 
@@ -315,8 +311,10 @@ export class TechTreeScene extends Phaser.Scene {
     for (let i = 0; i < 4; i++) {
       this.worldGfx.lineStyle(1, C_HEADER_LINE, 0.6);
       this.worldGfx.lineBetween(
-        colCX[i] - NODE_W / 2 + 6, TOP_MARGIN - 6,
-        colCX[i] + NODE_W / 2 - 6, TOP_MARGIN - 6,
+        colCX[i] - NODE_W / 2 + 6,
+        TOP_MARGIN - 6,
+        colCX[i] + NODE_W / 2 - 6,
+        TOP_MARGIN - 6,
       );
 
       this.addWorldText(colCX[i], 14, TIER_LABELS[i], {
@@ -334,7 +332,7 @@ export class TechTreeScene extends Phaser.Scene {
       if (techs.length === 0) continue;
       const totalH = techs.length * NODE_H + Math.max(0, techs.length - 1) * NODE_GAP;
       const startY = TOP_MARGIN + (contentH - totalH) / 2;
-      const nodeX  = colCX[tier - 1] - NODE_W / 2;
+      const nodeX = colCX[tier - 1] - NODE_W / 2;
       for (let j = 0; j < techs.length; j++) {
         this.drawNode(techs[j], d, nodeX, startY + j * (NODE_H + NODE_GAP));
       }
@@ -388,13 +386,13 @@ export class TechTreeScene extends Phaser.Scene {
       this.worldGfx.fillStyle(C_GOLD, 0.07);
       this.worldGfx.fillCircle(x + NODE_W / 2, y + NODE_H / 2, NODE_W * 0.72);
       this.worldGfx.fillStyle(C_GOLD, 0.04);
-      this.worldGfx.fillCircle(x + NODE_W / 2, y + NODE_H / 2, NODE_W * 0.90);
+      this.worldGfx.fillCircle(x + NODE_W / 2, y + NODE_H / 2, NODE_W * 0.9);
     }
 
     // Progress nodes: faint field-colour inner glow
     if (effectiveStage === 'progress') {
       this.worldGfx.fillStyle(this.dominantFieldColor(def), 0.04);
-      this.worldGfx.fillCircle(x + NODE_W / 2, y + NODE_H / 2, NODE_W * 0.60);
+      this.worldGfx.fillCircle(x + NODE_W / 2, y + NODE_H / 2, NODE_W * 0.6);
     }
 
     // Node body
@@ -404,11 +402,21 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.strokeRoundedRect(x, y, NODE_W, NODE_H, CORNER_R);
 
     switch (effectiveStage) {
-      case 'signal-hidden': this.drawSignalHiddenContent(x, y); break;
-      case 'unknown':       this.drawUnknownContent(x, y);      break;
-      case 'rumour':        this.drawRumourContent(def, x, y);  break;
-      case 'progress':      this.drawProgressContent(def, tech, d, x, y); break;
-      case 'discovered':    this.drawDiscoveredContent(def, tech, d, x, y); break;
+      case 'signal-hidden':
+        this.drawSignalHiddenContent(x, y);
+        break;
+      case 'unknown':
+        this.drawUnknownContent(x, y);
+        break;
+      case 'rumour':
+        this.drawRumourContent(def, x, y);
+        break;
+      case 'progress':
+        this.drawProgressContent(def, tech, d, x, y);
+        break;
+      case 'discovered':
+        this.drawDiscoveredContent(def, tech, d, x, y);
+        break;
     }
   }
 
@@ -418,15 +426,15 @@ export class TechTreeScene extends Phaser.Scene {
   ): { fill: number; border: number; borderAlpha: number } {
     switch (stage) {
       case 'signal-hidden':
-        return { fill: C_NODE_SIGNAL,   border: C_BORDER_SIGNAL,  borderAlpha: 0.7 };
+        return { fill: C_NODE_SIGNAL, border: C_BORDER_SIGNAL, borderAlpha: 0.7 };
       case 'unknown':
-        return { fill: C_NODE_UNKNOWN,  border: C_BORDER_UNKNOWN, borderAlpha: 1 };
+        return { fill: C_NODE_UNKNOWN, border: C_BORDER_UNKNOWN, borderAlpha: 1 };
       case 'rumour':
-        return { fill: C_NODE_RUMOUR,   border: C_BORDER_RUMOUR,  borderAlpha: 1 };
+        return { fill: C_NODE_RUMOUR, border: C_BORDER_RUMOUR, borderAlpha: 1 };
       case 'progress':
         return { fill: C_NODE_PROGRESS, border: this.dominantFieldColor(def), borderAlpha: 0.9 };
       case 'discovered':
-        return { fill: C_NODE_DISC,     border: C_GOLD,           borderAlpha: 1 };
+        return { fill: C_NODE_DISC, border: C_GOLD, borderAlpha: 1 };
     }
   }
 
@@ -449,7 +457,9 @@ export class TechTreeScene extends Phaser.Scene {
     }
 
     this.addWorldText(x + NODE_W / 2, y + NODE_H - 13, 'ACCESS RESTRICTED', {
-      fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#1e3040',
+      fontFamily: 'monospace',
+      fontSize: FS_SECONDARY,
+      color: '#1e3040',
     }).setOrigin(0.5, 1);
   }
 
@@ -462,9 +472,9 @@ export class TechTreeScene extends Phaser.Scene {
     const cy = y + NODE_H / 2 - 10;
 
     const waves: { color: number; alpha: number; amp: number }[] = [
-      { color: C_WAVE_DIM,    alpha: 0.4, amp: 6  },
-      { color: C_WAVE_MID,    alpha: 0.7, amp: 10 },
-      { color: C_WAVE_BRIGHT, alpha: 1.0, amp: 7  },
+      { color: C_WAVE_DIM, alpha: 0.4, amp: 6 },
+      { color: C_WAVE_MID, alpha: 0.7, amp: 10 },
+      { color: C_WAVE_BRIGHT, alpha: 1.0, amp: 7 },
     ];
     for (const wave of waves) {
       this.drawSineWave(cx, cy, 56, 2.2, wave.amp, wave.color, wave.alpha);
@@ -477,11 +487,15 @@ export class TechTreeScene extends Phaser.Scene {
     }
 
     this.addWorldText(cx, cy + 22, 'SIGNAL SOURCE: UNRESOLVED', {
-      fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#243c52',
+      fontFamily: 'monospace',
+      fontSize: FS_SECONDARY,
+      color: '#243c52',
     }).setOrigin(0.5, 0);
 
     this.addWorldText(cx, y + NODE_H - 13, 'PENDING SIGNAL ANALYSIS', {
-      fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#1a3048',
+      fontFamily: 'monospace',
+      fontSize: FS_SECONDARY,
+      color: '#1a3048',
     }).setOrigin(0.5, 1);
   }
 
@@ -491,7 +505,9 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.fillCircle(x + NODE_W - 14, y + 16, 4);
 
     const nameText = this.addWorldText(x + NODE_PAD, y + NODE_PAD, def.name, {
-      fontFamily: 'monospace', fontSize: FS_NODE_NAME, color: '#7aaab8',
+      fontFamily: 'monospace',
+      fontSize: FS_NODE_NAME,
+      color: '#7aaab8',
       wordWrap: { width: NODE_W - NODE_PAD * 2 - 18 },
     }).setOrigin(0, 0);
 
@@ -500,22 +516,32 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.lineBetween(x + NODE_PAD, sepY, x + NODE_W - NODE_PAD, sepY);
 
     this.addWorldText(x + NODE_PAD, sepY + 5, def.rumourText, {
-      fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#4a6a7a',
+      fontFamily: 'monospace',
+      fontSize: FS_SECONDARY,
+      color: '#4a6a7a',
       fontStyle: 'italic',
       wordWrap: { width: NODE_W - NODE_PAD * 2 },
     }).setOrigin(0, 0);
 
     this.addWorldText(x + NODE_W / 2, y + NODE_H - 13, 'UNCONFIRMED', {
-      fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#2e5060',
+      fontFamily: 'monospace',
+      fontSize: FS_SECONDARY,
+      color: '#2e5060',
     }).setOrigin(0.5, 1);
   }
 
   /** Progress: visible name and live field bars. */
   private drawProgressContent(
-    def: TechDef, tech: TechState, d: TechTreeSceneData, x: number, y: number,
+    def: TechDef,
+    tech: TechState,
+    d: TechTreeSceneData,
+    x: number,
+    y: number,
   ): void {
     const nameText = this.addWorldText(x + NODE_PAD, y + NODE_PAD, def.name, {
-      fontFamily: 'monospace', fontSize: FS_NODE_NAME, color: '#a8c8d8',
+      fontFamily: 'monospace',
+      fontSize: FS_NODE_NAME,
+      color: '#a8c8d8',
       wordWrap: { width: NODE_W - NODE_PAD * 2 },
     }).setOrigin(0, 0);
 
@@ -529,20 +555,28 @@ export class TechTreeScene extends Phaser.Scene {
 
     if (def.requiresSimultaneous) {
       this.addWorldText(x + NODE_W / 2, barY + 3, '\u2295 ALL FIELDS SIMULTANEOUS', {
-        fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#4a7080',
+        fontFamily: 'monospace',
+        fontSize: FS_SECONDARY,
+        color: '#4a7080',
       }).setOrigin(0.5, 0);
     }
   }
 
   /** Discovered: gold-framed, full bars shown as achievement. */
   private drawDiscoveredContent(
-    def: TechDef, tech: TechState, d: TechTreeSceneData, x: number, y: number,
+    def: TechDef,
+    tech: TechState,
+    d: TechTreeSceneData,
+    x: number,
+    y: number,
   ): void {
     this.worldGfx.lineStyle(1, C_GOLD, 0.3);
     this.worldGfx.lineBetween(x + 4, y + 4, x + NODE_W - 4, y + 4);
 
     const nameText = this.addWorldText(x + NODE_PAD, y + NODE_PAD + 4, def.name, {
-      fontFamily: 'monospace', fontSize: FS_NODE_NAME, color: '#f0e4a0',
+      fontFamily: 'monospace',
+      fontSize: FS_NODE_NAME,
+      color: '#f0e4a0',
       wordWrap: { width: NODE_W - NODE_PAD * 2 },
     }).setOrigin(0, 0);
 
@@ -555,12 +589,14 @@ export class TechTreeScene extends Phaser.Scene {
     barY = this.drawFieldBars(recipe, d.fields, true, x, barY);
 
     const unlocks: string[] = [
-      ...def.unlocksCards.map(id => d.cardDefs.get(id)?.name ?? id),
-      ...def.unlocksFacilities.map(id => d.facilityDefs.get(id)?.name ?? id),
+      ...def.unlocksCards.map((id) => d.cardDefs.get(id)?.name ?? id),
+      ...def.unlocksFacilities.map((id) => d.facilityDefs.get(id)?.name ?? id),
     ];
     if (unlocks.length > 0) {
       this.addWorldText(x + NODE_PAD, barY + 4, '\u25b8 ' + unlocks.join(', '), {
-        fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#4a8858',
+        fontFamily: 'monospace',
+        fontSize: FS_SECONDARY,
+        color: '#4a8858',
         wordWrap: { width: NODE_W - NODE_PAD * 2 },
       }).setOrigin(0, 0);
     }
@@ -577,20 +613,21 @@ export class TechTreeScene extends Phaser.Scene {
     x: number,
     startY: number,
   ): number {
-    const barW   = NODE_W - NODE_PAD * 2 - LABEL_W;
+    const barW = NODE_W - NODE_PAD * 2 - LABEL_W;
     const labelX = x + NODE_PAD;
-    const barX   = x + NODE_PAD + LABEL_W;
+    const barX = x + NODE_PAD + LABEL_W;
     let y = startY;
 
     for (const [field, threshold] of Object.entries(recipe)) {
       if (!threshold) continue;
       const currentVal = (fields as Record<string, number>)[field] ?? 0;
-      const progress   = discovered ? 1 : Math.min(1, currentVal / threshold);
-      const barColor   = FIELD_COLOURS[field]     ?? C_FIELD_FALLBACK;
-      const cssColor   = FIELD_COLOURS_CSS[field] ?? '#4a6880';
+      const progress = discovered ? 1 : Math.min(1, currentVal / threshold);
+      const barColor = FIELD_COLOURS[field] ?? C_FIELD_FALLBACK;
+      const cssColor = FIELD_COLOURS_CSS[field] ?? '#4a6880';
 
       this.addWorldText(labelX, y, FIELD_ABBR[field] ?? field.slice(0, 3).toUpperCase(), {
-        fontFamily: 'monospace', fontSize: FS_FIELD_LABEL,
+        fontFamily: 'monospace',
+        fontSize: FS_FIELD_LABEL,
         color: discovered ? cssColor : '#4a7080',
       }).setOrigin(0, 0.5);
 
@@ -614,19 +651,23 @@ export class TechTreeScene extends Phaser.Scene {
   // -------------------------------------------------------------------------
 
   private drawSineWave(
-    cx: number, cy: number,
-    halfWidth: number, cycles: number, amplitude: number,
-    color: number, alpha: number,
+    cx: number,
+    cy: number,
+    halfWidth: number,
+    cycles: number,
+    amplitude: number,
+    color: number,
+    alpha: number,
   ): void {
     const segments = 36;
     this.worldGfx.lineStyle(1.5, color, alpha);
     this.worldGfx.beginPath();
     for (let i = 0; i <= segments; i++) {
-      const t  = i / segments;
-      const px = (cx - halfWidth) + t * halfWidth * 2;
+      const t = i / segments;
+      const px = cx - halfWidth + t * halfWidth * 2;
       const py = cy + Math.sin(t * Math.PI * 2 * cycles) * amplitude;
       if (i === 0) this.worldGfx.moveTo(px, py);
-      else         this.worldGfx.lineTo(px, py);
+      else this.worldGfx.lineTo(px, py);
     }
     this.worldGfx.strokePath();
   }
@@ -645,10 +686,10 @@ export class TechTreeScene extends Phaser.Scene {
     this.uiGfx.lineBetween(0, H - LEGEND_H, W, H - LEGEND_H);
 
     const items: { color: number; css: string; label: string }[] = [
-      { color: C_GOLD,           css: '#d4a820', label: 'Discovered'  },
-      { color: C_LEGEND_INPROG,  css: '#4a8090', label: 'In Progress' },
-      { color: C_BORDER_RUMOUR,  css: '#2a4460', label: 'Rumoured'    },
-      { color: C_BORDER_UNKNOWN, css: '#14222e', label: 'Unknown'     },
+      { color: C_GOLD, css: '#d4a820', label: 'Discovered' },
+      { color: C_LEGEND_INPROG, css: '#4a8090', label: 'In Progress' },
+      { color: C_BORDER_RUMOUR, css: '#2a4460', label: 'Rumoured' },
+      { color: C_BORDER_UNKNOWN, css: '#14222e', label: 'Unknown' },
     ];
 
     const spacing = W / (items.length + 1);
@@ -661,13 +702,17 @@ export class TechTreeScene extends Phaser.Scene {
       this.uiGfx.fillCircle(lx - 36, ly, 4);
 
       this.addUIText(lx - 26, ly, items[i].label, {
-        fontFamily: 'monospace', fontSize: FS_LEGEND, color: '#587888',
+        fontFamily: 'monospace',
+        fontSize: FS_LEGEND,
+        color: '#587888',
       }).setOrigin(0, 0.5);
     }
 
     // Subtle scroll hint on the right
     this.addUIText(W - 10, ly, 'DRAG · SCROLL TO ZOOM', {
-      fontFamily: 'monospace', fontSize: FS_SECONDARY, color: '#1e3040',
+      fontFamily: 'monospace',
+      fontSize: FS_SECONDARY,
+      color: '#1e3040',
     }).setOrigin(1, 0.5);
   }
 
@@ -677,16 +722,21 @@ export class TechTreeScene extends Phaser.Scene {
 
   private dominantFieldColor(def: TechDef): number {
     let maxVal = 0;
-    let color  = C_FIELD_FALLBACK;
+    let color = C_FIELD_FALLBACK;
     for (const [field, val] of Object.entries(def.baseRecipe)) {
-      if ((val ?? 0) > maxVal) { maxVal = val ?? 0; color = FIELD_COLOURS[field] ?? C_FIELD_FALLBACK; }
+      if ((val ?? 0) > maxVal) {
+        maxVal = val ?? 0;
+        color = FIELD_COLOURS[field] ?? C_FIELD_FALLBACK;
+      }
     }
     return color;
   }
 
   /** Add a world-space text object that scrolls with the camera. */
   private addWorldText(
-    x: number, y: number, text: string,
+    x: number,
+    y: number,
+    text: string,
     style: Phaser.Types.GameObjects.Text.TextStyle,
   ): Phaser.GameObjects.Text {
     const t = this.add.text(x, y, text, style);
@@ -696,7 +746,9 @@ export class TechTreeScene extends Phaser.Scene {
 
   /** Add a screen-fixed text object (scroll factor 0). */
   private addUIText(
-    x: number, y: number, text: string,
+    x: number,
+    y: number,
+    text: string,
     style: Phaser.Types.GameObjects.Text.TextStyle,
   ): Phaser.GameObjects.Text {
     const t = this.add.text(x, y, text, style);
@@ -707,8 +759,8 @@ export class TechTreeScene extends Phaser.Scene {
 
   private clearAllTexts(): void {
     for (const t of this.worldTextObjs) t.destroy();
-    for (const t of this.uiTextObjs)    t.destroy();
+    for (const t of this.uiTextObjs) t.destroy();
     this.worldTextObjs = [];
-    this.uiTextObjs    = [];
+    this.uiTextObjs = [];
   }
 }

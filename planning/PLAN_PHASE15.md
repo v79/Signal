@@ -156,34 +156,34 @@ All planned sections implemented. Phase 15 is done.
 
 ## 8. Test Count
 
-| Milestone | Tests |
-|-----------|-------|
-| Phase 14 complete | 264 |
-| Phase 15 sections 1–4 | 307 |
-| Phase 15 complete | **319** |
+| Milestone             | Tests   |
+| --------------------- | ------- |
+| Phase 14 complete     | 264     |
+| Phase 15 sections 1–4 | 307     |
+| Phase 15 complete     | **319** |
 
 ---
 
 ## 9. Files Changed / Created
 
-| File | Status | Notes |
-|------|--------|-------|
-| `src/engine/types.ts` | ✅ Done | `pendingActionId` on `MapTile`; `buildTime`/`deleteTime`/`canDelete` on `FacilityDef`; `OngoingAction`; `constructionQueue` on `PlayerState` |
-| `src/engine/facilities.ts` | ✅ Done | `computeHqBonus`, `getTileSummary`, `tickConstructionQueue` |
-| `src/engine/turn.ts` | ✅ Done | HQ bonus + queue tick wired into World Phase |
-| `src/engine/state.ts` | ✅ Done | `constructionQueue: []` initialised |
-| `src/data/facilities.ts` | ✅ Done | HQ def; `buildTime`/`deleteTime`/`canDelete` on all defs |
-| `src/data/blocMaps.ts` | ✅ Done | **New** — 7 bloc tile layouts |
-| `src/lib/stores/game.svelte.ts` | ✅ Done | `generateEarthTilesForBloc`, HQ placement, `demolishFacility`, `hoveredTileKey`, queue paths |
-| `src/phaser/EarthScene.ts` | ✅ Done | `onTileHover`, `getQueue` callbacks; HQ gold visual; facility colour palette; construction/demolition overlays |
-| `src/lib/components/FacilityPicker.svelte` | ✅ Done | Occupied panel with demolish; build time display; HQ excluded; pending panel |
-| `src/lib/components/TileTooltip.svelte` | ✅ Done | **New** — hover tooltip |
-| `src/lib/components/OngoingActionsPanel.svelte` | ✅ Done | **New** — construction queue UI |
-| `src/lib/components/MapContainer.svelte` | ✅ Done | Tooltip + `getQueue` callback mount, hover/mouse tracking, `onDemolish` wiring |
-| `src/routes/+page.svelte` | ✅ Done | `OngoingActionsPanel` mounted in `.left-actions` wrapper |
-| `src/engine/blocMaps.test.ts` | ✅ Done | **New** — 29 layout validity tests |
-| `src/engine/hq.test.ts` | ✅ Done | **New** — 14 HQ tests |
-| `src/engine/constructionQueue.test.ts` | ✅ Done | **New** — 12 construction queue tests |
+| File                                            | Status  | Notes                                                                                                                                        |
+| ----------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/engine/types.ts`                           | ✅ Done | `pendingActionId` on `MapTile`; `buildTime`/`deleteTime`/`canDelete` on `FacilityDef`; `OngoingAction`; `constructionQueue` on `PlayerState` |
+| `src/engine/facilities.ts`                      | ✅ Done | `computeHqBonus`, `getTileSummary`, `tickConstructionQueue`                                                                                  |
+| `src/engine/turn.ts`                            | ✅ Done | HQ bonus + queue tick wired into World Phase                                                                                                 |
+| `src/engine/state.ts`                           | ✅ Done | `constructionQueue: []` initialised                                                                                                          |
+| `src/data/facilities.ts`                        | ✅ Done | HQ def; `buildTime`/`deleteTime`/`canDelete` on all defs                                                                                     |
+| `src/data/blocMaps.ts`                          | ✅ Done | **New** — 7 bloc tile layouts                                                                                                                |
+| `src/lib/stores/game.svelte.ts`                 | ✅ Done | `generateEarthTilesForBloc`, HQ placement, `demolishFacility`, `hoveredTileKey`, queue paths                                                 |
+| `src/phaser/EarthScene.ts`                      | ✅ Done | `onTileHover`, `getQueue` callbacks; HQ gold visual; facility colour palette; construction/demolition overlays                               |
+| `src/lib/components/FacilityPicker.svelte`      | ✅ Done | Occupied panel with demolish; build time display; HQ excluded; pending panel                                                                 |
+| `src/lib/components/TileTooltip.svelte`         | ✅ Done | **New** — hover tooltip                                                                                                                      |
+| `src/lib/components/OngoingActionsPanel.svelte` | ✅ Done | **New** — construction queue UI                                                                                                              |
+| `src/lib/components/MapContainer.svelte`        | ✅ Done | Tooltip + `getQueue` callback mount, hover/mouse tracking, `onDemolish` wiring                                                               |
+| `src/routes/+page.svelte`                       | ✅ Done | `OngoingActionsPanel` mounted in `.left-actions` wrapper                                                                                     |
+| `src/engine/blocMaps.test.ts`                   | ✅ Done | **New** — 29 layout validity tests                                                                                                           |
+| `src/engine/hq.test.ts`                         | ✅ Done | **New** — 14 HQ tests                                                                                                                        |
+| `src/engine/constructionQueue.test.ts`          | ✅ Done | **New** — 12 construction queue tests                                                                                                        |
 
 ---
 

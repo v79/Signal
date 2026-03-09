@@ -1,9 +1,16 @@
 <script lang="ts">
   import type {
-    FieldPoints, NewsItem, SignalState, SignalResponseOption,
-    TechState, TechDef, CardDef, FacilityDef,
+    FieldPoints,
+    NewsItem,
+    SignalState,
+    SignalResponseOption,
+    TechState,
+    TechDef,
+    CardDef,
+    FacilityDef,
   } from '../../engine/types';
   import TechTreeModal from './TechTreeModal.svelte';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     fields,
@@ -38,12 +45,12 @@
   }
 
   const FIELD_META: FieldMeta[] = [
-    { key: 'physics',       label: 'Physics',       color: '#6ab0d8' },
-    { key: 'mathematics',   label: 'Mathematics',   color: '#a07ad8' },
-    { key: 'engineering',   label: 'Engineering',   color: '#c8a040' },
-    { key: 'biochemistry',  label: 'Biochemistry',  color: '#4ab88a' },
-    { key: 'computing',     label: 'Computing',     color: '#d86a6a' },
-    { key: 'socialScience', label: 'Social Sci.',   color: '#d8a86a' },
+    { key: 'physics', label: 'Physics', color: '#6ab0d8' },
+    { key: 'mathematics', label: 'Mathematics', color: '#a07ad8' },
+    { key: 'engineering', label: 'Engineering', color: '#c8a040' },
+    { key: 'biochemistry', label: 'Biochemistry', color: '#4ab88a' },
+    { key: 'computing', label: 'Computing', color: '#d86a6a' },
+    { key: 'socialScience', label: 'Social Sci.', color: '#d8a86a' },
   ];
 
   // Scale field bars: 200 pts = full bar for visual purposes
@@ -57,14 +64,14 @@
 
   function signalLabel(s: SignalState): string {
     if (s.decodeProgress >= 100) return 'DECODED';
-    if (s.eraStrength === 'urgent')     return 'URGENT';
+    if (s.eraStrength === 'urgent') return 'URGENT';
     if (s.eraStrength === 'structured') return 'STRUCTURED';
     return 'FAINT';
   }
 
   function signalColor(s: SignalState): string {
     if (s.decodeProgress >= 100) return '#4a9b7a';
-    if (s.eraStrength === 'urgent')     return '#c84a4a';
+    if (s.eraStrength === 'urgent') return '#c84a4a';
     if (s.eraStrength === 'structured') return '#c8a040';
     return '#4a6878';
   }
@@ -78,14 +85,21 @@
     {signal}
     {cardDefs}
     {facilityDefs}
-    onClose={() => { showTechTree = false; }}
+    onClose={() => {
+      showTechTree = false;
+    }}
   />
 {/if}
 
 <aside class="research-feed">
   <div class="panel-title-row">
     <span class="panel-title">RESEARCH FIELDS</span>
-    <button class="tree-btn" onclick={() => { showTechTree = true; }}>TECH TREE</button>
+    <button
+      class="tree-btn"
+      onclick={() => {
+        showTechTree = true;
+      }}>TECH TREE</button
+    >
   </div>
 
   <div class="fields-list">
@@ -108,21 +122,30 @@
 
   <div class="panel-title">SIGNAL TRACK</div>
   <div class="signal-row">
-    <span class="signal-label" style="color: {signalColor(signal)}">{signalLabel(signal)}</span>
+    <Tooltip
+      text="Progress decoding the alien signal. Unlocks new techs and events as it advances."
+      direction="below"
+    >
+      <span class="signal-label" style="color: {signalColor(signal)}">{signalLabel(signal)}</span>
+    </Tooltip>
     <div class="signal-track">
       <div
         class="signal-fill"
         style="width: {signal.decodeProgress}%; background: {signalColor(signal)}"
       ></div>
     </div>
-    <span class="signal-pct" style="color: {signalColor(signal)}">{signal.decodeProgress.toFixed(0)}%</span>
+    <span class="signal-pct" style="color: {signalColor(signal)}"
+      >{signal.decodeProgress.toFixed(0)}%</span
+    >
   </div>
 
   {#if isClimax && wormholeOptions.length > 0}
     <div class="section-divider"></div>
     <div class="climax-section">
       <div class="climax-title">⬡ WORMHOLE RESPONSE REQUIRED</div>
-      <p class="climax-intro">The signal is fully decoded. Select a response. This decision cannot be undone.</p>
+      <p class="climax-intro">
+        The signal is fully decoded. Select a response. This decision cannot be undone.
+      </p>
       {#each wormholeOptions as opt}
         <button
           class="response-option"
@@ -133,7 +156,9 @@
         >
           <span class="opt-label">{opt.label}</span>
           {#if opt.confidenceHint}
-            <span class="opt-hint hint-{opt.confidenceHint}">{opt.confidenceHint.toUpperCase()}</span>
+            <span class="opt-hint hint-{opt.confidenceHint}"
+              >{opt.confidenceHint.toUpperCase()}</span
+            >
           {/if}
         </button>
       {/each}
@@ -142,7 +167,11 @@
 
   {#if signal.responseCommitted}
     <div class="section-divider"></div>
-    <div class="response-result" class:success={signal.wormholeActivated} class:failure={!signal.wormholeActivated}>
+    <div
+      class="response-result"
+      class:success={signal.wormholeActivated}
+      class:failure={!signal.wormholeActivated}
+    >
       {signal.wormholeActivated ? '⬡ WORMHOLE ACTIVATED' : '⬡ RESPONSE INCORRECT'}
     </div>
   {/if}
@@ -201,7 +230,9 @@
     border-radius: 2px;
     padding: 0.1rem 0.4rem;
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
     flex-shrink: 0;
   }
 
@@ -363,7 +394,9 @@
     cursor: pointer;
     font-family: inherit;
     text-align: left;
-    transition: background 0.15s, border-color 0.15s;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
     gap: 0.5rem;
   }
 
@@ -387,9 +420,18 @@
     flex-shrink: 0;
   }
 
-  .hint-high   { color: #4ad480; background: #0a2818; }
-  .hint-medium { color: #d4a840; background: #1e1408; }
-  .hint-low    { color: #d46a4a; background: #1e0e08; }
+  .hint-high {
+    color: #4ad480;
+    background: #0a2818;
+  }
+  .hint-medium {
+    color: #d4a840;
+    background: #1e1408;
+  }
+  .hint-low {
+    color: #d46a4a;
+    background: #1e0e08;
+  }
 
   .response-result {
     font-size: 0.65rem;

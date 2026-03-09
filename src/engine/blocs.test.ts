@@ -35,7 +35,7 @@ const authoritarianDef: BlocDef = {
 
 const defs = new Map([
   ['northAmerica', democraticDef],
-  ['eastAsia',     authoritarianDef],
+  ['eastAsia', authoritarianDef],
 ]);
 
 function makeBloc(defId: string, will: number, funding = 50, materials = 40): BlocState {
@@ -85,7 +85,7 @@ describe('simulateBlocs — normal tick', () => {
   it('increases funding and materials by passive income', () => {
     const bloc = makeBloc('northAmerica', 60, 50, 40);
     const { updatedBlocs } = simulateBlocs([bloc], defs, 1);
-    expect(updatedBlocs[0].resources.funding).toBe(55);   // +5
+    expect(updatedBlocs[0].resources.funding).toBe(55); // +5
     expect(updatedBlocs[0].resources.materials).toBe(43); // +3
   });
 
@@ -161,7 +161,7 @@ describe('simulateBlocs — elimination', () => {
 describe('checkBlocMergers', () => {
   it('returns a news item when two weak blocs exist', () => {
     const a = makeBloc('northAmerica', 20, 10);
-    const b = makeBloc('eastAsia',     25, 15);
+    const b = makeBloc('eastAsia', 25, 15);
     const items = checkBlocMergers([a, b], defs, 7);
     expect(items).toHaveLength(1);
     expect(items[0].text).toContain('North American Alliance');
@@ -170,13 +170,13 @@ describe('checkBlocMergers', () => {
 
   it('returns empty when fewer than two blocs are weak', () => {
     const strong = makeBloc('northAmerica', 70, 80);
-    const weak   = makeBloc('eastAsia', 20, 10);
+    const weak = makeBloc('eastAsia', 20, 10);
     expect(checkBlocMergers([strong, weak], defs, 7)).toHaveLength(0);
   });
 
   it('ignores eliminated blocs', () => {
     const elim = { ...makeBloc('northAmerica', 20, 10), eliminated: true };
-    const weak  = makeBloc('eastAsia', 20, 10);
+    const weak = makeBloc('eastAsia', 20, 10);
     expect(checkBlocMergers([elim, weak], defs, 7)).toHaveLength(0);
   });
 });

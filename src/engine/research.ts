@@ -1,4 +1,11 @@
-import type { TechDef, TechState, TechRecipe, TechDiscoveryStage, FieldPoints, SignalEraStrength } from './types';
+import type {
+  TechDef,
+  TechState,
+  TechRecipe,
+  TechDiscoveryStage,
+  FieldPoints,
+  SignalEraStrength,
+} from './types';
 import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
@@ -63,7 +70,7 @@ export function generateTechRecipes(techDefs: TechDef[], rng: Rng): Map<string, 
  */
 export function initialiseTechs(techDefs: TechDef[], rng: Rng): TechState[] {
   const recipes = generateTechRecipes(techDefs, rng);
-  return techDefs.map(def => ({
+  return techDefs.map((def) => ({
     defId: def.id,
     stage: 'unknown' as TechDiscoveryStage,
     recipe: recipes.get(def.id) ?? null,
@@ -140,7 +147,7 @@ export function checkResearchProgress(
   const newRumours: string[] = [];
   const newProgressTechs: string[] = [];
 
-  const updatedTechs = techs.map(tech => {
+  const updatedTechs = techs.map((tech) => {
     if (tech.stage === 'discovered') return tech;
     if (!tech.recipe) return tech;
 

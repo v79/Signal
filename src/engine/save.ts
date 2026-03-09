@@ -59,9 +59,7 @@ export function deserialiseSave(json: string): GameState {
 // Validation
 // ---------------------------------------------------------------------------
 
-export type ValidationResult =
-  | { valid: true; state: GameState }
-  | { valid: false; error: string };
+export type ValidationResult = { valid: true; state: GameState } | { valid: false; error: string };
 
 export function validateSave(raw: unknown): ValidationResult {
   if (raw === null || typeof raw !== 'object') {
@@ -115,7 +113,14 @@ export function validateSave(raw: unknown): ValidationResult {
   if (!fields || typeof fields !== 'object') {
     return { valid: false, error: 'Missing player.fields' };
   }
-  for (const k of ['physics', 'mathematics', 'engineering', 'biochemistry', 'computing', 'socialScience']) {
+  for (const k of [
+    'physics',
+    'mathematics',
+    'engineering',
+    'biochemistry',
+    'computing',
+    'socialScience',
+  ]) {
     if (typeof fields[k] !== 'number') {
       return { valid: false, error: `Missing player.fields.${k}` };
     }

@@ -10,7 +10,7 @@
   const tickerText = $derived(
     recent.length === 0
       ? 'SIGNAL INTELLIGENCE NETWORK — NO DISPATCHES'
-      : recent.map(i => `T${i.turn}: ${i.text}`).join('   ·   '),
+      : recent.map((i) => `T${i.turn}: ${i.text}`).join('   ·   '),
   );
 </script>
 
@@ -68,7 +68,11 @@
   }
 
   @keyframes ticker-scroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
   }
 </style>

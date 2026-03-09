@@ -56,7 +56,14 @@ describe('createRng', () => {
 
   it('pick() always returns an element from the array', () => {
     const rng = createRng('pick-test');
-    const arr = ['physics', 'mathematics', 'engineering', 'biochemistry', 'computing', 'socialScience'] as const;
+    const arr = [
+      'physics',
+      'mathematics',
+      'engineering',
+      'biochemistry',
+      'computing',
+      'socialScience',
+    ] as const;
     for (let i = 0; i < 200; i++) {
       expect(arr).toContain(rng.pick(arr));
     }

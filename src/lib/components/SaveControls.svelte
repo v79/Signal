@@ -18,7 +18,9 @@
   function showError(msg: string): void {
     if (errorTimer) clearTimeout(errorTimer);
     importError = msg;
-    errorTimer = setTimeout(() => { importError = null; }, 5000);
+    errorTimer = setTimeout(() => {
+      importError = null;
+    }, 5000);
   }
 
   function dismissError(): void {
@@ -27,10 +29,17 @@
   }
 
   function copySeed(): void {
-    navigator.clipboard.writeText(seed).then(() => {
-      copied = true;
-      setTimeout(() => { copied = false; }, 1500);
-    }).catch(() => {/* ignore */});
+    navigator.clipboard
+      .writeText(seed)
+      .then(() => {
+        copied = true;
+        setTimeout(() => {
+          copied = false;
+        }, 1500);
+      })
+      .catch(() => {
+        /* ignore */
+      });
   }
 
   async function handleFileChange(event: Event): Promise<void> {
@@ -42,7 +51,12 @@
     try {
       await onImport(file);
     } catch (err: unknown) {
-      const msg = typeof err === 'string' ? err : (err instanceof Error ? err.message : 'Unknown error loading save file.');
+      const msg =
+        typeof err === 'string'
+          ? err
+          : err instanceof Error
+            ? err.message
+            : 'Unknown error loading save file.';
       showError(msg);
     }
   }
@@ -130,7 +144,9 @@
     letter-spacing: 0.1em;
     padding: 0.15rem 0.45rem;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
     display: inline-flex;
     align-items: center;
   }

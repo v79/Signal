@@ -13,23 +13,24 @@
     cards: CardInstance[];
     cardDefs: Map<string, CardDef>;
     phase: string;
-    onPlay:   (cardId: string) => void;
-    onBank:   (cardId: string) => void;
+    onPlay: (cardId: string) => void;
+    onBank: (cardId: string) => void;
     onUnbank: (cardId: string) => void;
   } = $props();
 
-  const handCards   = $derived(cards.filter(c => c.zone === 'hand'));
-  const bankedCards = $derived(cards.filter(c => c.zone === 'bank'));
-  const bankFull    = $derived(bankedCards.length >= BANK_LIMIT);
-  const inAction    = $derived(phase === 'action');
+  const handCards = $derived(cards.filter((c) => c.zone === 'hand'));
+  const bankedCards = $derived(cards.filter((c) => c.zone === 'bank'));
+  const bankFull = $derived(bankedCards.length >= BANK_LIMIT);
+  const inAction = $derived(phase === 'action');
 
   function formatEffect(def: CardDef): string[] {
     const lines: string[] = [];
     if (def.effect.resources) {
       const r = def.effect.resources;
-      if (r.funding       != null) lines.push(`${r.funding > 0 ? '+' : ''}${r.funding} Funding`);
-      if (r.materials     != null) lines.push(`${r.materials > 0 ? '+' : ''}${r.materials} Materials`);
-      if (r.politicalWill != null) lines.push(`${r.politicalWill > 0 ? '+' : ''}${r.politicalWill} Will`);
+      if (r.funding != null) lines.push(`${r.funding > 0 ? '+' : ''}${r.funding} Funding`);
+      if (r.materials != null) lines.push(`${r.materials > 0 ? '+' : ''}${r.materials} Materials`);
+      if (r.politicalWill != null)
+        lines.push(`${r.politicalWill > 0 ? '+' : ''}${r.politicalWill} Will`);
     }
     if (def.effect.fields) {
       const f = def.effect.fields;
@@ -45,8 +46,12 @@
 
   function fieldLabel(k: keyof FieldPoints): string {
     const labels: Record<keyof FieldPoints, string> = {
-      physics: 'PHY', mathematics: 'MATH', engineering: 'ENG',
-      biochemistry: 'BIO', computing: 'COMP', socialScience: 'SOC',
+      physics: 'PHY',
+      mathematics: 'MATH',
+      engineering: 'ENG',
+      biochemistry: 'BIO',
+      computing: 'COMP',
+      socialScience: 'SOC',
     };
     return labels[k];
   }
@@ -71,7 +76,9 @@
               <div class="card-header">
                 <span class="card-name">{def.name}</span>
                 {#if def.counterEffect}
-                  <span class="counter-tag" title="Counters: {def.counterEffect.countersEventTag}">⚡</span>
+                  <span class="counter-tag" title="Counters: {def.counterEffect.countersEventTag}"
+                    >⚡</span
+                  >
                 {/if}
               </div>
               <div class="card-effects">
@@ -113,7 +120,9 @@
             <div class="card-header">
               <span class="card-name">{def.name}</span>
               {#if def.counterEffect}
-                <span class="counter-tag" title="Counters: {def.counterEffect.countersEventTag}">⚡</span>
+                <span class="counter-tag" title="Counters: {def.counterEffect.countersEventTag}"
+                  >⚡</span
+                >
               {/if}
             </div>
             <div class="card-effects">
@@ -175,8 +184,12 @@
     margin-bottom: 0.3rem;
   }
 
-  .bank-section { flex-shrink: 0; }
-  .hand-section  { flex-shrink: 0; }
+  .bank-section {
+    flex-shrink: 0;
+  }
+  .hand-section {
+    flex-shrink: 0;
+  }
 
   .card-row {
     display: flex;
@@ -195,8 +208,14 @@
     font-size: 0.7rem;
   }
 
-  .card.hand   { border-color: #2a4060; background: #0d1a28; }
-  .card.banked { border-color: #4a3a10; background: #181008; }
+  .card.hand {
+    border-color: #2a4060;
+    background: #0d1a28;
+  }
+  .card.banked {
+    border-color: #4a3a10;
+    background: #181008;
+  }
 
   .card-header {
     display: flex;
@@ -275,20 +294,26 @@
     color: #4a9b7a;
     border-color: #2a6050;
   }
-  .btn-play:not(.disabled):hover { background: #0a2018; }
+  .btn-play:not(.disabled):hover {
+    background: #0a2018;
+  }
 
   .btn-bank {
     color: #c8a040;
     border-color: #7a5a1a;
   }
-  .btn-bank:not(.disabled):hover { background: #2a1a05; }
+  .btn-bank:not(.disabled):hover {
+    background: #2a1a05;
+  }
 
   .btn-unbank {
     color: #8a6878;
     border-color: #4a3848;
     width: 100%;
   }
-  .btn-unbank:hover { background: #1a1018; }
+  .btn-unbank:hover {
+    background: #1a1018;
+  }
 
   .empty-hand {
     color: #2a3848;

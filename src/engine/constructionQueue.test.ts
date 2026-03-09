@@ -52,7 +52,7 @@ function makeFacility(overrides: Partial<FacilityInstance> = {}): FacilityInstan
 describe('tickConstructionQueue — construct', () => {
   it('decrements turnsRemaining each call', () => {
     const action = makeAction({ turnsRemaining: 3, totalTurns: 3 });
-    const tile   = makeTile(1, 0, { pendingActionId: 'action-1' });
+    const tile = makeTile(1, 0, { pendingActionId: 'action-1' });
     const result = tickConstructionQueue([action], [], [tile], 5);
     expect(result.updatedQueue).toHaveLength(1);
     expect(result.updatedQueue[0].turnsRemaining).toBe(2);
@@ -61,7 +61,7 @@ describe('tickConstructionQueue — construct', () => {
 
   it('completes when turnsRemaining reaches 0', () => {
     const action = makeAction({ turnsRemaining: 1, totalTurns: 2 });
-    const tile   = makeTile(1, 0, { pendingActionId: 'action-1' });
+    const tile = makeTile(1, 0, { pendingActionId: 'action-1' });
     const result = tickConstructionQueue([action], [], [tile], 10);
     expect(result.updatedQueue).toHaveLength(0);
     expect(result.completedActions).toHaveLength(1);
@@ -72,24 +72,24 @@ describe('tickConstructionQueue — construct', () => {
 
   it('sets tile.facilityId on completion', () => {
     const action = makeAction({ turnsRemaining: 1, totalTurns: 2 });
-    const tile   = makeTile(1, 0, { pendingActionId: 'action-1' });
+    const tile = makeTile(1, 0, { pendingActionId: 'action-1' });
     const result = tickConstructionQueue([action], [], [tile], 10);
-    const updatedTile = result.updatedTiles.find(t => t.coord.q === 1 && t.coord.r === 0);
+    const updatedTile = result.updatedTiles.find((t) => t.coord.q === 1 && t.coord.r === 0);
     expect(updatedTile?.facilityId).toBeTruthy();
     expect(updatedTile?.facilityId).toContain('researchLab');
   });
 
   it('clears tile.pendingActionId on completion', () => {
     const action = makeAction({ turnsRemaining: 1, totalTurns: 2 });
-    const tile   = makeTile(1, 0, { pendingActionId: 'action-1' });
+    const tile = makeTile(1, 0, { pendingActionId: 'action-1' });
     const result = tickConstructionQueue([action], [], [tile], 10);
-    const updatedTile = result.updatedTiles.find(t => t.coord.q === 1 && t.coord.r === 0);
+    const updatedTile = result.updatedTiles.find((t) => t.coord.q === 1 && t.coord.r === 0);
     expect(updatedTile?.pendingActionId).toBeNull();
   });
 
   it('does not mutate input arrays', () => {
     const action = makeAction({ turnsRemaining: 2, totalTurns: 2 });
-    const tile   = makeTile(1, 0, { pendingActionId: 'action-1' });
+    const tile = makeTile(1, 0, { pendingActionId: 'action-1' });
     const origQueue = [action];
     const origTiles = [tile];
     tickConstructionQueue(origQueue, [], origTiles, 5);
@@ -118,40 +118,45 @@ describe('tickConstructionQueue — construct', () => {
 
 describe('tickConstructionQueue — demolish', () => {
   it('decrements turnsRemaining while in progress', () => {
-    const action   = makeAction({ type: 'demolish', turnsRemaining: 2, totalTurns: 2 });
+    const action = makeAction({ type: 'demolish', turnsRemaining: 2, totalTurns: 2 });
     const facility = makeFacility();
-    const tile     = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
-    const result   = tickConstructionQueue([action], [facility], [tile], 5);
+    const tile = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
+    const result = tickConstructionQueue([action], [facility], [tile], 5);
     expect(result.updatedQueue).toHaveLength(1);
     expect(result.updatedFacilities).toHaveLength(1); // not removed yet
   });
 
   it('removes facility on completion', () => {
-    const action   = makeAction({ type: 'demolish', turnsRemaining: 1, totalTurns: 1 });
+    const action = makeAction({ type: 'demolish', turnsRemaining: 1, totalTurns: 1 });
     const facility = makeFacility();
-    const tile     = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
-    const result   = tickConstructionQueue([action], [facility], [tile], 5);
+    const tile = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
+    const result = tickConstructionQueue([action], [facility], [tile], 5);
     expect(result.updatedQueue).toHaveLength(0);
     expect(result.updatedFacilities).toHaveLength(0);
   });
 
   it('clears tile.facilityId and pendingActionId on demolish completion', () => {
-    const action   = makeAction({ type: 'demolish', turnsRemaining: 1, totalTurns: 1 });
+    const action = makeAction({ type: 'demolish', turnsRemaining: 1, totalTurns: 1 });
     const facility = makeFacility();
-    const tile     = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
-    const result   = tickConstructionQueue([action], [facility], [tile], 5);
-    const updatedTile = result.updatedTiles.find(t => t.coord.q === 1);
+    const tile = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
+    const result = tickConstructionQueue([action], [facility], [tile], 5);
+    const updatedTile = result.updatedTiles.find((t) => t.coord.q === 1);
     expect(updatedTile?.facilityId).toBeNull();
     expect(updatedTile?.pendingActionId).toBeNull();
   });
 
   it('only removes the facility at the matching coordKey', () => {
-    const action   = makeAction({ type: 'demolish', turnsRemaining: 1, totalTurns: 1, coordKey: '1,0' });
-    const f1       = makeFacility({ id: 'f1', locationKey: '1,0' });
-    const f2       = makeFacility({ id: 'f2', locationKey: '2,0' });
-    const t1       = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
-    const t2       = makeTile(2, 0, { facilityId: 'f2' });
-    const result   = tickConstructionQueue([action], [f1, f2], [t1, t2], 5);
+    const action = makeAction({
+      type: 'demolish',
+      turnsRemaining: 1,
+      totalTurns: 1,
+      coordKey: '1,0',
+    });
+    const f1 = makeFacility({ id: 'f1', locationKey: '1,0' });
+    const f2 = makeFacility({ id: 'f2', locationKey: '2,0' });
+    const t1 = makeTile(1, 0, { facilityId: 'f1', pendingActionId: 'action-1' });
+    const t2 = makeTile(2, 0, { facilityId: 'f2' });
+    const result = tickConstructionQueue([action], [f1, f2], [t1, t2], 5);
     expect(result.updatedFacilities).toHaveLength(1);
     expect(result.updatedFacilities[0].id).toBe('f2');
   });
@@ -163,7 +168,7 @@ describe('tickConstructionQueue — demolish', () => {
 
 describe('tickConstructionQueue — edge cases', () => {
   it('returns unchanged arrays when queue is empty', () => {
-    const tile   = makeTile(0, 0);
+    const tile = makeTile(0, 0);
     const result = tickConstructionQueue([], [], [tile], 1);
     expect(result.updatedQueue).toHaveLength(0);
     expect(result.updatedFacilities).toHaveLength(0);
@@ -173,7 +178,7 @@ describe('tickConstructionQueue — edge cases', () => {
 
   it('includes completedTurn in the built facility id', () => {
     const action = makeAction({ turnsRemaining: 1, totalTurns: 2 });
-    const tile   = makeTile(1, 0, { pendingActionId: 'action-1' });
+    const tile = makeTile(1, 0, { pendingActionId: 'action-1' });
     const result = tickConstructionQueue([action], [], [tile], 42);
     expect(result.updatedFacilities[0].id).toContain('t42');
     expect(result.updatedFacilities[0].builtTurn).toBe(42);

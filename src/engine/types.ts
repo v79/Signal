@@ -97,11 +97,7 @@ export interface MapTile {
 // Near Space map (Era 2)
 // ---------------------------------------------------------------------------
 
-export type SpaceNodeType =
-  | 'lowEarthOrbit'
-  | 'lagrangePoint'
-  | 'lunarOrbit'
-  | 'lunarSurface';
+export type SpaceNodeType = 'lowEarthOrbit' | 'lagrangePoint' | 'lunarOrbit' | 'lunarSurface';
 
 export interface SpaceNode {
   id: string;
@@ -117,12 +113,7 @@ export interface SpaceNode {
 // Node-graph, not a tile grid.
 // ---------------------------------------------------------------------------
 
-export type BeltNodeType =
-  | 'asteroid'
-  | 'jovianMoon'
-  | 'transitPoint'
-  | 'heliopause'
-  | 'wormhole';
+export type BeltNodeType = 'asteroid' | 'jovianMoon' | 'transitPoint' | 'heliopause' | 'wormhole';
 
 export interface BeltNode {
   id: string;

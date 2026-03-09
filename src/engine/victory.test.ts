@@ -116,7 +116,13 @@ describe('checkTerraformingVictory', () => {
       map: {
         ...makeState().map,
         spaceNodes: [
-          { id: 'lunarSurface', type: 'lunarSurface', label: 'Lunar Surface', launchCost: 45, facilityId: null },
+          {
+            id: 'lunarSurface',
+            type: 'lunarSurface',
+            label: 'Lunar Surface',
+            launchCost: 45,
+            facilityId: null,
+          },
         ],
       },
     });
@@ -129,7 +135,13 @@ describe('checkTerraformingVictory', () => {
       map: {
         ...makeState().map,
         spaceNodes: [
-          { id: 'lunarSurface', type: 'lunarSurface', label: 'Lunar Surface', launchCost: 45, facilityId: 'outpost-1' },
+          {
+            id: 'lunarSurface',
+            type: 'lunarSurface',
+            label: 'Lunar Surface',
+            launchCost: 45,
+            facilityId: 'outpost-1',
+          },
         ],
       },
     });
@@ -142,7 +154,13 @@ describe('checkTerraformingVictory', () => {
       map: {
         ...makeState().map,
         spaceNodes: [
-          { id: 'lunarSurface', type: 'lunarSurface', label: 'Lunar Surface', launchCost: 45, facilityId: 'outpost-1' },
+          {
+            id: 'lunarSurface',
+            type: 'lunarSurface',
+            label: 'Lunar Surface',
+            launchCost: 45,
+            facilityId: 'outpost-1',
+          },
         ],
       },
     });
@@ -274,7 +292,7 @@ describe('tickEarthWelfare', () => {
 
   it('is clamped to [0, 100]', () => {
     const lo = makeState({ climatePressure: 100, earthWelfareScore: 0 });
-    const hi = makeState({ climatePressure: 0,   earthWelfareScore: 100 });
+    const hi = makeState({ climatePressure: 0, earthWelfareScore: 100 });
     expect(tickEarthWelfare(lo)).toBe(0);
     expect(tickEarthWelfare(hi)).toBe(100);
   });
@@ -293,8 +311,22 @@ describe('tickEarthWelfare', () => {
       map: {
         ...base.map,
         earthTiles: [
-          { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: 'f1', pendingActionId: null },
-          { coord: { q: 1, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: 'f2', pendingActionId: null },
+          {
+            coord: { q: 0, r: 0 },
+            type: 'urban' as const,
+            destroyedStatus: null,
+            productivity: 1,
+            facilityId: 'f1',
+            pendingActionId: null,
+          },
+          {
+            coord: { q: 1, r: 0 },
+            type: 'urban' as const,
+            destroyedStatus: null,
+            productivity: 1,
+            facilityId: 'f2',
+            pendingActionId: null,
+          },
         ],
       },
     };

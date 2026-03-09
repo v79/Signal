@@ -12,19 +12,19 @@ import type { SpaceNode, FacilityInstance } from '../engine/types';
 // ---------------------------------------------------------------------------
 
 export interface SpaceSceneCallbacks {
-  getNodes:         () => SpaceNode[];
-  getFacilities:    () => FacilityInstance[];
-  getSelectedNode:  () => string | null;
-  onNodeClick:      (id: string) => void;
+  getNodes: () => SpaceNode[];
+  getFacilities: () => FacilityInstance[];
+  getSelectedNode: () => string | null;
+  onNodeClick: (id: string) => void;
 }
 
 // Fixed canvas positions for each node id (normalised to 600 × 400 logical px)
 const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  leo:          { x: 300, y: 240 },
-  l1:           { x: 110, y: 230 },
-  l2:           { x: 490, y: 230 },
-  lunarOrbit:   { x: 300, y: 130 },
-  lunarSurface: { x: 300, y: 60  },
+  leo: { x: 300, y: 240 },
+  l1: { x: 110, y: 230 },
+  l2: { x: 490, y: 230 },
+  lunarOrbit: { x: 300, y: 130 },
+  lunarSurface: { x: 300, y: 60 },
 };
 
 // Which nodes are directly connected by transit lines
@@ -39,8 +39,8 @@ const CONNECTIONS: [string, string][] = [
 const NODE_COLOURS: Record<string, number> = {
   lowEarthOrbit: 0x4a90c0,
   lagrangePoint: 0x7a60c0,
-  lunarOrbit:    0x8090a0,
-  lunarSurface:  0xb0b8c0,
+  lunarOrbit: 0x8090a0,
+  lunarSurface: 0xb0b8c0,
 };
 
 const NODE_RADIUS = 18;
@@ -82,11 +82,13 @@ export class SpaceScene extends Phaser.Scene {
     earthGfx.fillCircle(ex, ey, EARTH_RADIUS * this.scaleX);
     earthGfx.lineStyle(1.5, 0x3a6888, 1);
     earthGfx.strokeCircle(ex, ey, EARTH_RADIUS * this.scaleX);
-    this.add.text(ex, ey, 'EARTH', {
-      fontSize: `${Math.round(9 * this.scaleX)}px`,
-      color: '#6aB0d8',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5);
+    this.add
+      .text(ex, ey, 'EARTH', {
+        fontSize: `${Math.round(9 * this.scaleX)}px`,
+        color: '#6aB0d8',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5);
 
     this.game.events.emit('spaceSceneReady');
   }
@@ -97,11 +99,11 @@ export class SpaceScene extends Phaser.Scene {
   }
 
   private renderScene(): void {
-    const nodes        = this.callbacks!.getNodes();
-    const selectedId   = this.callbacks!.getSelectedNode();
+    const nodes = this.callbacks!.getNodes();
+    const selectedId = this.callbacks!.getSelectedNode();
 
     this.gfx.clear();
-    this.hitZones.forEach(z => z.destroy());
+    this.hitZones.forEach((z) => z.destroy());
     this.hitZones = [];
     this.labelGroup.clear(true, true);
 
@@ -124,7 +126,7 @@ export class SpaceScene extends Phaser.Scene {
 
       const cx = pos.x * this.scaleX;
       const cy = pos.y * this.scaleY;
-      const r  = NODE_RADIUS * Math.min(this.scaleX, this.scaleY);
+      const r = NODE_RADIUS * Math.min(this.scaleX, this.scaleY);
       const isSelected = node.id === selectedId;
       const colour = NODE_COLOURS[node.type] ?? 0x6080a0;
       const hasFacility = node.facilityId !== null;
@@ -148,19 +150,23 @@ export class SpaceScene extends Phaser.Scene {
       }
 
       // Launch cost label under node
-      const costLabel = this.add.text(cx, cy + r + 4, `${node.launchCost}M`, {
-        fontSize: `${Math.round(8 * this.scaleX)}px`,
-        color: '#4a7090',
-        fontFamily: 'monospace',
-      }).setOrigin(0.5, 0);
+      const costLabel = this.add
+        .text(cx, cy + r + 4, `${node.launchCost}M`, {
+          fontSize: `${Math.round(8 * this.scaleX)}px`,
+          color: '#4a7090',
+          fontFamily: 'monospace',
+        })
+        .setOrigin(0.5, 0);
       this.labelGroup.add(costLabel);
 
       // Node name above
-      const nameLabel = this.add.text(cx, cy - r - 5, node.label, {
-        fontSize: `${Math.round(9 * this.scaleX)}px`,
-        color: isSelected ? '#88c8ff' : '#8aacca',
-        fontFamily: 'monospace',
-      }).setOrigin(0.5, 1);
+      const nameLabel = this.add
+        .text(cx, cy - r - 5, node.label, {
+          fontSize: `${Math.round(9 * this.scaleX)}px`,
+          color: isSelected ? '#88c8ff' : '#8aacca',
+          fontFamily: 'monospace',
+        })
+        .setOrigin(0.5, 1);
       this.labelGroup.add(nameLabel);
 
       // Invisible hit zone
@@ -180,10 +186,29 @@ export class SpaceScene extends Phaser.Scene {
     starGfx.fillStyle(0xffffff, 1);
     // Fixed star positions derived from a simple hash — no RNG state consumed
     const stars = [
-      [42, 18], [88, 52], [155, 31], [210, 75], [280, 22], [350, 44],
-      [420, 15], [490, 67], [540, 38], [20, 88], [70, 120], [140, 95],
-      [200, 140], [330, 100], [500, 120], [570, 85], [60, 170], [160, 155],
-      [380, 165], [550, 175], [30, 200], [450, 210], [580, 195],
+      [42, 18],
+      [88, 52],
+      [155, 31],
+      [210, 75],
+      [280, 22],
+      [350, 44],
+      [420, 15],
+      [490, 67],
+      [540, 38],
+      [20, 88],
+      [70, 120],
+      [140, 95],
+      [200, 140],
+      [330, 100],
+      [500, 120],
+      [570, 85],
+      [60, 170],
+      [160, 155],
+      [380, 165],
+      [550, 175],
+      [30, 200],
+      [450, 210],
+      [580, 195],
     ];
     for (const [sx, sy] of stars) {
       const opacity = ((sx * 7 + sy * 13) % 5) * 0.15 + 0.2;

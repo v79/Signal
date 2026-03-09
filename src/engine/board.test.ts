@@ -105,7 +105,7 @@ describe('computeBoardModifiers', () => {
 
   it('compounds multipliers from two members', () => {
     const board: BoardSlots = {
-      chiefScientist:       makeInstance('drRamirez', 'chiefScientist'),
+      chiefScientist: makeInstance('drRamirez', 'chiefScientist'),
       directorOfEngineering: makeInstance('ingMarkov', 'directorOfEngineering'),
     };
     const mod = computeBoardModifiers(board, DEFS);
@@ -116,7 +116,11 @@ describe('computeBoardModifiers', () => {
   });
 
   it('skips members whose leftTurn is set', () => {
-    const departed = { ...makeInstance('drRamirez', 'chiefScientist'), leftTurn: 2, leftReason: 'retired' as const };
+    const departed = {
+      ...makeInstance('drRamirez', 'chiefScientist'),
+      leftTurn: 2,
+      leftReason: 'retired' as const,
+    };
     const board: BoardSlots = { chiefScientist: departed };
     const mod = computeBoardModifiers(board, DEFS);
     expect(mod.fieldMultipliers).toEqual({});
@@ -128,7 +132,14 @@ describe('computeBoardModifiers', () => {
 // ---------------------------------------------------------------------------
 
 describe('applyBoardFieldMultipliers', () => {
-  const baseFields: FieldPoints = { physics: 10, mathematics: 5, engineering: 8, biochemistry: 2, computing: 4, socialScience: 3 };
+  const baseFields: FieldPoints = {
+    physics: 10,
+    mathematics: 5,
+    engineering: 8,
+    biochemistry: 2,
+    computing: 4,
+    socialScience: 3,
+  };
 
   it('passes through unchanged when no multipliers', () => {
     const mod = { description: '', fieldMultipliers: {} };
@@ -200,7 +211,11 @@ describe('tickBoardAges', () => {
   });
 
   it('skips already-departed members', () => {
-    const departed = { ...makeInstance('drRamirez', 'chiefScientist', 65), leftTurn: 3, leftReason: 'resigned' as const };
+    const departed = {
+      ...makeInstance('drRamirez', 'chiefScientist', 65),
+      leftTurn: 3,
+      leftReason: 'resigned' as const,
+    };
     const board: BoardSlots = { chiefScientist: departed };
     const { updatedBoard, newNewsItems } = tickBoardAges(board, 7);
     expect(updatedBoard.chiefScientist?.age).toBe(65); // no change
@@ -247,7 +262,11 @@ describe('removeBoardMember', () => {
   });
 
   it('is a no-op if member already departed', () => {
-    const departed = { ...makeInstance('drRamirez', 'chiefScientist'), leftTurn: 2, leftReason: 'retired' as const };
+    const departed = {
+      ...makeInstance('drRamirez', 'chiefScientist'),
+      leftTurn: 2,
+      leftReason: 'retired' as const,
+    };
     const board: BoardSlots = { chiefScientist: departed };
     const updated = removeBoardMember(board, 'chiefScientist', 'died', 6);
     expect(updated.chiefScientist?.leftTurn).toBe(2); // unchanged
@@ -266,7 +285,7 @@ describe('getBoardAutoCounterTags', () => {
   it('collects auto-counter tags from active members', () => {
     const board: BoardSlots = {
       directorOfEngineering: makeInstance('ingMarkov', 'directorOfEngineering'),
-      securityDirector:      makeInstance('secBristow', 'securityDirector'),
+      securityDirector: makeInstance('secBristow', 'securityDirector'),
     };
     const tags = getBoardAutoCounterTags(board, DEFS);
     expect(tags).toContain('industrial');
@@ -274,7 +293,11 @@ describe('getBoardAutoCounterTags', () => {
   });
 
   it('excludes tags from departed members', () => {
-    const departed = { ...makeInstance('ingMarkov', 'directorOfEngineering'), leftTurn: 3, leftReason: 'retired' as const };
+    const departed = {
+      ...makeInstance('ingMarkov', 'directorOfEngineering'),
+      leftTurn: 3,
+      leftReason: 'retired' as const,
+    };
     const board: BoardSlots = { directorOfEngineering: departed };
     expect(getBoardAutoCounterTags(board, DEFS)).toHaveLength(0);
   });
@@ -295,7 +318,11 @@ describe('isBoardSlotVacant', () => {
   });
 
   it('returns true for a departed member', () => {
-    const departed = { ...makeInstance('drRamirez', 'chiefScientist'), leftTurn: 2, leftReason: 'retired' as const };
+    const departed = {
+      ...makeInstance('drRamirez', 'chiefScientist'),
+      leftTurn: 2,
+      leftReason: 'retired' as const,
+    };
     const board: BoardSlots = { chiefScientist: departed };
     expect(isBoardSlotVacant(board, 'chiefScientist')).toBe(true);
   });
@@ -303,9 +330,13 @@ describe('isBoardSlotVacant', () => {
 
 describe('getActiveMembers', () => {
   it('returns only active members', () => {
-    const departed = { ...makeInstance('drRamirez', 'chiefScientist'), leftTurn: 1, leftReason: 'resigned' as const };
+    const departed = {
+      ...makeInstance('drRamirez', 'chiefScientist'),
+      leftTurn: 1,
+      leftReason: 'resigned' as const,
+    };
     const board: BoardSlots = {
-      chiefScientist:       departed,
+      chiefScientist: departed,
       directorOfEngineering: makeInstance('ingMarkov', 'directorOfEngineering'),
     };
     const active = getActiveMembers(board);

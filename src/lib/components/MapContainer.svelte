@@ -10,13 +10,14 @@
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
   import type { Era } from '../../engine/types';
+  import Tooltip from './Tooltip.svelte';
 
   type SceneTab = 'earth' | 'space' | 'belt';
 
   const TABS: { id: SceneTab; label: string; requiredEra: Era | null }[] = [
-    { id: 'earth', label: 'EARTH',         requiredEra: null        },
-    { id: 'space', label: 'NEAR SPACE',    requiredEra: 'nearSpace' },
-    { id: 'belt',  label: 'ASTEROID BELT', requiredEra: 'deepSpace' },
+    { id: 'earth', label: 'EARTH', requiredEra: null },
+    { id: 'space', label: 'NEAR SPACE', requiredEra: 'nearSpace' },
+    { id: 'belt', label: 'ASTEROID BELT', requiredEra: 'deepSpace' },
   ];
 
   const ERA_ORDER: Era[] = ['earth', 'nearSpace', 'deepSpace'];
@@ -36,7 +37,7 @@
   const SCENE_KEYS: Record<SceneTab, string> = {
     earth: 'EarthScene',
     space: 'SpaceScene',
-    belt:  'AsteroidScene',
+    belt: 'AsteroidScene',
   };
 
   function switchTab(tab: SceneTab): void {
@@ -49,9 +50,9 @@
   // Selected Earth tile for facility placement
   const selectedTile = $derived(
     gameStore.selectedCoordKey != null && gameStore.state
-      ? gameStore.state.map.earthTiles.find(
-          t => `${t.coord.q},${t.coord.r}` === gameStore.selectedCoordKey,
-        ) ?? null
+      ? (gameStore.state.map.earthTiles.find(
+          (t) => `${t.coord.q},${t.coord.r}` === gameStore.selectedCoordKey,
+        ) ?? null)
       : null,
   );
 
@@ -65,28 +66,28 @@
       import('../../phaser/AsteroidScene'),
     ]);
 
-    const earthScene    = new EarthScene();
-    const spaceScene    = new SpaceScene();
+    const earthScene = new EarthScene();
+    const spaceScene = new SpaceScene();
     const asteroidScene = new AsteroidScene();
 
     game = new Phaser.Game({
-      type:            Phaser.AUTO,
-      parent:          container,
-      width:           container.clientWidth  || 600,
-      height:          container.clientHeight || 400,
+      type: Phaser.AUTO,
+      parent: container,
+      width: container.clientWidth || 600,
+      height: container.clientHeight || 400,
       backgroundColor: '#060a10',
-      scene:           [earthScene, spaceScene, asteroidScene],
-      banner:          false,
+      scene: [earthScene, spaceScene, asteroidScene],
+      banner: false,
     });
 
     // Wire SpaceScene callbacks each time it (re)starts
     game.events.on('spaceSceneReady', () => {
       const space = game!.scene.getScene('SpaceScene') as SpaceSceneType;
       space.setCallbacks({
-        getNodes:        () => gameStore.state?.map.spaceNodes ?? [],
-        getFacilities:   () => gameStore.state?.player.facilities ?? [],
+        getNodes: () => gameStore.state?.map.spaceNodes ?? [],
+        getFacilities: () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
-        onNodeClick:     (id: string) => {
+        onNodeClick: (id: string) => {
           gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
         },
       });
@@ -96,11 +97,11 @@
     game.events.on('asteroidSceneReady', () => {
       const asteroid = game!.scene.getScene('AsteroidScene') as AsteroidSceneType;
       asteroid.setCallbacks({
-        getNodes:        () => gameStore.state?.map.beltNodes ?? [],
-        getEdges:        () => gameStore.state?.map.beltEdges ?? [],
-        getFacilities:   () => gameStore.state?.player.facilities ?? [],
+        getNodes: () => gameStore.state?.map.beltNodes ?? [],
+        getEdges: () => gameStore.state?.map.beltEdges ?? [],
+        getFacilities: () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedBeltNodeId,
-        onNodeClick:     (id: string) => {
+        onNodeClick: (id: string) => {
           gameStore.selectBeltNode(gameStore.selectedBeltNodeId === id ? null : id);
         },
       });
@@ -110,15 +111,15 @@
     game.events.once('ready', () => {
       const earth = game!.scene.getScene('EarthScene') as EarthSceneType;
       earth.setCallbacks({
-        getTiles:      () => gameStore.state?.map.earthTiles ?? [],
+        getTiles: () => gameStore.state?.map.earthTiles ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
-        getQueue:      () => gameStore.state?.player.constructionQueue ?? [],
-        getSelected:   () => gameStore.selectedCoordKey,
-        getClimate:    () => gameStore.state?.climatePressure ?? 0,
-        onTileClick:   (key: string) => {
+        getQueue: () => gameStore.state?.player.constructionQueue ?? [],
+        getSelected: () => gameStore.selectedCoordKey,
+        getClimate: () => gameStore.state?.climatePressure ?? 0,
+        onTileClick: (key: string) => {
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },
-        onTileHover:   (key: string | null) => {
+        onTileHover: (key: string | null) => {
           gameStore.setHoveredTile(key);
         },
       });
@@ -138,18 +139,25 @@
   <!-- Scene tab bar -->
   <div class="tab-bar">
     {#each TABS as tab}
-      <button
-        class="tab"
-        class:active={activeTab === tab.id}
-        class:locked={!eraUnlocked(tab.requiredEra)}
-        disabled={!eraUnlocked(tab.requiredEra)}
-        onclick={() => switchTab(tab.id)}
+      <Tooltip
+        text={eraUnlocked(tab.requiredEra)
+          ? `Switch to ${tab.label} view`
+          : `Unlock the ${tab.label} era to access this view`}
+        direction="below"
       >
-        {tab.label}
-        {#if !eraUnlocked(tab.requiredEra)}
-          <span class="lock">&#x1F512;</span>
-        {/if}
-      </button>
+        <button
+          class="tab"
+          class:active={activeTab === tab.id}
+          class:locked={!eraUnlocked(tab.requiredEra)}
+          disabled={!eraUnlocked(tab.requiredEra)}
+          onclick={() => switchTab(tab.id)}
+        >
+          {tab.label}
+          {#if !eraUnlocked(tab.requiredEra)}
+            <span class="lock">&#x1F512;</span>
+          {/if}
+        </button>
+      </Tooltip>
     {/each}
   </div>
 
@@ -157,7 +165,10 @@
   <div
     class="map-container"
     bind:this={container}
-    onmousemove={(e) => { mouseX = e.offsetX; mouseY = e.offsetY; }}
+    onmousemove={(e) => {
+      mouseX = e.offsetX;
+      mouseY = e.offsetY;
+    }}
     onmouseleave={() => gameStore.setHoveredTile(null)}
   >
     {#if selectedTile && activeTab === 'earth'}
@@ -165,8 +176,10 @@
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
         playerResources={gameStore.state!.player.resources}
-        discoveredTechIds={new Set(gameStore.state!.player.techs.filter(t => t.stage === 'discovered').map(t => t.defId))}
-        techNames={new Map([...TECH_DEFS.values()].map(d => [d.id, d.name]))}
+        discoveredTechIds={new Set(
+          gameStore.state!.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
+        )}
+        techNames={new Map([...TECH_DEFS.values()].map((d) => [d.id, d.name]))}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onDemolish={() => gameStore.demolishFacility(gameStore.selectedCoordKey!)}
         onClose={() => gameStore.selectTile(null)}
@@ -174,7 +187,9 @@
     {/if}
     {#if gameStore.hoveredTileKey && !selectedTile && activeTab === 'earth' && gameStore.state}
       <TileTooltip
-        tile={gameStore.state.map.earthTiles.find(t => `${t.coord.q},${t.coord.r}` === gameStore.hoveredTileKey) ?? null}
+        tile={gameStore.state.map.earthTiles.find(
+          (t) => `${t.coord.q},${t.coord.r}` === gameStore.hoveredTileKey,
+        ) ?? null}
         facilities={gameStore.state.player.facilities}
         facilityDefs={FACILITY_DEFS}
         x={mouseX}
@@ -214,7 +229,9 @@
     font-size: 0.65rem;
     letter-spacing: 0.04em;
     padding: 3px 8px 4px;
-    transition: color 0.15s, border-color 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
   }
 
   .tab:hover:not(:disabled) {

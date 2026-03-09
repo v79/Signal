@@ -1,6 +1,29 @@
-import type { GameState, FacilityDef, TechDef, EventDef, CardDef, BlocDef, BoardMemberDef, NewsItem, Resources, FieldPoints } from './types';
-import { computeAdjacencyEffects, computeFacilityOutput, tickMineDepletion, computeHqBonus, tickConstructionQueue } from './facilities';
-import { tickWill, computeBankDecay, applyFieldDeltas, applyResourceDeltas, DEFAULT_WILL_CONFIG } from './resources';
+import type {
+  GameState,
+  FacilityDef,
+  TechDef,
+  EventDef,
+  CardDef,
+  BlocDef,
+  BoardMemberDef,
+  NewsItem,
+  Resources,
+  FieldPoints,
+} from './types';
+import {
+  computeAdjacencyEffects,
+  computeFacilityOutput,
+  tickMineDepletion,
+  computeHqBonus,
+  tickConstructionQueue,
+} from './facilities';
+import {
+  tickWill,
+  computeBankDecay,
+  applyFieldDeltas,
+  applyResourceDeltas,
+  DEFAULT_WILL_CONFIG,
+} from './resources';
 import { checkResearchProgress } from './research';
 import { drawCards } from './cards';
 import {
@@ -17,11 +40,7 @@ import {
   applyBoardResourceMultipliers,
   tickBoardAges,
 } from './board';
-import {
-  tickSignalProgress,
-  didCrossStrengthThreshold,
-  signalProgressNewsText,
-} from './signal';
+import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
 import { ZERO_RESOURCES } from './state';
 import type { Rng } from './rng';
@@ -84,7 +103,7 @@ export function executeEventPhase(
 
   // 3. Expire standing action restrictions
   const activeRestrictions = player.activeEventRestrictions.filter(
-    r => r.expiresAfterTurn >= state.turn,
+    (r) => r.expiresAfterTurn >= state.turn,
   );
 
   // 4. Select and add new events
@@ -137,7 +156,7 @@ export function executeDrawPhase(state: GameState, rng: Rng): GameState {
  * and advance phase to 'world'. Called by the UI when the player is done.
  */
 export function endBankPhase(state: GameState): GameState {
-  const discarded = state.player.cards.map(c =>
+  const discarded = state.player.cards.map((c) =>
     c.zone === 'hand' ? { ...c, zone: 'discard' as const } : c,
   );
   return {
@@ -166,8 +185,11 @@ export function executeWorldPhase(
 
   // 0. Construction queue tick — completes builds/demolitions before output is computed.
   const nextTurn = state.turn + 1;
-  const { updatedQueue, updatedFacilities: facilitiesAfterQueue, updatedTiles: tilesAfterQueue } =
-    tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn);
+  const {
+    updatedQueue,
+    updatedFacilities: facilitiesAfterQueue,
+    updatedTiles: tilesAfterQueue,
+  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn);
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -186,7 +208,7 @@ export function executeWorldPhase(
 
   // 2b. HQ bonus — applies if the player has an HQ facility on the map.
   //     Output varies by will profile (democratic vs authoritarian).
-  const hasHq = player.facilities.some(f => f.defId === 'hq');
+  const hasHq = player.facilities.some((f) => f.defId === 'hq');
   if (hasHq) {
     const hqBonus = computeHqBonus(player.willProfile);
     for (const k of Object.keys(hqBonus.resources) as (keyof Resources)[]) {
@@ -208,7 +230,12 @@ export function executeWorldPhase(
 
   // 5. Apply resource and field changes
   const newFields = applyFieldDeltas(player.fields, boostedFields);
-  const newResources = applyResourceDeltas(player.resources, boostedResources, bankDecay, projectUpkeep);
+  const newResources = applyResourceDeltas(
+    player.resources,
+    boostedResources,
+    bankDecay,
+    projectUpkeep,
+  );
 
   // 6. Research progress check (uses updated fields)
   const { updatedTechs, newDiscoveries, newRumours, newProgressTechs } = checkResearchProgress(
@@ -238,17 +265,18 @@ export function executeWorldPhase(
 
   // 8. News feed entries for research events
   const researchNews: NewsItem[] = [
-    ...newRumours.map(defId => ({
+    ...newRumours.map((defId) => ({
       id: `${nextTurn}-rumour-${defId}`,
       turn: nextTurn,
-      text: techDefs.get(defId)?.rumourText ?? 'Something new is stirring in the research community.',
+      text:
+        techDefs.get(defId)?.rumourText ?? 'Something new is stirring in the research community.',
     })),
-    ...newProgressTechs.map(defId => ({
+    ...newProgressTechs.map((defId) => ({
       id: `${nextTurn}-progress-${defId}`,
       turn: nextTurn,
       text: `Research into ${techDefs.get(defId)?.name ?? 'an unknown field'} is showing concrete results.`,
     })),
-    ...newDiscoveries.map(defId => ({
+    ...newDiscoveries.map((defId) => ({
       id: `${nextTurn}-discovery-${defId}`,
       turn: nextTurn,
       text: `Breakthrough: ${techDefs.get(defId)?.name ?? 'Unknown technology'} has been achieved.`,
@@ -275,8 +303,17 @@ export function executeWorldPhase(
   // 14. Signal progress tick
   const prevSignalProgress = state.signal.decodeProgress;
   const newSignal = tickSignalProgress(state.signal, newFields, newFacilities, facilityDefs);
-  const signalNews: NewsItem[] = didCrossStrengthThreshold(prevSignalProgress, newSignal.decodeProgress)
-    ? [{ id: `signal-${nextTurn}`, turn: nextTurn, text: signalProgressNewsText(newSignal.decodeProgress, nextTurn) }]
+  const signalNews: NewsItem[] = didCrossStrengthThreshold(
+    prevSignalProgress,
+    newSignal.decodeProgress,
+  )
+    ? [
+        {
+          id: `signal-${nextTurn}`,
+          turn: nextTurn,
+          text: signalProgressNewsText(newSignal.decodeProgress, nextTurn),
+        },
+      ]
     : [];
 
   // 15. Earth welfare tick
@@ -303,7 +340,14 @@ export function executeWorldPhase(
       cards: updatedCards,
       board: updatedBoard,
       constructionQueue: updatedQueue,
-      newsFeed: [...player.newsFeed, ...researchNews, ...blocNews, ...mergerNews, ...boardNews, ...signalNews],
+      newsFeed: [
+        ...player.newsFeed,
+        ...researchNews,
+        ...blocNews,
+        ...mergerNews,
+        ...boardNews,
+        ...signalNews,
+      ],
     },
   };
 

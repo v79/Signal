@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Resources, FieldPoints, Era, TurnPhase } from '../../engine/types';
   import SaveControls from './SaveControls.svelte';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     resources,
@@ -44,7 +45,9 @@
     }
     menuOpen = !menuOpen;
   }
-  function closeMenu(): void { menuOpen = false; }
+  function closeMenu(): void {
+    menuOpen = false;
+  }
 
   const ERA_LABELS: Record<Era, string> = {
     earth: 'EARTH',
@@ -53,23 +56,32 @@
   };
 
   const PHASE_LABELS: Record<TurnPhase, string> = {
-    event:  'EVENT',
-    draw:   'DRAW',
+    event: 'EVENT',
+    draw: 'DRAW',
     action: 'ACTION',
-    bank:   'BANK',
-    world:  'WORLD',
+    bank: 'BANK',
+    world: 'WORLD',
   };
 
   const FIELD_LABELS: Record<keyof FieldPoints, string> = {
-    physics:      'PHY',
-    mathematics:  'MATH',
-    engineering:  'ENG',
+    physics: 'PHY',
+    mathematics: 'MATH',
+    engineering: 'ENG',
     biochemistry: 'BIO',
-    computing:    'COMP',
-    socialScience:'SOC',
+    computing: 'COMP',
+    socialScience: 'SOC',
   };
 
   const FIELD_KEYS = Object.keys(FIELD_LABELS) as (keyof FieldPoints)[];
+
+  const FIELD_TOOLTIPS: Record<keyof FieldPoints, string> = {
+    physics: 'Physics — drives signal detection and propulsion research.',
+    mathematics: 'Mathematics — underpins cryptography, navigation, and signal decoding.',
+    engineering: 'Engineering — enables facility construction and hardware projects.',
+    biochemistry: 'Biochemistry — supports life sciences, habitat, and medical research.',
+    computing: 'Computing — accelerates all research; essential for signal analysis.',
+    socialScience: 'Social Science — improves Political Will generation and diplomacy.',
+  };
 
   function climateColor(p: number): string {
     if (p < 30) return '#4a9b7a';
@@ -91,20 +103,52 @@
 <header class="hud">
   <div class="hud-left">
     <div class="menu-wrapper">
-      <button class="menu-btn" onclick={(e) => toggleMenu(e)} aria-label="Game menu" aria-expanded={menuOpen}>
-        ≡
-      </button>
+      <Tooltip text="Game menu" direction="below">
+        <button
+          class="menu-btn"
+          onclick={(e) => toggleMenu(e)}
+          aria-label="Game menu"
+          aria-expanded={menuOpen}
+        >
+          ≡
+        </button>
+      </Tooltip>
       {#if menuOpen}
-        <div class="menu-backdrop" onclick={closeMenu} role="none" tabindex="-1" onkeydown={() => {}}></div>
+        <div
+          class="menu-backdrop"
+          onclick={closeMenu}
+          role="none"
+          tabindex="-1"
+          onkeydown={() => {}}
+        ></div>
         <div class="menu-dropdown" style="top: {dropdownPos.top}px; left: {dropdownPos.left}px;">
-          <button class="menu-item" onclick={() => { closeMenu(); onRestart(); }}>
+          <button
+            class="menu-item"
+            onclick={() => {
+              closeMenu();
+              onRestart();
+            }}
+          >
             RESTART GAME
           </button>
-          <button class="menu-item" onclick={() => { closeMenu(); onNewGame(); }}>
+          <button
+            class="menu-item"
+            onclick={() => {
+              closeMenu();
+              onNewGame();
+            }}
+          >
             NEW GAME SETUP
           </button>
           <div class="menu-divider"></div>
-          <button class="menu-item" disabled onclick={() => { closeMenu(); onSettings(); }}>
+          <button
+            class="menu-item"
+            disabled
+            onclick={() => {
+              closeMenu();
+              onSettings();
+            }}
+          >
             SETTINGS
           </button>
         </div>
@@ -121,44 +165,61 @@
   </div>
 
   <div class="hud-center">
-    <span class="label">CLIMATE</span>
+    <Tooltip
+      text="Earth climate index. Rises as you industrialise; affects event probabilities."
+      direction="below"
+    >
+      <span class="label">CLIMATE</span>
+    </Tooltip>
     <div class="bar-track climate-track">
       <div
         class="bar-fill"
         style="width: {climatePressure}%; background: {climateColor(climatePressure)}"
       ></div>
     </div>
-    <span class="value" style="color: {climateColor(climatePressure)}">{climatePressure.toFixed(0)}%</span>
+    <span class="value" style="color: {climateColor(climatePressure)}"
+      >{climatePressure.toFixed(0)}%</span
+    >
 
-    <span class="label" style="margin-left: 1rem">WILL</span>
+    <Tooltip text="Global political will level." direction="below">
+      <span class="label" style="margin-left: 1rem">WILL</span>
+    </Tooltip>
     <div class="bar-track will-track">
-      <div
-        class="bar-fill"
-        style="width: {will}%; background: {willColor(will)}"
-      ></div>
+      <div class="bar-fill" style="width: {will}%; background: {willColor(will)}"></div>
     </div>
     <span class="value" style="color: {willColor(will)}">{will}</span>
   </div>
 
   <div class="hud-right">
-    <div class="resource">
-      <span class="res-label">FUND</span>
-      <span class="res-value fund">{fmt(resources.funding)}</span>
-    </div>
-    <div class="resource">
-      <span class="res-label">MAT</span>
-      <span class="res-value mat">{fmt(resources.materials)}</span>
-    </div>
-    <div class="resource">
-      <span class="res-label">WILL</span>
-      <span class="res-value will">{fmt(resources.politicalWill)}</span>
-    </div>
+    <Tooltip text="Current funding. Gained from funding facilities and cards." direction="below">
+      <div class="resource">
+        <span class="res-label">FUND</span>
+        <span class="res-value fund">{fmt(resources.funding)}</span>
+      </div>
+    </Tooltip>
+    <Tooltip text="Raw materials. Gained from mines and industrial zones." direction="below">
+      <div class="resource">
+        <span class="res-label">MAT</span>
+        <span class="res-value mat">{fmt(resources.materials)}</span>
+      </div>
+    </Tooltip>
+    <Tooltip
+      text="Political will. Volatile in democracies; stable but fragile in authoritarian blocs."
+      direction="below"
+    >
+      <div class="resource">
+        <span class="res-label">WILL</span>
+        <span class="res-value will">{fmt(resources.politicalWill)}</span>
+      </div>
+    </Tooltip>
     <span class="divider">│</span>
     {#each FIELD_KEYS as key}
-      <div class="field-mini" title={key}>
-        <span class="field-label">{FIELD_LABELS[key]}</span>
-        <span class="field-value">{fields[key]}</span>
-      </div>
+      <Tooltip text={FIELD_TOOLTIPS[key]} direction="below">
+        <div class="field-mini">
+          <span class="field-label">{FIELD_LABELS[key]}</span>
+          <span class="field-value">{fields[key]}</span>
+        </div>
+      </Tooltip>
     {/each}
   </div>
 </header>
@@ -216,11 +277,13 @@
     padding: 0.1rem 0.35rem;
     cursor: pointer;
     border-radius: 2px;
-    transition: color 0.15s, border-color 0.15s;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
   }
 
   .menu-btn:hover,
-  .menu-btn[aria-expanded="true"] {
+  .menu-btn[aria-expanded='true'] {
     color: #8aacca;
     border-color: #2a4060;
   }
@@ -253,7 +316,9 @@
     padding: 0.55rem 0.9rem;
     text-align: left;
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+    transition:
+      background 0.12s,
+      color 0.12s;
   }
 
   .menu-item:last-child {
@@ -322,12 +387,18 @@
     overflow: hidden;
   }
 
-  .climate-track { width: 80px; }
-  .will-track    { width: 60px; }
+  .climate-track {
+    width: 80px;
+  }
+  .will-track {
+    width: 60px;
+  }
 
   .bar-fill {
     height: 100%;
-    transition: width 0.3s ease, background 0.3s ease;
+    transition:
+      width 0.3s ease,
+      background 0.3s ease;
   }
 
   .resource {
@@ -347,9 +418,15 @@
     font-size: 0.9rem;
   }
 
-  .fund { color: #c8d050; }
-  .mat  { color: #8B5E3C; }
-  .will { color: #b07ad0; }
+  .fund {
+    color: #c8d050;
+  }
+  .mat {
+    color: #8b5e3c;
+  }
+  .will {
+    color: #b07ad0;
+  }
 
   .field-mini {
     display: flex;
