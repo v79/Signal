@@ -152,6 +152,7 @@ export function executeDrawPhase(state: GameState, rng: Rng): GameState {
   return {
     ...state,
     phase: 'action',
+    actionsThisTurn: 0,
     player: { ...state.player, cards: newCards },
   };
 }

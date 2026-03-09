@@ -705,4 +705,8 @@ export interface GameState {
    * schedule and Earth welfare decay.
    */
   climatePressure: number;
+  /** Number of card plays used so far this action phase. Reset to 0 on draw. */
+  actionsThisTurn: number;
+  /** Maximum card plays allowed per action phase (default 3). Board members may modify. */
+  maxActionsPerTurn: number;
 }
