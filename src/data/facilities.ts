@@ -363,7 +363,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       id: 'heliopauseRelay',
       name: 'Heliopause Signal Relay',
       description:
-        'Positioned at the outer boundary of the solar system; critical for wormhole communication.',
+        'Positioned at the outer boundary of the solar system; critical for wormhole communication. Only one can ever be built.',
       era: 'deepSpace',
       allowedTileTypes: [],
       buildCost: { funding: 120, materials: 80 },
@@ -378,6 +378,25 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       depletes: false,
       // advancedPropulsion is a Phase 15 tech; gating will be added then.
       requiredTechId: null,
+      unique: true,
+      narrative: {
+        id: 'narrative-facility-heliopauseRelay',
+        title: 'Heliopause Signal Relay — Online',
+        slides: [
+          {
+            text: 'There is only one location at the heliopause where the relay geometry achieves the required alignment with the source structure. Your team spent years determining which one. It is now operational.',
+            imageColour: '#04050c',
+          },
+          {
+            text: 'Signal quality has improved by an order of magnitude. Features of the transmission that were previously theoretical artefacts are now confirmed structural elements. The interface is close.',
+            imageColour: '#06070f',
+          },
+          {
+            text: 'There will not be a second one. The geometry does not permit it, and there is only one structure to relay to. This is the instrument the programme has been building toward since 1970.',
+            imageColour: '#04050c',
+          },
+        ],
+      },
     },
   ],
 ]);

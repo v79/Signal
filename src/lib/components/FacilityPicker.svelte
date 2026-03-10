@@ -7,6 +7,7 @@
     playerResources,
     discoveredTechIds,
     techNames,
+    builtDefIds,
     onBuild,
     onDemolish,
     onClose,
@@ -18,6 +19,8 @@
     discoveredTechIds: ReadonlySet<string>;
     /** Maps tech def ID → display name for locked-facility labels. */
     techNames: ReadonlyMap<string, string>;
+    /** Def IDs of facilities already built or in the construction queue (for unique guard). */
+    builtDefIds: ReadonlySet<string>;
     onBuild: (defId: string) => void;
     onDemolish: () => void;
     onClose: () => void;
@@ -25,6 +28,10 @@
 
   function isTechUnlocked(def: FacilityDef): boolean {
     return def.requiredTechId == null || discoveredTechIds.has(def.requiredTechId);
+  }
+
+  function isUniqueBlocked(def: FacilityDef): boolean {
+    return def.unique === true && builtDefIds.has(def.id);
   }
 
   // Facilities whose tile type matches — split into unlocked and locked.
@@ -152,7 +159,8 @@
       <div class="facility-list">
         {#each eligible as def}
           {@const affordable = canAfford(def.buildCost)}
-          <div class="facility-row" class:unaffordable={!affordable}>
+          {@const uniqueBlocked = isUniqueBlocked(def)}
+          <div class="facility-row" class:unaffordable={!affordable || uniqueBlocked}>
             <div class="facility-info">
               <span class="facility-name">{def.name}</span>
               <span class="facility-desc">{def.description}</span>
@@ -173,12 +181,16 @@
               </div>
             </div>
             <div class="facility-action">
-              <div class="build-cost" class:cant-afford={!affordable}>
-                {formatCost(def.buildCost) || 'Free'}
-              </div>
-              <button class="build-btn" disabled={!affordable} onclick={() => onBuild(def.id)}>
-                {affordable ? 'BUILD' : 'AFFORD?'}
-              </button>
+              {#if uniqueBlocked}
+                <div class="unique-label">UNIQUE<br />ALREADY BUILT</div>
+              {:else}
+                <div class="build-cost" class:cant-afford={!affordable}>
+                  {formatCost(def.buildCost) || 'Free'}
+                </div>
+                <button class="build-btn" disabled={!affordable} onclick={() => onBuild(def.id)}>
+                  {affordable ? 'BUILD' : 'AFFORD?'}
+                </button>
+              {/if}
             </div>
           </div>
         {/each}
@@ -362,6 +374,14 @@
     color: #2a3848;
     border-color: #1a2535;
     cursor: not-allowed;
+  }
+
+  .unique-label {
+    font-size: 0.58rem;
+    color: #5a4a2a;
+    text-align: right;
+    line-height: 1.5;
+    letter-spacing: 0.05em;
   }
 
   .locked-row {
