@@ -12,6 +12,7 @@ This is a list of future requirements for the game but they are not to be implem
   - How are research fields 'spent' to progress unlocking Technologies
   - It should not be possible to decode the Signal until the Asteroid era!
   - When a technology is researched, a narrative popup should be shown on the main game screen, with information on the new cards, facilities or actions it unlocks and those it obsoletes
+  - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
 - Further Earth era content
   - Funding is hard to come by
   - Negative events happen to frequently
@@ -45,18 +46,8 @@ This is a list of future requirements for the game but they are not to be implem
   - Clicking on a discovered or in progress technology in the tech tree should show more information
   - Unlocked technologies may provide a passive resource gain (but may not, and may be restricted to the current era)
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
-- Interface for narrative story elements
-  - Opening sequence to set the scene
-  - Technology unlock events
-  - Era transitions
-  - Major landmarks
-  - Special events
-  - Win/lose events
-  - Modal User interface to show story text with optional images. Next button to progress through the story text. Close/skip button.
-  - Support for narrative choices - up to 3 options that will trigger in-game actions
 - News feed & ticker rework
   - The ticker is cute but not very functional
-  - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
 - Debug view and logs
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
 - Game menu
