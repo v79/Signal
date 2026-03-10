@@ -2,6 +2,10 @@
   import { gameStore } from '$lib/stores/game.svelte';
   import { BLOC_DEFS } from '../../data/blocs';
   import type { PushFactor } from '../../engine/types';
+  import NarrativeModal from '$lib/components/NarrativeModal.svelte';
+  import { NARRATIVE_OPENING } from '../../data/narrative';
+
+  let showOpening = $state(true);
 
   // ---------------------------------------------------------------------------
   // Seed
@@ -64,6 +68,10 @@
     gameStore.startNewGame(seed.trim() || generateSeed(), selectedBlocKey, pushFactor);
   }
 </script>
+
+{#if showOpening}
+  <NarrativeModal narrative={NARRATIVE_OPENING} onDismiss={() => (showOpening = false)} />
+{/if}
 
 <div class="newgame-layout">
   <div class="setup-card">
