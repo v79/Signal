@@ -12,6 +12,7 @@
   import MapContainer from '$lib/components/MapContainer.svelte';
   import NewsTicker from '$lib/components/NewsTicker.svelte';
   import PhaseControls from '$lib/components/PhaseControls.svelte';
+  import NarrativeModal from '$lib/components/NarrativeModal.svelte';
 
   import { gameStore } from '$lib/stores/game.svelte';
   import { CARD_DEFS } from '../data/cards';
@@ -76,6 +77,13 @@
     }
   }
 </script>
+
+{#if gameStore.state && gameStore.state.narrativeQueue.length > 0}
+  <NarrativeModal
+    narrative={gameStore.state.narrativeQueue[0]}
+    onDismiss={() => gameStore.dismissNarrativeModal()}
+  />
+{/if}
 
 {#if gameStore.state}
   {@const gs = gameStore.state}
