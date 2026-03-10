@@ -28,6 +28,7 @@ import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../
 import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
 import type { SignalResponseOption } from '../../engine/types';
 import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
+import { dismissNarrative } from '../../engine/narrative';
 import { initialiseTechs } from '../../engine/research';
 import { CARD_DEFS } from '../../data/cards';
 import { EVENT_DEFS } from '../../data/events';
@@ -921,6 +922,13 @@ export const gameStore = {
     if (!_state) return [];
     const rng = createRng(`${_state.seed}-wormhole`);
     return generateWormholeOptions(_state.signal, rng);
+  },
+
+  /** Dismiss the current narrative modal and advance the queue. */
+  dismissNarrativeModal(): void {
+    if (!_state) return;
+    _state = dismissNarrative(_state);
+    autoSave(_state);
   },
 
   /** Commit the player's chosen wormhole response. */

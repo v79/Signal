@@ -500,6 +500,26 @@ export function tickConstructionQueue(
 }
 
 // ---------------------------------------------------------------------------
+// Unique facility guard
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if a facility with the given def ID is already built
+ * (present in the facilities list or still in the construction queue).
+ * Used to enforce the `unique` constraint before starting construction.
+ */
+export function isUniqueAlreadyBuilt(
+  facilities: FacilityInstance[],
+  queue: OngoingAction[],
+  defId: string,
+): boolean {
+  return (
+    facilities.some((f) => f.defId === defId) ||
+    queue.some((a) => a.type === 'construct' && a.facilityDefId === defId)
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
