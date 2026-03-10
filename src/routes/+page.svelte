@@ -28,7 +28,6 @@
   } from '../engine/facilities';
   import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
-
   // Redirect to /newgame if there is no active game state (cold start).
   onMount(() => {
     if (!gameStore.state) goto('/newgame');
