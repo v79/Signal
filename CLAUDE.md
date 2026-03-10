@@ -24,6 +24,7 @@ Always create a new branch before implementing any feature or significant change
 npm run dev        # Start Vite dev server
 npm run build      # Production build
 npm run test       # Run Vitest suite
+npm run test:e2e   # Run end-to-end playwright tests
 npm run test -- --reporter=verbose <pattern>  # Run a single test file or pattern
 npm run lint       # Type-check and lint
 ```

@@ -20,6 +20,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Event frequency should be configured within the event definitions, so some events are less likely than others
   - Events frequency may be affected by the current Climate or Global Will scores
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
+  - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
 - Political Will
   - What is the difference between Global Will and Political Will?
   - Political Will should have a cap (100?)
@@ -29,6 +30,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Add panning and scrolling, constrained to bounds so the player can't lose the map entirely
   - Add a themetic loading text before the map renders
   - Map-specific events, such as coastalFlooding, should impact a specific tile, and should destroy any facility on that tile
+  - A drop-down list of all facilities
 - LEO technology content pass
 - Asteriod era technology content pass
 - Game art:
@@ -57,3 +59,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
 - Game menu
   - Move the Import and Export options into the dropdown game menu; rename as Save and Load
+- Committee/Board
+  - Make it more prominant, it's too easy to ignore
+  - Don't offer people if you can't afford the recruitment cost
+  

@@ -45,6 +45,54 @@ export const NARRATIVE_OPENING: NarrativeDef = {
 };
 
 // ---------------------------------------------------------------------------
+// Game help, shown after the opening sequence and before the first turn — skippable)
+// ---------------------------------------------------------------------------
+
+export const NARRATIVE_GAME_HELP: NarrativeDef = {
+  id: 'narrative-game-help',
+  title: 'The Game Experience',
+  skippable: true,
+  slides: [
+    {
+      text: 'Your goal is to decode the signal. The game is structured around that objective. Every decision you make should be in service of that goal.',
+      imageColour: '#080808',
+    },
+    {
+      text: 'On each turn you will be able to choose from a set of actions. Each action has a cost and an effect. Some actions will advance your signal decode progress. Others will improve your resources, your political position, or your scientific capabilities.',
+      imageColour: '#0a0a0a',
+    },
+    {
+      text: 'The signal is not the only thing you have to worry about. The world is changing around you. Climate change, political instability, economic crises — these are all real threats that can derail your programme if you do not manage them.',
+      imageColour: '#0a0a0a',
+    },
+    {
+      text: 'In the center of the game screen is a map of your bloc. You may build installations there to improve your capabilities. Your HQ is at the centre. On different tiles, you may build a research lab, a resource mine, a power station, or other more powerful installations.',
+      imageColour: '#080808',
+    },
+    {
+      text: 'At the bottom, there are a number of action cards that you may play in a turn - up to 3 cards. You may also bank cards for later use.',
+      imageColour: '#0a0a0a',
+    },
+    {
+      text: 'On the left, various events may help or hinder your progress. Some cards can help mitigate these events.',
+      imageColour: '#080808',
+    },
+    {
+      text: 'On the right, your scientific progress is tracked. The signal decode progress is the most important metric, but you also have a climate index, a political stability index, and a resource index. Keep an eye on all of them.',
+      imageColour: '#0a0a0a',
+    },
+    {
+      text: 'Technologies you research will be shown in the Tech Tree. Some technologies will unlock new actions, new installations, or new capabilities. Others will improve your existing ones.',
+      imageColour: '#080808',
+    },
+    {
+      text: 'The Board represents the committee who support your programme. Choose wisely to fill the positions.',
+      imageColour: '#0a0a0a',
+    }
+  ],
+};
+
+// ---------------------------------------------------------------------------
 // Era transitions
 // ---------------------------------------------------------------------------
 
