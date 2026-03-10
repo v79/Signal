@@ -41,7 +41,7 @@
     {label}
   </button>
   <div class="phase-desc">{phaseDesc}</div>
-  <button class="help-btn" onclick={() => (showHelp = true)}>Help?</button>
+  <button class="help-btn" onclick={() => (showHelp = true)} title="Help">?</button>
 </div>
 
 <style>
@@ -105,19 +105,28 @@
   }
 
   .help-btn {
-    background: none;
-    border: none;
-    color: #2a3a4a;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: #6a1a1a;
+    border: 1px solid #a03030;
+    color: #f0a0a0;
     font-family: monospace;
-    font-size: 0.58rem;
-    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 1;
     cursor: pointer;
     padding: 0;
-    margin-top: 0.15rem;
-    transition: color 0.15s;
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
   }
 
   .help-btn:hover {
-    color: #4a6070;
+    background: #8a2020;
+    border-color: #c04040;
   }
 </style>
