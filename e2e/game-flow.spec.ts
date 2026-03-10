@@ -8,6 +8,10 @@ async function startNewGame(page: Page): Promise<void> {
   await page.goto('/newgame');
   await page.waitForLoadState('networkidle');
 
+  // Dismiss the opening narrative (skippable)
+  await page.waitForSelector('.skip-btn');
+  await page.click('.skip-btn');
+
   // North American Alliance is pre-selected (first bloc). Click BEGIN MISSION.
   await page.click('button.btn-begin');
   await page.waitForURL('**/');
