@@ -396,10 +396,8 @@ export interface EventDef {
   negativeEffect: EventEffect;
   /** Effect if the event is accepted (opportunity events). */
   positiveEffect: EventEffect | null;
-  /** Partial mitigation cost (if responseTier is 'partialMitigation'). */
+  /** Partial mitigation cost (if responseTier is 'partialMitigation'). Paying this cost is the player's total penalty — no additional residual effect is applied. */
   mitigationCost?: Partial<Resources>;
-  /** Mitigation reduces the negative effect by this fraction. */
-  mitigationFactor?: number;
 }
 
 export interface EventEffect {

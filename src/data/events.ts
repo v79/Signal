@@ -22,7 +22,6 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map([
       negativeEffect: { resources: { funding: -30 } },
       positiveEffect: null,
       mitigationCost: { funding: 15 },
-      mitigationFactor: 0.5,
     },
   ],
   [
@@ -58,7 +57,6 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map([
       negativeEffect: { fields: { physics: -10, mathematics: -5 } },
       positiveEffect: null,
       mitigationCost: { funding: 20 },
-      mitigationFactor: 0.5,
     },
   ],
   [
@@ -111,7 +109,6 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map([
       negativeEffect: { resources: { materials: -20 } },
       positiveEffect: null,
       mitigationCost: { materials: 10 },
-      mitigationFactor: 0.6,
     },
   ],
   [

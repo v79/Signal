@@ -48,7 +48,6 @@ const fundingCrisisDef: EventDef = {
   negativeEffect: { resources: { funding: -30 } },
   positiveEffect: null,
   mitigationCost: { funding: 15 },
-  mitigationFactor: 0.5,
 };
 
 const diplomaticOpportunityDef: EventDef = {
@@ -95,7 +94,6 @@ const euOnlyEventDef: EventDef = {
   negativeEffect: { resources: { politicalWill: -15 } },
   positiveEffect: null,
   mitigationCost: { funding: 10 },
-  mitigationFactor: 0.5,
 };
 
 const restrictionEventDef: EventDef = {
@@ -279,10 +277,9 @@ describe('getEffectForResolution', () => {
     expect(effect?.resources?.funding).toBe(-30);
   });
 
-  it('returns scaled negative effect for mitigation', () => {
-    // fundingCrisis: -30 funding, 50% mitigation → -15
+  it('returns null for mitigation (mitigationCost is the only penalty)', () => {
     const effect = getEffectForResolution(fundingCrisisDef, 'mitigation');
-    expect(effect?.resources?.funding).toBe(-15);
+    expect(effect).toBeNull();
   });
 });
 

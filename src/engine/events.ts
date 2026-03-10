@@ -5,7 +5,6 @@ import type {
   PlayerState,
   MapTile,
   StandingActionRestriction,
-  Resources,
   FieldPoints,
   Era,
   PushFactor,
@@ -204,7 +203,7 @@ export function applyEventEffect(
  *
  * - 'counter': no negative effect (fully neutralised)
  * - 'accepted': positiveEffect (opportunity event accepted)
- * - 'mitigation': negativeEffect scaled by (1 - mitigationFactor)
+ * - 'mitigation': null — mitigationCost already deducted; no residual effect
  * - 'expired': full negativeEffect
  */
 export function getEffectForResolution(
@@ -218,11 +217,10 @@ export function getEffectForResolution(
     case 'accepted':
       return def.positiveEffect;
 
-    case 'mitigation': {
-      if (!def.mitigationFactor || !def.mitigationCost) return def.negativeEffect;
-      const factor = 1 - def.mitigationFactor;
-      return scaleEffect(def.negativeEffect, factor);
-    }
+    case 'mitigation':
+      // The mitigationCost deducted in mitigateEvent() is the player's total
+      // reduced penalty. No additional residual effect is applied.
+      return null;
 
     case 'expired':
       return def.negativeEffect;
@@ -258,27 +256,3 @@ export function formatEffectForNews(effect: EventEffect): string {
 
 // ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
-
-/** Scale numeric fields of an EventEffect by a factor (used for mitigation). */
-function scaleEffect(effect: EventEffect, factor: number): EventEffect {
-  const scaled: EventEffect = { ...effect };
-
-  if (effect.resources) {
-    const r: Partial<Resources> = {};
-    for (const k of Object.keys(effect.resources) as (keyof Resources)[]) {
-      r[k] = Math.round((effect.resources[k] ?? 0) * factor);
-    }
-    scaled.resources = r;
-  }
-
-  if (effect.fields) {
-    const f: Partial<FieldPoints> = {};
-    for (const k of Object.keys(effect.fields) as (keyof FieldPoints)[]) {
-      f[k] = Math.round((effect.fields[k] ?? 0) * factor);
-    }
-    scaled.fields = f;
-  }
-
-  return scaled;
-}
