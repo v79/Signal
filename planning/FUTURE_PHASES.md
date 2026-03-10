@@ -7,9 +7,6 @@ This is a list of future requirements for the game but they are not to be implem
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
-  - A better bank, shown to the side of the cards
-  - Bank can store up to two cards, at a cost of Will (not Funding)
-  - There is no limit to the number of cards that can be played, given sufficient resources.
 - Research work
   - What do the progress bars on the science fields mean?
   - How are research fields 'spent' to progress unlocking Technologies
@@ -19,6 +16,21 @@ This is a list of future requirements for the game but they are not to be implem
   - Funding is hard to come by
   - Negative events happen to frequently
   - There's no way of recovering from a funding/materials death spiral - maybe burn Will to build a cheap strip mine?
+- Events
+  - Event frequency should be configured within the event definitions, so some events are less likely than others
+  - Events frequency may be affected by the current Climate or Global Will scores
+  - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
+  - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
+- Political Will
+  - What is the difference between Global Will and Political Will?
+  - Political Will should have a cap (100?)
+- Earth map
+  - Show the name of our player's Bloc somewhere in the HUD or map
+  - Visualise neighbour adjacency bonuses/penalties - not the numbers, just indicate that they exist
+  - Add panning and scrolling, constrained to bounds so the player can't lose the map entirely
+  - Add a themetic loading text before the map renders
+  - Map-specific events, such as coastalFlooding, should impact a specific tile, and should destroy any facility on that tile
+  - A drop-down list of all facilities
 - LEO technology content pass
 - Asteriod era technology content pass
 - Game art:
@@ -34,6 +46,7 @@ This is a list of future requirements for the game but they are not to be implem
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
 - Interface for narrative story elements
   - Opening sequence to set the scene
+  - Technology unlock events
   - Era transitions
   - Major landmarks
   - Special events
@@ -42,6 +55,11 @@ This is a list of future requirements for the game but they are not to be implem
   - Support for narrative choices - up to 3 options that will trigger in-game actions
 - News feed & ticker rework
   - The ticker is cute but not very functional
-  - The news feed does not have enough space on smaller screens
 - Debug view and logs
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
+- Game menu
+  - Move the Import and Export options into the dropdown game menu; rename as Save and Load
+- Committee/Board
+  - Make it more prominant, it's too easy to ignore
+  - Don't offer people if you can't afford the recruitment cost
+  

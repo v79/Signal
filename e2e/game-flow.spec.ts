@@ -8,6 +8,10 @@ async function startNewGame(page: Page): Promise<void> {
   await page.goto('/newgame');
   await page.waitForLoadState('networkidle');
 
+  // Dismiss the opening narrative (skippable)
+  await page.waitForSelector('.skip-btn');
+  await page.click('.skip-btn');
+
   // North American Alliance is pre-selected (first bloc). Click BEGIN MISSION.
   await page.click('button.btn-begin');
   await page.waitForURL('**/');
@@ -24,6 +28,8 @@ async function startNewGame(page: Page): Promise<void> {
 test('setup screen — select bloc and push factor', async ({ page }) => {
   await page.goto('/newgame');
   await page.waitForLoadState('networkidle');
+  await page.waitForSelector('.skip-btn');
+  await page.click('.skip-btn');
 
   // Screenshot: default state (first bloc pre-selected, Climate Change active)
   await page.screenshot({ path: 'screenshots/01-setup-default.png', fullPage: true });

@@ -180,6 +180,12 @@
           gameStore.state!.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
         )}
         techNames={new Map([...TECH_DEFS.values()].map((d) => [d.id, d.name]))}
+        builtDefIds={new Set([
+          ...gameStore.state!.player.facilities.map((f) => f.defId),
+          ...gameStore.state!.player.constructionQueue
+            .filter((a) => a.type === 'construct')
+            .map((a) => a.facilityDefId),
+        ])}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onDemolish={() => gameStore.demolishFacility(gameStore.selectedCoordKey!)}
         onClose={() => gameStore.selectTile(null)}

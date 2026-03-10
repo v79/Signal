@@ -7,6 +7,8 @@ import { test, expect, type Page, type Locator } from '@playwright/test';
 async function startNewGame(page: Page): Promise<void> {
   await page.goto('/newgame');
   await page.waitForLoadState('networkidle');
+  await page.waitForSelector('.skip-btn');
+  await page.click('.skip-btn');
   await page.click('button.btn-begin');
   await page.waitForURL('**/');
   await page.waitForLoadState('networkidle');
