@@ -68,3 +68,10 @@ Banking mechanic: up to 2 cards held between turns at 1 Funding/card/turn decay 
 - **Game state is fully client-side.** Seeded runs (shareable seed strings) are a lightweight community feature; the seed must deterministically drive bloc simulation and event pools.
 - **Some events cannot be countered.** The third event-response tier (no counter) must remain in the design — the player should never feel perfect play counters everything.
 - **Multiplayer is explicitly out of scope** — not a deferral, a positive design choice.
+
+
+### Documentation
+
+- Always create a planning document for each phase in planning/PLAN_PHASE<number>.md
+- Use the ✅ mark when marking planning items as completed
+
