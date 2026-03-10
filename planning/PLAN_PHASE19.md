@@ -73,21 +73,21 @@ New standalone data file containing:
 - **Win narrative**: wormhole activation
 - **Loss narratives**: one per loss condition (funding collapse, political will collapse, etc.)
 
-### 19.4 — Narrative text for tech and unique facility defs ✅ COMPLETE
+### ~~19.4 — Narrative text for tech and unique facility defs~~ ✅ COMPLETE
 - Add `narrative` to all 12 `TECH_DEFS` entries in `src/data/technologies.ts`
 - Identify which facilities should be `unique: true` and add `narrative` to those entries in `src/data/facilities.ts` (candidates: Deep Space Array, HQ, Heliopause Relay)
 - Unique facilities that have already been built show their build button **disabled** with a tooltip explaining they can only be built once
 
-### 19.5 — Trigger integration
+### ~~19.5 — Trigger integration~~ ✅ COMPLETE
 Wire `enqueueNarrative` into the appropriate points:
-- **Tech discovery** (`turn.ts`): after research check, enqueue narrative for each newly discovered tech
-- **Signal decode stage** (`turn.ts` or game store): on stage increment, enqueue the signal stage narrative
-- **Unique facility completion** (game store, facility build path): on build queue completion for a unique facility, enqueue its narrative
-- **Era transition** (`turn.ts`): on era increment, enqueue the era transition narrative
-- Queue order when multiple narratives fire in one turn: tech unlock → signal progress → unique facility → era transition
-- **Win/lose** (`/summary` page): win/loss narrative is displayed on the summary page itself, not as a modal before redirect
+- **Tech discovery** (game store `advancePhase`): after world phase, compare before/after techs, enqueue narrative for each newly discovered tech with a narrative def
+- **Signal decode stage** (game store `advancePhase`): on stage crossing 30% → `NARRATIVE_SIGNAL_STRUCTURED`, 70% → `NARRATIVE_SIGNAL_URGENT`
+- **Unique facility completion** (game store `advancePhase`): detect newly added facilities after world phase tick; enqueue def.narrative if def.unique
+- **Era transition** (game store `advancePhase`): on era change, enqueue `NARRATIVE_ERA_NEARSPACE` or `NARRATIVE_ERA_DEEPSPACE`
+- Queue order: tech unlock → signal progress → unique facility → era transition
+- **Win/lose** (`/summary` page): `NarrativeModal` shown on page load using `VICTORY_NARRATIVES`/`LOSS_NARRATIVES` lookup, dismissed with local state
 
-### 19.6 — Opening sequence on `/newgame` ✅ COMPLETE
+### ~~19.6 — Opening sequence on `/newgame`~~ ✅ COMPLETE
 - Before the bloc selection UI renders, show the opening `NarrativeDef` as a modal (skippable)
 - Not gated by `seenNarrativeIds` — the game state does not exist yet at this point
 - After close or skip, reveal the bloc selection UI as normal

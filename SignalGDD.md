@@ -567,10 +567,7 @@ The climax of the wormhole path is a late-game event card presenting the player 
 
 The specific nature of the signal's builders, the destination of the wormhole, and the exact content of the warning are deliberately left open for future narrative development. The mechanical and structural decisions above are stable; the lore details beneath them can be revised without breaking the game systems.
 
----
-
-_All open questions resolved as of Version 0.6._
 
 ---
 
-_End of Document — Version 0.6_
+_End of Document — Version 0.7_

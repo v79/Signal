@@ -31,6 +31,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Add a themetic loading text before the map renders
   - Map-specific events, such as coastalFlooding, should impact a specific tile, and should destroy any facility on that tile
   - A drop-down list of all facilities
+  - Some facilities will polute (increase climate degredation), a few will heal the climate, and some may prevent tile loss (sea walls)
 - LEO technology content pass
 - Asteriod era technology content pass
 - Game art:
@@ -55,6 +56,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Support for narrative choices - up to 3 options that will trigger in-game actions
 - News feed & ticker rework
   - The ticker is cute but not very functional
+  - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
 - Debug view and logs
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
 - Game menu

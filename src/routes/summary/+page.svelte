@@ -3,13 +3,15 @@
   import { goto } from '$app/navigation';
   import { gameStore } from '$lib/stores/game.svelte';
   import type { VictoryCondition, LossCondition } from '../../engine/types';
+  import NarrativeModal from '$lib/components/NarrativeModal.svelte';
+  import { VICTORY_NARRATIVES, LOSS_NARRATIVES } from '../../data/narrative';
 
   onMount(() => {
     if (!gameStore.state) goto('/newgame');
   });
 
   const outcome = $derived(gameStore.state?.outcome);
-  const state = $derived(gameStore.state);
+  const gameState = $derived(gameStore.state);
 
   // ---------------------------------------------------------------------------
   // Condition copy
@@ -52,6 +54,15 @@
   };
 
   const isVictory = $derived(outcome?.type === 'victory');
+
+  let showOutcomeNarrative = $state(true);
+  const outcomeNarrative = $derived(
+    outcome
+      ? isVictory
+        ? (VICTORY_NARRATIVES[outcome.condition] ?? null)
+        : (LOSS_NARRATIVES[outcome.condition] ?? null)
+      : null,
+  );
   const title = $derived(
     outcome
       ? isVictory
@@ -77,7 +88,11 @@
   };
 </script>
 
-{#if state}
+{#if showOutcomeNarrative && outcomeNarrative}
+  <NarrativeModal narrative={outcomeNarrative} onDismiss={() => (showOutcomeNarrative = false)} />
+{/if}
+
+{#if gameState}
   <div class="summary-layout">
     <div class="summary-card">
       <!-- Outcome banner -->
@@ -107,24 +122,24 @@
       <div class="stats-grid">
         <div class="stat-block">
           <div class="stat-section-label">MISSION RECORD</div>
-          <div class="stat-row"><span>Turn</span><span>{outcome?.turn ?? state.turn}</span></div>
-          <div class="stat-row"><span>Year</span><span>{state.year}</span></div>
+          <div class="stat-row"><span>Turn</span><span>{outcome?.turn ?? gameState.turn}</span></div>
+          <div class="stat-row"><span>Year</span><span>{gameState.year}</span></div>
           <div class="stat-row">
             <span>Era</span><span class="era-badge"
-              >{state.era
+              >{gameState.era
                 .toUpperCase()
                 .replace('NEARSPACE', 'NEAR SPACE')
                 .replace('DEEPSPACE', 'DEEP SPACE')}</span
             >
           </div>
           <div class="stat-row">
-            <span>Climate Pressure</span><span class:danger={state.climatePressure >= 80}
-              >{Math.round(state.climatePressure)}%</span
+            <span>Climate Pressure</span><span class:danger={gameState.climatePressure >= 80}
+              >{Math.round(gameState.climatePressure)}%</span
             >
           </div>
           <div class="stat-row">
-            <span>Earth Welfare</span><span class:danger={state.earthWelfareScore < 40}
-              >{Math.round(state.earthWelfareScore)}%</span
+            <span>Earth Welfare</span><span class:danger={gameState.earthWelfareScore < 40}
+              >{Math.round(gameState.earthWelfareScore)}%</span
             >
           </div>
         </div>
@@ -132,22 +147,22 @@
         <div class="stat-block">
           <div class="stat-section-label">FINAL RESOURCES</div>
           <div class="stat-row">
-            <span>Funding</span><span>{Math.round(state.player.resources.funding)}</span>
+            <span>Funding</span><span>{Math.round(gameState.player.resources.funding)}</span>
           </div>
           <div class="stat-row">
-            <span>Materials</span><span>{Math.round(state.player.resources.materials)}</span>
+            <span>Materials</span><span>{Math.round(gameState.player.resources.materials)}</span>
           </div>
           <div class="stat-row">
             <span>Political Will</span><span
-              >{Math.round(state.player.resources.politicalWill)}</span
+              >{Math.round(gameState.player.resources.politicalWill)}</span
             >
           </div>
-          <div class="stat-row"><span>Will</span><span>{Math.round(state.player.will)}</span></div>
+          <div class="stat-row"><span>Will</span><span>{Math.round(gameState.player.will)}</span></div>
         </div>
 
         <div class="stat-block">
           <div class="stat-section-label">RESEARCH FIELDS</div>
-          {#each Object.entries(state.player.fields) as [field, pts]}
+          {#each Object.entries(gameState.player.fields) as [field, pts]}
             <div class="stat-row">
               <span>{FIELD_LABELS[field] ?? field}</span>
               <span>{Math.round(pts)}</span>

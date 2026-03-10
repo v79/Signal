@@ -28,7 +28,13 @@ import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../
 import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
 import type { SignalResponseOption } from '../../engine/types';
 import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
-import { dismissNarrative } from '../../engine/narrative';
+import { dismissNarrative, enqueueNarrative } from '../../engine/narrative';
+import {
+  NARRATIVE_SIGNAL_STRUCTURED,
+  NARRATIVE_SIGNAL_URGENT,
+  NARRATIVE_ERA_NEARSPACE,
+  NARRATIVE_ERA_DEEPSPACE,
+} from '../../data/narrative';
 import { initialiseTechs } from '../../engine/research';
 import { CARD_DEFS } from '../../data/cards';
 import { EVENT_DEFS } from '../../data/events';
@@ -837,7 +843,54 @@ export const gameStore = {
       // Each turn gets its own deterministic RNG slice derived from seed + turn number.
       const rng = createRng(`${_state.seed}-t${_state.turn}`);
       let next = endActionPhase(_state);
+
+      // Snapshot pre-world-phase state for narrative comparison
+      const prevTechs = _state.player.techs;
+      const prevSignalProgress = _state.signal.decodeProgress;
+      const prevEra = _state.era;
+      const prevFacilities = _state.player.facilities;
+
       next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS);
+
+      // ---------------------------------------------------------------------------
+      // Enqueue narratives in prescribed order:
+      //   1. Tech unlock  2. Signal progress  3. Unique facility  4. Era transition
+      // ---------------------------------------------------------------------------
+
+      // 1. Tech unlock narratives
+      const newlyDiscovered = next.player.techs.filter(
+        (t) =>
+          t.stage === 'discovered' &&
+          !prevTechs.some((pt) => pt.defId === t.defId && pt.stage === 'discovered'),
+      );
+      for (const tech of newlyDiscovered) {
+        const def = TECH_DEFS.get(tech.defId);
+        if (def?.narrative) next = enqueueNarrative(next, def.narrative);
+      }
+
+      // 2. Signal decode stage narratives
+      if (prevSignalProgress < 30 && next.signal.decodeProgress >= 30) {
+        next = enqueueNarrative(next, NARRATIVE_SIGNAL_STRUCTURED);
+      }
+      if (prevSignalProgress < 70 && next.signal.decodeProgress >= 70) {
+        next = enqueueNarrative(next, NARRATIVE_SIGNAL_URGENT);
+      }
+
+      // 3. Unique facility completion narratives (facilities added this world phase)
+      const newFacilities = next.player.facilities.filter(
+        (f) => !prevFacilities.some((pf) => pf.id === f.id),
+      );
+      for (const facility of newFacilities) {
+        const def = FACILITY_DEFS.get(facility.defId);
+        if (def?.unique && def.narrative) next = enqueueNarrative(next, def.narrative);
+      }
+
+      // 4. Era transition narratives
+      if (prevEra !== next.era) {
+        if (next.era === 'nearSpace') next = enqueueNarrative(next, NARRATIVE_ERA_NEARSPACE);
+        if (next.era === 'deepSpace') next = enqueueNarrative(next, NARRATIVE_ERA_DEEPSPACE);
+      }
+
       // If the game ended, skip the remaining automated phases and navigate.
       if (next.outcome) {
         _state = next;
