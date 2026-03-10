@@ -150,6 +150,10 @@ export function validateSave(raw: unknown): ValidationResult {
     return { valid: false, error: 'Missing blocs array' };
   }
 
+  // Backward-compat defaults for narrative fields added in Phase 19.
+  if (!Array.isArray(s['seenNarrativeIds'])) s['seenNarrativeIds'] = [];
+  if (!Array.isArray(s['narrativeQueue'])) s['narrativeQueue'] = [];
+
   return { valid: true, state: candidate as GameState };
 }
 

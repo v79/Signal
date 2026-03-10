@@ -137,6 +137,24 @@ export interface BeltEdge {
 }
 
 // ---------------------------------------------------------------------------
+// Narrative
+// ---------------------------------------------------------------------------
+
+export interface NarrativeSlide {
+  text: string;
+  /** CSS colour string for a placeholder image panel. Omit for text-only slides. */
+  imageColour?: string;
+}
+
+export interface NarrativeDef {
+  id: string;
+  title: string;
+  slides: NarrativeSlide[];
+  /** If true, a Skip button is shown so the player can dismiss immediately. */
+  skippable?: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Facilities
 // ---------------------------------------------------------------------------
 
@@ -173,6 +191,10 @@ export interface FacilityDef {
    * Null means available from game start.
    */
   requiredTechId: string | null;
+  /** If true, only one instance of this facility may exist per run. */
+  unique?: boolean;
+  /** Narrative shown when this facility is first completed (unique facilities only). */
+  narrative?: NarrativeDef;
 }
 
 export interface AdjacencyRule {
@@ -293,6 +315,8 @@ export interface TechDef {
   unlocksFacilities: string[];
   /** Whether this tech can only be found via signal analysis. */
   signalDerived: boolean;
+  /** Narrative shown when this technology is discovered. */
+  narrative?: NarrativeDef;
 }
 
 /** Per-run recipe generated from TechDef.baseRecipe + RNG. */
@@ -707,4 +731,8 @@ export interface GameState {
   actionsThisTurn: number;
   /** Maximum card plays allowed per action phase (default 3). Board members may modify. */
   maxActionsPerTurn: number;
+  /** IDs of narratives already seen this run. Prevents re-triggering after save/load. */
+  seenNarrativeIds: string[];
+  /** Narratives queued for display, processed one at a time in order. */
+  narrativeQueue: NarrativeDef[];
 }

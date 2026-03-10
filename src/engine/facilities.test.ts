@@ -5,6 +5,7 @@ import {
   computeFacilityOutput,
   tickMineDepletion,
   MINE_DEPLETION_RATE,
+  isUniqueAlreadyBuilt,
 } from './facilities';
 import type { FacilityDef, FacilityInstance, MapTile } from './types';
 import { ZERO_FIELDS, ZERO_RESOURCES } from './state';
@@ -298,5 +299,49 @@ describe('tickMineDepletion', () => {
     const original = [facility];
     tickMineDepletion(original, defs);
     expect(original[0].condition).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isUniqueAlreadyBuilt
+// ---------------------------------------------------------------------------
+
+describe('isUniqueAlreadyBuilt', () => {
+  it('returns false when no facilities exist', () => {
+    expect(isUniqueAlreadyBuilt([], [], 'deepSpaceArray')).toBe(false);
+  });
+
+  it('returns true when a facility instance with the def ID exists', () => {
+    const facility = makeFacility('dsa-1', 'deepSpaceArray', '0,0');
+    expect(isUniqueAlreadyBuilt([facility], [], 'deepSpaceArray')).toBe(true);
+  });
+
+  it('returns false for a different def ID', () => {
+    const facility = makeFacility('dsa-1', 'deepSpaceArray', '0,0');
+    expect(isUniqueAlreadyBuilt([facility], [], 'university')).toBe(false);
+  });
+
+  it('returns true when the facility is in the construction queue', () => {
+    const action: import('./types').OngoingAction = {
+      id: 'a1',
+      type: 'construct',
+      facilityDefId: 'deepSpaceArray',
+      coordKey: '1,0',
+      turnsRemaining: 2,
+      totalTurns: 3,
+    };
+    expect(isUniqueAlreadyBuilt([], [action], 'deepSpaceArray')).toBe(true);
+  });
+
+  it('ignores demolish actions in the queue', () => {
+    const action: import('./types').OngoingAction = {
+      id: 'a1',
+      type: 'demolish',
+      facilityDefId: 'deepSpaceArray',
+      coordKey: '1,0',
+      turnsRemaining: 1,
+      totalTurns: 1,
+    };
+    expect(isUniqueAlreadyBuilt([], [action], 'deepSpaceArray')).toBe(false);
   });
 });
