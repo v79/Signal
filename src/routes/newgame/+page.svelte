@@ -3,10 +3,9 @@
   import { BLOC_DEFS } from '../../data/blocs';
   import type { PushFactor } from '../../engine/types';
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
-  import { NARRATIVE_OPENING, NARRATIVE_GAME_HELP } from '../../data/narrative';
+  import { NARRATIVE_OPENING } from '../../data/narrative';
 
-  type OnboardingStage = 'opening' | 'help' | 'done';
-  let onboardingStage = $state<OnboardingStage>('opening');
+  let showOpening = $state(true);
 
   // ---------------------------------------------------------------------------
   // Seed
@@ -70,10 +69,8 @@
   }
 </script>
 
-{#if onboardingStage === 'opening'}
-  <NarrativeModal narrative={NARRATIVE_OPENING} onDismiss={() => (onboardingStage = 'help')} />
-{:else if onboardingStage === 'help'}
-  <NarrativeModal narrative={NARRATIVE_GAME_HELP} onDismiss={() => (onboardingStage = 'done')} />
+{#if showOpening}
+  <NarrativeModal narrative={NARRATIVE_OPENING} onDismiss={() => (showOpening = false)} />
 {/if}
 
 <div class="newgame-layout">

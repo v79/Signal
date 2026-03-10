@@ -1,5 +1,9 @@
 <script lang="ts">
   import type { TurnPhase } from '../../engine/types';
+  import NarrativeModal from './NarrativeModal.svelte';
+  import { NARRATIVE_GAME_HELP } from '../../data/narrative';
+
+  let showHelp = $state(false);
 
   let {
     phase,
@@ -24,6 +28,10 @@
   );
 </script>
 
+{#if showHelp}
+  <NarrativeModal narrative={NARRATIVE_GAME_HELP} onDismiss={() => (showHelp = false)} />
+{/if}
+
 <div class="phase-controls">
   <button
     class="advance-btn end-turn"
@@ -33,6 +41,7 @@
     {label}
   </button>
   <div class="phase-desc">{phaseDesc}</div>
+  <button class="help-btn" onclick={() => (showHelp = true)}>Help?</button>
 </div>
 
 <style>
@@ -93,5 +102,22 @@
     color: #3a4858;
     letter-spacing: 0.05em;
     font-style: italic;
+  }
+
+  .help-btn {
+    background: none;
+    border: none;
+    color: #2a3a4a;
+    font-family: monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 0.15rem;
+    transition: color 0.15s;
+  }
+
+  .help-btn:hover {
+    color: #4a6070;
   }
 </style>
