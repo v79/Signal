@@ -37,7 +37,7 @@ test('Help button — open, page through all slides, close', async ({ page }) =>
   // Modal should be visible with the correct title
   const modal = page.locator('[role="dialog"]');
   await expect(modal).toBeVisible();
-  await expect(modal.locator('.modal-title')).toHaveText(NARRATIVE_GAME_HELP.title.toUpperCase());
+  await expect(modal.locator('.modal-title')).toHaveText(NARRATIVE_GAME_HELP.title);
 
   // TRANSMISSION badge should be visible
   await expect(modal.locator('.modal-label')).toHaveText('TRANSMISSION');
