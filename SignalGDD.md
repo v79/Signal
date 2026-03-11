@@ -77,7 +77,7 @@ The player never directly chooses what to research. Technology emerges as a cons
 
 ### 4.2 Research Fields
 
-Five fields accumulate points passively based on player actions:
+Six fields accumulate points passively based on player actions:
 
 | Field           | Primary Sources                                                 |
 | --------------- | --------------------------------------------------------------- |
@@ -342,15 +342,17 @@ The player interacts with the game through a hybrid card system. Rather than a p
 
 ### 13.2 The Three Card Zones
 
-**Standing Actions** — always visible, always available (outside special events). Not drawn cards — a persistent toolbar representing routine organisational operations. Examples: Build Facility, Initiate Project, Adjust Budget, Standard Diplomacy. These do not deplete and are available every turn. They form the backbone of every turn; the player can always make progress even with a weak hand.
+**Standing Actions** — always visible, always available (outside special events). Not drawn cards — a persistent toolbar representing routine organisational operations. Examples: Build Facility, Recruit Board Member, Trade, Survey, Negotiate, Emergency Appeal (spend Political Will, gain Funding), Emergency Sourcing (spend Political Will, gain Materials). These do not deplete and are available every turn. They form the backbone of every turn; the player can always make progress even with a weak hand.
 
 **Action Hand** — drawn each turn from the player's unlocked deck. Typically 4–5 cards. These are opportunities, special moves, and powerful one-offs. Examples range from _Academic Conference_ (Physics + Mathematics gain) in the early game to _Asteroid Prospecting Expedition_ and _Decode Signal Segment_ in the late game. The hand is the primary source of strategic variety and surprise.
+
+**Action cap:** A maximum of **3 cards** may be played per turn. With a hand of 4–5 cards, the player always has at least one unplayed card to bank or discard — this creates meaningful decisions about which opportunities to preserve. Standing actions do not count toward the cap. Board members (particularly Director of Operations) may raise the cap.
 
 **Event Zone** — a separate area where incoming world events land. Events sit with a visible countdown, demanding a response within N turns. Some are opportunities (accept or decline); some are crises that must be addressed or absorbed. Events are framed as cards in the same visual language as action cards, keeping the UI consistent.
 
 ### 13.3 The Banking Mechanic
 
-The player may hold up to **2 cards** between turns in a bank. Banked cards do not expire automatically but carry a **decay cost** of 1 Funding per card per turn — representing the organisational overhead of keeping an initiative "warm" without acting on it.
+The player may hold up to **2 cards** between turns in a bank. Banked cards do not expire automatically but carry a **decay cost** of 1 Political Will per card per turn — representing the organisational overhead of keeping an initiative "warm" without acting on it.
 
 If the player draws new cards when the bank is full, they must discard to make room. This creates deliberate, sometimes painful decisions about which opportunities to preserve.
 
@@ -441,7 +443,7 @@ Each turn represents one calendar year. This grounds the game in a human timesca
 
 The one-year cadence may be revised per era through playtesting. Era 1 (Earth) maps naturally to annual political and budget cycles. Era 2 and 3 may warrant a different rhythm — space operations and asteroid mining don't necessarily tick on the same cadence as election cycles. This should be treated as a design variable rather than a fixed commitment across the whole game.
 
-**Implication for the card system:** banked cards decay at 1 Funding per year, giving the cost an in-world justification — keeping a programme initiative on the shelf for two or three years while waiting for the right moment carries real organisational overhead.
+**Implication for the card system:** banked cards decay at 1 Political Will per year, giving the cost an in-world justification — keeping a programme initiative on the shelf for two or three years while waiting for the right moment carries real organisational overhead. The Will cost also creates a meaningful tension: democratic blocs with volatile Will cannot afford to bank speculatively for long.
 
 ### 16.2 Bloc Identity Across Eras
 
