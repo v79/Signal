@@ -73,6 +73,8 @@
       }
     } else if (id === 'emergencyAppeal') {
       gameStore.emergencyAppeal();
+    } else if (id === 'emergencySourcing') {
+      gameStore.emergencySourcing();
     }
   }
 </script>

@@ -86,7 +86,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       description: 'Extracts raw materials each turn. Output depletes over time.',
       era: 'earth',
       allowedTileTypes: ['highland', 'arid', 'industrial'],
-      buildCost: { materials: 20 },
+      buildCost: { materials: 12 },
       upkeepCost: { funding: 2 },
       buildTime: 1,
       deleteTime: 1,

@@ -15,15 +15,9 @@ This is a list of future requirements for the game but they are not to be implem
   - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
     - Introduce a new, non-modal popup panel for Tech unlocks, that can be manually dismissed and is automatically dismissed at the end of the turn. This popup should be smaller and appear above the Phase Ctrl panel
   - Technologies should require a much broader range of sciences; most only need 2 but 4 or 5 is expected, though with low requirements for some (e.g. Genetic Sequencing Technology should require some Social Science, to reflect the cultural education and concerns around genetic engineering)
-- Further Earth era content
-  - Funding is hard to come by
-  - Negative events happen to frequently
-  - There's no way of recovering from a funding/materials death spiral - maybe burn Will to build a cheap strip mine?
-- Events
-  - Event frequency should be configured within the event definitions, so some events are less likely than others
-  - Events frequency may be affected by the current Climate or Global Will scores
-  - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
+- The Signal
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
+  - Signal should be decoded before era 3
 - Political Will
   - What is the difference between Global Will and Political Will?
   - Political Will should have a cap (100?)
@@ -57,4 +51,8 @@ This is a list of future requirements for the game but they are not to be implem
 - Committee/Board
   - Make it more prominant, it's too easy to ignore
   - Don't offer people if you can't afford the recruitment cost
-  
+- Climate management
+  - This is not fleshed out at all
+  - Postponed phase 20.2 on climate pressure scaling event severity
+  - Events frequency may be affected by the current Climate or Global Will scores
+  - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
