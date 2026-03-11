@@ -805,6 +805,31 @@ export const gameStore = {
     };
   },
 
+  /** Emergency Sourcing standing action: spend 25 Will, gain 20 Materials. */
+  emergencySourcing(): void {
+    if (!_state || _state.phase !== 'action') return;
+    const will = _state.player.resources.politicalWill;
+    if (will < 25) return;
+    const news: NewsItem = {
+      id: crypto.randomUUID(),
+      turn: _state.turn,
+      text: 'Emergency Sourcing activated — 20 Materials secured at cost of 25 Political Will.',
+      category: 'event-neutral',
+    };
+    _state = {
+      ..._state,
+      player: {
+        ..._state.player,
+        resources: {
+          ..._state.player.resources,
+          materials: _state.player.resources.materials + 20,
+          politicalWill: will - 25,
+        },
+        newsFeed: [..._state.player.newsFeed, news],
+      },
+    };
+  },
+
   /** Emergency Appeal standing action: spend 20 Will, gain 30 Funding. */
   emergencyAppeal(): void {
     if (!_state || _state.phase !== 'action') return;

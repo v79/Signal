@@ -52,7 +52,7 @@ Assign weights to all 10 existing events:
 
 ---
 
-### 20.2 — Climate pressure scales event severity
+### ~~20.2 — Climate pressure scales event severity~~
 
 **Files:** `src/engine/events.ts`, `src/engine/turn.ts`
 
@@ -78,7 +78,7 @@ Also extend the early-game protection window from 5 turns to **8 turns**, matchi
 
 ---
 
-### 20.4 — Materials recovery standing action
+### 20.4 — Materials recovery standing action ✅
 
 **Files:** `src/data/standingActions.ts`, `src/lib/stores/game.svelte.ts`
 
@@ -113,7 +113,7 @@ A 1-turn countdown is effectively no warning — the event arrives and expires b
 
 ---
 
-### 20.6 — Starting resource review
+### 20.6 — Starting resource review ✅
 
 **File:** `src/data/blocs.ts`
 
@@ -133,7 +133,7 @@ The intent: every bloc should be able to absorb one `industrialAccident` (–20 
 
 ---
 
-### 20.7 — Resource Mine cost reduction
+### 20.7 — Resource Mine cost reduction ✅
 
 **File:** `src/data/facilities.ts`
 
@@ -142,6 +142,10 @@ Reduce Resource Mine build cost from `{ materials: 20 }` to `{ materials: 12 }`.
 The mine costs 20 materials to build and produces 8 materials/turn. When a player's materials are depleted by a crisis event, they cannot afford to rebuild their production capacity — the very resource needed to recover is the one that buys recovery. Reducing the floor to 12 materials ensures the mine is reachable from a depleted state, with Emergency Sourcing (20 materials) acting as the bridge.
 
 ---
+
+## Postponed from Phase 20
+
+- **20.2 Climate pressure scales event severity** — deferred; climate management requires further design thought before implementation.
 
 ## Out of scope for Phase 20
 
