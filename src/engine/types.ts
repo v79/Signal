@@ -415,6 +415,8 @@ export interface EventDef {
   blocIds: string[] | null;
   /** Number of turns before the event resolves automatically. */
   countdownTurns: number;
+  /** Selection probability relative to other events. Default 1.0. */
+  weight: number;
   responseTier: EventResponseTier;
   /** Effect if the event is not countered / resolves unfavourably. */
   negativeEffect: EventEffect;

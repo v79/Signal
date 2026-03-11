@@ -21,6 +21,9 @@ export const MAX_NEW_EVENTS_PER_TURN = 2;
 /**
  * Filter the event pool to events eligible to fire given the current
  * game context: era, push factor, player's bloc, and events already active.
+ *
+ * If `hasCrisisActive` is true, all crisis-tagged events are excluded so
+ * that at most one crisis can be active at a time.
  */
 export function getEligibleEvents(
   pool: EventDef[],
@@ -28,12 +31,14 @@ export function getEligibleEvents(
   pushFactor: PushFactor,
   playerBlocId: string,
   activeEventDefIds: Set<string>,
+  hasCrisisActive: boolean,
 ): EventDef[] {
   return pool.filter((def) => {
     if (activeEventDefIds.has(def.id)) return false;
     if (!def.eras.includes(era)) return false;
     if (def.pushFactors !== null && !def.pushFactors.includes(pushFactor)) return false;
     if (def.blocIds !== null && !def.blocIds.includes(playerBlocId)) return false;
+    if (hasCrisisActive && def.tags.includes('crisis')) return false;
     return true;
   });
 }
@@ -55,20 +60,33 @@ export function selectNewEvents(
   arrivedTurn: number,
 ): EventInstance[] {
   const activeDefIds = new Set(activeEvents.map((e) => e.defId));
-  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds);
+  const hasCrisisActive = activeEvents.some(
+    (e) => !e.resolved && (pool.find((d) => d.id === e.defId)?.tags ?? []).includes('crisis'),
+  );
+  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive);
   if (eligible.length === 0) return [];
 
   const rawCount = rng.nextInt(0, Math.min(MAX_NEW_EVENTS_PER_TURN, eligible.length));
-  // Limit to at most 1 event in the first 5 turns so the player can establish a base.
-  const count = arrivedTurn <= 5 ? Math.min(rawCount, 1) : rawCount;
+  // Limit to at most 1 event in the first 8 turns so the player can establish a base.
+  const count = arrivedTurn <= 8 ? Math.min(rawCount, 1) : rawCount;
   const selected: EventDef[] = [];
   const remaining = [...eligible];
 
   for (let i = 0; i < count; i++) {
     if (remaining.length === 0) break;
-    const idx = Math.floor(rng.next() * remaining.length);
-    selected.push(remaining[idx]);
-    remaining.splice(idx, 1);
+    const totalWeight = remaining.reduce((sum, def) => sum + def.weight, 0);
+    if (totalWeight <= 0) break;
+    let threshold = rng.next() * totalWeight;
+    let chosen = remaining[remaining.length - 1];
+    for (const def of remaining) {
+      threshold -= def.weight;
+      if (threshold < 0) {
+        chosen = def;
+        break;
+      }
+    }
+    selected.push(chosen);
+    remaining.splice(remaining.indexOf(chosen), 1);
   }
 
   return selected.map((def) => ({
