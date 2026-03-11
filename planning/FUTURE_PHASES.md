@@ -13,6 +13,8 @@ This is a list of future requirements for the game but they are not to be implem
   - It should not be possible to decode the Signal until the Asteroid era!
   - When a technology is researched, a narrative popup should be shown on the main game screen, with information on the new cards, facilities or actions it unlocks and those it obsoletes
   - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
+    - Introduce a new, non-modal popup panel for Tech unlocks, that can be manually dismissed and is automatically dismissed at the end of the turn. This popup should be smaller and appear above the Phase Ctrl panel
+  - Technologies should require a much broader range of sciences; most only need 2 but 4 or 5 is expected, though with low requirements for some (e.g. Genetic Sequencing Technology should require some Social Science, to reflect the cultural education and concerns around genetic engineering)
 - Further Earth era content
   - Funding is hard to come by
   - Negative events happen to frequently

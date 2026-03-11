@@ -35,6 +35,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-integratedCircuits',
         title: 'Discovery — Integrated Circuit Arrays',
+        skippable: true,
         slides: [
           {
             text: 'The entire logic stack has been miniaturised onto a single substrate. Processing power that filled a room now fits in a package smaller than a fingernail.',
@@ -64,6 +65,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-rocketGuidanceSystems',
         title: 'Discovery — Precision Rocket Guidance',
+        skippable: true,
         slides: [
           {
             text: 'Orbital insertion on first attempt is now reliable. The mathematics of mid-course trajectory correction has been reduced to a procedure rather than an art.',
@@ -93,6 +95,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-satelliteCommunications',
         title: 'Discovery — Satellite Communications',
+        skippable: true,
         slides: [
           {
             text: 'An orbital relay now links every ground facility simultaneously. Data that previously required physical transfer across continents arrives in seconds.',
@@ -122,6 +125,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-microprocessors',
         title: 'Discovery — Microprocessor Architecture',
+        skippable: true,
         slides: [
           {
             text: 'A complete instruction set on a single chip, manufactured at scale. The cost of computation has dropped by two orders of magnitude.',
@@ -155,6 +159,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-personalComputing',
         title: 'Discovery — Personal Computing',
+        skippable: true,
         slides: [
           {
             text: 'Scientific-grade computation is now available to individual researchers. The bottleneck of centralised processing has been removed.',
@@ -184,6 +189,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-geneticSequencing',
         title: 'Discovery — Genetic Sequencing Technology',
+        skippable: true,
         slides: [
           {
             text: 'The chemical language of DNA is now readable at speed. Automated sequencing has reduced a decade of laboratory work to a matter of hours.',
@@ -213,6 +219,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-globalPositioningNetwork',
         title: 'Discovery — Global Positioning Network',
+        skippable: true,
         slides: [
           {
             text: 'Metre-accuracy positioning across the entire planet, derived from a constellation of precision timing satellites. Navigation has been solved.',
@@ -242,6 +249,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-roboticsAutomation',
         title: 'Discovery — Robotics and Remote Automation',
+        skippable: true,
         slides: [
           {
             text: 'Articulated machines capable of sustained autonomous operation in radiation, vacuum, and extreme temperatures have passed all field trials. The outer solar system becomes accessible without risking personnel.',
@@ -275,6 +283,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-internetProtocols',
         title: 'Discovery — Global Internetwork Protocols',
+        skippable: true,
         slides: [
           {
             text: 'A common packet-routing standard now connects every research facility on Earth in real time. Data that previously required scheduled courier transfer moves instantaneously and continuously.',
@@ -304,6 +313,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-digitisedTelemetry',
         title: 'Discovery — Digitised Space Telemetry',
+        skippable: true,
         slides: [
           {
             text: 'Standardised digital transmission formats have transformed the probe feed data. Error correction and compression have dropped the noise floor to levels that were previously theoretical.',
@@ -334,6 +344,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-signalPatternAnalysis',
         title: 'Discovery — Signal Pattern Analysis',
+        skippable: true,
         slides: [
           {
             text: 'The transmission is not random. The interval structure encodes a repeating mathematical schema — not a message in any conventional sense, but a formal system for constructing one.',
@@ -369,6 +380,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       narrative: {
         id: 'narrative-tech-orbitalMechanics',
         title: 'Discovery — Applied Orbital Mechanics',
+        skippable: true,
         slides: [
           {
             text: 'The mathematical framework for sustained human presence in low Earth orbit is complete. Trajectory planning, station-keeping, re-entry corridors — the theory is settled. The remaining work is engineering.',

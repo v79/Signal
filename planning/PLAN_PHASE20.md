@@ -17,7 +17,7 @@ Secondary issues confirmed from data:
 
 ## Sub-tasks
 
-### 20.1 — Event weight system
+### 20.1 — Event weight system ✅
 
 **Files:** `src/engine/types.ts`, `src/engine/events.ts`, `src/data/events.ts`
 
@@ -68,7 +68,7 @@ Only `climate`-tagged events receive the multiplier; all others remain at their 
 
 ---
 
-### 20.3 — Crisis concurrency cap
+### 20.3 — Crisis concurrency cap ✅
 
 **Files:** `src/engine/events.ts`
 
@@ -103,7 +103,7 @@ This mirrors Emergency Appeal (Will → Funding) and gives the player a symmetri
 
 ---
 
-### 20.5 — Coastal flooding countdown fix
+### 20.5 — Coastal flooding countdown fix ✅
 
 **File:** `src/data/events.ts`
 
