@@ -426,6 +426,8 @@ The draft specifies "at least one point per applicable tech per field." With 8+ 
 **2. What `player.fields` means after the change**
 Several existing engine and UI paths read `player.fields` as a cumulative total. These will all break or produce misleading output after 21.1. A full audit of every read of `player.fields` in engine, store, and components is needed before 21.1 is merged.
 
+- _Agreed._
+
 **3. Save file compatibility**
 Existing saves have cumulative `player.fields` values and `TechState` entries without `fieldProgress`. The migration default (all zeroes) is safe but means loaded games restart tech progress from zero. This may be acceptable given the model change, but warrants a clear warning to the user (or an explicit save-wipe notice).
 
