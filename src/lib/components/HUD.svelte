@@ -3,6 +3,7 @@
   import type { ResourceBreakdown } from '../../engine/facilities';
   import SaveControls from './SaveControls.svelte';
   import Tooltip from './Tooltip.svelte';
+  import { FIELD_ABBR, FIELD_COLOURS_CSS } from '../fieldColours';
 
   let {
     resources,
@@ -65,16 +66,7 @@
     world: 'WORLD',
   };
 
-  const FIELD_LABELS: Record<keyof FieldPoints, string> = {
-    physics: 'PHY',
-    mathematics: 'MATH',
-    engineering: 'ENG',
-    biochemistry: 'BIO',
-    computing: 'COMP',
-    socialScience: 'SOC',
-  };
-
-  const FIELD_KEYS = Object.keys(FIELD_LABELS) as (keyof FieldPoints)[];
+  const FIELD_KEYS = Object.keys(FIELD_ABBR) as (keyof FieldPoints)[];
 
   const FIELD_TOOLTIPS: Record<keyof FieldPoints, string> = {
     physics: 'Physics — drives signal detection and propulsion research.',
@@ -248,8 +240,8 @@
     {#each FIELD_KEYS as key}
       <Tooltip text={FIELD_TOOLTIPS[key]} direction="below">
         <div class="field-mini">
-          <span class="field-label">{FIELD_LABELS[key]}</span>
-          <span class="field-value">{fields[key]}</span>
+          <span class="field-label" style="color: {FIELD_COLOURS_CSS[key]}">{FIELD_ABBR[key]}</span>
+          <span class="field-value" style="color: {FIELD_COLOURS_CSS[key]}">{fields[key]}</span>
         </div>
       </Tooltip>
     {/each}
@@ -471,12 +463,10 @@
   }
 
   .field-label {
-    color: #6a7888;
     font-size: 0.65rem;
   }
 
   .field-value {
-    color: #4a9b7a;
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
   }

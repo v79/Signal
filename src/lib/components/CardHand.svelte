@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { CardInstance, CardDef, FieldPoints } from '../../engine/types';
   import { BANK_LIMIT } from '../../engine/cards';
+  import { FIELD_ABBR } from '../fieldColours';
 
   let {
     cards,
@@ -59,15 +60,7 @@
   }
 
   function fieldLabel(k: keyof FieldPoints): string {
-    const labels: Record<keyof FieldPoints, string> = {
-      physics: 'PHY',
-      mathematics: 'MATH',
-      engineering: 'ENG',
-      biochemistry: 'BIO',
-      computing: 'COMP',
-      socialScience: 'SOC',
-    };
-    return labels[k];
+    return FIELD_ABBR[k];
   }
 
   function effectColor(line: string): string {

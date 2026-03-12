@@ -6,6 +6,7 @@
     FieldPoints,
     Resources,
   } from '../../engine/types';
+  import { FIELD_ABBR } from '../fieldColours';
 
   let {
     tile,
@@ -51,16 +52,8 @@
 
   function formatFields(f: Partial<FieldPoints>): string[] {
     const lines: string[] = [];
-    const labels: Record<string, string> = {
-      physics: 'PHY',
-      mathematics: 'MATH',
-      engineering: 'ENG',
-      biochemistry: 'BIO',
-      computing: 'COMP',
-      socialScience: 'SOC',
-    };
     for (const [k, v] of Object.entries(f)) {
-      if (v && v !== 0) lines.push(`${v > 0 ? '+' : ''}${v} ${labels[k] ?? k}`);
+      if (v && v !== 0) lines.push(`${v > 0 ? '+' : ''}${v} ${FIELD_ABBR[k] ?? k}`);
     }
     return lines;
   }

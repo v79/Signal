@@ -9,6 +9,7 @@
     FacilityDef,
   } from '../../engine/types';
   import TechTreeModal from './TechTreeModal.svelte';
+  import { FIELD_COLOURS_CSS, FIELD_LABELS } from '../fieldColours';
 
   let {
     fields,
@@ -34,20 +35,7 @@
 
   const isClimax = $derived(signal.decodeProgress >= 100 && !signal.responseCommitted);
 
-  interface FieldMeta {
-    key: keyof FieldPoints;
-    label: string;
-    color: string;
-  }
-
-  const FIELD_META: FieldMeta[] = [
-    { key: 'physics', label: 'Physics', color: '#6ab0d8' },
-    { key: 'mathematics', label: 'Mathematics', color: '#a07ad8' },
-    { key: 'engineering', label: 'Engineering', color: '#c8a040' },
-    { key: 'biochemistry', label: 'Biochemistry', color: '#4ab88a' },
-    { key: 'computing', label: 'Computing', color: '#d86a6a' },
-    { key: 'socialScience', label: 'Social Sci.', color: '#d8a86a' },
-  ];
+  const FIELD_KEYS = Object.keys(FIELD_COLOURS_CSS) as (keyof FieldPoints)[];
 
   // Scale field bars: 200 pts = full bar for visual purposes
   const FIELD_SCALE = 200;
@@ -84,17 +72,18 @@
   </div>
 
   <div class="fields-list">
-    {#each FIELD_META as meta}
-      {@const val = fields[meta.key]}
+    {#each FIELD_KEYS as key}
+      {@const val = fields[key]}
+      {@const color = FIELD_COLOURS_CSS[key]}
       <div class="field-row">
-        <span class="field-name">{meta.label}</span>
+        <span class="field-name">{FIELD_LABELS[key]}</span>
         <div class="field-bar-track">
           <div
             class="field-bar-fill"
-            style="width: {fieldPct(val)}%; background: {meta.color}"
+            style="width: {fieldPct(val)}%; background: {color}"
           ></div>
         </div>
-        <span class="field-num" style="color: {meta.color}">{val}</span>
+        <span class="field-num" style="color: {color}">{val}</span>
       </div>
     {/each}
   </div>

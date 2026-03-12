@@ -325,7 +325,7 @@ The wormhole climax section stays in ResearchFeed (or is moved to a dedicated co
 
 ---
 
-### 21.9 — UI: HUD science output colour coding
+### 21.9 — UI: HUD science output colour coding ✅
 
 **Files:** `src/lib/components/StandingActions.svelte` or wherever per-turn field output is shown; `src/lib/stores/game.svelte.ts`; any component that renders field names
 
