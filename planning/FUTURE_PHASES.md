@@ -7,7 +7,7 @@ This is a list of future requirements for the game but they are not to be implem
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
-- Research work
+- Research work:
   - What do the progress bars on the science fields mean?
   - How are research fields 'spent' to progress unlocking Technologies
   - It should not be possible to decode the Signal until the Asteroid era!
@@ -15,10 +15,11 @@ This is a list of future requirements for the game but they are not to be implem
   - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
     - Introduce a new, non-modal popup panel for Tech unlocks, that can be manually dismissed and is automatically dismissed at the end of the turn. This popup should be smaller and appear above the Phase Ctrl panel
   - Technologies should require a much broader range of sciences; most only need 2 but 4 or 5 is expected, though with low requirements for some (e.g. Genetic Sequencing Technology should require some Social Science, to reflect the cultural education and concerns around genetic engineering)
-- The Signal
+  - It's far too possible for multiple techs to be unlocked in the same turn.
+- The Signal:
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Signal should be decoded before era 3
-- Political Will
+- Political Will:
   - What is the difference between Global Will and Political Will?
   - Political Will should have a cap (100?)
 - Earth map
@@ -36,7 +37,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Show building icons on hex map
   - Generic profile pictures for board members
   - Flavour text for board members
-- Tech tree dependencies
+- Tech tree dependencies:
   - Most technologies will have prerequisite technologies that must be researched first
   - Draw connecting lines between discovered technologies and progressing technologies
   - Clicking on a discovered or in progress technology in the tech tree should show more information
@@ -44,14 +45,15 @@ This is a list of future requirements for the game but they are not to be implem
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
 - News feed & ticker rework
   - The ticker is cute but not very functional
-- Debug view and logs
+- Debug view and logs:
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
-- Game menu
+- Game menu:
   - Move the Import and Export options into the dropdown game menu; rename as Save and Load
-- Committee/Board
+- Committee/Board:
   - Make it more prominant, it's too easy to ignore
   - Don't offer people if you can't afford the recruitment cost
-- Climate management
+  - The Board moves to a tab in the main panel, [ Earth | Near Space | Asteroid Belt | ... | Board]
+- Climate management:
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
   - Events frequency may be affected by the current Climate or Global Will scores
