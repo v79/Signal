@@ -23,6 +23,7 @@ import type {
   TechDiscoveryStage,
 } from '../engine/types';
 import { getTechTier } from '../engine/techTree';
+import { FIELD_COLOURS_PHASER, FIELD_COLOURS_CSS, FIELD_ABBR } from '../lib/fieldColours';
 
 // ---------------------------------------------------------------------------
 // Public interface — passed in from TechTreeModal.svelte
@@ -38,35 +39,10 @@ export interface TechTreeSceneData {
 }
 
 // ---------------------------------------------------------------------------
-// Field colour constants — exported so the modal can share them if needed
+// Field colour constants — re-exported for backward compatibility
 // ---------------------------------------------------------------------------
 
-export const FIELD_COLOURS: Record<string, number> = {
-  physics: 0x6a9fd8,
-  mathematics: 0x8a70c8,
-  engineering: 0xc87840,
-  biochemistry: 0x58a870,
-  computing: 0x60b8a0,
-  socialScience: 0xc86080,
-};
-
-const FIELD_COLOURS_CSS: Record<string, string> = {
-  physics: '#6a9fd8',
-  mathematics: '#8a70c8',
-  engineering: '#c87840',
-  biochemistry: '#58a870',
-  computing: '#60b8a0',
-  socialScience: '#c86080',
-};
-
-const FIELD_ABBR: Record<string, string> = {
-  physics: 'PHY',
-  mathematics: 'MAT',
-  engineering: 'ENG',
-  biochemistry: 'BIO',
-  computing: 'COM',
-  socialScience: 'SOC',
-};
+export { FIELD_COLOURS_PHASER as FIELD_COLOURS } from '../lib/fieldColours';
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -622,7 +598,7 @@ export class TechTreeScene extends Phaser.Scene {
       if (!threshold) continue;
       const currentVal = (fields as Record<string, number>)[field] ?? 0;
       const progress = discovered ? 1 : Math.min(1, currentVal / threshold);
-      const barColor = FIELD_COLOURS[field] ?? C_FIELD_FALLBACK;
+      const barColor = FIELD_COLOURS_PHASER[field] ?? C_FIELD_FALLBACK;
       const cssColor = FIELD_COLOURS_CSS[field] ?? '#4a6880';
 
       this.addWorldText(labelX, y, FIELD_ABBR[field] ?? field.slice(0, 3).toUpperCase(), {
@@ -726,7 +702,7 @@ export class TechTreeScene extends Phaser.Scene {
     for (const [field, val] of Object.entries(def.baseRecipe)) {
       if ((val ?? 0) > maxVal) {
         maxVal = val ?? 0;
-        color = FIELD_COLOURS[field] ?? C_FIELD_FALLBACK;
+        color = FIELD_COLOURS_PHASER[field] ?? C_FIELD_FALLBACK;
       }
     }
     return color;
