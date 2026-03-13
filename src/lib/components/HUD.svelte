@@ -241,7 +241,7 @@
       <Tooltip text={FIELD_TOOLTIPS[key]} direction="below">
         <div class="field-mini">
           <span class="field-label" style="color: {FIELD_COLOURS_CSS[key]}">{FIELD_ABBR[key]}</span>
-          <span class="field-value" style="color: {FIELD_COLOURS_CSS[key]}">{fields[key]}</span>
+          <span class="field-value" style="color: {FIELD_COLOURS_CSS[key]}">{fmt(fields[key])}</span>
         </div>
       </Tooltip>
     {/each}
