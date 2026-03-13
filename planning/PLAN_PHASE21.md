@@ -431,7 +431,7 @@ Several existing engine and UI paths read `player.fields` as a cumulative total.
 **3. Save file compatibility**
 Existing saves have cumulative `player.fields` values and `TechState` entries without `fieldProgress`. The migration default (all zeroes) is safe but means loaded games restart tech progress from zero. This may be acceptable given the model change, but warrants a clear warning to the user (or an explicit save-wipe notice).
 
-- _I am happy to break save game compatiability in this phase_
+- _I am happy to break save game compatibility in this phase_
 
 **4. The Rumour → Progress threshold numbers**
 "All required fields ≥ 33% OR 33% of fields ≥ 50%" are placeholder numbers from the draft. These need to be defined as named constants and balanced against the distribution algorithm. The risk is techs advancing to Progress very quickly in early turns if field output is high relative to recipe thresholds.

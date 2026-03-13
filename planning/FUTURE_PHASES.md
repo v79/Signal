@@ -26,12 +26,14 @@ This is a list of future requirements for the game but they are not to be implem
   - Show the name of our player's Bloc somewhere in the HUD or map
   - Visualise neighbour adjacency bonuses/penalties - not the numbers, just indicate that they exist
   - Add panning and scrolling, constrained to bounds so the player can't lose the map entirely
-  - Add a themetic loading text before the map renders
+  - Add a thematic loading text before the map renders
   - Map-specific events, such as coastalFlooding, should impact a specific tile, and should destroy any facility on that tile
   - A drop-down list of all facilities
-  - Some facilities will polute (increase climate degredation), a few will heal the climate, and some may prevent tile loss (sea walls)
+  - Some facilities will pollute (increase climate degradation), a few will heal the climate, and some may prevent tile loss (sea walls)
+  - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
+  - Climate pressure could change some tiles (forest -> arid), destroying any incompatible facilities
 - LEO technology content pass
-- Asteriod era technology content pass
+- Asteroid era technology content pass
 - Game art:
   - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
   - Show building icons on hex map
@@ -50,7 +52,7 @@ This is a list of future requirements for the game but they are not to be implem
 - Game menu:
   - Move the Import and Export options into the dropdown game menu; rename as Save and Load
 - Committee/Board:
-  - Make it more prominant, it's too easy to ignore
+  - Make it more prominent, it's too easy to ignore
   - Don't offer people if you can't afford the recruitment cost
   - The Board moves to a tab in the main panel, [ Earth | Near Space | Asteroid Belt | ... | Board]
 - Climate management:
