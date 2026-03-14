@@ -1,6 +1,6 @@
 # SIGNAL — Game Design Document
 
-_Version 0.7 — Working Draft_
+_Version 0.8 — Working Draft_
 
 ---
 
@@ -338,15 +338,13 @@ Beyond starting stats, blocs differ in:
 
 ### 13.1 Overview
 
-The player interacts with the game through a hybrid card system. Rather than a pure menu-driven action list or a fully randomised deck-builder, the system combines reliable standing actions with a drawn hand of opportunity cards. This creates turns that feel both legible and surprising.
+The player interacts with the game through a card-driven system. Player actions come from three sources: the drawn action hand, the game map (facility placement), and event responses. There are no standing actions — every turn the player works with what they have drawn.
 
-### 13.2 The Three Card Zones
-
-**Standing Actions** — always visible, always available (outside special events). Not drawn cards — a persistent toolbar representing routine organisational operations. Examples: Build Facility, Recruit Board Member, Trade, Survey, Negotiate, Emergency Appeal (spend Political Will, gain Funding), Emergency Sourcing (spend Political Will, gain Materials). These do not deplete and are available every turn. They form the backbone of every turn; the player can always make progress even with a weak hand.
+### 13.2 The Two Card Zones
 
 **Action Hand** — drawn each turn from the player's unlocked deck. Typically 4–5 cards. These are opportunities, special moves, and powerful one-offs. Examples range from _Academic Conference_ (Physics + Mathematics gain) in the early game to _Asteroid Prospecting Expedition_ and _Decode Signal Segment_ in the late game. The hand is the primary source of strategic variety and surprise.
 
-**Action cap:** A maximum of **3 cards** may be played per turn. With a hand of 4–5 cards, the player always has at least one unplayed card to bank or discard — this creates meaningful decisions about which opportunities to preserve. Standing actions do not count toward the cap. Board members (particularly Director of Operations) may raise the cap.
+**Action cap:** A maximum of **3 cards** may be played per turn. With a hand of 4–5 cards, the player always has at least one unplayed card to bank or discard — this creates meaningful decisions about which opportunities to preserve. Board members (particularly Director of Operations) may raise the cap.
 
 **Event Zone** — a separate area where incoming world events land. Events sit with a visible countdown, demanding a response within N turns. Some are opportunities (accept or decline); some are crises that must be addressed or absorbed. Events are framed as cards in the same visual language as action cards, keeping the UI consistent.
 
@@ -377,7 +375,7 @@ The high cost is intentional. Countering an event should feel like a genuine sac
 Not every event has a full counter. Three response tiers exist:
 
 1. **Full counter** — a specific card neutralises the event entirely, at significant cost
-2. **Partial mitigation** — a standing action or resource payment reduces the event's impact (e.g. spend 20 Funding to halve the Will damage from a public scandal)
+2. **Partial mitigation** — a resource payment or specific card reduces the event's impact (e.g. spend 20 Funding to halve the Will damage from a public scandal)
 3. **No counter** — some events simply happen. Climate flooding a coastal tile; a rival bloc completing a major project; a key scientist retiring. These are absorbed and adapted to, not solved.
 
 The third tier is important. The player should never feel that perfect play counters everything. Some events are the world doing what the world does.
@@ -393,16 +391,6 @@ The player's deck reflects the state of their civilisation. It grows and changes
 
 When a new card enters the deck due to a research breakthrough, a brief flavour note appears: _"Your materials scientists have refined deep-bore extraction. Automated Extraction is now available."_
 
-### 13.7 Standing Action Restrictions
-
-Rarely, special events may temporarily restrict standing actions — creating moments of genuine constraint. Examples:
-
-- _Government Audit_ — Build action suspended for 2 turns unless countered
-- _Supply Chain Collapse_ — Materials-based standing actions cost double this turn
-- _Public Inquiry_ — Will-generating actions locked; Will drains until resolved
-
-These should be rare and significant. Frequent restriction of standing actions makes the player feel helpless rather than challenged.
-
 ---
 
 ## 14. Game Loop Summary
@@ -411,7 +399,7 @@ Each turn proceeds through five phases:
 
 1. **Event Phase** — new event card(s) land in the event zone; existing events tick down their countdown; the player decides whether to counter any active events using banked or hand cards
 2. **Draw Phase** — player draws up to their hand limit from their unlocked deck
-3. **Action Phase** — player plays action cards and/or uses standing actions in any order; turn ends when the player chooses or options are exhausted
+3. **Action Phase** — player plays action cards and places facilities on the map in any order; turn ends when the player chooses or the action cap is reached
 4. **Bank Phase** — player may move up to 2 cards to their bank (paying decay cost next turn); remaining unplayed hand cards are discarded
 5. **World Phase** — resources tick, research fields accumulate, climate progresses, other blocs advance, signal strengthens or sends a new event
 
@@ -572,4 +560,4 @@ The specific nature of the signal's builders, the destination of the wormhole, a
 
 ---
 
-_End of Document — Version 0.7_
+_End of Document — Version 0.8_
