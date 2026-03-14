@@ -91,6 +91,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       buildTime: 1,
       deleteTime: 1,
       canDelete: true,
+      climateImpact: 0.4,
       fieldOutput: {},
       resourceOutput: { materials: 8 },
       adjacencyBonuses: [],
@@ -124,6 +125,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: -0.3,
     },
   ],
 
@@ -147,6 +149,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: -0.3,
     },
   ],
 
@@ -201,6 +204,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       ],
       depletes: false,
       requiredTechId: null,
+      climateImpact: 0.3,
     },
   ],
 
@@ -228,6 +232,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: -0.1,
     },
   ],
 
@@ -284,6 +289,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: 0.1,
     },
   ],
 
@@ -344,6 +350,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: 'microprocessors',
+      climateImpact: 0.1,
     },
   ],
 

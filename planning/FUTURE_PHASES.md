@@ -35,8 +35,9 @@ This is a list of future requirements for the game but they are not to be implem
   - Solar and wind farms available to early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
   - Technologies shouldn't require Computing until integrated circuits have been unlocked.
 - LEO content pass
+  - Map improvement actions such as sea walls
 - Asteroid era content pass
-  - Map improvement actions such as reforestation, radiation cleanup
+  - Map improvement actions such as reforestation, radiation cleanup, floating cities
 - Game art:
   - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
   - Show building icons on hex map

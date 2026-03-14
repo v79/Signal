@@ -195,6 +195,11 @@ export interface FacilityDef {
   unique?: boolean;
   /** Narrative shown when this facility is first completed (unique facilities only). */
   narrative?: NarrativeDef;
+  /**
+   * Net climate pressure change per World Phase contributed by this facility.
+   * Positive = pollution; negative = mitigation. Omit for climate-neutral.
+   */
+  climateImpact?: number;
 }
 
 export interface AdjacencyRule {
@@ -689,7 +694,8 @@ export type NewsCategory =
   | 'research'       // rumour or research progress
   | 'signal'         // signal track milestone
   | 'board'          // board member event
-  | 'bloc';          // NPC bloc status
+  | 'bloc'           // NPC bloc status
+  | 'climate';       // climate-driven tile degradation
 
 export interface NewsItem {
   id: string;
