@@ -102,7 +102,7 @@ export function executeEventPhase(
     if (!def) continue;
     const effect = getEffectForResolution(def, 'expired');
     if (!effect) continue;
-    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn);
+    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn, rng);
     updatedPlayer = result.player;
     updatedTiles = result.mapTiles;
     const summary = formatEffectForNews(effect);

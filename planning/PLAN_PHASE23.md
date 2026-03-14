@@ -11,7 +11,7 @@ Implemented in `src/phaser/EarthScene.ts`. Right-mouse drag pans the map; bounde
 
 ---
 
-## 23.2 — Tile-Targeted Events with Facility Destruction
+## 23.2 — Tile-Targeted Events with Facility Destruction ✅
 
 Currently `applyEventEffect` has a `// deferred` comment for `destroyTile`. The `coastalFlooding` event hardcodes coordKey `'2,-1'`.
 

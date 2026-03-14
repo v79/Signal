@@ -446,7 +446,15 @@ export interface EventDef {
 export interface EventEffect {
   resources?: Partial<Resources>;
   fields?: Partial<FieldPoints>;
-  /** Destroy a tile: coord string + the status to apply. */
+  /**
+   * Dynamically select a random non-destroyed, non-HQ tile of this type and
+   * destroy it, removing any facility on it. Use this instead of `destroyTile`
+   * for events that should target any eligible tile of a given type.
+   */
+  tileTypeTarget?: TileType;
+  /** Status applied when using `tileTypeTarget`. Defaults to 'flooded'. */
+  destroyTileStatus?: TileDestroyedStatus;
+  /** Destroy a specific tile by exact coordKey (use for scripted/fixed targets). */
   destroyTile?: { coordKey: string; status: TileDestroyedStatus };
   /** Bloc ID to eliminate. */
   eliminateBloc?: string;
