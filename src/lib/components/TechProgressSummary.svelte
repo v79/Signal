@@ -32,7 +32,7 @@
 <div class="summary-header">SHOWING PROMISE</div>
 <div class="summary">
   {#if progressTechs.length === 0}
-    <p class="empty">No research in progress.</p>
+    <p class="empty">No technologies showing promise.</p>
   {:else}
     {#each progressTechs as tech (tech.defId)}
       {@const def = techDefs.get(tech.defId)}
