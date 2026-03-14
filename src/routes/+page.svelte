@@ -206,6 +206,7 @@
         activeEventTags={counterableTags}
         actionsThisTurn={gs.actionsThisTurn ?? 0}
         maxActionsPerTurn={gs.maxActionsPerTurn ?? 3}
+        playerResources={gs.player.resources}
         onPlay={(id) => gameStore.playCard(id)}
         onBank={(id) => gameStore.bankCard(id)}
         onUnbank={(id) => gameStore.unbankCard(id)}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CardInstance, CardDef, FieldPoints } from '../../engine/types';
+  import type { CardInstance, CardDef, FieldPoints, Resources } from '../../engine/types';
   import { BANK_LIMIT } from '../../engine/cards';
   import { FIELD_ABBR } from '../fieldColours';
 
@@ -10,6 +10,7 @@
     activeEventTags,
     actionsThisTurn,
     maxActionsPerTurn,
+    playerResources,
     onPlay,
     onBank,
     onUnbank,
@@ -20,6 +21,7 @@
     activeEventTags: string[];
     actionsThisTurn: number;
     maxActionsPerTurn: number;
+    playerResources: Resources;
     onPlay: (cardId: string) => void;
     onBank: (cardId: string) => void;
     onUnbank: (cardId: string) => void;
@@ -31,6 +33,15 @@
   const inAction = $derived(phase === 'action');
   const atActionCap = $derived(actionsThisTurn >= maxActionsPerTurn);
   const canPlay = $derived(inAction && !atActionCap);
+
+  function canAfford(def: CardDef): boolean {
+    const r = def.effect.resources;
+    if (!r) return true;
+    if ((r.funding ?? 0) < 0 && playerResources.funding < -(r.funding!)) return false;
+    if ((r.materials ?? 0) < 0 && playerResources.materials < -(r.materials!)) return false;
+    if ((r.politicalWill ?? 0) < 0 && playerResources.politicalWill < -(r.politicalWill!)) return false;
+    return true;
+  }
 
   function canCounter(def: CardDef): boolean {
     return (
@@ -154,10 +165,10 @@
             <div class="card-actions">
               <button
                 class="btn btn-play"
-                class:disabled={!canPlay}
-                disabled={!canPlay}
+                class:disabled={!canPlay || !canAfford(def)}
+                disabled={!canPlay || !canAfford(def)}
                 onclick={() => onPlay(card.id)}
-                title={atActionCap ? 'Action limit reached this turn' : !inAction ? 'Not the action phase' : ''}
+                title={atActionCap ? 'Action limit reached this turn' : !inAction ? 'Not the action phase' : !canAfford(def) ? 'Insufficient resources' : ''}
               >
                 PLAY
               </button>

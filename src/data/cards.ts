@@ -314,4 +314,30 @@ export const CARD_DEFS: Map<string, CardDef> = new Map([
       upgradesFrom: null,
     },
   ],
+  [
+    'emergencyAppeal',
+    {
+      id: 'emergencyAppeal',
+      name: 'Emergency Appeal',
+      description: 'Spend 20 Political Will to secure 30 emergency Funding.',
+      flavourText: 'The mandate of the mission is its own currency.',
+      era: 'earth',
+      effect: { resources: { politicalWill: -20, funding: 30 } },
+      counterEffect: null,
+      upgradesFrom: null,
+    },
+  ],
+  [
+    'emergencySourcing',
+    {
+      id: 'emergencySourcing',
+      name: 'Emergency Sourcing',
+      description: 'Spend 25 Political Will to acquire 20 Materials through emergency channels.',
+      flavourText: 'Supply chains bend when enough pressure is applied.',
+      era: 'earth',
+      effect: { resources: { politicalWill: -25, materials: 20 } },
+      counterEffect: null,
+      upgradesFrom: null,
+    },
+  ],
 ]);
