@@ -7,6 +7,7 @@
   import TechProgressSummary from '$lib/components/TechProgressSummary.svelte';
   import TechTreeModal from '$lib/components/TechTreeModal.svelte';
   import SignalTrack from '$lib/components/SignalTrack.svelte';
+  import ScienceNewsFeed from '$lib/components/ScienceNewsFeed.svelte';
   import StandingActions from '$lib/components/StandingActions.svelte';
   import OngoingActionsPanel from '$lib/components/OngoingActionsPanel.svelte';
   import CardHand from '$lib/components/CardHand.svelte';
@@ -180,6 +181,8 @@
             <span class="new-dot"></span>
           {/if}
         </button>
+
+        <ScienceNewsFeed items={gs.player.newsFeed} />
 
         <TechProgressSummary techs={gs.player.techs} techDefs={TECH_DEFS} />
 

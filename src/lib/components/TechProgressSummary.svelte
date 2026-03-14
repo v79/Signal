@@ -66,8 +66,8 @@
     gap: 0.5rem;
     padding: 0.5rem 0.6rem;
     overflow-y: auto;
-    flex: 1;
-    min-height: 0;
+    flex-shrink: 0;
+    max-height: 10rem;
   }
 
   .empty {
