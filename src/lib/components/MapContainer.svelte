@@ -4,11 +4,12 @@
   import FacilityPicker from './FacilityPicker.svelte';
   import TileTooltip from './TileTooltip.svelte';
   import BoardPanel from './BoardPanel.svelte';
+  import FacilityOverview from './FacilityOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS } from '../../data/facilities';
   import { TECH_DEFS } from '../../data/technologies';
   import { BOARD_DEFS } from '../../data/board';
-  import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
+  import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
   import type { Era, BoardRole } from '../../engine/types';
@@ -38,6 +39,64 @@
   /** Mouse position inside the map container for tooltip positioning. */
   let mouseX = $state(0);
   let mouseY = $state(0);
+  /** True once the Phaser game has fully initialised. */
+  let mapReady = $state(false);
+  /** Whether the facility overview panel is open. */
+  let showFacilityOverview = $state(false);
+
+  const HEX_DIRS = [
+    { q: 1, r: 0 }, { q: -1, r: 0 },
+    { q: 0, r: 1 }, { q: 0, r: -1 },
+    { q: 1, r: -1 }, { q: -1, r: 1 },
+  ];
+
+  /**
+   * Per-coordKey list of directional adjacency indicators for the Earth scene.
+   * Each indicator says: "at the edge facing `direction`, draw a triangle of `type`."
+   */
+  const adjacencyMap = $derived.by<Map<string, AdjacencyIndicator[]>>(() => {
+    if (!gameStore.state) return new Map();
+    const facilities = gameStore.state.player.facilities;
+    const tiles = gameStore.state.map.earthTiles;
+
+    // Build coordKey → facility, skipping destroyed tiles
+    const keyToFacility = new Map<string, (typeof facilities)[0]>();
+    for (const tile of tiles) {
+      if (!tile.facilityId || tile.destroyedStatus !== null) continue;
+      const f = facilities.find((fac) => fac.id === tile.facilityId);
+      if (f) keyToFacility.set(`${tile.coord.q},${tile.coord.r}`, f);
+    }
+
+    const result = new Map<string, AdjacencyIndicator[]>();
+
+    for (const [key, facility] of keyToFacility) {
+      const def = FACILITY_DEFS.get(facility.defId);
+      if (!def) continue;
+      const [q, r] = key.split(',').map(Number);
+
+      for (const dir of HEX_DIRS) {
+        const nKey = `${q + dir.q},${r + dir.r}`;
+        const neighbor = keyToFacility.get(nKey);
+        if (!neighbor) continue;
+
+        for (const rule of def.adjacencyBonuses) {
+          if (rule.neighborDefId === neighbor.defId) {
+            if (!result.has(key)) result.set(key, []);
+            result.get(key)!.push({ direction: dir, type: 'bonus' });
+            break;
+          }
+        }
+        for (const rule of def.adjacencyPenalties) {
+          if (rule.neighborDefId === neighbor.defId) {
+            if (!result.has(key)) result.set(key, []);
+            result.get(key)!.push({ direction: dir, type: 'penalty' });
+            break;
+          }
+        }
+      }
+    }
+    return result;
+  });
 
   const SCENE_KEYS: Record<MapTab, string> = {
     earth: 'EarthScene',
@@ -133,6 +192,7 @@
         getQueue: () => gameStore.state?.player.constructionQueue ?? [],
         getSelected: () => gameStore.selectedCoordKey,
         getClimate: () => gameStore.state?.climatePressure ?? 0,
+        getAdjacencyMap: () => adjacencyMap,
         onTileClick: (key: string) => {
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },
@@ -143,6 +203,7 @@
       // Only EarthScene should run at startup
       game!.scene.stop('SpaceScene');
       game!.scene.stop('AsteroidScene');
+      mapReady = true;
     });
   });
 
@@ -183,6 +244,18 @@
     >
       BOARD
     </button>
+    <div class="tab-spacer"></div>
+    {#if activeTab === 'earth' && gameStore.state}
+      <Tooltip text="Overview of all built facilities" direction="below">
+        <button
+          class="tab overview-btn"
+          class:active={showFacilityOverview}
+          onclick={() => (showFacilityOverview = !showFacilityOverview)}
+        >
+          ≡ FACILITIES
+        </button>
+      </Tooltip>
+    {/if}
   </div>
 
   <!-- Board panel (shown instead of Phaser canvas when board tab is active) -->
@@ -209,6 +282,19 @@
     }}
     onmouseleave={() => gameStore.setHoveredTile(null)}
   >
+    {#if !mapReady}
+      <div class="map-loading">
+        <span class="loading-text">SYNCHRONISING GLOBAL UPLINK<span class="cursor">_</span></span>
+      </div>
+    {/if}
+    {#if showFacilityOverview && gameStore.state && activeTab === 'earth'}
+      <FacilityOverview
+        facilities={gameStore.state.player.facilities}
+        facilityDefs={FACILITY_DEFS}
+        earthTiles={gameStore.state.map.earthTiles}
+        onClose={() => (showFacilityOverview = false)}
+      />
+    {/if}
     {#if selectedTile && activeTab === 'earth'}
       <FacilityPicker
         tile={selectedTile}
@@ -318,5 +404,40 @@
     display: block;
     width: 100% !important;
     height: 100% !important;
+  }
+
+  .tab-spacer {
+    flex: 1;
+  }
+
+  .overview-btn {
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+  }
+
+  .map-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #060a10;
+  }
+
+  .loading-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: #2a4a6a;
+    text-transform: uppercase;
+  }
+
+  .cursor {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 </style>
