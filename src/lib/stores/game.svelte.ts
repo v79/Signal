@@ -44,6 +44,7 @@ import {
   formatEffectForNews,
 } from '../../engine/events';
 import { FACILITY_DEFS } from '../../data/facilities';
+import { getFacilitiesOnTile, findContiguousFreeStart } from '../../engine/facilities';
 import { BLOC_DEFS } from '../../data/blocs';
 import { BOARD_DEFS } from '../../data/board';
 import { TECH_DEFS } from '../../data/technologies';
@@ -71,7 +72,7 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
         destroyedStatus: null,
         productivity: 1.0,
         mineDepletion: 1.0,
-        facilityId: null,
+        facilitySlots: [null, null, null] as [null, null, null],
         pendingActionId: null,
       },
     ];
@@ -82,7 +83,7 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
     destroyedStatus: null,
     productivity: 1.0,
     mineDepletion: 1.0,
-    facilityId: null,
+    facilitySlots: [null, null, null] as [null, null, null],
     pendingActionId: null,
   }));
 }
@@ -126,7 +127,7 @@ export function generateEarthTiles(radius = 3): MapTile[] {
         destroyedStatus: null,
         productivity: 1.0,
         mineDepletion: 1.0,
-        facilityId: null,
+        facilitySlots: [null, null, null] as [null, null, null],
         pendingActionId: null,
       });
     }
@@ -413,7 +414,9 @@ export const gameStore = {
       builtTurn: 0,
     };
     const tilesWithHq = earthTiles.map((t) =>
-      t.coord.q === 0 && t.coord.r === 0 ? { ...t, facilityId: hqFacilityId } : t,
+      t.coord.q === 0 && t.coord.r === 0
+        ? { ...t, facilitySlots: [hqFacilityId, hqFacilityId, hqFacilityId] as [string, string, string] }
+        : t,
     );
 
     let next: GameState = {
@@ -459,6 +462,9 @@ export const gameStore = {
     );
     if (!tile || tile.destroyedStatus !== null) return;
 
+    // Cannot build if a construction/demolition is already in progress on this tile.
+    if (tile.pendingActionId != null) return;
+
     // Tech gate: refuse if the required technology has not been discovered.
     if (def.requiredTechId != null) {
       const techDiscovered = _state.player.techs.some(
@@ -466,6 +472,15 @@ export const gameStore = {
       );
       if (!techDiscovered) return;
     }
+
+    // Duplicate check: reject if this defId is already present on the tile.
+    const tileInstances = getFacilitiesOnTile(tile, _state.player.facilities);
+    if (tileInstances.some((f) => f.defId === defId)) return;
+
+    // Find first contiguous free slot start.
+    const slotCost = def.slotCost ?? 1;
+    const start = findContiguousFreeStart(tile.facilitySlots, slotCost);
+    if (start === null) return;
 
     // Deduct build cost up-front regardless of whether construction is instant.
     const newResources = {
@@ -487,6 +502,10 @@ export const gameStore = {
         condition: def.depletes ? tile.mineDepletion : 1.0,
         builtTurn: _state.turn,
       };
+      const newSlots = [...tile.facilitySlots] as [string | null, string | null, string | null];
+      for (let i = start; i < start + slotCost; i++) {
+        newSlots[i] = facilityId;
+      }
       _state = {
         ..._state,
         player: {
@@ -497,7 +516,7 @@ export const gameStore = {
         map: {
           ..._state.map,
           earthTiles: _state.map.earthTiles.map((t) =>
-            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId } : t,
+            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilitySlots: newSlots } : t,
           ),
         },
       };
@@ -511,6 +530,7 @@ export const gameStore = {
         coordKey,
         turnsRemaining: def.buildTime,
         totalTurns: def.buildTime,
+        slotIndex: start,
       };
       _state = {
         ..._state,
@@ -530,27 +550,32 @@ export const gameStore = {
     _selectedCoordKey = null;
   },
 
-  demolishFacility(coordKey: string): void {
+  demolishFacility(coordKey: string, slotIndex: number): void {
     if (!_state) return;
     const tile = _state.map.earthTiles.find((t) => `${t.coord.q},${t.coord.r}` === coordKey);
-    if (!tile?.facilityId) return;
-    const facility = _state.player.facilities.find((f) => f.id === tile.facilityId);
+    if (!tile) return;
+    const instanceId = tile.facilitySlots[slotIndex];
+    if (!instanceId) return;
+    const facility = _state.player.facilities.find((f) => f.id === instanceId);
     if (!facility) return;
     const def = FACILITY_DEFS.get(facility.defId);
     if (!def?.canDelete) return;
 
     if (def.deleteTime === 0) {
-      // Instant demolition
+      // Instant demolition: clear all slots containing this instance ID
+      const newSlots = tile.facilitySlots.map((s) =>
+        s === instanceId ? null : s,
+      ) as [string | null, string | null, string | null];
       _state = {
         ..._state,
         player: {
           ..._state.player,
-          facilities: _state.player.facilities.filter((f) => f.id !== facility.id),
+          facilities: _state.player.facilities.filter((f) => f.id !== instanceId),
         },
         map: {
           ..._state.map,
           earthTiles: _state.map.earthTiles.map((t) =>
-            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilityId: null } : t,
+            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilitySlots: newSlots } : t,
           ),
         },
       };
@@ -564,6 +589,7 @@ export const gameStore = {
         coordKey,
         turnsRemaining: def.deleteTime,
         totalTurns: def.deleteTime,
+        slotIndex,
       };
       _state = {
         ..._state,
@@ -607,7 +633,8 @@ export const gameStore = {
     const residualEffect = getEffectForResolution(def, 'mitigation');
     let updatedTiles = _state.map.earthTiles;
     if (residualEffect) {
-      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn);
+      const eventRng = createRng(`${_state.seed}-mitigate-${eventId}-t${_state.turn}`);
+      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn, eventRng);
       playerAfterCost = result.player;
       updatedTiles = result.mapTiles;
     }
@@ -647,7 +674,8 @@ export const gameStore = {
     let updatedPlayer = _state.player;
     let updatedTiles = _state.map.earthTiles;
     if (effect) {
-      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn);
+      const eventRng = createRng(`${_state.seed}-accept-${eventId}-t${_state.turn}`);
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
     }
@@ -686,7 +714,8 @@ export const gameStore = {
     let updatedPlayer = _state.player;
     let updatedTiles = _state.map.earthTiles;
     if (effect) {
-      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn);
+      const eventRng = createRng(`${_state.seed}-decline-${eventId}-t${_state.turn}`);
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
     }

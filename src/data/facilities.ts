@@ -32,6 +32,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       buildTime: 0,
       deleteTime: 0,
       canDelete: false,
+      slotCost: 3,
       fieldOutput: {
         physics: 1,
         mathematics: 1,
@@ -199,6 +200,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       buildTime: 2,
       deleteTime: 1,
       canDelete: true,
+      slotCost: 2,
       fieldOutput: { physics: 2, mathematics: 2, computing: 2, socialScience: 3 },
       resourceOutput: {},
       adjacencyBonuses: [
@@ -226,6 +228,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       buildTime: 1,
       deleteTime: 1,
       canDelete: true,
+      slotCost: 2,
       fieldOutput: { engineering: 4 },
       resourceOutput: { materials: 4 },
       adjacencyBonuses: [],
@@ -340,6 +343,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       buildTime: 3,
       deleteTime: 2,
       canDelete: true,
+      slotCost: 3,
       fieldOutput: { physics: 5, computing: 3 },
       resourceOutput: {},
       adjacencyBonuses: [

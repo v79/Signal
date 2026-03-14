@@ -182,6 +182,30 @@ export function validateSave(raw: unknown): ValidationResult {
     }
   }
 
+  // Backward-compat: Phase 24 replaces MapTile.facilityId with facilitySlots[3].
+  // Also adds slotIndex to OngoingAction.
+  const mapObj = s['map'] as Record<string, unknown> | undefined;
+  if (mapObj && Array.isArray(mapObj['earthTiles'])) {
+    mapObj['earthTiles'] = (mapObj['earthTiles'] as Record<string, unknown>[]).map((t) => {
+      if (!Array.isArray(t['facilitySlots'])) {
+        // Old save: facilityId → facilitySlots[0]
+        const oldId = typeof t['facilityId'] === 'string' ? t['facilityId'] : null;
+        t['facilitySlots'] = [oldId, null, null];
+        delete t['facilityId'];
+      }
+      return t;
+    });
+  }
+  const playerForMigration = s['player'] as Record<string, unknown> | undefined;
+  if (playerForMigration && Array.isArray(playerForMigration['constructionQueue'])) {
+    playerForMigration['constructionQueue'] = (
+      playerForMigration['constructionQueue'] as Record<string, unknown>[]
+    ).map((a) => ({
+      slotIndex: 0,
+      ...a,
+    }));
+  }
+
   return { valid: true, state: candidate as GameState };
 }
 

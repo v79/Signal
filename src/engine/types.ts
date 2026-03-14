@@ -90,8 +90,12 @@ export interface MapTile {
    * after demolition so the player cannot reset it by rebuilding.
    */
   mineDepletion: number;
-  /** ID of the facility built here, if any. */
-  facilityId: string | null;
+  /**
+   * Up to three facility IDs built on this tile. Multi-slot facilities repeat
+   * the same instance ID across all occupied slots.
+   * e.g. 2-slot facility in slots 0 and 1: ['univ-0,0-t5', 'univ-0,0-t5', null]
+   */
+  facilitySlots: [string | null, string | null, string | null];
   /**
    * ID of an OngoingAction currently in progress on this tile (construction
    * or demolition). Null when the tile is idle.
@@ -199,6 +203,8 @@ export interface FacilityDef {
   requiredTechId: string | null;
   /** If true, only one instance of this facility may exist per run. */
   unique?: boolean;
+  /** Number of tile slots this facility occupies. Default 1; 2 or 3 for large facilities. */
+  slotCost?: number;
   /** Narrative shown when this facility is first completed (unique facilities only). */
   narrative?: NarrativeDef;
   /**
@@ -663,6 +669,8 @@ export interface OngoingAction {
   turnsRemaining: number;
   /** Original duration, used to compute progress bar fraction. */
   totalTurns: number;
+  /** Lowest slot index this action occupies (for slot-aware construction/demolition). */
+  slotIndex: number;
 }
 
 // ---------------------------------------------------------------------------

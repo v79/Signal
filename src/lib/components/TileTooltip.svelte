@@ -7,6 +7,7 @@
     Resources,
   } from '../../engine/types';
   import { FIELD_ABBR } from '../fieldColours';
+  import { getFacilitiesOnTile } from '../../engine/facilities';
 
   let {
     tile,
@@ -34,11 +35,52 @@
   const left = $derived(Math.min(x + OFFSET_X, containerWidth - TOOLTIP_W - 4));
   const top = $derived(Math.min(y + OFFSET_Y, containerHeight - TOOLTIP_H - 4));
 
-  const facility = $derived(
-    tile?.facilityId != null ? (facilities.find((f) => f.id === tile.facilityId) ?? null) : null,
+  /** Unique facility instances on this tile (deduplicates multi-slot entries). */
+  const tileInstances = $derived(
+    tile ? getFacilitiesOnTile(tile, facilities) : [],
   );
 
-  const def = $derived(facility ? (facilityDefs.get(facility.defId) ?? null) : null);
+  const freeSlotCount = $derived(
+    tile ? tile.facilitySlots.filter((s) => s === null).length : 3,
+  );
+
+  /**
+   * Aggregate field output across all facilities on the tile (base only, no adjacency here).
+   * Scaled by condition × productivity per facility.
+   */
+  const aggFields = $derived.by<Partial<FieldPoints>>(() => {
+    if (!tile) return {};
+    const out: Partial<FieldPoints> = {};
+    for (const inst of tileInstances) {
+      const def = facilityDefs.get(inst.defId);
+      if (!def) continue;
+      const scale = inst.condition * tile.productivity;
+      for (const [k, v] of Object.entries(def.fieldOutput) as [keyof FieldPoints, number][]) {
+        if (v) out[k] = Math.round(((out[k] ?? 0) + v * scale) * 10) / 10;
+      }
+    }
+    return out;
+  });
+
+  /**
+   * Aggregate net resource output (income - upkeep) across all facilities on the tile.
+   */
+  const aggResources = $derived.by<Partial<Resources>>(() => {
+    if (!tile) return {};
+    const out: Partial<Resources> = {};
+    for (const inst of tileInstances) {
+      const def = facilityDefs.get(inst.defId);
+      if (!def) continue;
+      const scale = inst.condition * tile.productivity;
+      for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
+        if (v) out[k] = Math.round(((out[k] ?? 0) + v * scale) * 10) / 10;
+      }
+      for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
+        if (v) out[k] = (out[k] ?? 0) - v;
+      }
+    }
+    return out;
+  });
 
   const tileLabel: Record<string, string> = {
     urban: 'Urban',
@@ -71,32 +113,6 @@
     return lines;
   }
 
-  /** Scaling factor applied to output (condition × tile productivity). */
-  const outputScale = $derived(
-    tile && facility ? facility.condition * tile.productivity : 1,
-  );
-
-  // Net resource output = (resourceOutput × scale) - upkeep
-  const netResources = $derived.by<Partial<Resources>>(() => {
-    if (!def) return {};
-    const out: Partial<Resources> = {};
-    for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
-      if (v) out[k] = Math.round(v * outputScale * 10) / 10;
-    }
-    for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
-      out[k] = (out[k] ?? 0) - v;
-    }
-    return out;
-  });
-
-  function scaleFields(f: Partial<FieldPoints>): Partial<FieldPoints> {
-    const out: Partial<FieldPoints> = {};
-    for (const [k, v] of Object.entries(f) as [keyof FieldPoints, number][]) {
-      if (v) out[k] = Math.round(v * outputScale * 10) / 10;
-    }
-    return out;
-  }
-
   function conditionLabel(c: number): string {
     if (c >= 0.9) return 'Good';
     if (c >= 0.6) return 'Fair';
@@ -108,27 +124,32 @@
 {#if tile}
   <div class="tooltip" style="left: {left}px; top: {top}px;">
     <div class="tile-type">{tileLabel[tile.type] ?? tile.type} tile · ({tile.coord.q},{tile.coord.r})</div>
-    {#if def}
-      <div class="facility-name">{def.name}</div>
+    {#if tileInstances.length > 0}
+      {#each tileInstances as inst}
+        {@const def = facilityDefs.get(inst.defId)}
+        {#if def}
+          <div class="facility-name">{def.name}</div>
+          {#if def.climateImpact}
+            <div class="stat-line climate" class:climate-positive={def.climateImpact > 0}>
+              {def.climateImpact > 0 ? '+' : ''}{def.climateImpact} climate/turn
+            </div>
+          {/if}
+          {#if inst.condition < 1}
+            <div class="stat-line warn">Condition: {conditionLabel(inst.condition)} ({Math.round(inst.condition * 100)}%)</div>
+          {/if}
+        {/if}
+      {/each}
       <div class="divider"></div>
-      {#each formatFields(scaleFields(def.fieldOutput)) as line}
+      {#each formatFields(aggFields) as line}
         <div class="stat-line field">{line}/turn</div>
       {/each}
-      {#each formatResources(netResources) as line}
+      {#each formatResources(aggResources) as line}
         <div class="stat-line resource" class:negative={line.startsWith('-')}>{line}/turn</div>
       {/each}
-      {#if def.climateImpact}
-        <div class="stat-line climate" class:climate-positive={def.climateImpact > 0}>
-          {def.climateImpact > 0 ? '+' : ''}{def.climateImpact} climate/turn
-        </div>
-      {/if}
-      {#if facility && facility.condition < 1}
-        <div class="stat-line warn">Condition: {conditionLabel(facility.condition)} ({Math.round(facility.condition * 100)}%)</div>
-      {/if}
       {#if tile.productivity < 1}
         <div class="stat-line warn">Productivity: {Math.round(tile.productivity * 100)}%</div>
       {/if}
-    {:else}
+    {:else if freeSlotCount > 0}
       <div class="empty-hint">Empty — click to build</div>
     {/if}
     {#if tile.destroyedStatus}

@@ -359,8 +359,8 @@ describe('applyEventEffect', () => {
 
   it('destroyTile: marks the specific tile as destroyed and returns updated tiles', () => {
     const tiles = [
-      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
-      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
+      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
     const { mapTiles } = applyEventEffect({ destroyTile: { coordKey: '1,0', status: 'flooded' } }, basePlayer, tiles, 1, rng);
     expect(mapTiles.find(t => t.coord.q === 1 && t.coord.r === 0)?.destroyedStatus).toBe('flooded');
@@ -369,9 +369,9 @@ describe('applyEventEffect', () => {
 
   it('tileTypeTarget: destroys a random tile of the given type', () => {
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
-      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
-      { coord: { q: 2, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
+      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
+      { coord: { q: 2, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
@@ -386,7 +386,7 @@ describe('applyEventEffect', () => {
   it('tileTypeTarget: removes the facility on the destroyed tile', () => {
     const facilityId = 'fac-1';
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [facilityId, null, null] as [string | null, string | null, string | null], pendingActionId: null },
     ];
     const playerWithFacility: PlayerState = {
       ...basePlayer,
@@ -397,14 +397,14 @@ describe('applyEventEffect', () => {
       playerWithFacility, tiles, 1, createRng('seed-b'),
     );
     expect(mapTiles[0].destroyedStatus).toBe('flooded');
-    expect(mapTiles[0].facilityId).toBeNull();
+    expect(mapTiles[0].facilitySlots.every((s) => s === null)).toBe(true);
     expect(player.facilities).toHaveLength(0);
   });
 
   it('tileTypeTarget: never destroys the HQ tile', () => {
     const facilityId = 'hq-inst';
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [facilityId, facilityId, facilityId] as [string, string, string], pendingActionId: null },
     ];
     const playerWithHq: PlayerState = {
       ...basePlayer,
@@ -420,7 +420,7 @@ describe('applyEventEffect', () => {
 
   it('tileTypeTarget: skips already-destroyed tiles', () => {
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: 'flooded' as const, productivity: 1, facilityId: null, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: 'flooded' as const, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
@@ -575,7 +575,7 @@ describe('weighted event selection', () => {
 
   it('weights do not bypass eligibility filters', () => {
     // High-weight event gated to geopoliticalTension push factor.
-    const gated = { ...makeWeightedDef('gated', 99.0), pushFactors: ['geopoliticalTension'] as const };
+    const gated = { ...makeWeightedDef('gated', 99.0), pushFactors: ['geopoliticalTension'] as import('./types').PushFactor[] };
     const open = makeWeightedDef('open', 1.0);
     const weightedPool = [gated, open];
 

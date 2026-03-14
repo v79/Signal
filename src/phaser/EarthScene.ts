@@ -330,20 +330,23 @@ export class EarthScene extends Phaser.Scene {
       }
     }
 
-    const facilityMap = new Map(facilities.map((f) => [f.locationKey, f]));
+    const facilityById = new Map(facilities.map((f) => [f.id, f]));
     const queueMap = new Map(queue.map((a) => [a.coordKey, a]));
 
     for (const tile of tiles) {
       const key = `${tile.coord.q},${tile.coord.r}`;
       const { x, y } = this.hexCenter(tile.coord.q, tile.coord.r);
       const verts = this.hexVertices(x, y);
-      const facility = facilityMap.get(key) ?? null;
+      // Resolve each slot to its FacilityInstance (multi-slot facilities repeat the same instance across slots)
+      const slotInstances: (import('../engine/types').FacilityInstance | null)[] = tile.facilitySlots.map((id) =>
+        id ? (facilityById.get(id) ?? null) : null,
+      );
       const action = queueMap.get(key) ?? null;
       const isHovered = key === this.hoveredKey;
       const isSelected = key === selected;
       const flash = this.flashingTiles.get(key) ?? null;
 
-      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate, adjacencyMap.get(key) ?? [], flash, now);
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, slotInstances, action, climate, adjacencyMap.get(key) ?? [], flash, now);
     }
   }
 
@@ -354,7 +357,7 @@ export class EarthScene extends Phaser.Scene {
     cy: number,
     hovered: boolean,
     selected: boolean,
-    facility: FacilityInstance | null,
+    slotInstances: (FacilityInstance | null)[],
     action: OngoingAction | null,
     climate: number,
     adjacency: AdjacencyIndicator[],
@@ -391,26 +394,46 @@ export class EarthScene extends Phaser.Scene {
     this.tileGfx.lineStyle(strokeW, strokeColor, strokeAlpha);
     this.tileGfx.strokePoints(verts, true);
 
-    // Facility indicator
-    if (facility) {
-      const fColor = FACILITY_COLORS[facility.defId] ?? 0xffffff;
-      const r = HEX_SIZE * 0.22;
-      this.overlayGfx.fillStyle(fColor, 0.9);
-      this.overlayGfx.fillCircle(cx, cy, r);
-      // HQ: draw a distinctive outer ring to mark it as permanent
-      if (facility.defId === 'hq') {
-        this.overlayGfx.lineStyle(2, 0xffd060, 0.7);
-        this.overlayGfx.strokeCircle(cx, cy, r + 4);
-        // Small cross mark in the centre
-        const arm = r * 0.55;
+    // Facility slots — rhombus rendering
+    {
+      // Shrunk rhombus offsets relative to hex centre (R=HEX_SIZE, h=R*√3/2, f=0.80)
+      const R = HEX_SIZE;
+      const h = R * Math.sqrt(3) / 2;
+      const SLOT_RHOMBUSES: [number, number][][] = [
+        // Slot 0: upper-right — C,v4,v5,v0 shrunk toward centroid(+R/4,-h/2)
+        [[R*0.05, -h*0.20], [-R*0.35, -h*0.90], [R*0.45, -h*0.90], [R*0.85, -h*0.20]],
+        // Slot 1: left — C,v2,v3,v4 shrunk toward centroid(-R/2,0)
+        [[-R*0.10, 0], [-R*0.50, h*0.80], [-R*0.90, 0], [-R*0.50, -h*0.80]],
+        // Slot 2: bottom — C,v0,v1,v2 shrunk toward centroid(+R/4,+h/2)
+        [[R*0.05, h*0.20], [R*0.85, h*0.20], [R*0.45, h*0.90], [-R*0.35, h*0.90]],
+      ];
+
+      let isHq = false;
+      for (let si = 0; si < 3; si++) {
+        const instance = slotInstances[si];
+        const pts = SLOT_RHOMBUSES[si].map(([dx, dy]) => ({ x: cx + dx, y: cy + dy }));
+        if (instance) {
+          const fColor = FACILITY_COLORS[instance.defId] ?? 0xffffff;
+          const opacity = instance.defId === 'hq' ? 0.9 : Math.max(0.4, instance.condition * 0.9);
+          this.overlayGfx.fillStyle(fColor, opacity);
+          this.overlayGfx.fillPoints(pts, true);
+          if (instance.defId === 'hq') isHq = true;
+        } else if (!tile.destroyedStatus) {
+          // Empty slot indicator: faint outline
+          this.overlayGfx.lineStyle(0.75, 0x3a5878, 0.35);
+          this.overlayGfx.strokePoints(pts, true);
+        }
+      }
+
+      // HQ cross at hex centre
+      if (isHq) {
+        const arm = HEX_SIZE * 0.18;
         this.overlayGfx.lineStyle(1.5, 0xfff0c0, 0.85);
         this.overlayGfx.lineBetween(cx - arm, cy, cx + arm, cy);
         this.overlayGfx.lineBetween(cx, cy - arm, cx, cy + arm);
-      }
-      // Condition ring (dim if degraded)
-      if (facility.condition < 1 && facility.defId !== 'hq') {
-        this.overlayGfx.lineStyle(1.5, fColor, 0.4);
-        this.overlayGfx.strokeCircle(cx, cy, r + 3);
+        // Outer ring hint
+        this.overlayGfx.lineStyle(1.5, 0xffd060, 0.5);
+        this.overlayGfx.strokePoints(verts, true);
       }
     }
 

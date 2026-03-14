@@ -110,7 +110,7 @@ function makeTile(q: number, r: number, facilityId: string | null = null): MapTi
     destroyedStatus: null,
     productivity: 1,
     mineDepletion: 1,
-    facilityId,
+    facilitySlots: facilityId ? [facilityId, null, null] : [null, null, null],
     pendingActionId: null,
   };
 }
@@ -341,6 +341,7 @@ describe('isUniqueAlreadyBuilt', () => {
       coordKey: '1,0',
       turnsRemaining: 2,
       totalTurns: 3,
+      slotIndex: 0,
     };
     expect(isUniqueAlreadyBuilt([], [action], 'deepSpaceArray')).toBe(true);
   });
@@ -353,6 +354,7 @@ describe('isUniqueAlreadyBuilt', () => {
       coordKey: '1,0',
       turnsRemaining: 1,
       totalTurns: 1,
+      slotIndex: 0,
     };
     expect(isUniqueAlreadyBuilt([], [action], 'deepSpaceArray')).toBe(false);
   });
