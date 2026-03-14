@@ -45,11 +45,13 @@
               {#if threshold}
                 {@const pct = Math.min(100, ((tech.fieldProgress[field as keyof FieldPoints] ?? 0) / threshold) * 100)}
                 {@const color = FIELD_COLOURS_CSS[field as keyof FieldPoints] ?? '#4a6880'}
-                <div class="bar-row">
+                {@const current = tech.fieldProgress[field as keyof FieldPoints] ?? 0}
+                <div class="bar-row" title="{FIELD_ABBR[field as keyof FieldPoints] ?? field}: {current} / {threshold}">
                   <span class="abbr" style="color: {color}">{FIELD_ABBR[field as keyof FieldPoints] ?? field.slice(0, 3).toUpperCase()}</span>
                   <div class="track">
                     <div class="fill" style="width: {pct}%; background: {color}"></div>
                   </div>
+                  <span class="raw">{current}/{threshold}</span>
                 </div>
               {/if}
             {/each}
@@ -124,6 +126,15 @@
     width: 2.2rem;
     flex-shrink: 0;
     letter-spacing: 0.06em;
+  }
+
+  .raw {
+    font-size: 0.55rem;
+    color: #2a4050;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    width: 3.8rem;
+    text-align: right;
   }
 
   .track {
