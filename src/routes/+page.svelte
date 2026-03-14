@@ -19,6 +19,7 @@
   import { CARD_DEFS } from '../data/cards';
   import { EVENT_DEFS } from '../data/events';
   import { FACILITY_DEFS } from '../data/facilities';
+  import { BLOC_DEFS } from '../data/blocs';
   import { TECH_DEFS } from '../data/technologies';
   import {
     computeAdjacencyEffects,
@@ -115,6 +116,7 @@
       climatePressure={gs.climatePressure}
       will={gs.player.will}
       seed={gs.seed}
+      blocName={BLOC_DEFS.get(gs.player.blocDefId)?.name ?? ''}
       {resourceBreakdown}
       onExport={() => gameStore.exportSave()}
       onImport={(file) => gameStore.importSaveFile(file)}

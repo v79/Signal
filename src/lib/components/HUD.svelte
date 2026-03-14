@@ -15,6 +15,7 @@
     climatePressure,
     will,
     seed,
+    blocName,
     resourceBreakdown,
     onExport,
     onImport,
@@ -31,6 +32,7 @@
     climatePressure: number;
     will: number;
     seed: string;
+    blocName: string;
     onExport: () => void;
     onImport: (file: File) => Promise<void>;
     onRestart: () => void;
@@ -165,6 +167,9 @@
     <span class="label">TURN</span><span class="value">{turn}</span>
     <span class="label">YEAR</span><span class="value">{year}</span>
     <span class="era-badge">{ERA_LABELS[era]}</span>
+    {#if blocName}
+      <span class="bloc-name">{blocName}</span>
+    {/if}
     <span class="phase-badge">{PHASE_LABELS[phase]}</span>
     <span class="divider">│</span>
     <SaveControls {seed} {turn} {onExport} {onImport} />
@@ -394,6 +399,14 @@
     color: #4a8ab4;
     font-size: 0.65rem;
     letter-spacing: 0.12em;
+  }
+
+  .bloc-name {
+    color: #6a8aaa;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
   }
 
   .phase-badge {

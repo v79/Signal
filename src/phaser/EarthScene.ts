@@ -69,6 +69,7 @@ export interface EarthSceneCallbacks {
   getQueue: () => OngoingAction[];
   getSelected: () => string | null;
   getClimate: () => number;
+  getAdjacencyMap: () => Map<string, 'bonus' | 'penalty' | 'mixed'>;
   onTileClick: (coordKey: string) => void;
   onTileHover: (coordKey: string | null) => void;
 }
@@ -196,6 +197,7 @@ export class EarthScene extends Phaser.Scene {
     const queue = this.cb.getQueue();
     const selected = this.cb.getSelected();
     const climate = this.cb.getClimate(); // 0–100
+    const adjacencyMap = this.cb.getAdjacencyMap();
 
     const facilityMap = new Map(facilities.map((f) => [f.locationKey, f]));
     const queueMap = new Map(queue.map((a) => [a.coordKey, a]));
@@ -209,7 +211,7 @@ export class EarthScene extends Phaser.Scene {
       const isHovered = key === this.hoveredKey;
       const isSelected = key === selected;
 
-      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate);
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate, adjacencyMap.get(key) ?? null);
     }
   }
 
@@ -223,6 +225,7 @@ export class EarthScene extends Phaser.Scene {
     facility: FacilityInstance | null,
     action: OngoingAction | null,
     climate: number,
+    adjacency: 'bonus' | 'penalty' | 'mixed' | null,
   ): void {
     const baseFill = TILE_FILL[tile.type] ?? 0x1e2d40;
     const baseStroke = TILE_STROKE[tile.type] ?? 0x3a5878;
@@ -274,6 +277,28 @@ export class EarthScene extends Phaser.Scene {
       if (facility.condition < 1 && facility.defId !== 'hq') {
         this.overlayGfx.lineStyle(1.5, fColor, 0.4);
         this.overlayGfx.strokeCircle(cx, cy, r + 3);
+      }
+    }
+
+    // Adjacency indicator — small triangle below the facility circle
+    if (adjacency) {
+      const triY = cy + HEX_SIZE * 0.42;
+      const s = 4; // half-width of triangle base
+      if (adjacency === 'bonus') {
+        // Gold upward triangle ▲
+        this.overlayGfx.fillStyle(0xd4a820, 0.8);
+        this.overlayGfx.fillTriangle(cx - s, triY + s, cx + s, triY + s, cx, triY - s);
+      } else if (adjacency === 'penalty') {
+        // Red downward triangle ▼
+        this.overlayGfx.fillStyle(0xd44040, 0.8);
+        this.overlayGfx.fillTriangle(cx - s, triY - s, cx + s, triY - s, cx, triY + s);
+      } else {
+        // Mixed: gold up-triangle left, red down-triangle right
+        const half = s * 0.8;
+        this.overlayGfx.fillStyle(0xd4a820, 0.75);
+        this.overlayGfx.fillTriangle(cx - s - 2, triY + half, cx + 2, triY + half, cx - s + half - 2, triY - half);
+        this.overlayGfx.fillStyle(0xd44040, 0.75);
+        this.overlayGfx.fillTriangle(cx - 2, triY - half, cx + s + 2, triY - half, cx + s - half + 2, triY + half);
       }
     }
 

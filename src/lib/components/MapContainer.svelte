@@ -4,8 +4,10 @@
   import FacilityPicker from './FacilityPicker.svelte';
   import TileTooltip from './TileTooltip.svelte';
   import BoardPanel from './BoardPanel.svelte';
+  import FacilityOverview from './FacilityOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS } from '../../data/facilities';
+  import { computeAdjacencyEffects } from '../../engine/facilities';
   import { TECH_DEFS } from '../../data/technologies';
   import { BOARD_DEFS } from '../../data/board';
   import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
@@ -38,6 +40,36 @@
   /** Mouse position inside the map container for tooltip positioning. */
   let mouseX = $state(0);
   let mouseY = $state(0);
+  /** True once the Phaser game has fully initialised. */
+  let mapReady = $state(false);
+  /** Whether the facility overview panel is open. */
+  let showFacilityOverview = $state(false);
+
+  /** Per-coordKey adjacency status for the Earth scene indicator. */
+  const adjacencyMap = $derived.by<Map<string, 'bonus' | 'penalty' | 'mixed'>>(() => {
+    if (!gameStore.state) return new Map();
+    const effects = computeAdjacencyEffects(
+      gameStore.state.player.facilities,
+      FACILITY_DEFS,
+      gameStore.state.map.earthTiles,
+    );
+    const result = new Map<string, 'bonus' | 'penalty' | 'mixed'>();
+    for (const effect of effects) {
+      const inst = gameStore.state.player.facilities.find((f) => f.id === effect.facilityInstanceId);
+      if (!inst) continue;
+      const key = inst.locationKey;
+      const hasBonus =
+        Object.values(effect.fieldBonus).some((v) => v > 0) ||
+        Object.values(effect.resourceBonus).some((v) => v > 0);
+      const hasPenalty =
+        Object.values(effect.fieldBonus).some((v) => v < 0) ||
+        Object.values(effect.resourceBonus).some((v) => v < 0);
+      if (hasBonus && hasPenalty) result.set(key, 'mixed');
+      else if (hasBonus) result.set(key, 'bonus');
+      else if (hasPenalty) result.set(key, 'penalty');
+    }
+    return result;
+  });
 
   const SCENE_KEYS: Record<MapTab, string> = {
     earth: 'EarthScene',
@@ -133,6 +165,7 @@
         getQueue: () => gameStore.state?.player.constructionQueue ?? [],
         getSelected: () => gameStore.selectedCoordKey,
         getClimate: () => gameStore.state?.climatePressure ?? 0,
+        getAdjacencyMap: () => adjacencyMap,
         onTileClick: (key: string) => {
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },
@@ -143,6 +176,7 @@
       // Only EarthScene should run at startup
       game!.scene.stop('SpaceScene');
       game!.scene.stop('AsteroidScene');
+      mapReady = true;
     });
   });
 
@@ -183,6 +217,18 @@
     >
       BOARD
     </button>
+    <div class="tab-spacer"></div>
+    {#if activeTab === 'earth' && gameStore.state}
+      <Tooltip text="Overview of all built facilities" direction="below">
+        <button
+          class="tab overview-btn"
+          class:active={showFacilityOverview}
+          onclick={() => (showFacilityOverview = !showFacilityOverview)}
+        >
+          ≡ FACILITIES
+        </button>
+      </Tooltip>
+    {/if}
   </div>
 
   <!-- Board panel (shown instead of Phaser canvas when board tab is active) -->
@@ -209,6 +255,19 @@
     }}
     onmouseleave={() => gameStore.setHoveredTile(null)}
   >
+    {#if !mapReady}
+      <div class="map-loading">
+        <span class="loading-text">SYNCHRONISING GLOBAL UPLINK<span class="cursor">_</span></span>
+      </div>
+    {/if}
+    {#if showFacilityOverview && gameStore.state && activeTab === 'earth'}
+      <FacilityOverview
+        facilities={gameStore.state.player.facilities}
+        facilityDefs={FACILITY_DEFS}
+        earthTiles={gameStore.state.map.earthTiles}
+        onClose={() => (showFacilityOverview = false)}
+      />
+    {/if}
     {#if selectedTile && activeTab === 'earth'}
       <FacilityPicker
         tile={selectedTile}
@@ -318,5 +377,40 @@
     display: block;
     width: 100% !important;
     height: 100% !important;
+  }
+
+  .tab-spacer {
+    flex: 1;
+  }
+
+  .overview-btn {
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+  }
+
+  .map-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #060a10;
+  }
+
+  .loading-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: #2a4a6a;
+    text-transform: uppercase;
+  }
+
+  .cursor {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 </style>
