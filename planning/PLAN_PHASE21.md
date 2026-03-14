@@ -259,7 +259,7 @@ If `getDiscoveryStage` (step 3 of the turn order) also evaluates the same tech a
 
 ---
 
-### 21.7 — UI: right column restructure + Board tab
+### 21.7 — UI: right column restructure + Board tab ✅
 
 **Files:** `src/routes/+page.svelte`, `src/lib/components/ResearchFeed.svelte`, `src/lib/components/BoardPanel.svelte`, `src/phaser/EarthScene.ts` (or MapContainer)
 
@@ -295,7 +295,7 @@ Remove the two-tab (`RESEARCH | BOARD`) structure from the right column. The rig
 
 ---
 
-### 21.8 — UI: in-progress tech summary and Tech Tree button
+### 21.8 — UI: in-progress tech summary and Tech Tree button ✅
 
 **Files:** `src/lib/components/ResearchFeed.svelte` (heavily reworked), new `src/lib/components/TechProgressSummary.svelte`
 
@@ -356,7 +356,7 @@ Apply colour coding to:
 
 ---
 
-### 21.10 — Tech tree: dependency arrows
+### 21.10 — Tech tree: dependency arrows ✅
 
 **File:** `src/phaser/TechTreeScene.ts`
 

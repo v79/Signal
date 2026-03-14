@@ -1,238 +1,60 @@
 <script lang="ts">
-  import type {
-    FieldPoints,
-    SignalState,
-    SignalResponseOption,
-    TechState,
-    TechDef,
-    CardDef,
-    FacilityDef,
-  } from '../../engine/types';
-  import TechTreeModal from './TechTreeModal.svelte';
-  import { FIELD_COLOURS_CSS, FIELD_LABELS } from '../fieldColours';
+  import type { SignalState, SignalResponseOption } from '../../engine/types';
 
   let {
-    fields,
     signal,
-    techs = [],
-    techDefs = new Map(),
-    cardDefs = new Map(),
-    facilityDefs = new Map(),
     wormholeOptions = [],
     onCommitWormholeResponse,
   }: {
-    fields: FieldPoints;
     signal: SignalState;
-    techs?: TechState[];
-    techDefs?: Map<string, TechDef>;
-    cardDefs?: Map<string, CardDef>;
-    facilityDefs?: Map<string, FacilityDef>;
     wormholeOptions?: SignalResponseOption[];
     onCommitWormholeResponse?: (optionId: string) => void;
   } = $props();
 
-  let showTechTree = $state(false);
-
   const isClimax = $derived(signal.decodeProgress >= 100 && !signal.responseCommitted);
-
-  const FIELD_KEYS = Object.keys(FIELD_COLOURS_CSS) as (keyof FieldPoints)[];
-
-  // Scale field bars: 200 pts = full bar for visual purposes
-  const FIELD_SCALE = 200;
-
-  function fieldPct(val: number): number {
-    return Math.min(100, (val / FIELD_SCALE) * 100);
-  }
-
 </script>
 
-{#if showTechTree}
-  <TechTreeModal
-    {techs}
-    {techDefs}
-    {fields}
-    {signal}
-    {cardDefs}
-    {facilityDefs}
-    onClose={() => {
-      showTechTree = false;
-    }}
-  />
-{/if}
-
-<aside class="research-feed">
-  <div class="panel-title-row">
-    <span class="panel-title">RESEARCH FIELDS</span>
-    <button
-      class="tree-btn"
-      onclick={() => {
-        showTechTree = true;
-      }}>TECH TREE</button
-    >
-  </div>
-
-  <div class="fields-list">
-    {#each FIELD_KEYS as key}
-      {@const val = fields[key]}
-      {@const color = FIELD_COLOURS_CSS[key]}
-      <div class="field-row">
-        <span class="field-name">{FIELD_LABELS[key]}</span>
-        <div class="field-bar-track">
-          <div
-            class="field-bar-fill"
-            style="width: {fieldPct(val)}%; background: {color}"
-          ></div>
-        </div>
-        <span class="field-num" style="color: {color}">{val}</span>
-      </div>
+{#if isClimax && wormholeOptions.length > 0}
+  <div class="climax-section">
+    <div class="climax-title">⬡ WORMHOLE RESPONSE REQUIRED</div>
+    <p class="climax-intro">
+      The signal is fully decoded. Select a response. This decision cannot be undone.
+    </p>
+    {#each wormholeOptions as opt}
+      <button
+        class="response-option"
+        onclick={() => onCommitWormholeResponse?.(opt.id)}
+      >
+        <span class="opt-label">{opt.label}</span>
+        {#if opt.confidenceHint}
+          <span class="opt-hint hint-{opt.confidenceHint}"
+            >{opt.confidenceHint.toUpperCase()}</span
+          >
+        {/if}
+      </button>
     {/each}
   </div>
+{/if}
 
-  {#if isClimax && wormholeOptions.length > 0}
-    <div class="section-divider"></div>
-    <div class="climax-section">
-      <div class="climax-title">⬡ WORMHOLE RESPONSE REQUIRED</div>
-      <p class="climax-intro">
-        The signal is fully decoded. Select a response. This decision cannot be undone.
-      </p>
-      {#each wormholeOptions as opt}
-        <button
-          class="response-option"
-          class:hint-high={opt.confidenceHint === 'high'}
-          class:hint-medium={opt.confidenceHint === 'medium'}
-          class:hint-low={opt.confidenceHint === 'low'}
-          onclick={() => onCommitWormholeResponse?.(opt.id)}
-        >
-          <span class="opt-label">{opt.label}</span>
-          {#if opt.confidenceHint}
-            <span class="opt-hint hint-{opt.confidenceHint}"
-              >{opt.confidenceHint.toUpperCase()}</span
-            >
-          {/if}
-        </button>
-      {/each}
-    </div>
-  {/if}
-
-  {#if signal.responseCommitted}
-    <div class="section-divider"></div>
-    <div
-      class="response-result"
-      class:success={signal.wormholeActivated}
-      class:failure={!signal.wormholeActivated}
-    >
-      {signal.wormholeActivated ? '⬡ WORMHOLE ACTIVATED' : '⬡ RESPONSE INCORRECT'}
-    </div>
-  {/if}
-
-</aside>
+{#if signal.responseCommitted}
+  <div
+    class="response-result"
+    class:success={signal.wormholeActivated}
+    class:failure={!signal.wormholeActivated}
+  >
+    {signal.wormholeActivated ? '⬡ WORMHOLE ACTIVATED' : '⬡ RESPONSE INCORRECT'}
+  </div>
+{/if}
 
 <style>
-  .research-feed {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    padding: 0.6rem;
-    background: #0c1018;
-    border-left: 1px solid #1e2530;
-    overflow-y: auto;
-    min-width: 0;
-  }
-
-  .panel-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #1e2530;
-    padding-bottom: 0.3rem;
-    margin-bottom: 0.2rem;
-    flex-shrink: 0;
-  }
-
-  .panel-title {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    color: #5a6878;
-  }
-
-  .tree-btn {
-    font-family: monospace;
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-    color: #3a6070;
-    background: none;
-    border: 1px solid #1a3040;
-    border-radius: 2px;
-    padding: 0.1rem 0.4rem;
-    cursor: pointer;
-    transition:
-      color 0.15s,
-      border-color 0.15s;
-    flex-shrink: 0;
-  }
-
-  .tree-btn:hover {
-    color: #6aaabb;
-    border-color: #2a5060;
-  }
-
-  .section-divider {
-    height: 1px;
-    background: #1a2030;
-    margin: 0.3rem 0;
-    flex-shrink: 0;
-  }
-
-  .fields-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .field-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.68rem;
-  }
-
-  .field-name {
-    color: #8a9aaa;
-    width: 6rem;
-    flex-shrink: 0;
-    font-size: 0.65rem;
-  }
-
-  .field-bar-track {
-    flex: 1;
-    height: 5px;
-    background: #1a2030;
-    border-radius: 2px;
-    overflow: hidden;
-    min-width: 0;
-  }
-
-  .field-bar-fill {
-    height: 100%;
-    transition: width 0.4s ease;
-  }
-
-  .field-num {
-    width: 2.5rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    font-size: 0.68rem;
-    flex-shrink: 0;
-  }
-
   .climax-section {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    padding: 0.5rem;
-    border: 1px solid #2a4a6a;
-    border-radius: 3px;
+    padding: 0.5rem 0.6rem;
+    border-top: 1px solid #1a2030;
     background: #060c18;
+    flex-shrink: 0;
   }
 
   .climax-title {
@@ -302,21 +124,20 @@
   .response-result {
     font-size: 0.65rem;
     letter-spacing: 0.15em;
-    padding: 0.4rem 0.5rem;
-    border-radius: 2px;
+    padding: 0.4rem 0.6rem;
+    border-top: 1px solid #1a2030;
     text-align: center;
     font-weight: 600;
+    flex-shrink: 0;
   }
 
   .response-result.success {
     color: #4ad480;
     background: #0a2818;
-    border: 1px solid #1a5030;
   }
 
   .response-result.failure {
     color: #d46a4a;
     background: #1e0e08;
-    border: 1px solid #501808;
   }
 </style>
