@@ -91,6 +91,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       buildTime: 1,
       deleteTime: 1,
       canDelete: true,
+      climateImpact: 0.4,
       fieldOutput: {},
       resourceOutput: { materials: 8 },
       adjacencyBonuses: [],
@@ -102,6 +103,39 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       ],
       depletes: true,
       requiredTechId: null,
+    },
+  ],
+
+  [
+    'coalPowerStation',
+    {
+      id: 'coalPowerStation',
+      name: 'Coal Power Station',
+      description:
+        'Burns fossil fuels for reliable, high-volume Funding. Significant climate cost — the cheapest power is rarely the cleanest.',
+      era: 'earth',
+      allowedTileTypes: ['industrial', 'arid'],
+      buildCost: { materials: 20, funding: 10 },
+      upkeepCost: { funding: 3 },
+      buildTime: 1,
+      deleteTime: 1,
+      canDelete: true,
+      fieldOutput: { engineering: 1 },
+      resourceOutput: { funding: 9 },
+      adjacencyBonuses: [],
+      adjacencyPenalties: [
+        {
+          neighborDefId: 'publicUniversity',
+          fieldPenalty: { socialScience: 1 },
+        },
+        {
+          neighborDefId: 'bioResearchCentre',
+          fieldPenalty: { biochemistry: 1 },
+        },
+      ],
+      depletes: false,
+      requiredTechId: null,
+      climateImpact: 0.5,
     },
   ],
 
@@ -124,6 +158,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: -0.1,
     },
   ],
 
@@ -131,11 +166,11 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
     'offshoreWindFarm',
     {
       id: 'offshoreWindFarm',
-      name: 'Offshore Wind Farm',
+      name: 'Wind Farm',
       description:
-        'Generates steady Funding and minor Engineering field points. Requires coastal tile.',
+        'Generates steady Funding and minor Engineering field points. Suitable for coastal and highland sites.',
       era: 'earth',
-      allowedTileTypes: ['coastal'],
+      allowedTileTypes: ['coastal', 'highland'],
       buildCost: { materials: 20, funding: 15 },
       upkeepCost: {},
       buildTime: 2,
@@ -146,7 +181,8 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyBonuses: [],
       adjacencyPenalties: [],
       depletes: false,
-      requiredTechId: null,
+      requiredTechId: 'roboticsAutomation',
+      climateImpact: -0.1,
     },
   ],
 
@@ -201,6 +237,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       ],
       depletes: false,
       requiredTechId: null,
+      climateImpact: 0.3,
     },
   ],
 
@@ -228,6 +265,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: -0.1,
     },
   ],
 
@@ -284,6 +322,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,
+      climateImpact: 0.1,
     },
   ],
 
@@ -336,10 +375,15 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
           neighborDefId: 'deepSpaceArray',
           fieldBonus: { computing: 3 },
         },
+        {
+          neighborDefId: 'solarFarm',
+          fieldBonus: { computing: 2 },
+        },
       ],
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: 'microprocessors',
+      climateImpact: 0.1,
     },
   ],
 

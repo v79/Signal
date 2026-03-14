@@ -84,6 +84,12 @@ export interface MapTile {
    * Affects productivity of facilities on this tile.
    */
   productivity: number;
+  /**
+   * 0–1. Tracks how much of the mineral seam remains, independent of whether
+   * a mine is currently built here. Depletes while a mine operates; persists
+   * after demolition so the player cannot reset it by rebuilding.
+   */
+  mineDepletion: number;
   /** ID of the facility built here, if any. */
   facilityId: string | null;
   /**
@@ -195,6 +201,11 @@ export interface FacilityDef {
   unique?: boolean;
   /** Narrative shown when this facility is first completed (unique facilities only). */
   narrative?: NarrativeDef;
+  /**
+   * Net climate pressure change per World Phase contributed by this facility.
+   * Positive = pollution; negative = mitigation. Omit for climate-neutral.
+   */
+  climateImpact?: number;
 }
 
 export interface AdjacencyRule {
@@ -446,7 +457,15 @@ export interface EventDef {
 export interface EventEffect {
   resources?: Partial<Resources>;
   fields?: Partial<FieldPoints>;
-  /** Destroy a tile: coord string + the status to apply. */
+  /**
+   * Dynamically select a random non-destroyed, non-HQ tile of this type and
+   * destroy it, removing any facility on it. Use this instead of `destroyTile`
+   * for events that should target any eligible tile of a given type.
+   */
+  tileTypeTarget?: TileType;
+  /** Status applied when using `tileTypeTarget`. Defaults to 'flooded'. */
+  destroyTileStatus?: TileDestroyedStatus;
+  /** Destroy a specific tile by exact coordKey (use for scripted/fixed targets). */
   destroyTile?: { coordKey: string; status: TileDestroyedStatus };
   /** Bloc ID to eliminate. */
   eliminateBloc?: string;
@@ -681,7 +700,8 @@ export type NewsCategory =
   | 'research'       // rumour or research progress
   | 'signal'         // signal track milestone
   | 'board'          // board member event
-  | 'bloc';          // NPC bloc status
+  | 'bloc'           // NPC bloc status
+  | 'climate';       // climate-driven tile degradation
 
 export interface NewsItem {
   id: string;

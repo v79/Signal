@@ -70,6 +70,7 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
         type: 'urban',
         destroyedStatus: null,
         productivity: 1.0,
+        mineDepletion: 1.0,
         facilityId: null,
         pendingActionId: null,
       },
@@ -80,6 +81,7 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
     type: entry.type,
     destroyedStatus: null,
     productivity: 1.0,
+    mineDepletion: 1.0,
     facilityId: null,
     pendingActionId: null,
   }));
@@ -123,6 +125,7 @@ export function generateEarthTiles(radius = 3): MapTile[] {
         type: tileTypeForCoord(q, r),
         destroyedStatus: null,
         productivity: 1.0,
+        mineDepletion: 1.0,
         facilityId: null,
         pendingActionId: null,
       });
@@ -450,6 +453,12 @@ export const gameStore = {
     // HQ is placed at game start only — never buildable by the player.
     if (def.id === 'hq') return;
 
+    // Cannot build on a destroyed tile.
+    const tile = _state.map.earthTiles.find(
+      (t) => `${t.coord.q},${t.coord.r}` === coordKey,
+    );
+    if (!tile || tile.destroyedStatus !== null) return;
+
     // Tech gate: refuse if the required technology has not been discovered.
     if (def.requiredTechId != null) {
       const techDiscovered = _state.player.techs.some(
@@ -475,7 +484,7 @@ export const gameStore = {
         id: facilityId,
         defId,
         locationKey: coordKey,
-        condition: 1.0,
+        condition: def.depletes ? tile.mineDepletion : 1.0,
         builtTurn: _state.turn,
       };
       _state = {

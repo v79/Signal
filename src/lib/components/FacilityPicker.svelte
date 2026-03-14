@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FacilityDef, MapTile, Resources } from '../../engine/types';
+  import type { FacilityDef, FacilityInstance, MapTile, Resources } from '../../engine/types';
 
   let {
     tile,
@@ -8,6 +8,7 @@
     discoveredTechIds,
     techNames,
     builtDefIds,
+    occupyingInstance = null,
     onBuild,
     onDemolish,
     onClose,
@@ -21,6 +22,8 @@
     techNames: ReadonlyMap<string, string>;
     /** Def IDs of facilities already built or in the construction queue (for unique guard). */
     builtDefIds: ReadonlySet<string>;
+    /** The live FacilityInstance on this tile, if any — used to show current (scaled) output. */
+    occupyingInstance?: FacilityInstance | null;
     onBuild: (defId: string) => void;
     onDemolish: () => void;
     onClose: () => void;
@@ -63,19 +66,38 @@
     return p.join(' · ');
   }
 
-  function formatOutput(def: FacilityDef): string[] {
-    const lines: string[] = [];
+  function formatOutput(def: FacilityDef, scale = 1): { text: string; climate?: boolean; pollution?: boolean }[] {
+    const lines: { text: string; climate?: boolean; pollution?: boolean }[] = [];
     for (const [k, v] of Object.entries(def.fieldOutput)) {
-      if (v) lines.push(`+${v} ${k.slice(0, 4).toUpperCase()}`);
+      if (v) {
+        const scaled = Math.round(v * scale * 10) / 10;
+        lines.push({ text: `+${scaled} ${k.slice(0, 4).toUpperCase()}` });
+      }
     }
     for (const [k, v] of Object.entries(def.resourceOutput)) {
       if (v) {
+        const scaled = Math.round(v * scale * 10) / 10;
         const label = k === 'funding' ? 'Fund' : k === 'materials' ? 'Mat' : 'Will';
-        lines.push(`+${v} ${label}/turn`);
+        lines.push({ text: `+${scaled} ${label}/turn` });
       }
     }
-    if (def.depletes) lines.push('Depletes over time');
+    if (def.climateImpact) {
+      const sign = def.climateImpact > 0 ? '+' : '';
+      lines.push({
+        text: `${sign}${def.climateImpact} climate/turn`,
+        climate: true,
+        pollution: def.climateImpact > 0,
+      });
+    }
+    if (def.depletes) lines.push({ text: 'Depletes over time' });
     return lines;
+  }
+
+  function conditionLabel(c: number): string {
+    if (c >= 0.9) return 'Good';
+    if (c >= 0.6) return 'Fair';
+    if (c >= 0.3) return 'Poor';
+    return 'Critical';
   }
 
   const tileLabel: Record<string, string> = {
@@ -97,6 +119,17 @@
 
   /** True when this tile has an ongoing construction or demolition in progress. */
   const isPending = $derived(tile.pendingActionId != null);
+
+  const DESTROYED_LABELS: Record<string, string> = {
+    flooded: 'FLOODED',
+    dustbowl: 'DUST BOWL',
+    irradiated: 'IRRADIATED',
+  };
+  const DESTROYED_DESC: Record<string, string> = {
+    flooded: 'This tile has been inundated. No construction is possible until conditions improve.',
+    dustbowl: 'Sustained drought has rendered this tile uninhabitable. Construction is not possible.',
+    irradiated: 'Contamination has made this tile unsafe. No construction is permitted here.',
+  };
 </script>
 
 <div
@@ -122,7 +155,12 @@
       <button class="close-btn" onclick={onClose}>✕</button>
     </div>
 
-    {#if isPending}
+    {#if tile.destroyedStatus}
+      <div class="destroyed-panel">
+        <span class="destroyed-badge">{DESTROYED_LABELS[tile.destroyedStatus] ?? tile.destroyedStatus}</span>
+        <span class="destroyed-desc">{DESTROYED_DESC[tile.destroyedStatus] ?? 'This tile has been destroyed.'}</span>
+      </div>
+    {:else if isPending}
       <div class="pending-panel">
         {#if tile.facilityId}
           <span class="pending-label">Demolition in progress…</span>
@@ -137,11 +175,16 @@
         <div class="occupied-header">
           <span class="occupied-name">{occupyingDef.name}</span>
           <span class="occupied-badge">BUILT</span>
+          {#if occupyingInstance && occupyingInstance.condition < 1}
+            <span class="condition-badge" style="color: {occupyingInstance.condition >= 0.6 ? '#c8a040' : '#9b4a4a'}">
+              {conditionLabel(occupyingInstance.condition)}
+            </span>
+          {/if}
         </div>
         <span class="facility-desc">{occupyingDef.description}</span>
         <div class="facility-outputs" style="margin-top: 0.4rem;">
-          {#each formatOutput(occupyingDef) as line}
-            <span class="output-line">{line}</span>
+          {#each formatOutput(occupyingDef, occupyingInstance ? occupyingInstance.condition * tile.productivity : tile.productivity) as line}
+            <span class="output-line" class:climate-line={line.climate} class:pollution-line={line.pollution}>{line.text}</span>
           {/each}
         </div>
         <div class="upkeep">Upkeep: {formatCost(occupyingDef.upkeepCost) || 'Free'}</div>
@@ -166,7 +209,7 @@
               <span class="facility-desc">{def.description}</span>
               <div class="facility-outputs">
                 {#each formatOutput(def) as line}
-                  <span class="output-line">{line}</span>
+                  <span class="output-line" class:climate-line={line.climate} class:pollution-line={line.pollution}>{line.text}</span>
                 {/each}
               </div>
               <div class="upkeep">
@@ -326,6 +369,16 @@
     padding: 0 0.3rem;
   }
 
+  .output-line.climate-line {
+    color: #4a9b7a;
+    border-color: #1a4030;
+  }
+
+  .output-line.climate-line.pollution-line {
+    color: #9b6a4a;
+    border-color: #4a2a10;
+  }
+
   .upkeep {
     font-size: 0.6rem;
     color: #5a4a2a;
@@ -426,6 +479,12 @@
     letter-spacing: 0.1em;
   }
 
+  .condition-badge {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    margin-left: auto;
+  }
+
   .demolish-row {
     margin-top: 0.6rem;
     display: flex;
@@ -450,6 +509,29 @@
   .no-demolish {
     font-size: 0.6rem;
     color: #3a4858;
+    font-style: italic;
+  }
+
+  .destroyed-panel {
+    padding: 0.9rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .destroyed-badge {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: #9b4a4a;
+    border: 1px solid #4a1a1a;
+    padding: 0.15rem 0.5rem;
+    align-self: flex-start;
+  }
+
+  .destroyed-desc {
+    color: #5a4040;
+    font-size: 0.65rem;
+    line-height: 1.5;
     font-style: italic;
   }
 

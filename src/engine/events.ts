@@ -155,24 +155,17 @@ export interface EventEffectResult {
 /**
  * Apply an EventEffect to the player state and map.
  *
- * Handled in Phase 4:
- *   - resources delta
- *   - fields delta
- *   - standing action restrictions
- *
- * Deferred to later phases:
- *   - destroyTile (Phase 5 — map rendering)
- *   - eliminateBloc (Phase 7 — bloc simulation)
- *   - signalProgress (Phase 9 — signal track)
- *   - triggersEventId (requires event pool access — Phase 4 extended)
+ * @param rng - Seeded RNG used for dynamic tile selection (`tileTypeTarget`).
  */
 export function applyEventEffect(
   effect: EventEffect,
   player: PlayerState,
   mapTiles: MapTile[],
   currentTurn: number,
+  rng: Rng,
 ): EventEffectResult {
   let updatedPlayer = { ...player };
+  let updatedTiles = mapTiles;
 
   // Resources delta
   if (effect.resources) {
@@ -197,8 +190,72 @@ export function applyEventEffect(
     updatedPlayer = { ...updatedPlayer, fields: newFields };
   }
 
-  // destroyTile, eliminateBloc, signalProgress, triggersEventId — deferred
-  return { player: updatedPlayer, mapTiles };
+  // Dynamic tile targeting: pick a random non-destroyed, non-HQ tile of the target type
+  if (effect.tileTypeTarget) {
+    const status = effect.destroyTileStatus ?? 'flooded';
+    const candidates = updatedTiles.filter((t) => {
+      if (t.type !== effect.tileTypeTarget) return false;
+      if (t.destroyedStatus !== null) return false;
+      // Exclude tiles that have the HQ on them
+      const f = updatedPlayer.facilities.find((fac) => fac.id === t.facilityId);
+      return !f || f.defId !== 'hq';
+    });
+    if (candidates.length > 0) {
+      const chosen = candidates[Math.floor(rng.next() * candidates.length)];
+      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, chosen, status);
+      updatedTiles = destruction.tiles;
+      updatedPlayer = destruction.player;
+    }
+  }
+
+  // Fixed tile targeting: destroy a specific tile by coordKey
+  if (effect.destroyTile) {
+    const { coordKey, status } = effect.destroyTile;
+    const target = updatedTiles.find(
+      (t) => `${t.coord.q},${t.coord.r}` === coordKey,
+    );
+    if (target && target.destroyedStatus === null) {
+      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, target, status);
+      updatedTiles = destruction.tiles;
+      updatedPlayer = destruction.player;
+    }
+  }
+
+  // eliminateBloc, signalProgress, triggersEventId — deferred
+  return { player: updatedPlayer, mapTiles: updatedTiles };
+}
+
+/** Destroy a tile and remove any facility on it (except HQ). */
+function destroyTileAndFacility(
+  tiles: MapTile[],
+  player: PlayerState,
+  target: MapTile,
+  status: import('./types').TileDestroyedStatus,
+): { tiles: MapTile[]; player: PlayerState } {
+  const coordKey = `${target.coord.q},${target.coord.r}`;
+
+  const updatedTiles = tiles.map((t) =>
+    `${t.coord.q},${t.coord.r}` === coordKey
+      ? { ...t, destroyedStatus: status, facilityId: null, pendingActionId: null }
+      : t,
+  );
+
+  let updatedPlayer = player;
+  if (target.facilityId) {
+    const facility = player.facilities.find((f) => f.id === target.facilityId);
+    if (facility && facility.defId !== 'hq') {
+      updatedPlayer = {
+        ...player,
+        facilities: player.facilities.filter((f) => f.id !== target.facilityId),
+        // Also cancel any construction action on this tile
+        constructionQueue: player.constructionQueue.filter(
+          (a) => a.coordKey !== coordKey,
+        ),
+      };
+    }
+  }
+
+  return { tiles: updatedTiles, player: updatedPlayer };
 }
 
 /**

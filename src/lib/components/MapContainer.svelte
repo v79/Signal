@@ -244,8 +244,9 @@
     >
       BOARD
     </button>
-    <div class="tab-spacer"></div>
-    {#if activeTab === 'earth' && gameStore.state}
+  </div>
+  {#if activeTab === 'earth' && gameStore.state}
+    <div class="map-toolbar">
       <Tooltip text="Overview of all built facilities" direction="below">
         <button
           class="tab overview-btn"
@@ -255,8 +256,8 @@
           ≡ FACILITIES
         </button>
       </Tooltip>
-    {/if}
-  </div>
+    </div>
+  {/if}
 
   <!-- Board panel (shown instead of Phaser canvas when board tab is active) -->
   {#if activeTab === 'board' && gameStore.state}
@@ -300,6 +301,9 @@
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
         playerResources={gameStore.state!.player.resources}
+        occupyingInstance={gameStore.state!.player.facilities.find(
+          (f) => f.id === selectedTile.facilityId,
+        ) ?? null}
         discoveredTechIds={new Set(
           gameStore.state!.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
         )}
@@ -406,8 +410,13 @@
     height: 100% !important;
   }
 
-  .tab-spacer {
-    flex: 1;
+  .map-toolbar {
+    display: flex;
+    gap: 1px;
+    background: #0a0e14;
+    border-bottom: 1px solid #1e2530;
+    flex-shrink: 0;
+    padding: 2px 4px 0;
   }
 
   .overview-btn {

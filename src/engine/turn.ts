@@ -45,6 +45,7 @@ import {
   tickBoardAges,
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
+import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
 import { ZERO_RESOURCES, ZERO_FIELDS } from './state';
 import { createRng } from './rng';
@@ -102,7 +103,7 @@ export function executeEventPhase(
     if (!def) continue;
     const effect = getEffectForResolution(def, 'expired');
     if (!effect) continue;
-    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn);
+    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn, rng);
     updatedPlayer = result.player;
     updatedTiles = result.mapTiles;
     const summary = formatEffectForNews(effect);
@@ -201,7 +202,7 @@ export function executeWorldPhase(
     updatedQueue,
     updatedFacilities: facilitiesAfterQueue,
     updatedTiles: tilesAfterQueue,
-  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn);
+  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs);
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -329,19 +330,45 @@ export function executeWorldPhase(
   const newWill = tickWill(player.will, willConfig);
 
   // 10. Mine depletion (applied to post-queue facilities)
-  const newFacilities = tickMineDepletion(facilitiesAfterQueue, facilityDefs);
+  const { facilities: newFacilities, tiles: tilesAfterDepletion } = tickMineDepletion(
+    facilitiesAfterQueue,
+    facilityDefs,
+    tilesAfterQueue,
+  );
 
-  // 11. Climate pressure
-  const newClimatePressure = Math.min(100, state.climatePressure + CLIMATE_PRESSURE_PER_TURN);
+  // 11. Climate pressure — baseline + net facility impact
+  const facilityClimateImpact = newFacilities.reduce((sum, inst) => {
+    const def = facilityDefs.get(inst.defId);
+    return sum + (def?.climateImpact ?? 0);
+  }, 0);
+  const newClimatePressure = Math.min(
+    100,
+    Math.max(0, state.climatePressure + CLIMATE_PRESSURE_PER_TURN + facilityClimateImpact),
+  );
 
-  // 12. Bloc simulation
+  // 12. Climate-driven tile degradation
+  const rng = createRng(`${state.seed}-climate-t${nextTurn}`);
+  const degradation = applyClimateDegradation(
+    tilesAfterDepletion,
+    newClimatePressure,
+    newFacilities,
+    facilityDefs,
+    rng,
+  );
+  const degradedTiles = degradation.changed ? degradation.tiles : tilesAfterDepletion;
+  const facilitiesAfterDegradation = degradation.changed ? degradation.facilities : newFacilities;
+  const degradationNews: NewsItem[] = degradation.changed
+    ? [{ id: `climate-deg-${nextTurn}`, turn: nextTurn, text: degradation.newsText, category: 'climate' }]
+    : [];
+
+  // 14. Bloc simulation
   const { updatedBlocs, newNewsItems: blocNews } = simulateBlocs(state.blocs, blocDefs, nextTurn);
   const mergerNews = checkBlocMergers(updatedBlocs, blocDefs, nextTurn);
 
-  // 13. Board age ticking (retirements generate news)
+  // 15. Board age ticking (retirements generate news)
   const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, nextTurn);
 
-  // 14. Signal progress tick
+  // 16. Signal progress tick
   const prevSignalProgress = state.signal.decodeProgress;
   const newSignal = tickSignalProgress(state.signal, newFields, newFacilities, facilityDefs);
   const signalNews: NewsItem[] = didCrossStrengthThreshold(
@@ -358,7 +385,7 @@ export function executeWorldPhase(
       ]
     : [];
 
-  // 15. Earth welfare tick
+  // 17. Earth welfare tick
   const newEarthWelfare = tickEarthWelfare(state);
 
   // Assemble the next state (outcome checked below)
@@ -371,13 +398,13 @@ export function executeWorldPhase(
     earthWelfareScore: newEarthWelfare,
     blocs: updatedBlocs,
     signal: newSignal,
-    map: { ...map, earthTiles: tilesAfterQueue },
+    map: { ...map, earthTiles: degradedTiles },
     player: {
       ...player,
       resources: newResources,
       fields: newFields,
       will: newWill,
-      facilities: newFacilities,
+      facilities: facilitiesAfterDegradation,
       techs: updatedTechs,
       cards: updatedCards,
       board: updatedBoard,
@@ -386,6 +413,7 @@ export function executeWorldPhase(
         ...player.newsFeed,
         ...breakthroughNews,
         ...researchNews,
+        ...degradationNews,
         ...blocNews,
         ...mergerNews,
         ...boardNews,
@@ -394,7 +422,7 @@ export function executeWorldPhase(
     },
   };
 
-  // 16. Victory / loss check (uses fully updated state)
+  // 18. Victory / loss check (uses fully updated state)
   const outcome = nextState.outcome ?? checkVictoryConditions(nextState);
   return { ...nextState, outcome };
 }

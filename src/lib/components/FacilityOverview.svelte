@@ -76,7 +76,7 @@
           </div>
           {#each group.instances as inst (inst.id)}
             <div class="inst-row">
-              <span class="tile-type">{tileLabel(inst.locationKey)}</span>
+              <span class="tile-type">{tileLabel(inst.locationKey)} · ({inst.locationKey})</span>
               {#if inst.condition < 1}
                 <span class="condition" style="color: {conditionColor(inst.condition)}">
                   {conditionLabel(inst.condition)}
@@ -100,7 +100,7 @@
     z-index: 50;
     display: flex;
     align-items: flex-start;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 
   .panel {
@@ -111,7 +111,7 @@
     max-height: 100%;
     display: flex;
     flex-direction: column;
-    box-shadow: -4px 4px 16px rgba(0, 0, 0, 0.6);
+    box-shadow: 4px 4px 16px rgba(0, 0, 0, 0.6);
   }
 
   .panel-header {
