@@ -63,13 +63,21 @@ const FACILITY_COLORS: Record<string, number> = {
 // Svelte modules (avoids compile-time coupling with runes).
 // ---------------------------------------------------------------------------
 
+/** One directional adjacency indicator for a single hex edge. */
+export interface AdjacencyIndicator {
+  /** Axial direction toward the neighbour causing the effect. */
+  direction: { q: number; r: number };
+  type: 'bonus' | 'penalty';
+}
+
 export interface EarthSceneCallbacks {
   getTiles: () => MapTile[];
   getFacilities: () => FacilityInstance[];
   getQueue: () => OngoingAction[];
   getSelected: () => string | null;
   getClimate: () => number;
-  getAdjacencyMap: () => Map<string, 'bonus' | 'penalty' | 'mixed'>;
+  /** Per-coordKey list of directional indicators to draw at each hex edge. */
+  getAdjacencyMap: () => Map<string, AdjacencyIndicator[]>;
   onTileClick: (coordKey: string) => void;
   onTileHover: (coordKey: string | null) => void;
 }
@@ -211,7 +219,7 @@ export class EarthScene extends Phaser.Scene {
       const isHovered = key === this.hoveredKey;
       const isSelected = key === selected;
 
-      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate, adjacencyMap.get(key) ?? null);
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate, adjacencyMap.get(key) ?? []);
     }
   }
 
@@ -225,7 +233,7 @@ export class EarthScene extends Phaser.Scene {
     facility: FacilityInstance | null,
     action: OngoingAction | null,
     climate: number,
-    adjacency: 'bonus' | 'penalty' | 'mixed' | null,
+    adjacency: AdjacencyIndicator[],
   ): void {
     const baseFill = TILE_FILL[tile.type] ?? 0x1e2d40;
     const baseStroke = TILE_STROKE[tile.type] ?? 0x3a5878;
@@ -280,25 +288,38 @@ export class EarthScene extends Phaser.Scene {
       }
     }
 
-    // Adjacency indicator — small triangle below the facility circle
-    if (adjacency) {
-      const triY = cy + HEX_SIZE * 0.42;
-      const s = 4; // half-width of triangle base
-      if (adjacency === 'bonus') {
-        // Gold upward triangle ▲
-        this.overlayGfx.fillStyle(0xd4a820, 0.8);
-        this.overlayGfx.fillTriangle(cx - s, triY + s, cx + s, triY + s, cx, triY - s);
-      } else if (adjacency === 'penalty') {
-        // Red downward triangle ▼
-        this.overlayGfx.fillStyle(0xd44040, 0.8);
-        this.overlayGfx.fillTriangle(cx - s, triY - s, cx + s, triY - s, cx, triY + s);
-      } else {
-        // Mixed: gold up-triangle left, red down-triangle right
-        const half = s * 0.8;
-        this.overlayGfx.fillStyle(0xd4a820, 0.75);
-        this.overlayGfx.fillTriangle(cx - s - 2, triY + half, cx + 2, triY + half, cx - s + half - 2, triY - half);
-        this.overlayGfx.fillStyle(0xd44040, 0.75);
-        this.overlayGfx.fillTriangle(cx - 2, triY - half, cx + s + 2, triY - half, cx + s - half + 2, triY + half);
+    // Adjacency indicators — one small triangle per active edge, pointing toward the neighbour
+    if (adjacency.length > 0) {
+      // Inradius: distance from hex centre to edge midpoint (flat-top hex)
+      const inradius = HEX_SIZE * (Math.sqrt(3) / 2);
+      const triH = 5; // triangle height in px
+      const triW = 5; // triangle base half-width in px
+
+      for (const { direction, type } of adjacency) {
+        // World-space vector toward neighbour centre (unnormalised)
+        const vx = 1.5 * direction.q;
+        const vy = (Math.sqrt(3) / 2) * direction.q + Math.sqrt(3) * direction.r;
+        const angle = Math.atan2(vy, vx);
+
+        // Edge midpoint — place the triangle centroid just inside the edge
+        const ex = cx + inradius * 0.82 * Math.cos(angle);
+        const ey = cy + inradius * 0.82 * Math.sin(angle);
+
+        // Perpendicular direction (for base width)
+        const px = Math.cos(angle + Math.PI / 2);
+        const py = Math.sin(angle + Math.PI / 2);
+
+        // Tip points outward toward the neighbour; base is behind it
+        const tipX = ex + (triH * 0.67) * Math.cos(angle);
+        const tipY = ey + (triH * 0.67) * Math.sin(angle);
+        const b1x = ex - (triH * 0.33) * Math.cos(angle) + triW * px;
+        const b1y = ey - (triH * 0.33) * Math.sin(angle) + triW * py;
+        const b2x = ex - (triH * 0.33) * Math.cos(angle) - triW * px;
+        const b2y = ey - (triH * 0.33) * Math.sin(angle) - triW * py;
+
+        const color = type === 'bonus' ? 0xd4a820 : 0xd44040;
+        this.overlayGfx.fillStyle(color, 0.85);
+        this.overlayGfx.fillTriangle(tipX, tipY, b1x, b1y, b2x, b2y);
       }
     }
 

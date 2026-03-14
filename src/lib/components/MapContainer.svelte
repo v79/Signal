@@ -7,10 +7,9 @@
   import FacilityOverview from './FacilityOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS } from '../../data/facilities';
-  import { computeAdjacencyEffects } from '../../engine/facilities';
   import { TECH_DEFS } from '../../data/technologies';
   import { BOARD_DEFS } from '../../data/board';
-  import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
+  import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
   import type { Era, BoardRole } from '../../engine/types';
@@ -45,28 +44,56 @@
   /** Whether the facility overview panel is open. */
   let showFacilityOverview = $state(false);
 
-  /** Per-coordKey adjacency status for the Earth scene indicator. */
-  const adjacencyMap = $derived.by<Map<string, 'bonus' | 'penalty' | 'mixed'>>(() => {
+  const HEX_DIRS = [
+    { q: 1, r: 0 }, { q: -1, r: 0 },
+    { q: 0, r: 1 }, { q: 0, r: -1 },
+    { q: 1, r: -1 }, { q: -1, r: 1 },
+  ];
+
+  /**
+   * Per-coordKey list of directional adjacency indicators for the Earth scene.
+   * Each indicator says: "at the edge facing `direction`, draw a triangle of `type`."
+   */
+  const adjacencyMap = $derived.by<Map<string, AdjacencyIndicator[]>>(() => {
     if (!gameStore.state) return new Map();
-    const effects = computeAdjacencyEffects(
-      gameStore.state.player.facilities,
-      FACILITY_DEFS,
-      gameStore.state.map.earthTiles,
-    );
-    const result = new Map<string, 'bonus' | 'penalty' | 'mixed'>();
-    for (const effect of effects) {
-      const inst = gameStore.state.player.facilities.find((f) => f.id === effect.facilityInstanceId);
-      if (!inst) continue;
-      const key = inst.locationKey;
-      const hasBonus =
-        Object.values(effect.fieldBonus).some((v) => v > 0) ||
-        Object.values(effect.resourceBonus).some((v) => v > 0);
-      const hasPenalty =
-        Object.values(effect.fieldBonus).some((v) => v < 0) ||
-        Object.values(effect.resourceBonus).some((v) => v < 0);
-      if (hasBonus && hasPenalty) result.set(key, 'mixed');
-      else if (hasBonus) result.set(key, 'bonus');
-      else if (hasPenalty) result.set(key, 'penalty');
+    const facilities = gameStore.state.player.facilities;
+    const tiles = gameStore.state.map.earthTiles;
+
+    // Build coordKey → facility, skipping destroyed tiles
+    const keyToFacility = new Map<string, (typeof facilities)[0]>();
+    for (const tile of tiles) {
+      if (!tile.facilityId || tile.destroyedStatus !== null) continue;
+      const f = facilities.find((fac) => fac.id === tile.facilityId);
+      if (f) keyToFacility.set(`${tile.coord.q},${tile.coord.r}`, f);
+    }
+
+    const result = new Map<string, AdjacencyIndicator[]>();
+
+    for (const [key, facility] of keyToFacility) {
+      const def = FACILITY_DEFS.get(facility.defId);
+      if (!def) continue;
+      const [q, r] = key.split(',').map(Number);
+
+      for (const dir of HEX_DIRS) {
+        const nKey = `${q + dir.q},${r + dir.r}`;
+        const neighbor = keyToFacility.get(nKey);
+        if (!neighbor) continue;
+
+        for (const rule of def.adjacencyBonuses) {
+          if (rule.neighborDefId === neighbor.defId) {
+            if (!result.has(key)) result.set(key, []);
+            result.get(key)!.push({ direction: dir, type: 'bonus' });
+            break;
+          }
+        }
+        for (const rule of def.adjacencyPenalties) {
+          if (rule.neighborDefId === neighbor.defId) {
+            if (!result.has(key)) result.set(key, []);
+            result.get(key)!.push({ direction: dir, type: 'penalty' });
+            break;
+          }
+        }
+      }
     }
     return result;
   });
