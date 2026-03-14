@@ -3,18 +3,21 @@
   import { browser } from '$app/environment';
   import FacilityPicker from './FacilityPicker.svelte';
   import TileTooltip from './TileTooltip.svelte';
+  import BoardPanel from './BoardPanel.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS } from '../../data/facilities';
   import { TECH_DEFS } from '../../data/technologies';
+  import { BOARD_DEFS } from '../../data/board';
   import type { EarthScene as EarthSceneType } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
-  import type { Era } from '../../engine/types';
+  import type { Era, BoardRole } from '../../engine/types';
   import Tooltip from './Tooltip.svelte';
 
-  type SceneTab = 'earth' | 'space' | 'belt';
+  type MapTab = 'earth' | 'space' | 'belt';
+  type AllTab = MapTab | 'board';
 
-  const TABS: { id: SceneTab; label: string; requiredEra: Era | null }[] = [
+  const MAP_TABS: { id: MapTab; label: string; requiredEra: Era | null }[] = [
     { id: 'earth', label: 'EARTH', requiredEra: null },
     { id: 'space', label: 'NEAR SPACE', requiredEra: 'nearSpace' },
     { id: 'belt', label: 'ASTEROID BELT', requiredEra: 'deepSpace' },
@@ -29,22 +32,36 @@
 
   let container: HTMLDivElement;
   let game: import('phaser').Game | null = null;
-  let activeTab = $state<SceneTab>('earth');
+  let activeTab = $state<AllTab>('earth');
+  /** Last active map (Phaser) tab — preserved when switching to Board so we can restore it. */
+  let lastMapTab = $state<MapTab>('earth');
   /** Mouse position inside the map container for tooltip positioning. */
   let mouseX = $state(0);
   let mouseY = $state(0);
 
-  const SCENE_KEYS: Record<SceneTab, string> = {
+  const SCENE_KEYS: Record<MapTab, string> = {
     earth: 'EarthScene',
     space: 'SpaceScene',
     belt: 'AsteroidScene',
   };
 
-  function switchTab(tab: SceneTab): void {
-    if (!game || activeTab === tab) return;
-    game.scene.stop(SCENE_KEYS[activeTab]);
-    game.scene.start(SCENE_KEYS[tab]);
-    activeTab = tab;
+  function switchTab(tab: AllTab): void {
+    if (activeTab === tab) return;
+
+    if (tab === 'board') {
+      // Just show the board panel — don't stop the running Phaser scene.
+      // The canvas becomes hidden via CSS; state is preserved on return.
+      activeTab = 'board';
+    } else {
+      // Switching to a map tab. Stop the previously active map scene if it differs.
+      const fromMapTab: MapTab = activeTab !== 'board' ? (activeTab as MapTab) : lastMapTab;
+      if (game && fromMapTab !== tab) {
+        game.scene.stop(SCENE_KEYS[fromMapTab]);
+        game.scene.start(SCENE_KEYS[tab]);
+      }
+      lastMapTab = tab;
+      activeTab = tab;
+    }
   }
 
   // Selected Earth tile for facility placement
@@ -138,7 +155,7 @@
 <div class="map-wrapper">
   <!-- Scene tab bar -->
   <div class="tab-bar">
-    {#each TABS as tab}
+    {#each MAP_TABS as tab}
       <Tooltip
         text={eraUnlocked(tab.requiredEra)
           ? `Switch to ${tab.label} view`
@@ -159,11 +176,32 @@
         </button>
       </Tooltip>
     {/each}
+    <button
+      class="tab"
+      class:active={activeTab === 'board'}
+      onclick={() => switchTab('board')}
+    >
+      BOARD
+    </button>
   </div>
 
-  <!-- Phaser canvas mount point -->
+  <!-- Board panel (shown instead of Phaser canvas when board tab is active) -->
+  {#if activeTab === 'board' && gameStore.state}
+    <div class="board-panel-wrap">
+      <BoardPanel
+        board={gameStore.state.player.board}
+        boardDefs={BOARD_DEFS}
+        phase={gameStore.state.phase}
+        onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
+        onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
+      />
+    </div>
+  {/if}
+
+  <!-- Phaser canvas mount point (hidden when board tab active, preserving scene state) -->
   <div
     class="map-container"
+    style="display: {activeTab === 'board' ? 'none' : 'flex'}"
     bind:this={container}
     onmousemove={(e) => {
       mouseX = e.offsetX;
@@ -260,11 +298,20 @@
     margin-left: 2px;
   }
 
+  .board-panel-wrap {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .map-container {
     flex: 1;
     position: relative;
     overflow: hidden;
     min-height: 0;
+    flex-direction: column;
   }
 
   .map-container :global(canvas) {

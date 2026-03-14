@@ -4,8 +4,10 @@
   import HUD from '$lib/components/HUD.svelte';
   import EventZone from '$lib/components/EventZone.svelte';
   import ResearchFeed from '$lib/components/ResearchFeed.svelte';
-  import BoardPanel from '$lib/components/BoardPanel.svelte';
+  import TechProgressSummary from '$lib/components/TechProgressSummary.svelte';
+  import TechTreeModal from '$lib/components/TechTreeModal.svelte';
   import SignalTrack from '$lib/components/SignalTrack.svelte';
+  import ScienceNewsFeed from '$lib/components/ScienceNewsFeed.svelte';
   import StandingActions from '$lib/components/StandingActions.svelte';
   import OngoingActionsPanel from '$lib/components/OngoingActionsPanel.svelte';
   import CardHand from '$lib/components/CardHand.svelte';
@@ -18,7 +20,6 @@
   import { CARD_DEFS } from '../data/cards';
   import { EVENT_DEFS } from '../data/events';
   import { STANDING_ACTIONS } from '../data/standingActions';
-  import { BOARD_DEFS } from '../data/board';
   import { FACILITY_DEFS } from '../data/facilities';
   import { TECH_DEFS } from '../data/technologies';
   import {
@@ -26,7 +27,6 @@
     computeResourceBreakdown,
     type ResourceBreakdown,
   } from '../engine/facilities';
-  import type { BoardRole } from '../engine/types';
   import { isSignalClimax } from '../engine/signal';
   // Redirect to /newgame if there is no active game state (cold start).
   onMount(() => {
@@ -53,7 +53,21 @@
     gameStore.state && isSignalClimax(gameStore.state.signal) ? gameStore.getWormholeOptions() : [],
   );
 
-  let rightTab = $state<'research' | 'board'>('research');
+  let showTechTree = $state(false);
+  let hasNewResearch = $state(false);
+  // Plain JS counter (not reactive) to avoid effect loops
+  let _knownResearchCount = 0;
+
+  $effect(() => {
+    if (!gameStore.state) return;
+    const count = gameStore.state.player.techs.filter(
+      (t) => t.stage === 'rumour' || t.stage === 'progress',
+    ).length;
+    if (count > _knownResearchCount) {
+      hasNewResearch = true;
+    }
+    _knownResearchCount = count;
+  });
 
   // Tags of active fullCounter events — used to highlight matching counter cards in hand.
   const counterableTags = $derived(
@@ -83,6 +97,20 @@
   <NarrativeModal
     narrative={gameStore.state.narrativeQueue[0]}
     onDismiss={() => gameStore.dismissNarrativeModal()}
+  />
+{/if}
+
+{#if showTechTree && gameStore.state}
+  <TechTreeModal
+    techs={gameStore.state.player.techs}
+    techDefs={TECH_DEFS}
+    signal={gameStore.state.signal}
+    cardDefs={CARD_DEFS}
+    facilityDefs={FACILITY_DEFS}
+    onClose={() => {
+      showTechTree = false;
+      hasNewResearch = false;
+    }}
   />
 {/if}
 
@@ -137,43 +165,32 @@
       <!-- Centre: Earth map (Phaser) -->
       <MapContainer />
 
-      <!-- Right column: signal track + tabbed research/board -->
+      <!-- Right column: signal track + tech tree + in-progress research -->
       <div class="right-column">
         <SignalTrack signal={gs.signal} />
 
-        <div class="panel-tabs">
-          <button
-            class="tab-btn"
-            class:active={rightTab === 'research'}
-            onclick={() => (rightTab = 'research')}>RESEARCH</button
-          >
-          <button
-            class="tab-btn"
-            class:active={rightTab === 'board'}
-            onclick={() => (rightTab = 'board')}>BOARD</button
-          >
-        </div>
+        <button
+          class="tree-btn"
+          onclick={() => {
+            showTechTree = true;
+            hasNewResearch = false;
+          }}
+        >
+          TECH TREE
+          {#if hasNewResearch}
+            <span class="new-dot"></span>
+          {/if}
+        </button>
 
-        {#if rightTab === 'research'}
-          <ResearchFeed
-            fields={gs.player.fields}
-            signal={gs.signal}
-            techs={gs.player.techs}
-            techDefs={TECH_DEFS}
-            cardDefs={CARD_DEFS}
-            facilityDefs={FACILITY_DEFS}
-            {wormholeOptions}
-            onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
-          />
-        {:else}
-          <BoardPanel
-            board={gs.player.board}
-            boardDefs={BOARD_DEFS}
-            phase={gs.phase}
-            onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
-            onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
-          />
-        {/if}
+        <ScienceNewsFeed items={gs.player.newsFeed} />
+
+        <TechProgressSummary techs={gs.player.techs} techDefs={TECH_DEFS} />
+
+        <ResearchFeed
+          signal={gs.signal}
+          {wormholeOptions}
+          onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
+        />
       </div>
     </div>
 
@@ -231,41 +248,46 @@
     min-height: 0;
   }
 
-  .panel-tabs {
+  .tree-btn {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
     flex-shrink: 0;
-    border-bottom: 1px solid #1e2530;
-    background: #0c1018;
-    border-left: 1px solid #1e2530;
-  }
-
-  .tab-btn {
-    flex: 1;
-    background: none;
+    width: 100%;
+    background: #0a1218;
     border: none;
-    border-right: 1px solid #1e2530;
-    color: #4a6070;
+    border-top: 1px solid #1e2530;
+    border-bottom: 1px solid #1e2530;
+    border-left: 1px solid #1e2530;
+    color: #4a7888;
     font-family: monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.18em;
-    padding: 0.4rem 0;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    padding: 0.55rem 0;
     cursor: pointer;
     transition: color 0.15s, background 0.15s;
   }
 
-  .tab-btn:last-child {
-    border-right: none;
+  .tree-btn:hover {
+    color: #8aacca;
+    background: #0d1820;
   }
 
-  .tab-btn:hover {
-    color: #8aacca;
-    background: #0f1820;
+  .new-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ab8d8;
+    box-shadow: 0 0 6px #4ab8d8;
+    animation: pulse 1.6s ease-in-out infinite;
   }
 
-  .tab-btn.active {
-    color: #8aacca;
-    background: #0a1420;
-    border-bottom: 2px solid #2a6090;
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
   }
 
   .bottom-row {

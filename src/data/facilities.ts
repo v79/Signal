@@ -219,7 +219,68 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       canDelete: true,
       fieldOutput: { biochemistry: 5, socialScience: 2 },
       resourceOutput: {},
-      adjacencyBonuses: [],
+      adjacencyBonuses: [
+        {
+          neighborDefId: 'agriculturalResearchStation',
+          fieldBonus: { biochemistry: 2, socialScience: 1 },
+        },
+      ],
+      adjacencyPenalties: [],
+      depletes: false,
+      requiredTechId: null,
+    },
+  ],
+
+  [
+    'policyInstitute',
+    {
+      id: 'policyInstitute',
+      name: 'Policy Institute',
+      description:
+        'Dedicated social science research: governance modelling, public behaviour analysis, and international coordination studies. Generates strong Social Science output.',
+      era: 'earth',
+      allowedTileTypes: ['urban'],
+      buildCost: { funding: 40, materials: 5 },
+      upkeepCost: { funding: 6 },
+      buildTime: 2,
+      deleteTime: 1,
+      canDelete: true,
+      fieldOutput: { socialScience: 5, mathematics: 1 },
+      resourceOutput: {},
+      adjacencyBonuses: [
+        {
+          neighborDefId: 'publicUniversity',
+          fieldBonus: { socialScience: 2 },
+        },
+      ],
+      adjacencyPenalties: [],
+      depletes: false,
+      requiredTechId: null,
+    },
+  ],
+
+  [
+    'agriculturalResearchStation',
+    {
+      id: 'agriculturalResearchStation',
+      name: 'Agricultural Research Station',
+      description:
+        'Field biology and crop science programmes. Generates Biochemistry; adjacent to a Bioresearch Centre it accelerates both.',
+      era: 'earth',
+      allowedTileTypes: ['agricultural'],
+      buildCost: { funding: 25, materials: 10 },
+      upkeepCost: { funding: 4 },
+      buildTime: 2,
+      deleteTime: 1,
+      canDelete: true,
+      fieldOutput: { biochemistry: 3, socialScience: 1 },
+      resourceOutput: {},
+      adjacencyBonuses: [
+        {
+          neighborDefId: 'bioResearchCentre',
+          fieldBonus: { biochemistry: 2, socialScience: 1 },
+        },
+      ],
       adjacencyPenalties: [],
       depletes: false,
       requiredTechId: null,

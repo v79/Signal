@@ -4,7 +4,6 @@
   import type {
     TechState,
     TechDef,
-    FieldPoints,
     SignalState,
     CardDef,
     FacilityDef,
@@ -17,7 +16,6 @@
   let {
     techs,
     techDefs,
-    fields,
     signal,
     cardDefs,
     facilityDefs,
@@ -25,7 +23,6 @@
   }: {
     techs: TechState[];
     techDefs: Map<string, TechDef>;
-    fields: FieldPoints;
     signal: SignalState;
     cardDefs: Map<string, CardDef>;
     facilityDefs: Map<string, FacilityDef>;
@@ -38,7 +35,7 @@
   let loading = $state(true);
 
   function buildData(): TechTreeSceneData {
-    return { techs, techDefs, fields, signal, cardDefs, facilityDefs };
+    return { techs, techDefs, signal, cardDefs, facilityDefs };
   }
 
   onMount(async () => {

@@ -16,7 +16,6 @@ import Phaser from 'phaser';
 import type {
   TechState,
   TechDef,
-  FieldPoints,
   SignalState,
   CardDef,
   FacilityDef,
@@ -32,7 +31,6 @@ import { FIELD_COLOURS_PHASER, FIELD_COLOURS_CSS, FIELD_ABBR } from '../lib/fiel
 export interface TechTreeSceneData {
   techs: TechState[];
   techDefs: Map<string, TechDef>;
-  fields: FieldPoints;
   signal: SignalState;
   cardDefs: Map<string, CardDef>;
   facilityDefs: Map<string, FacilityDef>;
@@ -302,7 +300,8 @@ export class TechTreeScene extends Phaser.Scene {
       }).setOrigin(0.5, 0);
     }
 
-    // Draw nodes — vertically centred within content height
+    // Compute node top-left positions for all techs (needed for arrows)
+    const nodePositions = new Map<string, { x: number; y: number }>();
     for (let tier = 1; tier <= 4; tier++) {
       const techs = tierGroups.get(tier)!;
       if (techs.length === 0) continue;
@@ -310,11 +309,107 @@ export class TechTreeScene extends Phaser.Scene {
       const startY = TOP_MARGIN + (contentH - totalH) / 2;
       const nodeX = colCX[tier - 1] - NODE_W / 2;
       for (let j = 0; j < techs.length; j++) {
-        this.drawNode(techs[j], d, nodeX, startY + j * (NODE_H + NODE_GAP));
+        nodePositions.set(techs[j].defId, { x: nodeX, y: startY + j * (NODE_H + NODE_GAP) });
+      }
+    }
+
+    // Draw dependency arrows beneath nodes
+    this.drawDependencyArrows(d, nodePositions);
+
+    // Draw nodes — vertically centred within content height
+    for (let tier = 1; tier <= 4; tier++) {
+      for (const tech of tierGroups.get(tier)!) {
+        const pos = nodePositions.get(tech.defId)!;
+        this.drawNode(tech, d, pos.x, pos.y);
       }
     }
 
     this.drawLegend(W, H);
+  }
+
+  // -------------------------------------------------------------------------
+  // Dependency arrows (drawn before nodes so they appear behind)
+  // -------------------------------------------------------------------------
+
+  private drawDependencyArrows(
+    d: TechTreeSceneData,
+    nodePositions: Map<string, { x: number; y: number }>,
+  ): void {
+    const ARROW_SIZE = 5;
+
+    for (const tech of d.techs) {
+      const def = d.techDefs.get(tech.defId);
+      if (!def || def.requiredTechIds.length === 0) continue;
+
+      const targetPos = nodePositions.get(tech.defId);
+      if (!targetPos) continue;
+
+      const targetLeft = targetPos.x;
+      const targetMidY = targetPos.y + NODE_H / 2;
+
+      for (const reqId of def.requiredTechIds) {
+        const sourcePos = nodePositions.get(reqId);
+        if (!sourcePos) continue;
+
+        const sourceRight = sourcePos.x + NODE_W;
+        const sourceMidY = sourcePos.y + NODE_H / 2;
+
+        // Colour based on prerequisite stage and relationship status
+        const reqTech = d.techs.find((t) => t.defId === reqId);
+        const reqStage = reqTech?.stage ?? 'unknown';
+        let lineColor: number;
+        let lineAlpha: number;
+
+        if (
+          reqStage === 'discovered' &&
+          (tech.stage === 'progress' || tech.stage === 'discovered')
+        ) {
+          lineColor = 0x6aacca; // active connection — bright blue
+          lineAlpha = 0.85;
+        } else if (reqStage === 'discovered' || reqStage === 'progress') {
+          lineColor = 0x2a6090; // prerequisite met — medium blue
+          lineAlpha = 0.65;
+        } else {
+          lineColor = 0x1e3040; // undiscovered — dim
+          lineAlpha = 0.5;
+        }
+
+        // Cubic bezier approximated as line segments (Phaser Graphics types lack bezierCurveTo)
+        const cpX = sourceRight + (targetLeft - sourceRight) * 0.5;
+        const STEPS = 20;
+
+        this.worldGfx.lineStyle(1.5, lineColor, lineAlpha);
+        this.worldGfx.beginPath();
+        this.worldGfx.moveTo(sourceRight, sourceMidY);
+        for (let s = 1; s <= STEPS; s++) {
+          const t = s / STEPS;
+          const mt = 1 - t;
+          const bx =
+            mt * mt * mt * sourceRight +
+            3 * mt * mt * t * cpX +
+            3 * mt * t * t * cpX +
+            t * t * t * targetLeft;
+          const by =
+            mt * mt * mt * sourceMidY +
+            3 * mt * mt * t * sourceMidY +
+            3 * mt * t * t * targetMidY +
+            t * t * t * targetMidY;
+          this.worldGfx.lineTo(bx, by);
+        }
+        this.worldGfx.strokePath();
+
+        // Arrow head — small filled triangle pointing right at target
+        this.worldGfx.fillStyle(lineColor, lineAlpha);
+        this.worldGfx.fillTriangle(
+          targetLeft,
+          targetMidY,
+          targetLeft - ARROW_SIZE,
+          targetMidY - ARROW_SIZE / 2,
+          targetLeft - ARROW_SIZE,
+          targetMidY + ARROW_SIZE / 2,
+        );
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -393,6 +488,17 @@ export class TechTreeScene extends Phaser.Scene {
       case 'discovered':
         this.drawDiscoveredContent(def, tech, d, x, y);
         break;
+    }
+
+    // Breakthrough indicator: small ⚡ marker in bottom-left corner
+    if (tech.unlockedByBreakthrough) {
+      this.addWorldText(x + 6, y + NODE_H - 14, '⚡', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#8ab8d0',
+      })
+        .setOrigin(0, 1)
+        .setAlpha(0.7);
     }
   }
 
@@ -527,7 +633,7 @@ export class TechTreeScene extends Phaser.Scene {
 
     const recipe = tech.recipe ?? def.baseRecipe;
     let barY = sepY + 8;
-    barY = this.drawFieldBars(recipe, d.fields, false, x, barY);
+    barY = this.drawFieldBars(recipe, tech.fieldProgress, false, x, barY);
 
     if (def.requiresSimultaneous) {
       this.addWorldText(x + NODE_W / 2, barY + 3, '\u2295 ALL FIELDS SIMULTANEOUS', {
@@ -562,7 +668,7 @@ export class TechTreeScene extends Phaser.Scene {
 
     const recipe = tech.recipe ?? def.baseRecipe;
     let barY = sepY + 8;
-    barY = this.drawFieldBars(recipe, d.fields, true, x, barY);
+    barY = this.drawFieldBars(recipe, tech.fieldProgress, true, x, barY);
 
     const unlocks: string[] = [
       ...def.unlocksCards.map((id) => d.cardDefs.get(id)?.name ?? id),
@@ -584,7 +690,7 @@ export class TechTreeScene extends Phaser.Scene {
 
   private drawFieldBars(
     recipe: Record<string, number | undefined>,
-    fields: FieldPoints,
+    fieldProgress: Partial<Record<string, number>>,
     discovered: boolean,
     x: number,
     startY: number,
@@ -596,8 +702,8 @@ export class TechTreeScene extends Phaser.Scene {
 
     for (const [field, threshold] of Object.entries(recipe)) {
       if (!threshold) continue;
-      const currentVal = (fields as Record<string, number>)[field] ?? 0;
-      const progress = discovered ? 1 : Math.min(1, currentVal / threshold);
+      const currentVal = fieldProgress[field] ?? 0;
+      const progress = Math.min(1, currentVal / threshold);
       const barColor = FIELD_COLOURS_PHASER[field] ?? C_FIELD_FALLBACK;
       const cssColor = FIELD_COLOURS_CSS[field] ?? '#4a6880';
 

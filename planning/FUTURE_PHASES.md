@@ -4,6 +4,7 @@ This is a list of future requirements for the game but they are not to be implem
 
 - UI visual flare:
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
+  - The game is just too dark, the colour scheme is too muted
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
@@ -22,6 +23,8 @@ This is a list of future requirements for the game but they are not to be implem
 - Political Will:
   - What is the difference between Global Will and Political Will?
   - Political Will should have a cap (100?)
+- Era Gates
+  - We haven't yet given much thought to how to unlock and progress Eras.
 - Earth map
   - Show the name of our player's Bloc somewhere in the HUD or map
   - Visualise neighbour adjacency bonuses/penalties - not the numbers, just indicate that they exist
