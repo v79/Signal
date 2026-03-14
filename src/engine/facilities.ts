@@ -299,17 +299,31 @@ export const MINE_DEPLETION_RATE = 0.02;
 
 /**
  * Advance depletion for all depleting facilities.
- * Returns a new facilities array — does not mutate the input.
+ * Also decrements `mineDepletion` on the tile so the seam level persists
+ * independently of whether a mine is currently built there.
+ * Returns updated facilities and tiles — does not mutate inputs.
  */
 export function tickMineDepletion(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
-): FacilityInstance[] {
-  return facilities.map((facility) => {
+  tiles: MapTile[],
+): { facilities: FacilityInstance[]; tiles: MapTile[] } {
+  const depletingKeys = new Set<string>();
+
+  const updatedFacilities = facilities.map((facility) => {
     const def = facilityDefs.get(facility.defId);
     if (!def?.depletes) return facility;
+    depletingKeys.add(facility.locationKey);
     return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
   });
+
+  const updatedTiles = tiles.map((tile) => {
+    const key = `${tile.coord.q},${tile.coord.r}`;
+    if (!depletingKeys.has(key)) return tile;
+    return { ...tile, mineDepletion: Math.max(0, tile.mineDepletion - MINE_DEPLETION_RATE) };
+  });
+
+  return { facilities: updatedFacilities, tiles: updatedTiles };
 }
 
 // ---------------------------------------------------------------------------
@@ -453,6 +467,7 @@ export function tickConstructionQueue(
   facilities: FacilityInstance[],
   tiles: MapTile[],
   completedTurn: number,
+  facilityDefs: Map<string, FacilityDef> = new Map(),
 ): ConstructionTickResult {
   const updatedQueue: OngoingAction[] = [];
   let updatedFacilities = [...facilities];
@@ -472,11 +487,14 @@ export function tickConstructionQueue(
 
     if (action.type === 'construct') {
       const facilityId = `${action.facilityDefId}-${action.coordKey}-t${completedTurn}`;
+      const def = facilityDefs.get(action.facilityDefId);
+      const tile = updatedTiles.find((t) => coordKey(t.coord) === action.coordKey);
+      const startCondition = def?.depletes && tile ? tile.mineDepletion : 1.0;
       const newInstance: FacilityInstance = {
         id: facilityId,
         defId: action.facilityDefId,
         locationKey: action.coordKey,
-        condition: 1.0,
+        condition: startCondition,
         builtTurn: completedTurn,
       };
       updatedFacilities = [...updatedFacilities, newInstance];

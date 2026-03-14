@@ -70,6 +70,7 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
         type: 'urban',
         destroyedStatus: null,
         productivity: 1.0,
+        mineDepletion: 1.0,
         facilityId: null,
         pendingActionId: null,
       },
@@ -80,6 +81,7 @@ export function generateEarthTilesForBloc(blocDefId: string): MapTile[] {
     type: entry.type,
     destroyedStatus: null,
     productivity: 1.0,
+    mineDepletion: 1.0,
     facilityId: null,
     pendingActionId: null,
   }));
@@ -123,6 +125,7 @@ export function generateEarthTiles(radius = 3): MapTile[] {
         type: tileTypeForCoord(q, r),
         destroyedStatus: null,
         productivity: 1.0,
+        mineDepletion: 1.0,
         facilityId: null,
         pendingActionId: null,
       });
@@ -481,7 +484,7 @@ export const gameStore = {
         id: facilityId,
         defId,
         locationKey: coordKey,
-        condition: 1.0,
+        condition: def.depletes ? tile.mineDepletion : 1.0,
         builtTurn: _state.turn,
       };
       _state = {

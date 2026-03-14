@@ -71,29 +71,60 @@
     return lines;
   }
 
-  // Net resource output = resourceOutput - upkeep
+  /** Scaling factor applied to output (condition × tile productivity). */
+  const outputScale = $derived(
+    tile && facility ? facility.condition * tile.productivity : 1,
+  );
+
+  // Net resource output = (resourceOutput × scale) - upkeep
   const netResources = $derived.by<Partial<Resources>>(() => {
     if (!def) return {};
-    const out: Partial<Resources> = { ...def.resourceOutput };
+    const out: Partial<Resources> = {};
+    for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
+      if (v) out[k] = Math.round(v * outputScale * 10) / 10;
+    }
     for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
       out[k] = (out[k] ?? 0) - v;
     }
     return out;
   });
+
+  function scaleFields(f: Partial<FieldPoints>): Partial<FieldPoints> {
+    const out: Partial<FieldPoints> = {};
+    for (const [k, v] of Object.entries(f) as [keyof FieldPoints, number][]) {
+      if (v) out[k] = Math.round(v * outputScale * 10) / 10;
+    }
+    return out;
+  }
+
+  function conditionLabel(c: number): string {
+    if (c >= 0.9) return 'Good';
+    if (c >= 0.6) return 'Fair';
+    if (c >= 0.3) return 'Poor';
+    return 'Critical';
+  }
 </script>
 
 {#if tile}
   <div class="tooltip" style="left: {left}px; top: {top}px;">
-    <div class="tile-type">{tileLabel[tile.type] ?? tile.type} tile</div>
+    <div class="tile-type">{tileLabel[tile.type] ?? tile.type} tile · ({tile.coord.q},{tile.coord.r})</div>
     {#if def}
       <div class="facility-name">{def.name}</div>
       <div class="divider"></div>
-      {#each formatFields(def.fieldOutput) as line}
+      {#each formatFields(scaleFields(def.fieldOutput)) as line}
         <div class="stat-line field">{line}/turn</div>
       {/each}
       {#each formatResources(netResources) as line}
         <div class="stat-line resource" class:negative={line.startsWith('-')}>{line}/turn</div>
       {/each}
+      {#if def.climateImpact}
+        <div class="stat-line climate" class:climate-positive={def.climateImpact > 0}>
+          {def.climateImpact > 0 ? '+' : ''}{def.climateImpact} climate/turn
+        </div>
+      {/if}
+      {#if facility && facility.condition < 1}
+        <div class="stat-line warn">Condition: {conditionLabel(facility.condition)} ({Math.round(facility.condition * 100)}%)</div>
+      {/if}
       {#if tile.productivity < 1}
         <div class="stat-line warn">Productivity: {Math.round(tile.productivity * 100)}%</div>
       {/if}
@@ -168,6 +199,14 @@
 
   .stat-line.warn {
     color: #987840;
+  }
+
+  .stat-line.climate {
+    color: #4a9b7a; /* green = mitigation */
+  }
+
+  .stat-line.climate.climate-positive {
+    color: #9b6a4a; /* amber = pollution */
   }
 
   .empty-hint {

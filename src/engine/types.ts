@@ -84,6 +84,12 @@ export interface MapTile {
    * Affects productivity of facilities on this tile.
    */
   productivity: number;
+  /**
+   * 0–1. Tracks how much of the mineral seam remains, independent of whether
+   * a mine is currently built here. Depletes while a mine operates; persists
+   * after demolition so the player cannot reset it by rebuilding.
+   */
+  mineDepletion: number;
   /** ID of the facility built here, if any. */
   facilityId: string | null;
   /**

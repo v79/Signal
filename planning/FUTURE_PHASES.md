@@ -9,6 +9,7 @@ This is a list of future requirements for the game but they are not to be implem
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
+  - Fix the height of the action had to be the height of a banked card
 - The Signal:
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Signal should not be decoded before era 3
@@ -29,11 +30,13 @@ This is a list of future requirements for the game but they are not to be implem
   - Climate pressure could change some tiles (forest -> arid), destroying any incompatible facilities
   - It's too easy to fill up the map and have nothing to do. Only destroyed facilities in a funding emergency.
   - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
-  - Facility tooltips should show there adjacency bonuses/penalities too
+  - Facility tooltips should show their adjacency bonuses/penalities too
+  - Map tiles really need names or coordinates. Let's stick to coordinates for now. So that the facility list can be identify specific tiles.
 - Earth era content pass
   - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
   - Solar and wind farms available to early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
   - Technologies shouldn't require Computing until integrated circuits have been unlocked.
+  - Technologies are too dependent on Computing but there are very few ways of getting Computing research
 - LEO content pass
   - Map improvement actions such as sea walls
 - Asteroid era content pass

@@ -89,7 +89,7 @@ Add two new events:
 
 ---
 
-## 23.3 — Facility Climate Impact (Pollution & Healing)
+## 23.3 — Facility Climate Impact (Pollution & Healing) ✅
 
 ### Engine: `src/engine/types.ts`
 
@@ -108,8 +108,8 @@ climateImpact?: number;
 |----------|--------------|-----------|
 | mine | +0.4 | Extractive, heavy industry |
 | engineeringWorks | +0.3 | Manufacturing emissions |
-| solarFarm | -0.3 | Displaces fossil generation |
-| offshoreWindFarm | -0.3 | Clean energy |
+| solarFarm | -0.1 | Displaces fossil generation (reduced from -0.3 — too powerful) |
+| offshoreWindFarm | -0.1 | Clean energy (reduced from -0.3 — too powerful) |
 | bioResearchCentre | -0.1 | Carbon sequestration research |
 | agriculturalResearchStation | +0.1 | Fertilisers, land use |
 | computingHub | +0.1 | Power consumption |
@@ -133,7 +133,7 @@ const newClimatePressure = Math.min(
 
 ---
 
-## 23.4 — Climate-Driven Tile Degradation
+## 23.4 — Climate-Driven Tile Degradation ✅
 
 ### New file: `src/engine/climate.ts`
 
@@ -194,6 +194,26 @@ if (degradation.changed) {
 | `src/data/events.ts` | Update `coastalFlooding`; add `drought` and `industrialContamination` |
 | `src/data/facilities.ts` | Add `climateImpact` to 7 facility defs |
 | `src/engine/climate.ts` | **New** — `applyClimateDegradation` |
+
+---
+
+## Additional Work (Phase 23) ✅
+
+### UI improvements
+- Save/export/import controls moved from HUD bar into the burger menu; `SaveControls.svelte` deleted
+- `FacilityOverview` panel repositioned to open on the left, aligned with its toolbar button
+- `FacilityPicker` shows FLOODED / DUST BOWL / IRRADIATED status instead of build options on destroyed tiles; store-level guard also blocks the action
+- Damage flash animation in `EarthScene`: 3-pulse colour flash when a tile is first destroyed (blue/orange/green per status type)
+- Facility tooltips (`TileTooltip`, `FacilityPicker`) now show climate impact with colour coding (green = mitigation, amber = pollution)
+- Facility output in tooltips now scaled by `condition × productivity` (previously always showed base values)
+- `FacilityPicker` occupied view shows current condition label (Good/Fair/Poor/Critical)
+
+### Adjacency
+- Computing Hub gains +2 Computing adjacency bonus from adjacent Solar Farm
+
+### Bug fixes
+- Building on a destroyed tile blocked in UI and store
+- Mine depletion exploit closed: `mineDepletion` field added to `MapTile`; seam depletion persists on the tile independently of the facility, so demolish-and-rebuild gives no benefit
 
 ---
 

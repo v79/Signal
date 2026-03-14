@@ -76,7 +76,7 @@
           </div>
           {#each group.instances as inst (inst.id)}
             <div class="inst-row">
-              <span class="tile-type">{tileLabel(inst.locationKey)}</span>
+              <span class="tile-type">{tileLabel(inst.locationKey)} · ({inst.locationKey})</span>
               {#if inst.condition < 1}
                 <span class="condition" style="color: {conditionColor(inst.condition)}">
                   {conditionLabel(inst.condition)}

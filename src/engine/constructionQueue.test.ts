@@ -28,6 +28,7 @@ function makeTile(q: number, r: number, opts: Partial<MapTile> = {}): MapTile {
     type: 'urban',
     destroyedStatus: null,
     productivity: 1,
+    mineDepletion: 1,
     facilityId: null,
     pendingActionId: null,
     ...opts,

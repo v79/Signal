@@ -301,6 +301,9 @@
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
         playerResources={gameStore.state!.player.resources}
+        occupyingInstance={gameStore.state!.player.facilities.find(
+          (f) => f.id === selectedTile.facilityId,
+        ) ?? null}
         discoveredTechIds={new Set(
           gameStore.state!.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
         )}

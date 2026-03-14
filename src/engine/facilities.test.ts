@@ -109,6 +109,7 @@ function makeTile(q: number, r: number, facilityId: string | null = null): MapTi
     type: 'urban',
     destroyedStatus: null,
     productivity: 1,
+    mineDepletion: 1,
     facilityId,
     pendingActionId: null,
   };
@@ -278,26 +279,37 @@ describe('computeFacilityOutput', () => {
 describe('tickMineDepletion', () => {
   it('does not deplete non-depleting facilities', () => {
     const facility = makeFacility('u1', 'university', '0,0');
-    const result = tickMineDepletion([facility], defs);
-    expect(result[0].condition).toBe(1);
+    const tile = makeTile(0, 0);
+    const { facilities } = tickMineDepletion([facility], defs, [tile]);
+    expect(facilities[0].condition).toBe(1);
   });
 
   it('depletes mine condition by MINE_DEPLETION_RATE per turn', () => {
     const facility = makeFacility('m1', 'mine', '0,0');
-    const result = tickMineDepletion([facility], defs);
-    expect(result[0].condition).toBeCloseTo(1 - MINE_DEPLETION_RATE);
+    const tile = makeTile(0, 0);
+    const { facilities } = tickMineDepletion([facility], defs, [tile]);
+    expect(facilities[0].condition).toBeCloseTo(1 - MINE_DEPLETION_RATE);
+  });
+
+  it('depletes tile mineDepletion in sync with facility condition', () => {
+    const facility = makeFacility('m1', 'mine', '0,0');
+    const tile = makeTile(0, 0);
+    const { tiles } = tickMineDepletion([facility], defs, [tile]);
+    expect(tiles[0].mineDepletion).toBeCloseTo(1 - MINE_DEPLETION_RATE);
   });
 
   it('clamps mine condition at 0', () => {
     const facility: FacilityInstance = { ...makeFacility('m1', 'mine', '0,0'), condition: 0.005 };
-    const result = tickMineDepletion([facility], defs);
-    expect(result[0].condition).toBe(0);
+    const tile = makeTile(0, 0);
+    const { facilities } = tickMineDepletion([facility], defs, [tile]);
+    expect(facilities[0].condition).toBe(0);
   });
 
   it('does not mutate the input array', () => {
     const facility = makeFacility('m1', 'mine', '0,0');
+    const tile = makeTile(0, 0);
     const original = [facility];
-    tickMineDepletion(original, defs);
+    tickMineDepletion(original, defs, [tile]);
     expect(original[0].condition).toBe(1);
   });
 });

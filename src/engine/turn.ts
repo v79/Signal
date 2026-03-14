@@ -202,7 +202,7 @@ export function executeWorldPhase(
     updatedQueue,
     updatedFacilities: facilitiesAfterQueue,
     updatedTiles: tilesAfterQueue,
-  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn);
+  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs);
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -330,7 +330,11 @@ export function executeWorldPhase(
   const newWill = tickWill(player.will, willConfig);
 
   // 10. Mine depletion (applied to post-queue facilities)
-  const newFacilities = tickMineDepletion(facilitiesAfterQueue, facilityDefs);
+  const { facilities: newFacilities, tiles: tilesAfterDepletion } = tickMineDepletion(
+    facilitiesAfterQueue,
+    facilityDefs,
+    tilesAfterQueue,
+  );
 
   // 11. Climate pressure — baseline + net facility impact
   const facilityClimateImpact = newFacilities.reduce((sum, inst) => {
@@ -345,13 +349,13 @@ export function executeWorldPhase(
   // 12. Climate-driven tile degradation
   const rng = createRng(`${state.seed}-climate-t${nextTurn}`);
   const degradation = applyClimateDegradation(
-    tilesAfterQueue,
+    tilesAfterDepletion,
     newClimatePressure,
     newFacilities,
     facilityDefs,
     rng,
   );
-  const degradedTiles = degradation.changed ? degradation.tiles : tilesAfterQueue;
+  const degradedTiles = degradation.changed ? degradation.tiles : tilesAfterDepletion;
   const facilitiesAfterDegradation = degradation.changed ? degradation.facilities : newFacilities;
   const degradationNews: NewsItem[] = degradation.changed
     ? [{ id: `climate-deg-${nextTurn}`, turn: nextTurn, text: degradation.newsText, category: 'climate' }]
