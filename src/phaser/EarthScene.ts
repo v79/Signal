@@ -401,11 +401,11 @@ export class EarthScene extends Phaser.Scene {
       const h = R * Math.sqrt(3) / 2;
       const SLOT_RHOMBUSES: [number, number][][] = [
         // Slot 0: upper-right — C,v4,v5,v0 shrunk toward centroid(+R/4,-h/2)
-        [[R*0.05, -h*0.20], [-R*0.35, -h*0.90], [R*0.45, -h*0.90], [R*0.85, -h*0.20]],
+        [[R*0.05, -h*0.10], [-R*0.35, -h*0.90], [R*0.45, -h*0.90], [R*0.85, -h*0.10]],
         // Slot 1: left — C,v2,v3,v4 shrunk toward centroid(-R/2,0)
         [[-R*0.10, 0], [-R*0.50, h*0.80], [-R*0.90, 0], [-R*0.50, -h*0.80]],
         // Slot 2: bottom — C,v0,v1,v2 shrunk toward centroid(+R/4,+h/2)
-        [[R*0.05, h*0.20], [R*0.85, h*0.20], [R*0.45, h*0.90], [-R*0.35, h*0.90]],
+        [[R*0.05, h*0.10], [R*0.85, h*0.10], [R*0.45, h*0.90], [-R*0.35, h*0.90]],
       ];
 
       let isHq = false;
