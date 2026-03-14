@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" style="background:#060a10">
+<!--
+  Flat-top hex, HEX_SIZE R=42.
+  Vertices (relative to centre): v0=(+42,0) v1=(+21,+36.37) v2=(-21,+36.37)
+                                  v3=(-42,0) v4=(-21,-36.37) v5=(+21,-36.37)
+
+  Three rhombuses — each is [centre, two adjacent vertices, connecting vertex]:
+    Slot 0 (upper-right): C, v4, v5, v0   centroid=(+10.5,-18.19)
+    Slot 1 (left):        C, v2, v3, v4   centroid=(-21,    0)
+    Slot 2 (bottom):      C, v0, v1, v2   centroid=(+10.5,+18.19)
+
+  Each rhombus is scaled 80% toward its own centroid (f=0.80) to leave a visible gap.
+
+  Shrunk offsets relative to hex centre:
+    R0: (+2.1,-3.6)  (-14.7,-32.7)  (+18.9,-32.7)  (+35.7,-3.6)
+    R1: (-4.2, 0)    (-21,  +29.1)  (-37.8,  0)    (-21,  -29.1)
+    R2: (+2.1,+3.6)  (+35.7,+3.6)   (+18.9,+32.7)  (-14.7,+32.7)
+-->
+
+  <!-- ══════════════════════════════════════════════════ TITLES ══ -->
+  <text x="450" y="22" fill="#88c8ff" font-family="monospace" font-size="14" text-anchor="middle">Phase 24 — Multi-Facility Hex Slots</text>
+
+  <!-- ══════════════════════════════════════════════ BEFORE ROW ══ -->
+  <text x="450" y="50" fill="#6aaad8" font-family="monospace" font-size="11" text-anchor="middle">BEFORE — one facility per tile</text>
+
+  <!-- Tile B1: empty  cx=360 cy=100 -->
+  <polygon points="402,100 381,136.4 339,136.4 318,100 339,63.6 381,63.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <text x="360" y="157" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Empty</text>
+
+  <!-- Tile B2: Research Lab  cx=540 cy=100 -->
+  <polygon points="582,100 561,136.4 519,136.4 498,100 519,63.6 561,63.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- single centred circle, current style -->
+  <circle cx="540" cy="100" r="9.24" fill="#6aaad8" opacity="0.9"/>
+  <text x="540" y="157" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Research Lab</text>
+  <text x="540" y="168" fill="#4a7090" font-family="monospace" font-size="9" text-anchor="middle">centred circle, 1 per tile max</text>
+
+  <!-- ══════════════════════════════════════════════  AFTER ROW ══ -->
+  <text x="450" y="198" fill="#6aaad8" font-family="monospace" font-size="11" text-anchor="middle">AFTER Phase 24 — three rhombus slots per tile</text>
+  <text x="450" y="211" fill="#4a7090" font-family="monospace" font-size="9" text-anchor="middle">slot 0: upper-right   slot 1: left   slot 2: bottom   (gaps = tile background showing through)</text>
+
+  <!-- ──────────────────── Tile A1: Empty  cx=80 cy=305 ──────── -->
+  <polygon points="122,305 101,341.4 59,341.4 38,305 59,268.6 101,268.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- R0 empty -->
+  <polygon points="82.1,301.4 65.3,272.3 98.9,272.3 115.7,301.4"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <!-- R1 empty -->
+  <polygon points="75.8,305 59,334.1 42.2,305 59,275.9"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <!-- R2 empty -->
+  <polygon points="82.1,308.6 115.7,308.6 98.9,337.7 65.3,337.7"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <text x="80"  y="361" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Empty</text>
+  <text x="80"  y="372" fill="#4a7090" font-family="monospace" font-size="9"  text-anchor="middle">3 free slots</text>
+
+  <!-- ──────────────── Tile A2: Research Lab slot 0  cx=228 cy=305 ──── -->
+  <polygon points="270,305 249,341.4 207,341.4 186,305 207,268.6 249,268.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- R0 filled: researchLab #6aaad8 -->
+  <polygon points="230.1,301.4 213.3,272.3 246.9,272.3 263.7,301.4"
+           fill="#6aaad8" opacity="0.9"/>
+  <!-- R1 empty -->
+  <polygon points="223.8,305 207,334.1 190.2,305 207,275.9"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <!-- R2 empty -->
+  <polygon points="230.1,308.6 263.7,308.6 246.9,337.7 213.3,337.7"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <text x="228" y="361" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Research Lab</text>
+  <text x="228" y="372" fill="#4a7090" font-family="monospace" font-size="9"  text-anchor="middle">slot 0 · 1-slot</text>
+
+  <!-- ─────────────── Tile A3: Lab (slot 0) + Hub (slot 2)  cx=376 cy=305 ─── -->
+  <polygon points="418,305 397,341.4 355,341.4 334,305 355,268.6 397,268.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- R0 filled: researchLab -->
+  <polygon points="378.1,301.4 361.3,272.3 394.9,272.3 411.7,301.4"
+           fill="#6aaad8" opacity="0.9"/>
+  <!-- R1 empty -->
+  <polygon points="371.8,305 355,334.1 338.2,305 355,275.9"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <!-- R2 filled: computingHub #20d0a0 -->
+  <polygon points="378.1,308.6 411.7,308.6 394.9,337.7 361.3,337.7"
+           fill="#20d0a0" opacity="0.9"/>
+  <text x="376" y="361" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Lab + Hub</text>
+  <text x="376" y="372" fill="#4a7090" font-family="monospace" font-size="9"  text-anchor="middle">slots 0,2 · slot 1 free</text>
+
+  <!-- ─────────────── Tile A4: Public University slots 0+1  cx=524 cy=305 ─── -->
+  <polygon points="566,305 545,341.4 503,341.4 482,305 503,268.6 545,268.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- R0 filled: publicUniversity #a070d8 -->
+  <polygon points="526.1,301.4 509.3,272.3 542.9,272.3 559.7,301.4"
+           fill="#a070d8" opacity="0.9"/>
+  <!-- R1 filled: publicUniversity -->
+  <polygon points="519.8,305 503,334.1 486.2,305 503,275.9"
+           fill="#a070d8" opacity="0.9"/>
+  <!-- R2 empty -->
+  <polygon points="526.1,308.6 559.7,308.6 542.9,337.7 509.3,337.7"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <text x="524" y="361" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Public University</text>
+  <text x="524" y="372" fill="#4a7090" font-family="monospace" font-size="9"  text-anchor="middle">slots 0–1 · 2-slot</text>
+
+  <!-- ─────────────── Tile A5: Eng. Works slots 1+2  cx=672 cy=305 ─── -->
+  <polygon points="714,305 693,341.4 651,341.4 630,305 651,268.6 693,268.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- R0 empty -->
+  <polygon points="674.1,301.4 657.3,272.3 690.9,272.3 707.7,301.4"
+           fill="none" stroke="#3a5878" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.5"/>
+  <!-- R1 filled: engineeringWorks #d87840 -->
+  <polygon points="667.8,305 651,334.1 634.2,305 651,275.9"
+           fill="#d87840" opacity="0.9"/>
+  <!-- R2 filled: engineeringWorks -->
+  <polygon points="674.1,308.6 707.7,308.6 690.9,337.7 657.3,337.7"
+           fill="#d87840" opacity="0.9"/>
+  <text x="672" y="361" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">Eng. Works</text>
+  <text x="672" y="372" fill="#4a7090" font-family="monospace" font-size="9"  text-anchor="middle">slots 1–2 · 2-slot</text>
+
+  <!-- ──────────────────── Tile A6: HQ all slots  cx=820 cy=305 ──── -->
+  <polygon points="862,305 841,341.4 799,341.4 778,305 799,268.6 841,268.6"
+           fill="#1e2d40" stroke="#3a5878" stroke-width="1"/>
+  <!-- R0 filled: hq #d4a820 -->
+  <polygon points="822.1,301.4 805.3,272.3 838.9,272.3 855.7,301.4"
+           fill="#d4a820" opacity="0.9"/>
+  <!-- R1 filled: hq -->
+  <polygon points="815.8,305 799,334.1 782.2,305 799,275.9"
+           fill="#d4a820" opacity="0.9"/>
+  <!-- R2 filled: hq -->
+  <polygon points="822.1,308.6 855.7,308.6 838.9,337.7 805.3,337.7"
+           fill="#d4a820" opacity="0.9"/>
+  <!-- HQ cross at hex centre -->
+  <line x1="810" y1="305" x2="830" y2="305" stroke="#fff0c0" stroke-width="1.5" opacity="0.85"/>
+  <line x1="820" y1="295" x2="820" y2="315" stroke="#fff0c0" stroke-width="1.5" opacity="0.85"/>
+  <!-- HQ outer ring hint -->
+  <polygon points="862,305 841,341.4 799,341.4 778,305 799,268.6 841,268.6"
+           fill="none" stroke="#ffd060" stroke-width="1.5" opacity="0.5"/>
+  <text x="820" y="361" fill="#88c8ff" font-family="monospace" font-size="10" text-anchor="middle">HQ</text>
+  <text x="820" y="372" fill="#4a7090" font-family="monospace" font-size="9"  text-anchor="middle">slots 0–2 · 3-slot</text>
+
+  <!-- ═══════════════════════════════════════════════ SLOT LEGEND ══ -->
+  <text x="450" y="410" fill="#3a5878" font-family="monospace" font-size="9" text-anchor="middle">Geometry: flat-top hex R=42, each rhombus scaled 80% toward its centroid · colours match existing FACILITY_COLORS</text>
+
+</svg>

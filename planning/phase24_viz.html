@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { background: #060a10; margin: 0; padding: 30px 20px; font-family: monospace; }
+</style>
+</head>
+<body>
+<svg id="viz" xmlns="http://www.w3.org/2000/svg" width="900" height="420"></svg>
+
+<script>
+const S = 42; // HEX_SIZE
+
+const URBAN_FILL   = '#1e2d40';
+const URBAN_STROKE = '#3a5878';
+const BG           = '#060a10';
+
+const COLORS = {
+  hq:               '#d4a820',
+  researchLab:      '#6aaad8',
+  computingHub:     '#20d0a0',
+  publicUniversity: '#a070d8',
+  engineeringWorks: '#d87840',
+  deepSpaceArray:   '#4060d8',
+  mine:             '#b06030',
+};
+
+// Flat-top hex vertices (relative to centre)
+function hexPoints(cx, cy) {
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i;
+    pts.push([cx + S * Math.cos(a), cy + S * Math.sin(a)]);
+  }
+  return pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+}
+
+// Slot offsets relative to hex centre
+const SLOT_OFFSETS = [
+  [0,         -S * 0.35],   // 0: top-centre
+  [-S * 0.30,  S * 0.20],   // 1: bottom-left
+  [ S * 0.30,  S * 0.20],   // 2: bottom-right
+];
+
+const R_LARGE  = S * 0.22;  // 3-slot
+const R_MEDIUM = S * 0.18;  // 2-slot
+const R_SMALL  = S * 0.14;  // 1-slot
+
+const svg = document.getElementById('viz');
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function text(x, y, str, opts, parent) {
+  const e = el('text', {
+    x, y, fill: opts.fill || '#6aaad8',
+    'font-family': 'monospace',
+    'font-size': opts.size || 11,
+    'text-anchor': opts.anchor || 'middle',
+    ...( opts.opacity ? { opacity: opts.opacity } : {} ),
+  }, parent);
+  e.textContent = str;
+  return e;
+}
+
+function drawHex(g, cx, cy, { label = '', sublabel = '', dimSlots = [], facilities = [] } = {}) {
+  // Background hex
+  el('polygon', {
+    points: hexPoints(cx, cy),
+    fill: URBAN_FILL,
+    stroke: URBAN_STROKE,
+    'stroke-width': 1,
+    opacity: 0.9,
+  }, g);
+
+  // Dim slot indicators for empty slots
+  for (const si of dimSlots) {
+    const [dx, dy] = SLOT_OFFSETS[si];
+    el('circle', {
+      cx: cx + dx, cy: cy + dy,
+      r: R_SMALL,
+      fill: 'none',
+      stroke: '#3a5878',
+      'stroke-width': 1,
+      'stroke-dasharray': '2 2',
+      opacity: 0.5,
+    }, g);
+  }
+
+  // Facility circles
+  for (const fac of facilities) {
+    const color = COLORS[fac.defId] || '#ffffff';
+
+    if (fac.slots === 3) {
+      // Large circle at hex centre
+      el('circle', { cx, cy, r: R_LARGE, fill: color, opacity: 0.9 }, g);
+      // HQ: outer ring + cross
+      if (fac.defId === 'hq') {
+        el('circle', { cx, cy, r: R_LARGE + 4, fill: 'none', stroke: '#ffd060', 'stroke-width': 2, opacity: 0.7 }, g);
+        const arm = R_LARGE * 0.55;
+        el('line', { x1: cx - arm, y1: cy, x2: cx + arm, y2: cy, stroke: '#fff0c0', 'stroke-width': 1.5, opacity: 0.85 }, g);
+        el('line', { x1: cx, y1: cy - arm, x2: cx, y2: cy + arm, stroke: '#fff0c0', 'stroke-width': 1.5, opacity: 0.85 }, g);
+      }
+    } else if (fac.slots === 2) {
+      // Medium circle midpoint between the two slot offsets
+      const [dx0, dy0] = SLOT_OFFSETS[fac.slotIndex];
+      const [dx1, dy1] = SLOT_OFFSETS[fac.slotIndex + 1];
+      const mx = cx + (dx0 + dx1) / 2;
+      const my = cy + (dy0 + dy1) / 2;
+      el('circle', { cx: mx, cy: my, r: R_MEDIUM, fill: color, opacity: 0.9 }, g);
+    } else {
+      // Small circle at slot position
+      const [dx, dy] = SLOT_OFFSETS[fac.slotIndex];
+      el('circle', { cx: cx + dx, cy: cy + dy, r: R_SMALL, fill: color, opacity: 0.9 }, g);
+    }
+  }
+
+  // Label below
+  if (label) text(cx, cy + S + 14, label, { size: 10, fill: '#88c8ff' }, g);
+  if (sublabel) text(cx, cy + S + 25, sublabel, { size: 9, fill: '#4a7090' }, g);
+}
+
+// ─────────────────────────────────────────────────────────
+// BEFORE row
+// ─────────────────────────────────────────────────────────
+const g1 = el('g', {}, svg);
+text(450, 22, 'BEFORE — Phase 24 (current)', { size: 12, fill: '#88c8ff' }, g1);
+text(450, 36, 'Each tile holds exactly one facility', { size: 10, fill: '#4a7090' }, g1);
+
+const beforeY = 95;
+const bTiles = [
+  { x: 360, slots: [], facs: [] },
+  { x: 540, slots: [], facs: [{ defId: 'researchLab', slot: 'centre' }] },
+];
+
+for (const t of bTiles) {
+  const g = el('g', {}, g1);
+  el('polygon', { points: hexPoints(t.x, beforeY), fill: URBAN_FILL, stroke: URBAN_STROKE, 'stroke-width': 1, opacity: 0.9 }, g);
+  if (t.facs.length) {
+    el('circle', { cx: t.x, cy: beforeY, r: R_LARGE, fill: COLORS.researchLab, opacity: 0.9 }, g);
+  }
+}
+text(360, beforeY + S + 14, 'Empty', { size: 10, fill: '#88c8ff' }, g1);
+text(540, beforeY + S + 14, 'Research Lab', { size: 10, fill: '#88c8ff' }, g1);
+text(540, beforeY + S + 25, '(1 per tile max)', { size: 9, fill: '#4a7090' }, g1);
+
+// ─────────────────────────────────────────────────────────
+// AFTER row
+// ─────────────────────────────────────────────────────────
+const g2 = el('g', {}, svg);
+text(450, 210, 'AFTER — Phase 24 (multi-slot)', { size: 12, fill: '#88c8ff' }, g2);
+text(450, 224, 'Up to 3 facilities per tile; large facilities occupy multiple slots', { size: 10, fill: '#4a7090' }, g2);
+
+const afterY = 295;
+const spacing = 148;
+const startX = 900/2 - spacing * 2.5;
+
+const afterTiles = [
+  {
+    label: 'Empty', sublabel: '(3 free slots)',
+    dimSlots: [0, 1, 2],
+    facilities: [],
+  },
+  {
+    label: 'Research Lab', sublabel: 'slot 0  ·  1-slot',
+    dimSlots: [1, 2],
+    facilities: [{ defId: 'researchLab', slots: 1, slotIndex: 0 }],
+  },
+  {
+    label: 'Lab + Hub', sublabel: 'slots 0,2  ·  slot 1 free',
+    dimSlots: [1],
+    facilities: [
+      { defId: 'researchLab',  slots: 1, slotIndex: 0 },
+      { defId: 'computingHub', slots: 1, slotIndex: 2 },
+    ],
+  },
+  {
+    label: 'Public University', sublabel: 'slots 0–1  ·  2-slot',
+    dimSlots: [2],
+    facilities: [{ defId: 'publicUniversity', slots: 2, slotIndex: 0 }],
+  },
+  {
+    label: 'Eng. Works', sublabel: 'slots 1–2  ·  2-slot',
+    dimSlots: [0],
+    facilities: [{ defId: 'engineeringWorks', slots: 2, slotIndex: 1 }],
+  },
+  {
+    label: 'HQ', sublabel: 'slots 0–2  ·  3-slot',
+    dimSlots: [],
+    facilities: [{ defId: 'hq', slots: 3, slotIndex: 0 }],
+  },
+];
+
+afterTiles.forEach((t, i) => {
+  const cx = startX + i * spacing;
+  drawHex(g2, cx, afterY, t);
+});
+
+// Slot legend
+const legY = 390;
+text(450, legY - 8, '● slot 0: top-centre   ● slot 1: bottom-left   ● slot 2: bottom-right', { size: 9, fill: '#3a5878' }, svg);
+</script>
+</body>
+</html>
