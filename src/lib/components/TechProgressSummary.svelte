@@ -29,6 +29,7 @@
   );
 </script>
 
+<div class="summary-header">SHOWING PROMISE</div>
 <div class="summary">
   {#if progressTechs.length === 0}
     <p class="empty">No research in progress.</p>
@@ -60,6 +61,17 @@
 </div>
 
 <style>
+  .summary-header {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    color: #3a5060;
+    padding: 0.3rem 0.6rem;
+    border-top: 1px solid #1e2530;
+    border-bottom: 1px solid #141c26;
+    flex-shrink: 0;
+    background: #060a10;
+  }
+
   .summary {
     display: flex;
     flex-direction: column;
