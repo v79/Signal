@@ -5,12 +5,12 @@
 
   const SCIENCE_CATEGORIES = new Set(['research', 'discovery', 'signal']);
 
-  // Most recent science-related items, newest first, capped at 12
+  // Most recent science-related items, newest first, capped at 5
   const scienceItems = $derived(
     [...items]
       .filter((i) => SCIENCE_CATEGORIES.has(i.category ?? ''))
       .reverse()
-      .slice(0, 12),
+      .slice(0, 5),
   );
 </script>
 
@@ -36,9 +36,7 @@
     flex-direction: column;
     border-top: 1px solid #1e2530;
     border-bottom: 1px solid #1e2530;
-    min-height: 0;
-    flex: 1;
-    overflow: hidden;
+    flex-shrink: 0;
   }
 
   .feed-header {
@@ -52,12 +50,9 @@
   }
 
   .feed-list {
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 1px;
-    flex: 1;
-    min-height: 0;
   }
 
   .feed-item {
