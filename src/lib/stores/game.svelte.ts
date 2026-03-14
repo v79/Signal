@@ -47,7 +47,6 @@ import { FACILITY_DEFS } from '../../data/facilities';
 import { BLOC_DEFS } from '../../data/blocs';
 import { BOARD_DEFS } from '../../data/board';
 import { TECH_DEFS } from '../../data/technologies';
-import { STANDING_ACTIONS } from '../../data/standingActions';
 
 // ---------------------------------------------------------------------------
 // Re-export data for components that import from this store
@@ -55,7 +54,6 @@ import { STANDING_ACTIONS } from '../../data/standingActions';
 
 export { CARD_DEFS as CARD_DEFS } from '../../data/cards';
 export { EVENT_DEFS as EVENT_DEFS } from '../../data/events';
-export { STANDING_ACTIONS as STUB_STANDING_ACTIONS } from '../../data/standingActions';
 export { BOARD_DEFS as BOARD_DEFS } from '../../data/board';
 
 // ---------------------------------------------------------------------------

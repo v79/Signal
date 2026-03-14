@@ -67,9 +67,6 @@
       if (r.politicalWill != null)
         parts.push(`${r.politicalWill > 0 ? '+' : ''}${r.politicalWill} Will`);
     }
-    if (effect.restrictActions?.length) {
-      parts.push(`Restricts: ${effect.restrictActions.join(', ')}`);
-    }
     return parts.join(' · ');
   }
 

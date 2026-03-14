@@ -448,10 +448,6 @@ export interface EventEffect {
   fields?: Partial<FieldPoints>;
   /** Destroy a tile: coord string + the status to apply. */
   destroyTile?: { coordKey: string; status: TileDestroyedStatus };
-  /** Standing action IDs to restrict. */
-  restrictActions?: string[];
-  /** Number of turns the restriction lasts. */
-  restrictionDuration?: number;
   /** Bloc ID to eliminate. */
   eliminateBloc?: string;
   signalProgress?: number;
@@ -469,27 +465,6 @@ export interface EventInstance {
   /** Whether the player has responded to this event. */
   resolved: boolean;
   resolvedWith: 'counter' | 'mitigation' | 'accepted' | 'expired' | null;
-}
-
-// ---------------------------------------------------------------------------
-// Standing Actions
-// ---------------------------------------------------------------------------
-
-/** Standing actions are always available unless restricted by an event. */
-export interface StandingActionDef {
-  id: string;
-  name: string;
-  description: string;
-  /** Resource cost to use. */
-  cost: Partial<Resources>;
-  /** Custom action key for engine dispatch. */
-  actionKey: string;
-}
-
-export interface StandingActionRestriction {
-  actionId: string;
-  /** Turn the restriction expires. */
-  expiresAfterTurn: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -694,7 +669,6 @@ export interface PlayerState {
   board: BoardSlots;
   /** News items queued for display in the ticker. */
   newsFeed: NewsItem[];
-  activeEventRestrictions: StandingActionRestriction[];
   /** Active multi-turn construction and demolition tasks. */
   constructionQueue: OngoingAction[];
 }
