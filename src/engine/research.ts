@@ -146,55 +146,61 @@ export function distributeResearchPoints(
   fieldOutput: FieldPoints,
   rng: Rng,
 ): TechState[] {
-  // Applicable: rumour or progress, still needs at least one field
-  const applicable = techs.filter((tech) => {
+  // Applicable: rumour or progress, still needs at least one field.
+  // Progress techs are separated from rumour techs so they can be prioritised.
+  function needsField(tech: TechState, field: keyof FieldPoints, pm: Map<string, TechRecipe>): boolean {
+    const threshold = tech.recipe![field];
+    if (!threshold) return false;
+    return (pm.get(tech.defId)![field] ?? 0) < threshold;
+  }
+
+  function isApplicable(tech: TechState): boolean {
     if (tech.stage !== 'rumour' && tech.stage !== 'progress') return false;
     if (!tech.recipe) return false;
     const entries = Object.entries(tech.recipe) as [keyof FieldPoints, number][];
     return entries.some(([f, t]) => (tech.fieldProgress[f] ?? 0) < t);
-  });
+  }
 
-  if (applicable.length === 0) return techs;
+  const progressTechs = techs.filter((t) => t.stage === 'progress' && isApplicable(t));
+  const rumourTechs   = techs.filter((t) => t.stage === 'rumour'   && isApplicable(t));
+
+  if (progressTechs.length === 0 && rumourTechs.length === 0) return techs;
 
   // Mutable copies of field output and fieldProgress per tech
   const remaining: Partial<FieldPoints> = { ...fieldOutput };
   const progressMap = new Map<string, TechRecipe>();
-  for (const tech of applicable) {
+  for (const tech of [...progressTechs, ...rumourTechs]) {
     progressMap.set(tech.defId, { ...tech.fieldProgress });
   }
 
-  // Step 2: guaranteed minimums — one pass per field, one point per applicable tech
+  // Step 2: guaranteed minimums — progress techs first, then rumour techs.
+  // This ensures an in-progress tech that is blocked on a low-income field
+  // always receives its minimum allocation before rumour techs consume it.
   for (const field of Object.keys(fieldOutput) as (keyof FieldPoints)[]) {
     let rem = remaining[field] ?? 0;
     if (rem <= 0) continue;
-    for (const tech of applicable) {
+    for (const tech of [...progressTechs, ...rumourTechs]) {
       if (rem <= 0) break;
-      const threshold = tech.recipe![field];
-      if (!threshold) continue;
-      const progress = progressMap.get(tech.defId)!;
-      if ((progress[field] ?? 0) >= threshold) continue;
+      if (!needsField(tech, field, progressMap)) continue;
       const give = Math.min(MIN_POINTS_PER_TECH_PER_FIELD, rem);
-      progress[field] = (progress[field] ?? 0) + give;
+      progressMap.get(tech.defId)![field] = (progressMap.get(tech.defId)![field] ?? 0) + give;
       rem -= give;
     }
     remaining[field] = rem;
   }
 
-  // Step 3: distribute remaining randomly — all remainder for each field goes to one random eligible tech
+  // Step 3: distribute remaining — prefer progress techs over rumour techs.
+  // All remainder for a field goes to one random eligible tech from the
+  // higher-priority pool (progress if any remain eligible, else rumour).
   for (const field of Object.keys(fieldOutput) as (keyof FieldPoints)[]) {
     const rem = remaining[field] ?? 0;
     if (rem <= 0) continue;
-    const eligible = applicable.filter((tech) => {
-      const threshold = tech.recipe![field];
-      if (!threshold) return false;
-      const progress = progressMap.get(tech.defId)!;
-      return (progress[field] ?? 0) < threshold;
-    });
-    if (eligible.length === 0) continue; // discard remainder
-    const idx = Math.floor(rng.nextFloat(0, 1) * eligible.length);
-    const chosen = eligible[idx];
-    const progress = progressMap.get(chosen.defId)!;
-    progress[field] = (progress[field] ?? 0) + rem;
+    const eligibleProgress = progressTechs.filter((t) => needsField(t, field, progressMap));
+    const eligibleRumour   = rumourTechs.filter((t) => needsField(t, field, progressMap));
+    const pool = eligibleProgress.length > 0 ? eligibleProgress : eligibleRumour;
+    if (pool.length === 0) continue; // discard remainder
+    const chosen = pool[Math.floor(rng.nextFloat(0, 1) * pool.length)];
+    progressMap.get(chosen.defId)![field] = (progressMap.get(chosen.defId)![field] ?? 0) + rem;
     remaining[field] = 0;
   }
 
