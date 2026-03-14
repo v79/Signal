@@ -107,6 +107,39 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
   ],
 
   [
+    'coalPowerStation',
+    {
+      id: 'coalPowerStation',
+      name: 'Coal Power Station',
+      description:
+        'Burns fossil fuels for reliable, high-volume Funding. Significant climate cost — the cheapest power is rarely the cleanest.',
+      era: 'earth',
+      allowedTileTypes: ['industrial', 'arid'],
+      buildCost: { materials: 20, funding: 10 },
+      upkeepCost: { funding: 3 },
+      buildTime: 1,
+      deleteTime: 1,
+      canDelete: true,
+      fieldOutput: { engineering: 1 },
+      resourceOutput: { funding: 9 },
+      adjacencyBonuses: [],
+      adjacencyPenalties: [
+        {
+          neighborDefId: 'publicUniversity',
+          fieldPenalty: { socialScience: 1 },
+        },
+        {
+          neighborDefId: 'bioResearchCentre',
+          fieldPenalty: { biochemistry: 1 },
+        },
+      ],
+      depletes: false,
+      requiredTechId: null,
+      climateImpact: 0.5,
+    },
+  ],
+
+  [
     'solarFarm',
     {
       id: 'solarFarm',
@@ -148,7 +181,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyBonuses: [],
       adjacencyPenalties: [],
       depletes: false,
-      requiredTechId: null,
+      requiredTechId: 'roboticsAutomation',
       climateImpact: -0.1,
     },
   ],

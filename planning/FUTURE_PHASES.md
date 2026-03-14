@@ -23,18 +23,11 @@ This is a list of future requirements for the game but they are not to be implem
 - Competitor blocs
   - They are absent from the game so far.
 - Earth map
-  - Add panning and scrolling, constrained to bounds so the player can't lose the map entirely
-  - Map-specific events, such as coastalFlooding, should impact a specific tile, and should destroy any facility on that tile
-  - Some facilities will pollute (increase climate degradation), a few will heal the climate, and some may prevent tile loss (sea walls)
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
-  - Climate pressure could change some tiles (forest -> arid), destroying any incompatible facilities
-  - It's too easy to fill up the map and have nothing to do. Only destroyed facilities in a funding emergency.
+  - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
   - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
-  - Facility tooltips should show their adjacency bonuses/penalities too
-  - Map tiles really need names or coordinates. Let's stick to coordinates for now. So that the facility list can be identify specific tiles.
-- Earth era content pass
   - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
-  - Solar and wind farms available to early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
+  - Solar and wind farms available too early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
   - Technologies shouldn't require Computing until integrated circuits have been unlocked.
   - Technologies are too dependent on Computing but there are very few ways of getting Computing research
 - LEO content pass
@@ -73,3 +66,11 @@ This is a list of future requirements for the game but they are not to be implem
   BUGS:
 
   - Political will isn't reduced when accepting an event which is supposed to cost Will
+
+
+
+FACILITY IDEAS:
+
+- Coal Power Station (+funding, + climate)
+- Petrochemical Refinery (+funding, +climate)
+- Industrial Port (+funding, +materials)

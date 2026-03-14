@@ -56,6 +56,7 @@ const FACILITY_COLORS: Record<string, number> = {
   hq: 0xd4a820,
   researchLab: 0x6aaad8,
   mine: 0xb06030,
+  coalPowerStation: 0x806050,
   solarFarm: 0xd8c840,
   offshoreWindFarm: 0x40c8d8,
   publicUniversity: 0xa070d8,
