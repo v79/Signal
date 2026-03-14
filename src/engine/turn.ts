@@ -114,12 +114,7 @@ export function executeEventPhase(
     });
   }
 
-  // 3. Expire standing action restrictions
-  const activeRestrictions = player.activeEventRestrictions.filter(
-    (r) => r.expiresAfterTurn >= state.turn,
-  );
-
-  // 4. Select and add new events
+  // 3. Select and add new events
   const newEvents = selectNewEvents(
     eventPool,
     state.era,
@@ -137,7 +132,6 @@ export function executeEventPhase(
     map: { ...state.map, earthTiles: updatedTiles },
     player: {
       ...updatedPlayer,
-      activeEventRestrictions: activeRestrictions,
       newsFeed: [...updatedPlayer.newsFeed, ...expiryNews],
     },
   };

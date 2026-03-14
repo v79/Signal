@@ -3,7 +3,6 @@ import type {
   CardDef,
   CardEffect,
   CounterEffect,
-  StandingActionRestriction,
 } from './types';
 import type { Rng } from './rng';
 
@@ -167,28 +166,3 @@ export function upgradeCard(
   return cards.map((c) => (c.defId === oldDefId ? { ...c, defId: newDefId } : c));
 }
 
-// ---------------------------------------------------------------------------
-// Standing action restrictions
-// ---------------------------------------------------------------------------
-
-/**
- * Return only the restrictions that are still active this turn.
- * Restrictions with `expiresAfterTurn < currentTurn` are dropped.
- */
-export function getActiveRestrictions(
-  restrictions: StandingActionRestriction[],
-  currentTurn: number,
-): StandingActionRestriction[] {
-  return restrictions.filter((r) => r.expiresAfterTurn >= currentTurn);
-}
-
-/**
- * Check whether a specific standing action is currently restricted.
- */
-export function isActionRestricted(
-  actionId: string,
-  restrictions: StandingActionRestriction[],
-  currentTurn: number,
-): boolean {
-  return getActiveRestrictions(restrictions, currentTurn).some((r) => r.actionId === actionId);
-}

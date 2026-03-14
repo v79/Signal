@@ -68,7 +68,6 @@ function createPlayerState(config: GameConfig): PlayerState {
     cards: [],
     board: {},
     newsFeed: [],
-    activeEventRestrictions: [],
     constructionQueue: [],
   };
 }

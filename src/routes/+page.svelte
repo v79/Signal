@@ -8,7 +8,6 @@
   import TechTreeModal from '$lib/components/TechTreeModal.svelte';
   import SignalTrack from '$lib/components/SignalTrack.svelte';
   import ScienceNewsFeed from '$lib/components/ScienceNewsFeed.svelte';
-  import StandingActions from '$lib/components/StandingActions.svelte';
   import OngoingActionsPanel from '$lib/components/OngoingActionsPanel.svelte';
   import CardHand from '$lib/components/CardHand.svelte';
   import MapContainer from '$lib/components/MapContainer.svelte';
@@ -19,7 +18,6 @@
   import { gameStore } from '$lib/stores/game.svelte';
   import { CARD_DEFS } from '../data/cards';
   import { EVENT_DEFS } from '../data/events';
-  import { STANDING_ACTIONS } from '../data/standingActions';
   import { FACILITY_DEFS } from '../data/facilities';
   import { TECH_DEFS } from '../data/technologies';
   import {
@@ -80,17 +78,6 @@
       : [],
   );
 
-  function handleStandingAction(id: string): void {
-    if (id === 'build') {
-      if (gameStore.selectedCoordKey != null) {
-        gameStore.selectTile(null);
-      }
-    } else if (id === 'emergencyAppeal') {
-      gameStore.emergencyAppeal();
-    } else if (id === 'emergencySourcing') {
-      gameStore.emergencySourcing();
-    }
-  }
 </script>
 
 {#if gameStore.state && gameStore.state.narrativeQueue.length > 0}
@@ -152,14 +139,6 @@
           <OngoingActionsPanel queue={gs.player.constructionQueue} facilityDefs={FACILITY_DEFS} />
         {/if}
 
-        <StandingActions
-          actions={STANDING_ACTIONS}
-          restrictions={gs.player.activeEventRestrictions}
-          turn={gs.turn}
-          phase={gs.phase}
-          playerResources={gs.player.resources}
-          onAction={handleStandingAction}
-        />
       </div>
 
       <!-- Centre: Earth map (Phaser) -->
@@ -206,6 +185,7 @@
         activeEventTags={counterableTags}
         actionsThisTurn={gs.actionsThisTurn ?? 0}
         maxActionsPerTurn={gs.maxActionsPerTurn ?? 3}
+        playerResources={gs.player.resources}
         onPlay={(id) => gameStore.playCard(id)}
         onBank={(id) => gameStore.bankCard(id)}
         onUnbank={(id) => gameStore.unbankCard(id)}

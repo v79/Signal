@@ -30,7 +30,6 @@ const basePlayer: PlayerState = {
   cards: [],
   board: {},
   newsFeed: [],
-  activeEventRestrictions: [],
   constructionQueue: [],
 };
 
@@ -100,21 +99,6 @@ const euOnlyEventDef: EventDef = {
   mitigationCost: { funding: 10 },
 };
 
-const restrictionEventDef: EventDef = {
-  id: 'governmentAudit',
-  name: 'Government Audit',
-  description: 'Build actions suspended.',
-  flavourText: 'Inspectors arrive.',
-  tags: ['political'],
-  eras: ['earth'],
-  pushFactors: null,
-  blocIds: null,
-  countdownTurns: 2,
-  weight: 1.0,
-  responseTier: 'noCounter',
-  negativeEffect: { restrictActions: ['build'], restrictionDuration: 2 },
-  positiveEffect: null,
-};
 
 const pool = [fundingCrisisDef, diplomaticOpportunityDef, sabotageEventDef, euOnlyEventDef];
 
@@ -363,18 +347,6 @@ describe('applyEventEffect', () => {
     const effect = { fields: { physics: 10 } };
     const { player } = applyEventEffect(effect, basePlayer, [], 5);
     expect(player.fields.physics).toBe(10);
-  });
-
-  it('adds standing action restrictions', () => {
-    const { player } = applyEventEffect(
-      { restrictActions: ['build', 'recruit'], restrictionDuration: 2 },
-      basePlayer,
-      [],
-      5,
-    );
-    expect(player.activeEventRestrictions).toHaveLength(2);
-    expect(player.activeEventRestrictions[0].actionId).toBe('build');
-    expect(player.activeEventRestrictions[0].expiresAfterTurn).toBe(6); // turn 5 + duration 2 - 1
   });
 
   it('handles effects with no resource or field changes', () => {

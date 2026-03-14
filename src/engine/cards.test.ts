@@ -8,13 +8,11 @@ import {
   discardHand,
   addCardsToDeck,
   upgradeCard,
-  getActiveRestrictions,
-  isActionRestricted,
   HAND_LIMIT,
   BANK_LIMIT,
 } from './cards';
 import { createRng } from './rng';
-import type { CardDef, CardInstance, StandingActionRestriction } from './types';
+import type { CardDef, CardInstance } from './types';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -273,47 +271,3 @@ describe('upgradeCard', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Standing action restrictions
-// ---------------------------------------------------------------------------
-
-describe('getActiveRestrictions', () => {
-  const restrictions: StandingActionRestriction[] = [
-    { actionId: 'build', expiresAfterTurn: 5 },
-    { actionId: 'recruit', expiresAfterTurn: 3 },
-    { actionId: 'trade', expiresAfterTurn: 8 },
-  ];
-
-  it('returns only restrictions active on the current turn', () => {
-    const active = getActiveRestrictions(restrictions, 4);
-    expect(active.map((r) => r.actionId)).toContain('build');
-    expect(active.map((r) => r.actionId)).not.toContain('recruit');
-    expect(active.map((r) => r.actionId)).toContain('trade');
-  });
-
-  it('includes restrictions that expire exactly this turn', () => {
-    const active = getActiveRestrictions(restrictions, 5);
-    expect(active.map((r) => r.actionId)).toContain('build');
-  });
-
-  it('returns empty when all restrictions have expired', () => {
-    expect(getActiveRestrictions(restrictions, 10)).toHaveLength(0);
-  });
-});
-
-describe('isActionRestricted', () => {
-  it('returns true for a currently restricted action', () => {
-    const r: StandingActionRestriction[] = [{ actionId: 'build', expiresAfterTurn: 5 }];
-    expect(isActionRestricted('build', r, 4)).toBe(true);
-  });
-
-  it('returns false for an unrestricted action', () => {
-    const r: StandingActionRestriction[] = [{ actionId: 'build', expiresAfterTurn: 5 }];
-    expect(isActionRestricted('recruit', r, 4)).toBe(false);
-  });
-
-  it('returns false when the restriction has expired', () => {
-    const r: StandingActionRestriction[] = [{ actionId: 'build', expiresAfterTurn: 3 }];
-    expect(isActionRestricted('build', r, 4)).toBe(false);
-  });
-});

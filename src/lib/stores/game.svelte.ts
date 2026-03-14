@@ -47,7 +47,6 @@ import { FACILITY_DEFS } from '../../data/facilities';
 import { BLOC_DEFS } from '../../data/blocs';
 import { BOARD_DEFS } from '../../data/board';
 import { TECH_DEFS } from '../../data/technologies';
-import { STANDING_ACTIONS } from '../../data/standingActions';
 
 // ---------------------------------------------------------------------------
 // Re-export data for components that import from this store
@@ -55,7 +54,6 @@ import { STANDING_ACTIONS } from '../../data/standingActions';
 
 export { CARD_DEFS as CARD_DEFS } from '../../data/cards';
 export { EVENT_DEFS as EVENT_DEFS } from '../../data/events';
-export { STANDING_ACTIONS as STUB_STANDING_ACTIONS } from '../../data/standingActions';
 export { BOARD_DEFS as BOARD_DEFS } from '../../data/board';
 
 // ---------------------------------------------------------------------------
@@ -361,6 +359,18 @@ export const gameStore = {
       {
         id: 'coalitionBuilding-1',
         defId: 'coalitionBuilding',
+        zone: 'deck',
+        bankedSinceTurn: null,
+      },
+      {
+        id: 'emergencyAppeal-1',
+        defId: 'emergencyAppeal',
+        zone: 'deck',
+        bankedSinceTurn: null,
+      },
+      {
+        id: 'emergencySourcing-1',
+        defId: 'emergencySourcing',
         zone: 'deck',
         bankedSinceTurn: null,
       },
@@ -705,6 +715,15 @@ export const gameStore = {
     const def = CARD_DEFS.get(card.defId);
     if (!def) return;
 
+    // Afford check: any negative resource delta must be coverable
+    if (def.effect.resources) {
+      const r = def.effect.resources;
+      const res = _state.player.resources;
+      if ((r.funding ?? 0) < 0 && res.funding < -(r.funding!)) return;
+      if ((r.materials ?? 0) < 0 && res.materials < -(r.materials!)) return;
+      if ((r.politicalWill ?? 0) < 0 && res.politicalWill < -(r.politicalWill!)) return;
+    }
+
     let resources = { ..._state.player.resources };
     if (def.effect.resources) {
       const r = def.effect.resources;
@@ -801,56 +820,6 @@ export const gameStore = {
             ? { ...c, zone: 'hand' as const, bankedSinceTurn: null }
             : c,
         ),
-      },
-    };
-  },
-
-  /** Emergency Sourcing standing action: spend 25 Will, gain 20 Materials. */
-  emergencySourcing(): void {
-    if (!_state || _state.phase !== 'action') return;
-    const will = _state.player.resources.politicalWill;
-    if (will < 25) return;
-    const news: NewsItem = {
-      id: crypto.randomUUID(),
-      turn: _state.turn,
-      text: 'Emergency Sourcing activated — 20 Materials secured at cost of 25 Political Will.',
-      category: 'event-neutral',
-    };
-    _state = {
-      ..._state,
-      player: {
-        ..._state.player,
-        resources: {
-          ..._state.player.resources,
-          materials: _state.player.resources.materials + 20,
-          politicalWill: will - 25,
-        },
-        newsFeed: [..._state.player.newsFeed, news],
-      },
-    };
-  },
-
-  /** Emergency Appeal standing action: spend 20 Will, gain 30 Funding. */
-  emergencyAppeal(): void {
-    if (!_state || _state.phase !== 'action') return;
-    const will = _state.player.resources.politicalWill;
-    if (will < 20) return;
-    const news: NewsItem = {
-      id: crypto.randomUUID(),
-      turn: _state.turn,
-      text: 'Emergency Appeal launched — 30 Funding secured at cost of 20 Political Will.',
-      category: 'event-neutral',
-    };
-    _state = {
-      ..._state,
-      player: {
-        ..._state.player,
-        resources: {
-          ..._state.player.resources,
-          funding: _state.player.resources.funding + 30,
-          politicalWill: will - 20,
-        },
-        newsFeed: [..._state.player.newsFeed, news],
       },
     };
   },

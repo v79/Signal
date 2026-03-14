@@ -5,38 +5,39 @@ This is a list of future requirements for the game but they are not to be implem
 - UI visual flare:
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
   - The game is just too dark, the colour scheme is too muted
+  - On the HUD, highlight resources which have a negative income
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
-- Research work:
-  - What do the progress bars on the science fields mean?
-  - How are research fields 'spent' to progress unlocking Technologies
-  - It should not be possible to decode the Signal until the Asteroid era!
-  - When a technology is researched, a narrative popup should be shown on the main game screen, with information on the new cards, facilities or actions it unlocks and those it obsoletes
-  - Tech unlocks are modal narrative events - interrupt game flow too much? But news ticker is too small and easy to miss
-    - Introduce a new, non-modal popup panel for Tech unlocks, that can be manually dismissed and is automatically dismissed at the end of the turn. This popup should be smaller and appear above the Phase Ctrl panel
-  - Technologies should require a much broader range of sciences; most only need 2 but 4 or 5 is expected, though with low requirements for some (e.g. Genetic Sequencing Technology should require some Social Science, to reflect the cultural education and concerns around genetic engineering)
-  - It's far too possible for multiple techs to be unlocked in the same turn.
 - The Signal:
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
-  - Signal should be decoded before era 3
+  - Signal should not be decoded before era 3
 - Political Will:
   - What is the difference between Global Will and Political Will?
   - Political Will should have a cap (100?)
+  - Political Will is too easy to gain and too hard to spend (same as Materials)
+  - Maybe a better name is Influence?
 - Era Gates
   - We haven't yet given much thought to how to unlock and progress Eras.
+- Competitor blocs
+  - They are absent from the game so far.
 - Earth map
   - Show the name of our player's Bloc somewhere in the HUD or map
   - Visualise neighbour adjacency bonuses/penalties - not the numbers, just indicate that they exist
   - Add panning and scrolling, constrained to bounds so the player can't lose the map entirely
   - Add a thematic loading text before the map renders
   - Map-specific events, such as coastalFlooding, should impact a specific tile, and should destroy any facility on that tile
-  - A drop-down list of all facilities
+  - A drop-down list of all facilities should be available, as an overview of what exists
   - Some facilities will pollute (increase climate degradation), a few will heal the climate, and some may prevent tile loss (sea walls)
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - Climate pressure could change some tiles (forest -> arid), destroying any incompatible facilities
-- LEO technology content pass
-- Asteroid era technology content pass
+  - It's too easy to fill up the map and have nothing to do. Only destroyed facilities in a funding emergency.
+  - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
+- Earth era content pass
+  - Solar and wind farms available to early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
+  - Technologies shouldn't require Computing until integrated circuits have been unlocked.
+- LEO content pass
+- Asteroid era content pass
 - Game art:
   - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
   - Show building icons on hex map
@@ -46,7 +47,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Most technologies will have prerequisite technologies that must be researched first
   - Draw connecting lines between discovered technologies and progressing technologies
   - Clicking on a discovered or in progress technology in the tech tree should show more information
-  - Unlocked technologies may provide a passive resource gain (but may not, and may be restricted to the current era)
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
 - News feed & ticker rework
   - The ticker is cute but not very functional
@@ -58,8 +58,15 @@ This is a list of future requirements for the game but they are not to be implem
   - Make it more prominent, it's too easy to ignore
   - Don't offer people if you can't afford the recruitment cost
   - The Board moves to a tab in the main panel, [ Earth | Near Space | Asteroid Belt | ... | Board]
+  - This gives a lot more room for the Board - use it! Add placeholders for art (headshot pictures). Add a summary of the gains and losses provided by the current board members.
 - Climate management:
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
   - Events frequency may be affected by the current Climate or Global Will scores
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
+
+
+
+  BUGS:
+
+  - Political will isn't reduced when accepting an event which is supposed to cost Will

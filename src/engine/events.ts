@@ -4,7 +4,6 @@ import type {
   EventEffect,
   PlayerState,
   MapTile,
-  StandingActionRestriction,
   FieldPoints,
   Era,
   PushFactor,
@@ -196,19 +195,6 @@ export function applyEventEffect(
       newFields[k] = Math.max(0, (newFields[k] ?? 0) + (f[k] ?? 0));
     }
     updatedPlayer = { ...updatedPlayer, fields: newFields };
-  }
-
-  // Standing action restrictions
-  if (effect.restrictActions && effect.restrictActions.length > 0) {
-    const duration = effect.restrictionDuration ?? 1;
-    const newRestrictions: StandingActionRestriction[] = effect.restrictActions.map((actionId) => ({
-      actionId,
-      expiresAfterTurn: currentTurn + duration - 1,
-    }));
-    updatedPlayer = {
-      ...updatedPlayer,
-      activeEventRestrictions: [...player.activeEventRestrictions, ...newRestrictions],
-    };
   }
 
   // destroyTile, eliminateBloc, signalProgress, triggersEventId — deferred
