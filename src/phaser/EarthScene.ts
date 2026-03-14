@@ -92,6 +92,17 @@ export class EarthScene extends Phaser.Scene {
   private overlayGfx!: Phaser.GameObjects.Graphics;
   private hoveredKey: string | null = null;
 
+  // Camera pan state
+  private camOffsetX = 0;
+  private camOffsetY = 0;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private dragStartCamX = 0;
+  private dragStartCamY = 0;
+  private isDragging = false;
+  private dragMoved = false;
+  private static readonly DRAG_THRESHOLD = 5; // px
+
   constructor() {
     super({ key: 'EarthScene' });
   }
@@ -111,26 +122,95 @@ export class EarthScene extends Phaser.Scene {
     this.tileGfx = this.add.graphics();
     this.overlayGfx = this.add.graphics();
 
-    // Hover tracking
+    // Drag-to-pan: record origin on press, pan on move, click on release
+    this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      this.dragStartX = ptr.x;
+      this.dragStartY = ptr.y;
+      this.dragStartCamX = this.camOffsetX;
+      this.dragStartCamY = this.camOffsetY;
+      this.isDragging = true;
+      this.dragMoved = false;
+    });
+
     this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
-      const key = this.hitTest(ptr.x, ptr.y);
+      if (this.isDragging) {
+        const dx = ptr.x - this.dragStartX;
+        const dy = ptr.y - this.dragStartY;
+        if (!this.dragMoved && Math.hypot(dx, dy) > EarthScene.DRAG_THRESHOLD) {
+          this.dragMoved = true;
+        }
+        if (this.dragMoved) {
+          this.camOffsetX = this.dragStartCamX + dx;
+          this.camOffsetY = this.dragStartCamY + dy;
+          this.clampCamera();
+        }
+      }
+
+      // Hover: suppress during drag so the cursor doesn't flicker
+      const key = this.isDragging && this.dragMoved ? null : this.hitTest(ptr.x, ptr.y);
       if (key !== this.hoveredKey) {
         this.hoveredKey = key;
         if (this.cb) this.cb.onTileHover(key);
       }
     });
 
-    // Click → select tile
-    this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
-      const key = this.hitTest(ptr.x, ptr.y);
-      if (key && this.cb) {
-        this.cb.onTileClick(key);
+    this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
+      if (!this.dragMoved) {
+        // Treat as click — hitTest at the release point
+        const key = this.hitTest(ptr.x, ptr.y);
+        if (key && this.cb) this.cb.onTileClick(key);
+      }
+      this.isDragging = false;
+    });
+
+    // Clear hover and cancel drag when pointer leaves the canvas
+    this.input.on('pointerout', () => {
+      this.isDragging = false;
+      this.dragMoved = false;
+      if (this.hoveredKey !== null) {
+        this.hoveredKey = null;
+        if (this.cb) this.cb.onTileHover(null);
       }
     });
   }
 
   update(): void {
     this.renderAll();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Camera helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Clamp `camOffsetX/Y` so the map can't be panned completely off-screen.
+   * Keeps at least one hex-width of the map visible on each side.
+   */
+  private clampCamera(): void {
+    if (!this.cb) return;
+    const tiles = this.cb.getTiles();
+    if (tiles.length === 0) return;
+
+    // Compute the bounding box of all tile centres in un-offset map space
+    const sqrt3 = Math.sqrt(3);
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const t of tiles) {
+      const tx = HEX_SIZE * 1.5 * t.coord.q;
+      const ty = HEX_SIZE * ((sqrt3 / 2) * t.coord.q + sqrt3 * t.coord.r);
+      if (tx < minX) minX = tx;
+      if (tx > maxX) maxX = tx;
+      if (ty < minY) minY = ty;
+      if (ty > maxY) maxY = ty;
+    }
+
+    // Pad by one hex to keep the edge tiles fully visible
+    const pad = HEX_SIZE * 2;
+    const hw = this.scale.width / 2;
+    const hh = this.scale.height / 2;
+
+    // Offset must keep the map extent within [−hw+pad, hw−pad] of viewport centre
+    this.camOffsetX = Math.min(hw - minX - pad, Math.max(-hw - maxX + pad, this.camOffsetX));
+    this.camOffsetY = Math.min(hh - minY - pad, Math.max(-hh - maxY + pad, this.camOffsetY));
   }
 
   // ---------------------------------------------------------------------------
@@ -142,8 +222,8 @@ export class EarthScene extends Phaser.Scene {
     const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
     return {
-      x: cx + HEX_SIZE * (1.5 * q),
-      y: cy + HEX_SIZE * ((Math.sqrt(3) / 2) * q + Math.sqrt(3) * r),
+      x: cx + this.camOffsetX + HEX_SIZE * (1.5 * q),
+      y: cy + this.camOffsetY + HEX_SIZE * ((Math.sqrt(3) / 2) * q + Math.sqrt(3) * r),
     };
   }
 
@@ -166,8 +246,8 @@ export class EarthScene extends Phaser.Scene {
    */
   private hitTest(px: number, py: number): string | null {
     if (!this.cb) return null;
-    const cx = px - this.scale.width / 2;
-    const cy = py - this.scale.height / 2;
+    const cx = px - this.scale.width / 2 - this.camOffsetX;
+    const cy = py - this.scale.height / 2 - this.camOffsetY;
 
     // Inverse of the flat-top hex formula
     const fq = ((2 / 3) * cx) / HEX_SIZE;
