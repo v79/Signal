@@ -154,6 +154,34 @@ export function validateSave(raw: unknown): ValidationResult {
   if (!Array.isArray(s['seenNarrativeIds'])) s['seenNarrativeIds'] = [];
   if (!Array.isArray(s['narrativeQueue'])) s['narrativeQueue'] = [];
 
+  // Backward-compat: Phase 21 adds fieldProgress and unlockedByBreakthrough to TechState.
+  // Also zeros out player.fields which is now a per-turn snapshot (not cumulative).
+  const playerObj = s['player'] as Record<string, unknown> | undefined;
+  if (playerObj && Array.isArray(playerObj['techs'])) {
+    playerObj['techs'] = (playerObj['techs'] as Record<string, unknown>[]).map((t) => ({
+      ...t,
+      fieldProgress: typeof t['fieldProgress'] === 'object' && t['fieldProgress'] !== null
+        ? t['fieldProgress']
+        : {},
+      unlockedByBreakthrough: typeof t['unlockedByBreakthrough'] === 'boolean'
+        ? t['unlockedByBreakthrough']
+        : false,
+    }));
+  }
+  // player.fields is now per-turn output — zero it out on load from old saves
+  // (old saves had cumulative totals which are no longer meaningful)
+  if (playerObj && typeof playerObj['fields'] === 'object' && playerObj['fields'] !== null) {
+    const oldFields = playerObj['fields'] as Record<string, unknown>;
+    // Only reset if any field value is very large (indicating cumulative totals)
+    const maxField = Math.max(...Object.values(oldFields).map(v => typeof v === 'number' ? v : 0));
+    if (maxField > 50) { // threshold: per-turn output should never exceed this
+      playerObj['fields'] = {
+        physics: 0, mathematics: 0, engineering: 0,
+        biochemistry: 0, computing: 0, socialScience: 0,
+      };
+    }
+  }
+
   return { valid: true, state: candidate as GameState };
 }
 

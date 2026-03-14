@@ -2,8 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   generateTechRecipes,
   initialiseTechs,
+  prerequisitesMet,
   getDiscoveryStage,
-  checkResearchProgress,
+  distributeResearchPoints,
+  applyStageTransitions,
+  checkBreakthroughConditions,
+  MIN_POINTS_PER_TECH_PER_FIELD,
 } from './research';
 import { createRng } from './rng';
 import type { TechDef, TechState, FieldPoints } from './types';
@@ -24,6 +28,8 @@ const orbitalMechanicsDef: TechDef = {
   unlocksProjects: ['firstSatellite'],
   unlocksFacilities: [],
   signalDerived: false,
+  tier: 1,
+  requiredTechIds: [],
 };
 
 const lifeSupport: TechDef = {
@@ -37,6 +43,8 @@ const lifeSupport: TechDef = {
   unlocksProjects: [],
   unlocksFacilities: [],
   signalDerived: false,
+  tier: 1,
+  requiredTechIds: [],
 };
 
 // Cross-field breakthrough tech
@@ -51,6 +59,24 @@ const signalResonanceDef: TechDef = {
   unlocksProjects: [],
   unlocksFacilities: [],
   signalDerived: false,
+  tier: 2,
+  requiredTechIds: ['orbitalMechanics'],
+};
+
+// Tech with no prerequisites (Tier 1)
+const tier1TechDef: TechDef = {
+  id: 'basicResearch',
+  name: 'Basic Research',
+  rumourText: 'Basic investigations are underway.',
+  baseRecipe: { physics: 10 },
+  recipeVariance: 0.0,
+  requiresSimultaneous: false,
+  unlocksCards: [],
+  unlocksProjects: [],
+  unlocksFacilities: [],
+  signalDerived: false,
+  tier: 1,
+  requiredTechIds: [],
 };
 
 const allDefs = [orbitalMechanicsDef, lifeSupport, signalResonanceDef];
@@ -58,6 +84,22 @@ const defsMap = new Map(allDefs.map((d) => [d.id, d]));
 
 function makeFields(overrides: Partial<FieldPoints> = {}): FieldPoints {
   return { ...ZERO_FIELDS, ...overrides };
+}
+
+function makeTechState(
+  defId: string,
+  recipe: Record<string, number>,
+  stage: TechState['stage'] = 'unknown',
+  fieldProgress: Record<string, number> = {},
+): TechState {
+  return {
+    defId,
+    stage,
+    recipe,
+    fieldProgress,
+    unlockedByBreakthrough: false,
+    discoveredTurn: null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -163,160 +205,301 @@ describe('initialiseTechs', () => {
       expect(tech.discoveredTurn).toBeNull();
     }
   });
-});
 
-// ---------------------------------------------------------------------------
-// getDiscoveryStage — standard tech (requiresSimultaneous: false)
-// ---------------------------------------------------------------------------
-
-describe('getDiscoveryStage (standard tech)', () => {
-  // Recipe: physics 40, mathematics 30, engineering 20
-  const recipe = { physics: 40, mathematics: 30, engineering: 20 };
-
-  it('returns unknown when fields are well below threshold', () => {
-    const fields = makeFields({ physics: 1, mathematics: 1 });
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('unknown');
+  it('initialises fieldProgress to {} for all techs', () => {
+    const techs = initialiseTechs(allDefs, createRng('init'));
+    for (const tech of techs) {
+      expect(tech.fieldProgress).toEqual({});
+    }
   });
 
-  it('returns rumour when any field reaches 30% of its threshold', () => {
-    // 30% of physics threshold (40) = 12
-    const fields = makeFields({ physics: 12 });
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('rumour');
-  });
-
-  it('returns progress when all fields reach 60% of their thresholds', () => {
-    // 60%: physics 24, mathematics 18, engineering 12
-    const fields = makeFields({ physics: 24, mathematics: 18, engineering: 12 });
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('progress');
-  });
-
-  it('does not return progress if only some fields hit 60%', () => {
-    const fields = makeFields({ physics: 40, mathematics: 30, engineering: 5 }); // engineering short
-    expect(getDiscoveryStage(fields, recipe, false)).not.toBe('progress');
-  });
-
-  it('returns discovered when all fields meet 100% threshold', () => {
-    const fields = makeFields({ physics: 40, mathematics: 30, engineering: 20 });
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('discovered');
-  });
-
-  it('returns discovered when fields exceed 100% threshold', () => {
-    const fields = makeFields({ physics: 100, mathematics: 100, engineering: 100 });
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('discovered');
-  });
-
-  it('returns discovered for an empty recipe', () => {
-    expect(getDiscoveryStage(makeFields(), {}, false)).toBe('discovered');
+  it('initialises unlockedByBreakthrough to false for all techs', () => {
+    const techs = initialiseTechs(allDefs, createRng('init'));
+    for (const tech of techs) {
+      expect(tech.unlockedByBreakthrough).toBe(false);
+    }
   });
 });
 
 // ---------------------------------------------------------------------------
-// getDiscoveryStage — cross-field breakthrough (requiresSimultaneous: true)
+// prerequisitesMet
 // ---------------------------------------------------------------------------
 
-describe('getDiscoveryStage (simultaneous breakthrough)', () => {
-  // Recipe: physics 60, mathematics 60
-  const recipe = { physics: 60, mathematics: 60 };
+describe('prerequisitesMet', () => {
+  const prereqDef: TechDef = {
+    ...orbitalMechanicsDef,
+    id: 'advanced',
+    requiredTechIds: ['orbitalMechanics', 'lifeSupport'],
+  };
 
-  it('returns unknown when only one field is above 30%', () => {
-    // physics at 40% but mathematics at 0 — breakthrough requires BOTH
-    const fields = makeFields({ physics: 24 });
-    expect(getDiscoveryStage(fields, recipe, true)).toBe('unknown');
+  const orbitalDiscovered: TechState = {
+    ...makeTechState('orbitalMechanics', { physics: 40 }, 'discovered'),
+  };
+  const lifeSupportProgress: TechState = {
+    ...makeTechState('lifeSupport', { biochemistry: 50 }, 'progress'),
+  };
+  const lifeSupportRumour: TechState = {
+    ...makeTechState('lifeSupport', { biochemistry: 50 }, 'rumour'),
+  };
+  const lifeSupportUnknown: TechState = {
+    ...makeTechState('lifeSupport', { biochemistry: 50 }, 'unknown'),
+  };
+
+  it('returns true for Tier 1 tech with empty requiredTechIds', () => {
+    const allTechs: TechState[] = [];
+    expect(prerequisitesMet(tier1TechDef, allTechs)).toBe(true);
   });
 
-  it('returns rumour only when ALL fields reach 30%', () => {
-    const fields = makeFields({ physics: 18, mathematics: 18 }); // both at 30%
-    expect(getDiscoveryStage(fields, recipe, true)).toBe('rumour');
+  it('returns true when all prerequisites are at progress', () => {
+    const allTechs = [
+      makeTechState('orbitalMechanics', { physics: 40 }, 'progress'),
+      lifeSupportProgress,
+    ];
+    expect(prerequisitesMet(prereqDef, allTechs)).toBe(true);
   });
 
-  it('contrast: standard tech would give rumour from single field at 30%', () => {
-    const fields = makeFields({ physics: 18 }); // only physics at 30%
-    expect(getDiscoveryStage(fields, recipe, false)).toBe('rumour'); // standard: yes
-    expect(getDiscoveryStage(fields, recipe, true)).toBe('unknown'); // simultaneous: no
+  it('returns true when all prerequisites are at discovered', () => {
+    const allTechs = [orbitalDiscovered, makeTechState('lifeSupport', { biochemistry: 50 }, 'discovered')];
+    expect(prerequisitesMet(prereqDef, allTechs)).toBe(true);
+  });
+
+  it('returns false when a prerequisite is at rumour', () => {
+    const allTechs = [orbitalDiscovered, lifeSupportRumour];
+    expect(prerequisitesMet(prereqDef, allTechs)).toBe(false);
+  });
+
+  it('returns false when a prerequisite is unknown', () => {
+    const allTechs = [orbitalDiscovered, lifeSupportUnknown];
+    expect(prerequisitesMet(prereqDef, allTechs)).toBe(false);
+  });
+
+  it('returns false when a prerequisite is missing from allTechs', () => {
+    const allTechs = [orbitalDiscovered]; // lifeSupport missing
+    expect(prerequisitesMet(prereqDef, allTechs)).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
-// checkResearchProgress
+// getDiscoveryStage (new signature)
 // ---------------------------------------------------------------------------
 
-describe('checkResearchProgress', () => {
-  function makeTechState(defId: string, recipe: Record<string, number>): TechState {
-    return { defId, stage: 'unknown', recipe, discoveredTurn: null };
-  }
+describe('getDiscoveryStage', () => {
+  const tier1Def = orbitalMechanicsDef; // requiredTechIds: []
 
-  it('returns unchanged techs when fields are too low', () => {
-    const techs = [makeTechState('orbitalMechanics', { physics: 40, mathematics: 30 })];
-    const result = checkResearchProgress(techs, defsMap, makeFields(), 1);
-    expect(result.updatedTechs[0].stage).toBe('unknown');
-    expect(result.newDiscoveries).toHaveLength(0);
-    expect(result.newRumours).toHaveLength(0);
+  const tier2Def: TechDef = {
+    ...signalResonanceDef,
+    requiredTechIds: ['orbitalMechanics'],
+  };
+
+  it('unknown → stays unknown when no prerequisites met', () => {
+    const tech = makeTechState('signalResonance', { physics: 60, mathematics: 60 }, 'unknown');
+    const prereqTech = makeTechState('orbitalMechanics', { physics: 40 }, 'unknown');
+    const allTechs = [tech, prereqTech];
+    const techDefsMap = new Map([['signalResonance', tier2Def], ['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier2Def, allTechs, techDefsMap)).toBe('unknown');
   });
 
-  it('advances to rumour when any field crosses 30%', () => {
-    const techs = [makeTechState('orbitalMechanics', { physics: 40, mathematics: 30 })];
-    const fields = makeFields({ physics: 12 }); // 30% of 40
-    const result = checkResearchProgress(techs, defsMap, fields, 5);
-    expect(result.updatedTechs[0].stage).toBe('rumour');
-    expect(result.newRumours).toContain('orbitalMechanics');
+  it('unknown → rumour when prerequisites met (Tier 2)', () => {
+    const tech = makeTechState('signalResonance', { physics: 60, mathematics: 60 }, 'unknown');
+    const prereqTech = makeTechState('orbitalMechanics', { physics: 40 }, 'discovered');
+    const allTechs = [tech, prereqTech];
+    const techDefsMap = new Map([['signalResonance', tier2Def], ['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier2Def, allTechs, techDefsMap)).toBe('rumour');
   });
 
-  it('advances directly to progress if fields already meet 60%', () => {
-    const techs = [makeTechState('orbitalMechanics', { physics: 40, mathematics: 30 })];
-    const fields = makeFields({ physics: 30, mathematics: 25 }); // both above 60%
-    const result = checkResearchProgress(techs, defsMap, fields, 5);
-    expect(result.updatedTechs[0].stage).toBe('progress');
-    expect(result.newProgressTechs).toContain('orbitalMechanics');
+  it('unknown → rumour when Tier 1 (no prerequisites)', () => {
+    const tech = makeTechState('orbitalMechanics', { physics: 40 }, 'unknown');
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('rumour');
   });
 
-  it('advances to discovered and records the turn', () => {
-    const techs = [makeTechState('orbitalMechanics', { physics: 40, mathematics: 30 })];
-    const fields = makeFields({ physics: 40, mathematics: 30 });
-    const result = checkResearchProgress(techs, defsMap, fields, 12);
-    expect(result.updatedTechs[0].stage).toBe('discovered');
-    expect(result.updatedTechs[0].discoveredTurn).toBe(12);
-    expect(result.newDiscoveries).toContain('orbitalMechanics');
+  it('rumour → stays rumour when fieldProgress too low', () => {
+    // recipe: physics 40, mathematics 30, engineering 20
+    // allAt33: need all >= 33% — physics:13.2, math:9.9, eng:6.6
+    // partial: need 1 field (ceil(3*0.33)=1) at 50% — physics:20, etc.
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'rumour',
+      { physics: 5 }, // very low progress
+    );
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('rumour');
   });
 
-  it('does not re-advance already-discovered techs', () => {
-    const discovered: TechState = {
+  it('rumour → progress when allAt33 threshold met', () => {
+    // all fields at >= 33% of their thresholds
+    // physics >= 0.33*40=13.2, math >= 0.33*30=9.9, eng >= 0.33*20=6.6
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'rumour',
+      { physics: 14, mathematics: 10, engineering: 7 },
+    );
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('progress');
+  });
+
+  it('rumour → progress when partial threshold met (≥ 50% on 1/3 of fields)', () => {
+    // 1 field (ceil(3*0.33)=1) at >= 50%: physics >= 0.5*40=20
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'rumour',
+      { physics: 20, mathematics: 0, engineering: 0 },
+    );
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('progress');
+  });
+
+  it('rumour → discovered directly if fieldProgress meets 100%', () => {
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'rumour',
+      { physics: 40, mathematics: 30, engineering: 20 },
+    );
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('discovered');
+  });
+
+  it('progress → stays progress if fieldProgress not at 100%', () => {
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'progress',
+      { physics: 39, mathematics: 30, engineering: 20 },
+    );
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('progress');
+  });
+
+  it('progress → discovered when fieldProgress meets 100%', () => {
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'progress',
+      { physics: 40, mathematics: 30, engineering: 20 },
+    );
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('discovered');
+  });
+
+  it('discovered → stays discovered always', () => {
+    const tech: TechState = {
       defId: 'orbitalMechanics',
       stage: 'discovered',
       recipe: { physics: 40 },
+      fieldProgress: {},
+      unlockedByBreakthrough: false,
       discoveredTurn: 5,
     };
-    const result = checkResearchProgress([discovered], defsMap, makeFields({ physics: 100 }), 10);
-    expect(result.updatedTechs[0].discoveredTurn).toBe(5); // unchanged
-    expect(result.newDiscoveries).toHaveLength(0);
-  });
-
-  it('handles multiple techs advancing in the same turn', () => {
-    const techs = [
-      makeTechState('orbitalMechanics', { physics: 40, mathematics: 30 }),
-      makeTechState('lifeSupport', { biochemistry: 50, engineering: 35 }),
-    ];
-    const fields = makeFields({ physics: 40, mathematics: 30, biochemistry: 50, engineering: 35 });
-    const result = checkResearchProgress(techs, defsMap, fields, 8);
-    expect(result.newDiscoveries).toHaveLength(2);
-  });
-
-  it('skips techs with null recipe', () => {
-    const tech: TechState = {
-      defId: 'orbitalMechanics',
-      stage: 'unknown',
-      recipe: null,
-      discoveredTurn: null,
-    };
-    const result = checkResearchProgress([tech], defsMap, makeFields({ physics: 100 }), 1);
-    expect(result.updatedTechs[0].stage).toBe('unknown');
+    const allTechs = [tech];
+    const techDefsMap = new Map([['orbitalMechanics', tier1Def]]);
+    expect(getDiscoveryStage(tech, tier1Def, allTechs, techDefsMap)).toBe('discovered');
   });
 });
 
 // ---------------------------------------------------------------------------
-// signalEraStrength gate for signal-derived techs
+// distributeResearchPoints
 // ---------------------------------------------------------------------------
 
-describe('checkResearchProgress — signalDerived gate', () => {
+describe('distributeResearchPoints', () => {
+  const techA: TechDef = {
+    ...tier1TechDef,
+    id: 'techA',
+    baseRecipe: { physics: 10, computing: 8 },
+    requiredTechIds: [],
+  };
+  const techB: TechDef = {
+    ...tier1TechDef,
+    id: 'techB',
+    baseRecipe: { physics: 10 },
+    requiredTechIds: [],
+  };
+  const techDefsMap = new Map([['techA', techA], ['techB', techB]]);
+
+  it('distributes guaranteed minimum to each applicable tech per field', () => {
+    const techs = [
+      makeTechState('techA', { physics: 10, computing: 8 }, 'rumour'),
+      makeTechState('techB', { physics: 10 }, 'rumour'),
+    ];
+    const fieldOutput = makeFields({ physics: 5 });
+    const rng = createRng('test');
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    // Both techA and techB are applicable for physics
+    const a = result.find((t) => t.defId === 'techA')!;
+    const b = result.find((t) => t.defId === 'techB')!;
+    // Each should have received at least MIN_POINTS_PER_TECH_PER_FIELD
+    expect(a.fieldProgress['physics'] ?? 0).toBeGreaterThanOrEqual(MIN_POINTS_PER_TECH_PER_FIELD);
+    expect(b.fieldProgress['physics'] ?? 0).toBeGreaterThanOrEqual(MIN_POINTS_PER_TECH_PER_FIELD);
+  });
+
+  it('remainder goes to one random eligible tech', () => {
+    const techs = [
+      makeTechState('techA', { physics: 100 }, 'rumour'),
+      makeTechState('techB', { physics: 100 }, 'rumour'),
+    ];
+    const fieldOutput = makeFields({ physics: 20 });
+    const rng = createRng('remainder-test');
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    const totalPhysics = result.reduce((sum, t) => sum + (t.fieldProgress['physics'] ?? 0), 0);
+    // All 20 points should be distributed (2 guaranteed + 18 remainder)
+    expect(totalPhysics).toBe(20);
+  });
+
+  it('points discarded when no eligible tech needs a field', () => {
+    // Both techs have physics already at threshold
+    const techs = [
+      makeTechState('techA', { physics: 10 }, 'rumour', { physics: 10 }),
+      makeTechState('techB', { physics: 10 }, 'rumour', { physics: 10 }),
+    ];
+    const fieldOutput = makeFields({ physics: 5 });
+    const rng = createRng('discard-test');
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    // physics already met — no new points
+    expect(result.find((t) => t.defId === 'techA')!.fieldProgress['physics']).toBe(10);
+    expect(result.find((t) => t.defId === 'techB')!.fieldProgress['physics']).toBe(10);
+  });
+
+  it('unknown techs receive no points', () => {
+    const techs = [
+      makeTechState('techA', { physics: 10 }, 'unknown'),
+      makeTechState('techB', { physics: 10 }, 'rumour'),
+    ];
+    const fieldOutput = makeFields({ physics: 5 });
+    const rng = createRng('unknown-test');
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    const a = result.find((t) => t.defId === 'techA')!;
+    // techA is unknown — should not receive points
+    expect(a.fieldProgress['physics'] ?? 0).toBe(0);
+  });
+
+  it('already-met fields receive no points', () => {
+    const techs = [
+      makeTechState('techA', { physics: 10, computing: 8 }, 'rumour', { physics: 10, computing: 0 }),
+    ];
+    const fieldOutput = makeFields({ physics: 5 });
+    const rng = createRng('met-fields-test');
+    const result = distributeResearchPoints(techs, new Map([['techA', techA]]), fieldOutput, rng);
+    const a = result.find((t) => t.defId === 'techA')!;
+    // physics already met — no more physics points
+    expect(a.fieldProgress['physics']).toBe(10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyStageTransitions
+// ---------------------------------------------------------------------------
+
+describe('applyStageTransitions', () => {
   const signalDerivedDef: TechDef = {
     id: 'signalPattern',
     name: 'Signal Pattern Analysis',
@@ -328,71 +511,152 @@ describe('checkResearchProgress — signalDerived gate', () => {
     unlocksProjects: [],
     unlocksFacilities: [],
     signalDerived: true,
+    tier: 3,
+    requiredTechIds: [],
   };
 
   const signalDerivedMap = new Map([['signalPattern', signalDerivedDef]]);
-
-  const richFields = makeFields({ computing: 100, physics: 100 });
 
   function makeSignalTech(stage: TechState['stage'] = 'unknown'): TechState {
     return {
       defId: 'signalPattern',
       stage,
       recipe: { computing: 50, physics: 40 },
+      fieldProgress: stage === 'discovered' ? { computing: 50, physics: 40 } : {},
+      unlockedByBreakthrough: false,
       discoveredTurn: null,
     };
   }
 
-  it('keeps signal-derived tech unknown when signal is faint, even if fields meet threshold', () => {
-    const result = checkResearchProgress(
-      [makeSignalTech()],
-      signalDerivedMap,
-      richFields,
-      5,
-      'faint',
-    );
+  it('signal-derived tech stays unknown when signal is faint, even if prerequisites met', () => {
+    const tech = { ...makeSignalTech('unknown') };
+    const result = applyStageTransitions([tech], signalDerivedMap, 5, 'faint');
     expect(result.updatedTechs[0].stage).toBe('unknown');
     expect(result.newRumours).toHaveLength(0);
   });
 
-  it('promotes signal-derived tech once signal reaches structured', () => {
-    const result = checkResearchProgress(
-      [makeSignalTech()],
-      signalDerivedMap,
-      richFields,
-      5,
-      'structured',
+  it('signal-derived tech advances when signal is structured', () => {
+    // signalDerivedDef has requiredTechIds: [] so prerequisites are always met
+    const tech = makeSignalTech('unknown');
+    const result = applyStageTransitions([tech], signalDerivedMap, 5, 'structured');
+    // Should advance from unknown to rumour (prerequisites empty, so met)
+    expect(result.updatedTechs[0].stage).not.toBe('unknown');
+    expect(result.newRumours).toContain('signalPattern');
+  });
+
+  it('non-regression: stage never decreases', () => {
+    const tech = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'progress',
+      { physics: 5 }, // low progress — not enough to stay at progress normally, but no regress
     );
-    expect(result.updatedTechs[0].stage).toBe('discovered');
-    expect(result.newDiscoveries).toContain('signalPattern');
+    const defs = new Map([['orbitalMechanics', orbitalMechanicsDef]]);
+    const result = applyStageTransitions([tech], defs, 5);
+    // Should not regress from progress
+    expect(result.updatedTechs[0].stage).not.toBe('rumour');
+    expect(result.updatedTechs[0].stage).not.toBe('unknown');
   });
 
-  it('promotes signal-derived tech when signal is urgent', () => {
-    const result = checkResearchProgress(
-      [makeSignalTech()],
-      signalDerivedMap,
-      richFields,
-      5,
-      'urgent',
+  it('multiple techs can transition in same call', () => {
+    const techA = makeTechState(
+      'orbitalMechanics',
+      { physics: 40, mathematics: 30, engineering: 20 },
+      'rumour',
+      { physics: 40, mathematics: 30, engineering: 20 },
     );
-    expect(result.updatedTechs[0].stage).toBe('discovered');
+    const techB = makeTechState(
+      'lifeSupport',
+      { biochemistry: 50, engineering: 35, computing: 20 },
+      'rumour',
+      { biochemistry: 50, engineering: 35, computing: 20 },
+    );
+    const defs = new Map([
+      ['orbitalMechanics', orbitalMechanicsDef],
+      ['lifeSupport', lifeSupport],
+    ]);
+    const result = applyStageTransitions([techA, techB], defs, 8);
+    expect(result.newDiscoveries).toHaveLength(2);
+    expect(result.newDiscoveries).toContain('orbitalMechanics');
+    expect(result.newDiscoveries).toContain('lifeSupport');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkBreakthroughConditions
+// ---------------------------------------------------------------------------
+
+describe('checkBreakthroughConditions', () => {
+  const breakthroughDef: TechDef = {
+    id: 'quantumComputing',
+    name: 'Quantum Computing',
+    rumourText: 'Something unusual is happening in the lab.',
+    baseRecipe: { computing: 200 },
+    recipeVariance: 0.1,
+    requiresSimultaneous: false,
+    unlocksCards: [],
+    unlocksProjects: [],
+    unlocksFacilities: [],
+    signalDerived: false,
+    tier: 3,
+    requiredTechIds: ['orbitalMechanics', 'lifeSupport'], // normally requires these
+    breakthroughCondition: {
+      fieldOutputThresholds: { physics: 20, computing: 15 },
+      facilityDefIds: ['computingHub'],
+      facilityCount: 2,
+    },
+  };
+
+  const techDefsMap = new Map([['quantumComputing', breakthroughDef]]);
+
+  const richFields = makeFields({ physics: 25, computing: 20 });
+  const activeFacilities = ['computingHub', 'researchLab'];
+
+  it('fires when field output thresholds met and required facilities present', () => {
+    const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
+    const results = checkBreakthroughConditions([tech], techDefsMap, richFields, activeFacilities);
+    expect(results).toHaveLength(1);
+    expect(results[0].techId).toBe('quantumComputing');
   });
 
-  it('default signalEraStrength is faint — preserves backwards compatibility', () => {
-    // Called without the fifth argument (as existing tests do)
-    const result = checkResearchProgress([makeSignalTech()], signalDerivedMap, richFields, 5);
-    expect(result.updatedTechs[0].stage).toBe('unknown');
+  it('does not fire on non-unknown techs', () => {
+    const tech = makeTechState('quantumComputing', { computing: 200 }, 'rumour');
+    const results = checkBreakthroughConditions([tech], techDefsMap, richFields, activeFacilities);
+    expect(results).toHaveLength(0);
   });
 
-  it('non-signal-derived techs are unaffected by signal strength parameter', () => {
-    const tech: TechState = {
-      defId: 'orbitalMechanics',
-      stage: 'unknown',
-      recipe: { physics: 40, mathematics: 30, engineering: 20 },
-      discoveredTurn: null,
+  it('does not fire when field output below threshold', () => {
+    const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
+    const lowFields = makeFields({ physics: 5, computing: 20 }); // physics too low
+    const results = checkBreakthroughConditions([tech], techDefsMap, lowFields, activeFacilities);
+    expect(results).toHaveLength(0);
+  });
+
+  it('does not fire when required facility not active', () => {
+    const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
+    const noComputingHub = ['researchLab', 'observatory'];
+    const results = checkBreakthroughConditions([tech], techDefsMap, richFields, noComputingHub);
+    expect(results).toHaveLength(0);
+  });
+
+  it('does not fire when facility count is below minimum', () => {
+    const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
+    const oneFacility = ['computingHub']; // only 1, need 2
+    const results = checkBreakthroughConditions([tech], techDefsMap, richFields, oneFacility);
+    expect(results).toHaveLength(0);
+  });
+
+  it('fires when tech has no facilityDefIds requirement (only field thresholds)', () => {
+    const simpleBreakthroughDef: TechDef = {
+      ...breakthroughDef,
+      id: 'simpleBreakthrough',
+      breakthroughCondition: {
+        fieldOutputThresholds: { physics: 20 },
+      },
     };
-    const fields = makeFields({ physics: 40, mathematics: 30, engineering: 20 });
-    const result = checkResearchProgress([tech], defsMap, fields, 5, 'faint');
-    expect(result.updatedTechs[0].stage).toBe('discovered');
+    const techDefsMap2 = new Map([['simpleBreakthrough', simpleBreakthroughDef]]);
+    const tech = makeTechState('simpleBreakthrough', { computing: 200 }, 'unknown');
+    const results = checkBreakthroughConditions([tech], techDefsMap2, richFields, []);
+    expect(results).toHaveLength(1);
   });
 });

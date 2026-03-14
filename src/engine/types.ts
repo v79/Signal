@@ -288,6 +288,13 @@ export interface ProjectInstance {
 // Research & Technology
 // ---------------------------------------------------------------------------
 
+export interface BreakthroughCondition {
+  // All of these must be true simultaneously on the same turn:
+  fieldOutputThresholds: Partial<FieldPoints>; // e.g. { physics: 20, computing: 15 }
+  facilityDefIds?: string[];                    // at least one of each must be active
+  facilityCount?: number;                       // minimum total active facilities
+}
+
 /**
  * Static definition of a technology.
  * The actual recipe thresholds are generated per-run from the base shape
@@ -317,6 +324,12 @@ export interface TechDef {
   signalDerived: boolean;
   /** Narrative shown when this technology is discovered. */
   narrative?: NarrativeDef;
+  /** Tier within the era (1–4). Drives prerequisite chain depth. */
+  tier: number;
+  /** IDs of techs that must be at 'progress' or 'discovered' to unlock this as a Rumour. Empty = no prerequisites (Tier 1). */
+  requiredTechIds: string[];
+  /** Only on Tier 3+ techs. Allows bypass of normal prerequisite chain. */
+  breakthroughCondition?: BreakthroughCondition;
 }
 
 /** Per-run recipe generated from TechDef.baseRecipe + RNG. */
@@ -329,6 +342,10 @@ export interface TechState {
   stage: TechDiscoveryStage;
   /** The randomised recipe for this run. Null until stage >= rumour. */
   recipe: TechRecipe | null;
+  /** Accumulated field points toward this tech's recipe thresholds. */
+  fieldProgress: TechRecipe;
+  /** True if this tech entered 'rumour' via a breakthrough condition. */
+  unlockedByBreakthrough: boolean;
   /** Turn the tech was discovered. Null if not yet discovered. */
   discoveredTurn: number | null;
 }
@@ -661,7 +678,11 @@ export interface OngoingAction {
 export interface PlayerState {
   blocDefId: string;
   resources: Resources;
-  /** Accumulated research field points this run. */
+  /**
+   * Field output generated in the most recently completed World Phase.
+   * Overwritten each turn (not accumulated). Used for HUD display and
+   * breakthrough condition evaluation.
+   */
   fields: FieldPoints;
   will: number;
   willProfile: WillProfile;

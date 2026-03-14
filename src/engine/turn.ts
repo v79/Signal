@@ -20,11 +20,14 @@ import {
 import {
   tickWill,
   computeBankDecay,
-  applyFieldDeltas,
   applyResourceDeltas,
   DEFAULT_WILL_CONFIG,
 } from './resources';
-import { checkResearchProgress } from './research';
+import {
+  distributeResearchPoints,
+  applyStageTransitions,
+  checkBreakthroughConditions,
+} from './research';
 import { drawCards } from './cards';
 import {
   selectNewEvents,
@@ -43,7 +46,8 @@ import {
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
-import { ZERO_RESOURCES } from './state';
+import { ZERO_RESOURCES, ZERO_FIELDS } from './state';
+import { createRng } from './rng';
 import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
@@ -57,7 +61,7 @@ import type { Rng } from './rng';
 // PRNG canonical call order within each automated phase (must not change):
 //   Event Phase: selectNewEvents → nextInt (count) → next() per pick
 //   Draw Phase:  drawCards → shuffle (deck ids)
-//   World Phase: (climate RNG — Phase 5) → (bloc RNG — Phase 7)
+//   World Phase: (climate RNG — Phase 5) → (bloc RNG — Phase 7) → distributeResearchPoints (createRng(`${seed}-research-t${nextTurn}`))
 // ---------------------------------------------------------------------------
 
 const CLIMATE_PRESSURE_PER_TURN = 0.5;
@@ -243,7 +247,7 @@ export function executeWorldPhase(
   const projectUpkeep = ZERO_RESOURCES; // Phase 4 extended: wire in actual project upkeep
 
   // 5. Apply resource and field changes
-  const newFields = applyFieldDeltas(player.fields, boostedFields);
+  const newFields: FieldPoints = { ...ZERO_FIELDS, ...boostedFields };
   const newResources = applyResourceDeltas(
     player.resources,
     boostedResources,
@@ -251,13 +255,33 @@ export function executeWorldPhase(
     projectUpkeep,
   );
 
-  // 6. Research progress check (uses updated fields)
-  const { updatedTechs, newDiscoveries, newRumours, newProgressTechs } = checkResearchProgress(
-    player.techs,
-    techDefs,
-    newFields,
-    nextTurn,
-    state.signal.eraStrength,
+  // 6a. Breakthrough check — may promote 'unknown' techs to 'rumour' before distribution
+  const activeFacilityDefIds = facilitiesAfterQueue
+    .filter((f) => {
+      // exclude facilities still under construction or being demolished
+      const tile = tilesAfterQueue.find((t) => t.facilityId === f.id);
+      return tile ? tile.pendingActionId === null : true;
+    })
+    .map((f) => f.defId);
+  const breakthroughs = checkBreakthroughConditions(
+    player.techs, techDefs, newFields, activeFacilityDefIds,
+  );
+  let techsAfterBreakthroughs = player.techs.map((tech) => {
+    if (breakthroughs.some((b) => b.techId === tech.defId)) {
+      return { ...tech, stage: 'rumour' as const, unlockedByBreakthrough: true };
+    }
+    return tech;
+  });
+
+  // 6b. Distribute research points across rumour/progress techs
+  const researchRng = createRng(`${state.seed}-research-t${nextTurn}`);
+  const techsAfterDistribution = distributeResearchPoints(
+    techsAfterBreakthroughs, techDefs, newFields, researchRng,
+  );
+
+  // 6c. Stage transitions (prerequisites + fieldProgress thresholds)
+  const { updatedTechs, newDiscoveries, newRumours, newProgressTechs } = applyStageTransitions(
+    techsAfterDistribution, techDefs, nextTurn, state.signal.eraStrength,
   );
 
   // 7. Card upgrades from newly discovered techs
@@ -278,6 +302,12 @@ export function executeWorldPhase(
   }
 
   // 8. News feed entries for research events
+  const breakthroughNews: NewsItem[] = breakthroughs.map((b) => ({
+    id: `${nextTurn}-breakthrough-${b.techId}`,
+    turn: nextTurn,
+    text: `Breakthrough: an unexpected convergence of research fields has revealed a new avenue of investigation.`,
+    category: 'research' as const,
+  }));
   const researchNews: NewsItem[] = [
     ...newRumours.map((defId) => ({
       id: `${nextTurn}-rumour-${defId}`,
@@ -360,6 +390,7 @@ export function executeWorldPhase(
       constructionQueue: updatedQueue,
       newsFeed: [
         ...player.newsFeed,
+        ...breakthroughNews,
         ...researchNews,
         ...blocNews,
         ...mergerNews,

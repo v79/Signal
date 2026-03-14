@@ -10,7 +10,7 @@ This is the largest single rework since Phase 14. It is broken into sub-phases t
 
 ## Sub-phases
 
-### 21.1 — Data model: per-tech field progress
+### 21.1 — Data model: per-tech field progress ✅
 
 **Files:** `src/engine/types.ts`, `src/engine/state.ts`, `src/engine/save.ts`
 
@@ -45,7 +45,7 @@ export interface TechState {
 
 ---
 
-### 21.2 — Engine: research distribution algorithm
+### 21.2 — Engine: research distribution algorithm ✅
 
 **Files:** `src/engine/research.ts`, `src/engine/turn.ts`
 
@@ -84,7 +84,7 @@ Replace the current `applyFieldDeltas` accumulation with a call to `distributeRe
 
 ---
 
-### 21.3 — Engine: discovery stage transitions
+### 21.3 — Engine: discovery stage transitions ✅
 
 **Files:** `src/engine/research.ts`, `src/engine/turn.ts`
 
@@ -105,21 +105,26 @@ export function getDiscoveryStage(
 
 | To stage | Condition |
 |---|---|
-| `'rumour'` | All prerequisite techs are at `'progress'` or `'discovered'`; OR tech is Tier 1 (no prerequisites); OR breakthrough triggered (see 21.6) |
+| `'rumour'` | Tech is `'unknown'` AND all prerequisite techs (from `requiredTechIds`) are at `'progress'` or `'discovered'`. Tier 1 techs have an empty `requiredTechIds` so this condition is trivially satisfied — but see the note below on game start. |
 | `'progress'` | Tech is at `'rumour'` AND: all required fields ≥ 33% of recipe threshold, OR at least 33% of required fields ≥ 50% of threshold |
 | `'discovered'` | All required fields in `fieldProgress` ≥ recipe threshold |
 
-The `'unknown' → 'rumour'` transition is evaluated separately in the prerequisite check (21.4). The `'rumour' → 'progress'` and `'progress' → 'discovered'` transitions are checked each turn after distribution.
+**Two independent paths to `'rumour'`:** A tech can be promoted from `'unknown'` to `'rumour'` by either `getDiscoveryStage` (prerequisites met) or `checkBreakthroughConditions` (see 21.6). These are separate mechanisms that can fire on the same turn without conflict. The calling code in `turn.ts` must only advance stage — never regress it — so whichever mechanism fires first sets the tech to `'rumour'`, and any subsequent attempt for the same tech that turn is a no-op. `getDiscoveryStage` should return the tech's current stage unchanged if no advancement condition is met.
 
-**Note on Tier 1 at game start:** All Era 1 Tier 1 techs begin at `'rumour'` (set in `startNewGame` rather than by this function). This is a special initialisation, not an ongoing rule.
+**Note on Tier 1 at game start:** All Era 1 Tier 1 techs begin at `'rumour'` (set in `startNewGame` rather than by this function). This is a special initialisation, not an ongoing rule. `getDiscoveryStage` does not re-evaluate Tier 1 techs for this transition after game start.
 
 #### Changes to `turn.ts`
 
-After `distributeResearchPoints`, iterate all techs and apply stage transitions. Stage changes from this evaluation are used to trigger news items and narrative queues (as currently happens in `advancePhase` in the store).
+The per-turn execution order for research is:
+1. `checkBreakthroughConditions` — may promote `'unknown'` techs to `'rumour'` via breakthrough path
+2. `distributeResearchPoints` — distributes field output across `'rumour'` and `'progress'` techs
+3. Iterate all techs, call `getDiscoveryStage`, apply returned stage if it is higher than current stage
+
+Stage changes from step 3 are used to trigger news items and narrative queues (as currently happens in `advancePhase` in the store).
 
 ---
 
-### 21.4 — Engine: tech prerequisites
+### 21.4 — Engine: tech prerequisites ✅
 
 **Files:** `src/engine/types.ts`, `src/engine/research.ts`, `src/data/technologies.ts`
 
@@ -153,7 +158,7 @@ All 12 existing `TechDef` entries get `requiredTechIds: []` initially (Tier 1) o
 
 ---
 
-### 21.5 — Data: Era 1 tech definitions rework
+### 21.5 — Data: Era 1 tech definitions rework ✅
 
 **File:** `src/data/technologies.ts`
 
@@ -182,7 +187,7 @@ TIER 3 (require 1–2 Tier 2 techs)
   digitisedTelemetry         ← requires globalPositioningNetwork, roboticsAutomation
   signalPatternAnalysis      ← requires digitisedTelemetry (+ signal gate)
 
-TIER 4 (era gate)
+TIER 4
   orbitalMechanics           ← requires internetProtocols, digitisedTelemetry
 ```
 
@@ -207,7 +212,7 @@ Exact `baseRecipe` values and `recipeVariance` require balancing against the new
 
 ---
 
-### 21.6 — Engine: breakthrough tech mechanics
+### 21.6 — Engine: breakthrough tech mechanics ✅
 
 **Files:** `src/engine/types.ts`, `src/engine/research.ts`, `src/engine/turn.ts`
 
@@ -240,13 +245,15 @@ export function checkBreakthroughConditions(
 ): BreakthroughResult[]
 ```
 
-Returns an array of `{ techId, wasAlreadyRumoured }` for each tech whose breakthrough conditions are newly met this turn. Only triggers if the tech is currently `'unknown'`.
+Returns an array of `{ techId }` for each tech whose breakthrough conditions are newly met this turn. Only triggers if the tech is currently `'unknown'`.
 
 #### Changes to `turn.ts`
 
 Call `checkBreakthroughConditions` during `executeWorldPhase`, after facility output is computed and before `distributeResearchPoints`. For each triggered breakthrough:
 - Promote the tech to `'rumour'`, setting `unlockedByBreakthrough: true`
 - Enqueue a news item: e.g. _"Breakthrough: unexpected convergence of physics and computing research has revealed a new avenue of investigation."_
+
+If `getDiscoveryStage` (step 3 of the turn order) also evaluates the same tech and finds prerequisites met, it will return `'rumour'` — which matches the current stage and produces no change. This double-evaluation is harmless and requires no special handling.
 
 **Which techs get breakthrough conditions:** Only 2–3 techs across Era 1 (Tier 3 or 4 only). Candidates: `signalPatternAnalysis`, `orbitalMechanics`, possibly one Tier 3 tech. The normal prerequisite path must always remain open — breakthrough is an _earlier_ route, never the _only_ route.
 
@@ -426,7 +433,7 @@ The draft specifies "at least one point per applicable tech per field." With 8+ 
 **2. What `player.fields` means after the change**
 Several existing engine and UI paths read `player.fields` as a cumulative total. These will all break or produce misleading output after 21.1. A full audit of every read of `player.fields` in engine, store, and components is needed before 21.1 is merged.
 
-- _Agreed._
+- _Agreed. Note: the HUD (`HUD.svelte` lines 240–247) already displays each field value from `player.fields` with the label and colour — after 21.1 this naturally becomes the per-turn output display with no component changes required. Player visibility into total field output is therefore preserved._
 
 **3. Save file compatibility**
 Existing saves have cumulative `player.fields` values and `TechState` entries without `fieldProgress`. The migration default (all zeroes) is safe but means loaded games restart tech progress from zero. This may be acceptable given the model change, but warrants a clear warning to the user (or an explicit save-wipe notice).

@@ -8,7 +8,7 @@
 //   Tier 1 (~30–60 pts):   turns 5–12   (years 1975–1982)
 //   Tier 2 (~75–120 pts):  turns 12–22  (years 1982–1992)
 //   Tier 3 (~120–160 pts): turns 22–34  (years 1992–2004)
-//   Tier 4 (~180–200 pts): turns 30–40  (years 2000–2010) — Era 2 gate
+//   Tier 4 (~180–200 pts): turns 30–40  (years 2000–2010)
 // =============================================================================
 
 import type { TechDef } from '../engine/types';
@@ -16,6 +16,7 @@ import type { TechDef } from '../engine/types';
 export const TECH_DEFS: Map<string, TechDef> = new Map([
   // ---------------------------------------------------------------------------
   // Tier 1 — Foundation Technologies (1975–1982)
+  // requiredTechIds: [] — no prerequisites
   // ---------------------------------------------------------------------------
 
   [
@@ -25,13 +26,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Integrated Circuit Arrays',
       rumourText:
         'Miniaturised components are being tested that may replace entire banks of discrete transistors.',
-      baseRecipe: { engineering: 40, computing: 25 },
+      baseRecipe: { engineering: 40, computing: 25, physics: 20, mathematics: 15 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: ['softwareGrant'],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 1,
+      requiredTechIds: [],
       narrative: {
         id: 'narrative-tech-integratedCircuits',
         title: 'Discovery — Integrated Circuit Arrays',
@@ -55,13 +58,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Precision Rocket Guidance',
       rumourText:
         'Navigation accuracy beyond the atmosphere may soon allow reliable orbital insertion on first attempt.',
-      baseRecipe: { physics: 35, mathematics: 30, engineering: 40 },
+      baseRecipe: { physics: 35, mathematics: 30, engineering: 40, computing: 20 },
       recipeVariance: 0.15,
       requiresSimultaneous: false,
       unlocksCards: [],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 1,
+      requiredTechIds: [],
       narrative: {
         id: 'narrative-tech-rocketGuidanceSystems',
         title: 'Discovery — Precision Rocket Guidance',
@@ -85,13 +90,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Satellite Communications',
       rumourText:
         'A relay station in orbit could link every ground facility on the globe simultaneously.',
-      baseRecipe: { physics: 45, engineering: 50 },
+      baseRecipe: { physics: 45, engineering: 50, computing: 30, mathematics: 25 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: ['globalBroadcast'],
       unlocksProjects: [],
       unlocksFacilities: ['deepSpaceArray'],
       signalDerived: false,
+      tier: 1,
+      requiredTechIds: [],
       narrative: {
         id: 'narrative-tech-satelliteCommunications',
         title: 'Discovery — Satellite Communications',
@@ -115,13 +122,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Microprocessor Architecture',
       rumourText:
         'A single chip carrying a complete instruction set has been demonstrated in prototype form.',
-      baseRecipe: { computing: 55, mathematics: 40 },
+      baseRecipe: { computing: 55, mathematics: 40, engineering: 30, physics: 20 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: ['computerModellingRun'],
       unlocksProjects: [],
       unlocksFacilities: ['computingHub'],
       signalDerived: false,
+      tier: 1,
+      requiredTechIds: [],
       narrative: {
         id: 'narrative-tech-microprocessors',
         title: 'Discovery — Microprocessor Architecture',
@@ -149,13 +158,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Personal Computing',
       rumourText:
         'Desktop machines with sufficient power for scientific calculation may reach civilian researchers within years.',
-      baseRecipe: { computing: 80, socialScience: 45 },
+      baseRecipe: { computing: 80, socialScience: 45, engineering: 35 },
       recipeVariance: 0.25,
       requiresSimultaneous: false,
       unlocksCards: ['digitalCoordination'],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 2,
+      requiredTechIds: ['integratedCircuits', 'microprocessors'],
       narrative: {
         id: 'narrative-tech-personalComputing',
         title: 'Discovery — Personal Computing',
@@ -179,13 +190,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Genetic Sequencing Technology',
       rumourText:
         'The chemical language of DNA is almost legible — automated reading may be possible within a decade.',
-      baseRecipe: { biochemistry: 75, computing: 55 },
+      baseRecipe: { biochemistry: 75, computing: 55, mathematics: 45, socialScience: 40 },
       recipeVariance: 0.25,
       requiresSimultaneous: false,
       unlocksCards: ['biomedicalAdvance'],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 2,
+      requiredTechIds: ['integratedCircuits'],
       narrative: {
         id: 'narrative-tech-geneticSequencing',
         title: 'Discovery — Genetic Sequencing Technology',
@@ -209,13 +222,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Global Positioning Network',
       rumourText:
         'A constellation of precision timing satellites could yield metre-accuracy navigation across the entire planet.',
-      baseRecipe: { mathematics: 85, physics: 65, computing: 60 },
+      baseRecipe: { mathematics: 85, physics: 65, computing: 60, engineering: 55, socialScience: 40 },
       recipeVariance: 0.15,
       requiresSimultaneous: false,
       unlocksCards: [],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 2,
+      requiredTechIds: ['rocketGuidanceSystems', 'satelliteCommunications'],
       narrative: {
         id: 'narrative-tech-globalPositioningNetwork',
         title: 'Discovery — Global Positioning Network',
@@ -239,13 +254,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Robotics and Remote Automation',
       rumourText:
         'Articulated machines capable of sustained remote operation in hostile environments have passed field trials.',
-      baseRecipe: { engineering: 90, computing: 70 },
+      baseRecipe: { engineering: 90, computing: 70, physics: 55, mathematics: 45 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: [],
       unlocksProjects: [],
       unlocksFacilities: ['asteroidMiner'],
       signalDerived: false,
+      tier: 2,
+      requiredTechIds: ['integratedCircuits', 'rocketGuidanceSystems'],
       narrative: {
         id: 'narrative-tech-roboticsAutomation',
         title: 'Discovery — Robotics and Remote Automation',
@@ -273,13 +290,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Global Internetwork Protocols',
       rumourText:
         'A common packet-routing standard may allow every research facility on Earth to share data in real time.',
-      baseRecipe: { computing: 130, mathematics: 95 },
+      baseRecipe: { computing: 130, mathematics: 95, socialScience: 75, engineering: 60, physics: 55 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: ['openSourceResearch'],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 3,
+      requiredTechIds: ['personalComputing'],
       narrative: {
         id: 'narrative-tech-internetProtocols',
         title: 'Discovery — Global Internetwork Protocols',
@@ -303,13 +322,15 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Digitised Space Telemetry',
       rumourText:
         'Standardised digital transmission formats for deep-space probes would dramatically improve the precision of signal analysis.',
-      baseRecipe: { physics: 120, computing: 100, mathematics: 85 },
+      baseRecipe: { physics: 120, computing: 100, mathematics: 85, engineering: 70 },
       recipeVariance: 0.15,
       requiresSimultaneous: false,
       unlocksCards: ['signalDeconvolution'],
       unlocksProjects: [],
       unlocksFacilities: [],
       signalDerived: false,
+      tier: 3,
+      requiredTechIds: ['globalPositioningNetwork', 'roboticsAutomation'],
       narrative: {
         id: 'narrative-tech-digitisedTelemetry',
         title: 'Discovery — Digitised Space Telemetry',
@@ -333,7 +354,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Signal Pattern Analysis',
       rumourText:
         'The transmission is not random. The interval structure repeats at a period inconsistent with any known pulsar or natural source.',
-      baseRecipe: { computing: 150, mathematics: 125, physics: 100 },
+      baseRecipe: { computing: 150, mathematics: 125, physics: 100, engineering: 80, biochemistry: 60 },
       recipeVariance: 0.1,
       requiresSimultaneous: true,
       unlocksCards: [],
@@ -341,6 +362,8 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       unlocksFacilities: [],
       // Gated: only enters the rumour pool once signal.eraStrength >= 'structured'.
       signalDerived: true,
+      tier: 3,
+      requiredTechIds: ['digitisedTelemetry'],
       narrative: {
         id: 'narrative-tech-signalPatternAnalysis',
         title: 'Discovery — Signal Pattern Analysis',
@@ -358,7 +381,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
   ],
 
   // ---------------------------------------------------------------------------
-  // Tier 4 — Era 2 Gate (2000–2010)
+  // Tier 4 (2000–2010)
   // ---------------------------------------------------------------------------
 
   [
@@ -368,7 +391,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Applied Orbital Mechanics',
       rumourText:
         'Sustained human habitation in low orbit is within theoretical reach — the mathematics is there; the engineering must follow.',
-      baseRecipe: { physics: 200, mathematics: 140 },
+      baseRecipe: { physics: 200, mathematics: 140, engineering: 120, computing: 100, socialScience: 80 },
       recipeVariance: 0.15,
       requiresSimultaneous: true,
       unlocksCards: [],
@@ -377,6 +400,8 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       // Simultaneous requirement: the player must invest in both physics AND mathematics.
       // Neglecting mathematics for physics leaves the Near Space era permanently locked.
       signalDerived: false,
+      tier: 4,
+      requiredTechIds: ['internetProtocols', 'digitisedTelemetry'],
       narrative: {
         id: 'narrative-tech-orbitalMechanics',
         title: 'Discovery — Applied Orbital Mechanics',

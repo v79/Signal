@@ -9,28 +9,18 @@ import type {
 import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
-// Stage transition thresholds
-//
-// These fractions of the recipe threshold determine when a tech moves
-// between discovery stages.
-//
-// For standard techs (requiresSimultaneous: false):
-//   - Rumour:    ANY required field >= 30% of its threshold
-//   - Progress:  ALL required fields >= 60% of their thresholds
-//   - Discovered: ALL required fields >= 100% of their thresholds
-//
-// For cross-field breakthrough techs (requiresSimultaneous: true):
-//   - Rumour:    ALL required fields >= 30% — forces a balanced approach
-//   - Progress:  ALL required fields >= 60%
-//   - Discovered: ALL required fields >= 100%
-//
-// The simultaneous distinction means breakthrough techs give no early
-// signals from a single-field lead — the player must develop multiple
-// fields together before anything surfaces.
+// Named constants
 // ---------------------------------------------------------------------------
 
-const RUMOUR_FRACTION = 0.3;
-const PROGRESS_FRACTION = 0.6;
+// Minimum field points guaranteed to each applicable tech per field per turn
+export const MIN_POINTS_PER_TECH_PER_FIELD = 1;
+
+// Rumour → Progress thresholds:
+// Either ALL required fields reach PROGRESS_ALL_FRACTION of threshold,
+// OR at least PROGRESS_PARTIAL_FIELD_FRACTION of fields reach PROGRESS_PARTIAL_FRACTION.
+export const PROGRESS_ALL_FRACTION = 0.33;
+export const PROGRESS_PARTIAL_FRACTION = 0.5;
+export const PROGRESS_PARTIAL_FIELD_FRACTION = 0.33;
 
 // ---------------------------------------------------------------------------
 // Recipe generation
@@ -74,8 +64,25 @@ export function initialiseTechs(techDefs: TechDef[], rng: Rng): TechState[] {
     defId: def.id,
     stage: 'unknown' as TechDiscoveryStage,
     recipe: recipes.get(def.id) ?? null,
+    fieldProgress: {},
+    unlockedByBreakthrough: false,
     discoveredTurn: null,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Prerequisite check
+// ---------------------------------------------------------------------------
+
+export function prerequisitesMet(
+  techDef: TechDef,
+  allTechs: TechState[],
+): boolean {
+  if (techDef.requiredTechIds.length === 0) return true;
+  return techDef.requiredTechIds.every((reqId) => {
+    const t = allTechs.find((s) => s.defId === reqId);
+    return t?.stage === 'progress' || t?.stage === 'discovered';
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -83,39 +90,172 @@ export function initialiseTechs(techDefs: TechDef[], rng: Rng): TechState[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Determine which discovery stage a tech should be in given current field
- * totals. Stages are computed fresh each call — the caller is responsible
- * for ensuring stages only advance (never regress).
+ * Determine which discovery stage a tech should be in given current
+ * fieldProgress and prerequisites. Stages are computed fresh each call —
+ * the caller is responsible for ensuring stages only advance (never regress).
  */
 export function getDiscoveryStage(
-  fields: FieldPoints,
-  recipe: TechRecipe,
-  requiresSimultaneous: boolean,
+  tech: TechState,
+  def: TechDef,
+  allTechs: TechState[],
+  techDefs: Map<string, TechDef>,
 ): TechDiscoveryStage {
-  const entries = Object.entries(recipe) as [keyof FieldPoints, number][];
+  switch (tech.stage) {
+    case 'discovered':
+      return 'discovered';
 
-  if (entries.length === 0) return 'discovered'; // no-requirement tech: immediately available
+    case 'progress': {
+      const recipe = tech.recipe;
+      if (!recipe) return 'progress';
+      const entries = Object.entries(recipe) as [keyof FieldPoints, number][];
+      if (entries.every(([f, t]) => (tech.fieldProgress[f] ?? 0) >= t)) return 'discovered';
+      return 'progress';
+    }
 
-  // Discovery: all fields at 100%
-  if (entries.every(([f, t]) => fields[f] >= t)) return 'discovered';
+    case 'rumour': {
+      const recipe = tech.recipe;
+      if (!recipe) return 'rumour';
+      const entries = Object.entries(recipe) as [keyof FieldPoints, number][];
+      // Check discovered first
+      if (entries.every(([f, t]) => (tech.fieldProgress[f] ?? 0) >= t)) return 'discovered';
+      // Check progress
+      const allAt33 = entries.every(
+        ([f, t]) => (tech.fieldProgress[f] ?? 0) >= t * PROGRESS_ALL_FRACTION,
+      );
+      const halfMetCount = entries.filter(
+        ([f, t]) => (tech.fieldProgress[f] ?? 0) >= t * PROGRESS_PARTIAL_FRACTION,
+      ).length;
+      const thirdCount = Math.ceil(entries.length * PROGRESS_PARTIAL_FIELD_FRACTION);
+      if (allAt33 || halfMetCount >= thirdCount) return 'progress';
+      return 'rumour';
+    }
 
-  // Progress: all fields at 60%
-  if (entries.every(([f, t]) => fields[f] >= t * PROGRESS_FRACTION)) return 'progress';
-
-  // Rumour: depends on simultaneity requirement
-  if (requiresSimultaneous) {
-    // Cross-field breakthrough — ALL fields must show at least 30%
-    if (entries.every(([f, t]) => fields[f] >= t * RUMOUR_FRACTION)) return 'rumour';
-  } else {
-    // Standard tech — ANY field at 30% triggers the hint
-    if (entries.some(([f, t]) => fields[f] >= t * RUMOUR_FRACTION)) return 'rumour';
+    case 'unknown':
+      if (prerequisitesMet(def, allTechs)) return 'rumour';
+      return 'unknown';
   }
-
-  return 'unknown';
 }
 
 // ---------------------------------------------------------------------------
-// Progress check
+// Research point distribution
+// ---------------------------------------------------------------------------
+
+export function distributeResearchPoints(
+  techs: TechState[],
+  techDefs: Map<string, TechDef>,
+  fieldOutput: FieldPoints,
+  rng: Rng,
+): TechState[] {
+  // Applicable: rumour or progress, still needs at least one field
+  const applicable = techs.filter((tech) => {
+    if (tech.stage !== 'rumour' && tech.stage !== 'progress') return false;
+    if (!tech.recipe) return false;
+    const entries = Object.entries(tech.recipe) as [keyof FieldPoints, number][];
+    return entries.some(([f, t]) => (tech.fieldProgress[f] ?? 0) < t);
+  });
+
+  if (applicable.length === 0) return techs;
+
+  // Mutable copies of field output and fieldProgress per tech
+  const remaining: Partial<FieldPoints> = { ...fieldOutput };
+  const progressMap = new Map<string, TechRecipe>();
+  for (const tech of applicable) {
+    progressMap.set(tech.defId, { ...tech.fieldProgress });
+  }
+
+  // Step 2: guaranteed minimums — one pass per field, one point per applicable tech
+  for (const field of Object.keys(fieldOutput) as (keyof FieldPoints)[]) {
+    let rem = remaining[field] ?? 0;
+    if (rem <= 0) continue;
+    for (const tech of applicable) {
+      if (rem <= 0) break;
+      const threshold = tech.recipe![field];
+      if (!threshold) continue;
+      const progress = progressMap.get(tech.defId)!;
+      if ((progress[field] ?? 0) >= threshold) continue;
+      const give = Math.min(MIN_POINTS_PER_TECH_PER_FIELD, rem);
+      progress[field] = (progress[field] ?? 0) + give;
+      rem -= give;
+    }
+    remaining[field] = rem;
+  }
+
+  // Step 3: distribute remaining randomly — all remainder for each field goes to one random eligible tech
+  for (const field of Object.keys(fieldOutput) as (keyof FieldPoints)[]) {
+    const rem = remaining[field] ?? 0;
+    if (rem <= 0) continue;
+    const eligible = applicable.filter((tech) => {
+      const threshold = tech.recipe![field];
+      if (!threshold) return false;
+      const progress = progressMap.get(tech.defId)!;
+      return (progress[field] ?? 0) < threshold;
+    });
+    if (eligible.length === 0) continue; // discard remainder
+    const idx = Math.floor(rng.nextFloat(0, 1) * eligible.length);
+    const chosen = eligible[idx];
+    const progress = progressMap.get(chosen.defId)!;
+    progress[field] = (progress[field] ?? 0) + rem;
+    remaining[field] = 0;
+  }
+
+  // Return updated TechState[] — only modify applicable techs
+  return techs.map((tech) => {
+    const newProgress = progressMap.get(tech.defId);
+    if (!newProgress) return tech;
+    return { ...tech, fieldProgress: newProgress };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Breakthrough conditions
+// ---------------------------------------------------------------------------
+
+export interface BreakthroughResult {
+  techId: string;
+}
+
+export function checkBreakthroughConditions(
+  techs: TechState[],
+  techDefs: Map<string, TechDef>,
+  fieldOutput: FieldPoints,
+  activeFacilityDefIds: string[],
+): BreakthroughResult[] {
+  const results: BreakthroughResult[] = [];
+
+  for (const tech of techs) {
+    if (tech.stage !== 'unknown') continue;
+    const def = techDefs.get(tech.defId);
+    if (!def?.breakthroughCondition) continue;
+
+    const cond = def.breakthroughCondition;
+
+    // Check field output thresholds
+    const fieldsMet = (
+      Object.entries(cond.fieldOutputThresholds) as [keyof FieldPoints, number][]
+    ).every(([f, threshold]) => fieldOutput[f] >= threshold);
+    if (!fieldsMet) continue;
+
+    // Check required facility types (at least one of each must be active)
+    if (cond.facilityDefIds && cond.facilityDefIds.length > 0) {
+      const facilitiesMet = cond.facilityDefIds.every((defId) =>
+        activeFacilityDefIds.includes(defId),
+      );
+      if (!facilitiesMet) continue;
+    }
+
+    // Check total facility count
+    if (cond.facilityCount !== undefined && activeFacilityDefIds.length < cond.facilityCount) {
+      continue;
+    }
+
+    results.push({ techId: tech.defId });
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// Stage transitions
 // ---------------------------------------------------------------------------
 
 export interface ResearchProgressResult {
@@ -128,18 +268,11 @@ export interface ResearchProgressResult {
   newProgressTechs: string[];
 }
 
-/**
- * Check all techs against current field totals and advance stages where
- * conditions are met. Call at the end of the World Phase after field
- * points have been updated.
- *
- * Signal-derived techs remain 'unknown' while signalEraStrength === 'faint'.
- * They enter the rumour pool once the signal reaches 'structured' (decodeProgress ≥ 30).
- */
-export function checkResearchProgress(
+const STAGE_ORDER: TechDiscoveryStage[] = ['unknown', 'rumour', 'progress', 'discovered'];
+
+export function applyStageTransitions(
   techs: TechState[],
   techDefs: Map<string, TechDef>,
-  fields: FieldPoints,
   turn: number,
   signalEraStrength: SignalEraStrength = 'faint',
 ): ResearchProgressResult {
@@ -149,17 +282,17 @@ export function checkResearchProgress(
 
   const updatedTechs = techs.map((tech) => {
     if (tech.stage === 'discovered') return tech;
-    if (!tech.recipe) return tech;
 
     const def = techDefs.get(tech.defId);
+    if (!def) return tech;
 
-    // Signal-derived techs are locked until the signal becomes structured.
-    if (def?.signalDerived && signalEraStrength === 'faint') return tech;
+    // Signal-derived techs locked until signal is structured
+    if (def.signalDerived && signalEraStrength === 'faint') return tech;
 
-    const requiresSimultaneous = def?.requiresSimultaneous ?? false;
+    const newStage = getDiscoveryStage(tech, def, techs, techDefs);
 
-    const newStage = getDiscoveryStage(fields, tech.recipe, requiresSimultaneous);
-    if (newStage === tech.stage) return tech;
+    // Only advance, never regress
+    if (STAGE_ORDER.indexOf(newStage) <= STAGE_ORDER.indexOf(tech.stage)) return tech;
 
     if (newStage === 'discovered') newDiscoveries.push(tech.defId);
     else if (newStage === 'progress') newProgressTechs.push(tech.defId);
