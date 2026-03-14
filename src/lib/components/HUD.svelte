@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Resources, FieldPoints, Era, TurnPhase } from '../../engine/types';
   import type { ResourceBreakdown } from '../../engine/facilities';
-  import SaveControls from './SaveControls.svelte';
   import Tooltip from './Tooltip.svelte';
   import { FIELD_ABBR, FIELD_COLOURS_CSS } from '../fieldColours';
 
@@ -43,6 +42,9 @@
 
   let menuOpen = $state(false);
   let dropdownPos = $state({ top: 0, left: 0 });
+  let seedCopied = $state(false);
+  let importError = $state<string | null>(null);
+  let errorTimer: ReturnType<typeof setTimeout> | null = null;
 
   function toggleMenu(event: MouseEvent): void {
     if (!menuOpen) {
@@ -53,6 +55,39 @@
   }
   function closeMenu(): void {
     menuOpen = false;
+  }
+
+  function copySeed(): void {
+    navigator.clipboard
+      .writeText(seed)
+      .then(() => {
+        seedCopied = true;
+        setTimeout(() => { seedCopied = false; }, 1500);
+      })
+      .catch(() => { /* ignore */ });
+  }
+
+  function showImportError(msg: string): void {
+    if (errorTimer) clearTimeout(errorTimer);
+    importError = msg;
+    errorTimer = setTimeout(() => { importError = null; }, 5000);
+  }
+
+  async function handleFileChange(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+    try {
+      await onImport(file);
+      closeMenu();
+    } catch (err: unknown) {
+      const msg =
+        typeof err === 'string' ? err
+        : err instanceof Error ? err.message
+        : 'Unknown error loading save file.';
+      showImportError(msg);
+    }
   }
 
   const ERA_LABELS: Record<Era, string> = {
@@ -130,6 +165,29 @@
           onkeydown={() => {}}
         ></div>
         <div class="menu-dropdown" style="top: {dropdownPos.top}px; left: {dropdownPos.left}px;">
+          <div class="menu-seed-row">
+            <span class="menu-seed-label">SEED</span>
+            <button class="menu-seed-value" onclick={copySeed} title="Copy seed to clipboard">
+              {seed}<span class="menu-copy-hint">{seedCopied ? '✓' : '⧉'}</span>
+            </button>
+          </div>
+          <div class="menu-divider"></div>
+          <button
+            class="menu-item"
+            onclick={() => { closeMenu(); onExport(); }}
+          >
+            EXPORT SAVE
+          </button>
+          <label class="menu-item menu-import-label" title="Import a save file">
+            IMPORT SAVE
+            <input
+              type="file"
+              accept=".json,application/json"
+              onchange={handleFileChange}
+              class="menu-hidden-input"
+            />
+          </label>
+          <div class="menu-divider"></div>
           <button
             class="menu-item"
             onclick={() => {
@@ -171,8 +229,6 @@
       <span class="bloc-name">{blocName}</span>
     {/if}
     <span class="phase-badge">{PHASE_LABELS[phase]}</span>
-    <span class="divider">│</span>
-    <SaveControls {seed} {turn} {onExport} {onImport} />
   </div>
 
   <div class="hud-center">
@@ -252,6 +308,14 @@
     {/each}
   </div>
 </header>
+
+{#if importError}
+  <div class="import-error" role="alert">
+    <span class="error-icon">⚠</span>
+    <span class="error-text">{importError}</span>
+    <button class="error-dismiss" onclick={() => { importError = null; }} aria-label="Dismiss">✕</button>
+  </div>
+{/if}
 
 <style>
   .hud {
@@ -370,6 +434,101 @@
     margin: 0.1rem 0;
   }
 
+  .menu-seed-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.9rem;
+  }
+
+  .menu-seed-label {
+    color: #5a6878;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .menu-seed-value {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: none;
+    border: 1px solid #2a3040;
+    color: #4a8ab4;
+    font-size: 0.6rem;
+    font-family: inherit;
+    letter-spacing: 0.06em;
+    padding: 0.1rem 0.35rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 10rem;
+  }
+
+  .menu-seed-value:hover {
+    border-color: #4a8ab4;
+  }
+
+  .menu-copy-hint {
+    color: #5a6878;
+    font-size: 0.55rem;
+    flex-shrink: 0;
+  }
+
+  .menu-import-label {
+    cursor: pointer;
+  }
+
+  .menu-hidden-input {
+    display: none;
+  }
+
+  .import-error {
+    position: fixed;
+    top: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #1a0e0e;
+    border: 1px solid #8b3030;
+    color: #d08080;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 0.85rem;
+    z-index: 1000;
+    max-width: 36rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  .error-icon {
+    color: #c04040;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .error-text {
+    flex: 1;
+  }
+
+  .error-dismiss {
+    background: none;
+    border: none;
+    color: #6a4040;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0 0.1rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .error-dismiss:hover {
+    color: #d08080;
+  }
+
   /* ---- Logo ---- */
 
   .logo {
@@ -407,6 +566,10 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     opacity: 0.8;
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .phase-badge {

@@ -336,6 +336,10 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
           neighborDefId: 'deepSpaceArray',
           fieldBonus: { computing: 3 },
         },
+        {
+          neighborDefId: 'solarFarm',
+          fieldBonus: { computing: 2 },
+        },
       ],
       adjacencyPenalties: [],
       depletes: false,

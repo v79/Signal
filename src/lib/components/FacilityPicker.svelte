@@ -97,6 +97,17 @@
 
   /** True when this tile has an ongoing construction or demolition in progress. */
   const isPending = $derived(tile.pendingActionId != null);
+
+  const DESTROYED_LABELS: Record<string, string> = {
+    flooded: 'FLOODED',
+    dustbowl: 'DUST BOWL',
+    irradiated: 'IRRADIATED',
+  };
+  const DESTROYED_DESC: Record<string, string> = {
+    flooded: 'This tile has been inundated. No construction is possible until conditions improve.',
+    dustbowl: 'Sustained drought has rendered this tile uninhabitable. Construction is not possible.',
+    irradiated: 'Contamination has made this tile unsafe. No construction is permitted here.',
+  };
 </script>
 
 <div
@@ -122,7 +133,12 @@
       <button class="close-btn" onclick={onClose}>✕</button>
     </div>
 
-    {#if isPending}
+    {#if tile.destroyedStatus}
+      <div class="destroyed-panel">
+        <span class="destroyed-badge">{DESTROYED_LABELS[tile.destroyedStatus] ?? tile.destroyedStatus}</span>
+        <span class="destroyed-desc">{DESTROYED_DESC[tile.destroyedStatus] ?? 'This tile has been destroyed.'}</span>
+      </div>
+    {:else if isPending}
       <div class="pending-panel">
         {#if tile.facilityId}
           <span class="pending-label">Demolition in progress…</span>
@@ -450,6 +466,29 @@
   .no-demolish {
     font-size: 0.6rem;
     color: #3a4858;
+    font-style: italic;
+  }
+
+  .destroyed-panel {
+    padding: 0.9rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .destroyed-badge {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: #9b4a4a;
+    border: 1px solid #4a1a1a;
+    padding: 0.15rem 0.5rem;
+    align-self: flex-start;
+  }
+
+  .destroyed-desc {
+    color: #5a4040;
+    font-size: 0.65rem;
+    line-height: 1.5;
     font-style: italic;
   }
 

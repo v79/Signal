@@ -29,12 +29,14 @@ This is a list of future requirements for the game but they are not to be implem
   - Climate pressure could change some tiles (forest -> arid), destroying any incompatible facilities
   - It's too easy to fill up the map and have nothing to do. Only destroyed facilities in a funding emergency.
   - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
+  - Facility tooltips should show there adjacency bonuses/penalities too
 - Earth era content pass
   - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
   - Solar and wind farms available to early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
   - Technologies shouldn't require Computing until integrated circuits have been unlocked.
 - LEO content pass
 - Asteroid era content pass
+  - Map improvement actions such as reforestation, radiation cleanup
 - Game art:
   - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
   - Show building icons on hex map

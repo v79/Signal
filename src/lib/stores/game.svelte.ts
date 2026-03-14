@@ -450,6 +450,12 @@ export const gameStore = {
     // HQ is placed at game start only — never buildable by the player.
     if (def.id === 'hq') return;
 
+    // Cannot build on a destroyed tile.
+    const tile = _state.map.earthTiles.find(
+      (t) => `${t.coord.q},${t.coord.r}` === coordKey,
+    );
+    if (!tile || tile.destroyedStatus !== null) return;
+
     // Tech gate: refuse if the required technology has not been discovered.
     if (def.requiredTechId != null) {
       const techDiscovered = _state.player.techs.some(

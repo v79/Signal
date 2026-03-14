@@ -44,6 +44,13 @@ const DESTROYED_FILL: Record<TileDestroyedStatus, number> = {
   irradiated: 0x183010,
 };
 
+/** Flash colour for the damage animation when a tile is first destroyed. */
+const DAMAGE_FLASH_COLOR: Record<TileDestroyedStatus, number> = {
+  flooded: 0x60b0ff,
+  dustbowl: 0xff8030,
+  irradiated: 0x80ff50,
+};
+
 /** Facility indicator colours by defId. */
 const FACILITY_COLORS: Record<string, number> = {
   hq: 0xd4a820,
@@ -91,6 +98,11 @@ export class EarthScene extends Phaser.Scene {
   private tileGfx!: Phaser.GameObjects.Graphics;
   private overlayGfx!: Phaser.GameObjects.Graphics;
   private hoveredKey: string | null = null;
+
+  // Damage flash animation state
+  private prevDestroyedStatus = new Map<string, TileDestroyedStatus | null>();
+  private flashingTiles = new Map<string, { startTime: number; color: number }>();
+  private static readonly FLASH_DURATION = 1800; // ms
 
   // Camera pan state
   private camOffsetX = 0;
@@ -297,6 +309,25 @@ export class EarthScene extends Phaser.Scene {
     const selected = this.cb.getSelected();
     const climate = this.cb.getClimate(); // 0–100
     const adjacencyMap = this.cb.getAdjacencyMap();
+    const now = this.time.now;
+
+    // Detect newly destroyed tiles and start flash animations
+    for (const tile of tiles) {
+      const key = `${tile.coord.q},${tile.coord.r}`;
+      const prev = this.prevDestroyedStatus.get(key) ?? null;
+      const curr = tile.destroyedStatus;
+      if (curr !== null && curr !== prev) {
+        this.flashingTiles.set(key, { startTime: now, color: DAMAGE_FLASH_COLOR[curr] });
+      }
+      this.prevDestroyedStatus.set(key, curr);
+    }
+
+    // Prune expired flashes
+    for (const [key, flash] of this.flashingTiles) {
+      if (now - flash.startTime > EarthScene.FLASH_DURATION) {
+        this.flashingTiles.delete(key);
+      }
+    }
 
     const facilityMap = new Map(facilities.map((f) => [f.locationKey, f]));
     const queueMap = new Map(queue.map((a) => [a.coordKey, a]));
@@ -309,8 +340,9 @@ export class EarthScene extends Phaser.Scene {
       const action = queueMap.get(key) ?? null;
       const isHovered = key === this.hoveredKey;
       const isSelected = key === selected;
+      const flash = this.flashingTiles.get(key) ?? null;
 
-      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate, adjacencyMap.get(key) ?? []);
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, facility, action, climate, adjacencyMap.get(key) ?? [], flash, now);
     }
   }
 
@@ -325,6 +357,8 @@ export class EarthScene extends Phaser.Scene {
     action: OngoingAction | null,
     climate: number,
     adjacency: AdjacencyIndicator[],
+    flash: { startTime: number; color: number } | null,
+    now: number,
   ): void {
     const baseFill = TILE_FILL[tile.type] ?? 0x1e2d40;
     const baseStroke = TILE_STROKE[tile.type] ?? 0x3a5878;
@@ -446,6 +480,16 @@ export class EarthScene extends Phaser.Scene {
         this.overlayGfx.beginPath();
         this.overlayGfx.arc(cx, cy, HEX_SIZE * 0.42, Phaser.Math.DegToRad(-90), demArcEnd, false);
         this.overlayGfx.strokePath();
+      }
+    }
+
+    // Damage flash — 3 diminishing pulses over FLASH_DURATION ms
+    if (flash) {
+      const t = (now - flash.startTime) / EarthScene.FLASH_DURATION; // 0→1
+      const alpha = Math.abs(Math.sin(t * Math.PI * 3)) * (1 - t) * 0.8;
+      if (alpha > 0.01) {
+        this.tileGfx.fillStyle(flash.color, alpha);
+        this.tileGfx.fillPoints(verts, true);
       }
     }
 
