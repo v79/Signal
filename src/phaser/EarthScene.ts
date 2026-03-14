@@ -122,8 +122,9 @@ export class EarthScene extends Phaser.Scene {
     this.tileGfx = this.add.graphics();
     this.overlayGfx = this.add.graphics();
 
-    // Drag-to-pan: record origin on press, pan on move, click on release
+    // Right-click drag-to-pan: record origin on right press, pan on move, release on right up
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      if (!ptr.rightButtonDown()) return;
       this.dragStartX = ptr.x;
       this.dragStartY = ptr.y;
       this.dragStartCamX = this.camOffsetX;
@@ -155,12 +156,19 @@ export class EarthScene extends Phaser.Scene {
     });
 
     this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
-      if (!this.dragMoved) {
-        // Treat as click — hitTest at the release point
-        const key = this.hitTest(ptr.x, ptr.y);
-        if (key && this.cb) this.cb.onTileClick(key);
+      // Only end a drag on right-button release; left clicks are unaffected
+      if (ptr.rightButtonReleased()) {
+        this.isDragging = false;
+        // If the right button was released without a meaningful drag, do nothing
+        // (right-click selection is intentionally not wired)
       }
-      this.isDragging = false;
+    });
+
+    // Left-click → select tile (completely independent of pan)
+    this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      if (!ptr.leftButtonDown()) return;
+      const key = this.hitTest(ptr.x, ptr.y);
+      if (key && this.cb) this.cb.onTileClick(key);
     });
 
     // Clear hover and cancel drag when pointer leaves the canvas
@@ -172,6 +180,9 @@ export class EarthScene extends Phaser.Scene {
         if (this.cb) this.cb.onTileHover(null);
       }
     });
+
+    // Suppress the browser context menu on the Phaser canvas
+    this.game.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   update(): void {
