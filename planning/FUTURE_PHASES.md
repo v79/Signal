@@ -27,7 +27,6 @@ This is a list of future requirements for the game but they are not to be implem
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
   - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
   - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
-  - Solar and wind farms available too early. Need a poluting power source before the mid-1990s. Need Technologies which unlock Solar and Wind power.
   - Technologies shouldn't require Computing until integrated circuits have been unlocked.
   - Technologies are too dependent on Computing but there are very few ways of getting Computing research
 - LEO content pass
@@ -69,8 +68,15 @@ This is a list of future requirements for the game but they are not to be implem
 
 
 
-FACILITY IDEAS:
+## FACILITY IDEAS:
+
+Era 1:
 
 - Coal Power Station (+funding, + climate)
 - Petrochemical Refinery (+funding, +climate)
-- Industrial Port (+funding, +materials)
+- Industrial Port (+funding, +materials, +climate)
+
+Era 2:
+
+
+Era 3:

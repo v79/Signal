@@ -76,4 +76,4 @@ Banking mechanic: up to 2 cards held between turns at 1 Funding/card/turn decay 
 - Always create a planning document for each phase in planning/PLAN_PHASE<number>.md
 - Use the ✅ mark when marking planning items as completed
 - Only use strikethrough for features that have been rejected or postponed to a future phase (not for completed phases)
-
+- User answers to outstanding questions will appear in _underline_ text
