@@ -5,12 +5,13 @@ This is a list of future requirements for the game but they are not to be implem
 - UI visual flare:
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
   - The game is just too dark, the colour scheme is too muted
+  - On the HUD, highlight resources which have a negative income
 - Card rework:
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
 - The Signal:
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
-  - Signal should be decoded before era 3
+  - Signal should not be decoded before era 3
 - Political Will:
   - What is the difference between Global Will and Political Will?
   - Political Will should have a cap (100?)
