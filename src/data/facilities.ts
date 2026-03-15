@@ -206,7 +206,7 @@ export const FACILITY_DEFS: Map<string, FacilityDef> = new Map([
       adjacencyBonuses: [
         {
           neighborDefId: 'researchLab',
-          fieldBonus: { physics: 2, mathematics: 1 },
+          fieldBonus: { physics: 2, mathematics: 1, computing: 1 },
         },
       ],
       adjacencyPenalties: [],

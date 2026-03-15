@@ -451,6 +451,11 @@ export interface EventDef {
   countdownTurns: number;
   /** Selection probability relative to other events. Default 1.0. */
   weight: number;
+  /**
+   * Minimum climatePressure value (0–100) required before this event can
+   * appear in the pool. Omit (or 0) for no climate gate.
+   */
+  minClimate?: number;
   responseTier: EventResponseTier;
   /** Effect if the event is not countered / resolves unfavourably. */
   negativeEffect: EventEffect;

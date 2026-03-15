@@ -90,7 +90,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       name: 'Satellite Communications',
       rumourText:
         'A relay station in orbit could link every ground facility on the globe simultaneously.',
-      baseRecipe: { physics: 45, engineering: 50, computing: 30, mathematics: 25 },
+      baseRecipe: { physics: 45, engineering: 50, computing: 20, mathematics: 25 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: ['globalBroadcast'],
@@ -115,14 +115,17 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
     },
   ],
 
-  [
+  // ---------------------------------------------------------------------------
+  // Tier 2 — Orbital Era Technologies (1982–1992)
+  // ---------------------------------------------------------------------------
+[
     'microprocessors',
     {
       id: 'microprocessors',
       name: 'Microprocessor Architecture',
       rumourText:
         'A single chip carrying a complete instruction set has been demonstrated in prototype form.',
-      baseRecipe: { computing: 55, mathematics: 40, engineering: 30, physics: 20 },
+      baseRecipe: { computing: 35, mathematics: 40, engineering: 30, physics: 20 },
       recipeVariance: 0.2,
       requiresSimultaneous: false,
       unlocksCards: ['computerModellingRun'],
@@ -130,7 +133,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       unlocksFacilities: ['computingHub'],
       signalDerived: false,
       tier: 1,
-      requiredTechIds: [],
+      requiredTechIds: [ 'integratedCircuits' ],
       narrative: {
         id: 'narrative-tech-microprocessors',
         title: 'Discovery — Microprocessor Architecture',
@@ -146,11 +149,7 @@ export const TECH_DEFS: Map<string, TechDef> = new Map([
       },
     },
   ],
-
-  // ---------------------------------------------------------------------------
-  // Tier 2 — Orbital Era Technologies (1982–1992)
-  // ---------------------------------------------------------------------------
-
+  
   [
     'personalComputing',
     {

@@ -46,9 +46,9 @@ This is a list of future requirements for the game but they are not to be implem
   - Flavour text for board members
 - Tech tree dependencies:
   - Most technologies will have prerequisite technologies that must be researched first
-  - Draw connecting lines between discovered technologies and progressing technologies
   - Clicking on a discovered or in progress technology in the tech tree should show more information
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
+  - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
 - News feed & ticker rework
   - The ticker is cute but not very functional
 - Debug view and logs:

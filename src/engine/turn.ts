@@ -124,6 +124,7 @@ export function executeEventPhase(
     tickedEvents,
     rng,
     state.turn,
+    state.climatePressure,
   );
 
   return {

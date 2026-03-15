@@ -130,6 +130,7 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map([
       blocIds: null,
       countdownTurns: 2,
       weight: 0.5,
+      minClimate: 25,
       responseTier: 'noCounter',
       negativeEffect: {
         resources: { funding: -15, materials: -10 },
@@ -152,6 +153,7 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map([
       blocIds: null,
       countdownTurns: 3,
       weight: 0.6,
+      minClimate: 20,
       responseTier: 'noCounter',
       negativeEffect: {
         resources: { materials: -15, funding: -10 },

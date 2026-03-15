@@ -10,7 +10,7 @@ export const BLOC_DEFS: Map<string, BlocDef> = new Map([
     'northAmerica',
     {
       id: 'northAmerica',
-      name: 'North American Alliance',
+      name: 'North American Space Administration',
       willProfile: 'democratic',
       victoryBias: 'economicHegemony',
       startingResources: { funding: 80, materials: 70, politicalWill: 70 },
@@ -70,7 +70,7 @@ export const BLOC_DEFS: Map<string, BlocDef> = new Map([
     'eurozone',
     {
       id: 'eurozone',
-      name: 'European Union',
+      name: 'European Community',
       willProfile: 'democratic',
       victoryBias: 'ecologicalRestoration',
       startingResources: { funding: 75, materials: 60, politicalWill: 68 },
@@ -94,6 +94,21 @@ export const BLOC_DEFS: Map<string, BlocDef> = new Map([
       specificEventTags: ['scientific', 'industrial'],
       willCeiling: 82,
       willCollapsThreshold: 0,
+    },
+  ],
+  [
+    'sovietUnion',
+    {
+      id: 'sovietUnion',
+      name: 'Soviet Union',
+      willProfile: 'authoritarian',
+      victoryBias: 'terraforming',
+      startingResources: { funding: 35, materials: 95, politicalWill: 68 },
+      startingFields: { physics: 22, mathematics: 14, engineering: 18 },
+      victoryCostModifiers: { terraforming: 0.85 },
+      specificEventTags: ['industrial', 'scientific'],
+      willCeiling: 68,
+      willCollapsThreshold: 28,
     },
   ],
   [

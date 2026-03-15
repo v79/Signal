@@ -32,6 +32,7 @@ export function getEligibleEvents(
   playerBlocId: string,
   activeEventDefIds: Set<string>,
   hasCrisisActive: boolean,
+  climatePressure: number,
 ): EventDef[] {
   return pool.filter((def) => {
     if (activeEventDefIds.has(def.id)) return false;
@@ -39,6 +40,7 @@ export function getEligibleEvents(
     if (def.pushFactors !== null && !def.pushFactors.includes(pushFactor)) return false;
     if (def.blocIds !== null && !def.blocIds.includes(playerBlocId)) return false;
     if (hasCrisisActive && def.tags.includes('crisis')) return false;
+    if (def.minClimate != null && climatePressure < def.minClimate) return false;
     return true;
   });
 }
@@ -58,12 +60,13 @@ export function selectNewEvents(
   activeEvents: EventInstance[],
   rng: Rng,
   arrivedTurn: number,
+  climatePressure: number,
 ): EventInstance[] {
   const activeDefIds = new Set(activeEvents.map((e) => e.defId));
   const hasCrisisActive = activeEvents.some(
     (e) => !e.resolved && (pool.find((d) => d.id === e.defId)?.tags ?? []).includes('crisis'),
   );
-  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive);
+  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive, climatePressure);
   if (eligible.length === 0) return [];
 
   const rawCount = rng.nextInt(0, Math.min(MAX_NEW_EVENTS_PER_TURN, eligible.length));

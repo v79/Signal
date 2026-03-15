@@ -36,6 +36,7 @@ const northAmerica: TileLayout[] = [
   // Urban core (0,0) + capital region
   { q: 0, r: 0, type: 'urban' },
   { q: -1, r: 0, type: 'urban' },
+  { q: 3, r: 1, type: 'urban' },
   { q: 1, r: 0, type: 'industrial' },
   // Industrial belt
   { q: 0, r: 1, type: 'industrial' },
@@ -122,6 +123,7 @@ const southAmerica: TileLayout[] = [
   // Urban core
   { q: 0, r: 0, type: 'urban' },
   { q: 1, r: 0, type: 'urban' },
+  { q: 0, r: -2, type: 'urban' },
   // Industrial north
   { q: 0, r: -1, type: 'industrial' },
   { q: 1, r: -1, type: 'industrial' },
@@ -281,6 +283,48 @@ const southAsia: TileLayout[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Soviet Union
+// Vast east-west sprawl: dense western industrial core, Siberian taiga,
+// Central Asian steppe and desert, Caucasus highlands, long Arctic coastline.
+// ---------------------------------------------------------------------------
+const sovietUnion: TileLayout[] = [
+  // Urban core (Moscow, Leningrad, Sverdlovsk)
+  { q: 0, r: 0, type: 'urban' },
+  { q: -1, r: -1, type: 'urban' },
+  { q: 1, r: 0, type: 'urban' },
+  // Industrial (Donbass, Volga, Urals, Novosibirsk)
+  { q: -1, r: 0, type: 'industrial' },
+  { q: 0, r: 1, type: 'industrial' },
+  { q: 2, r: -1, type: 'industrial' },
+  { q: 2, r: 0, type: 'industrial' },
+  // Siberian taiga
+  { q: 0, r: -1, type: 'forested' },
+  { q: 1, r: -1, type: 'forested' },
+  { q: 3, r: -1, type: 'forested' },
+  { q: 3, r: 0, type: 'forested' },
+  { q: 4, r: 0, type: 'forested' },
+  { q: 1, r: 1, type: 'forested' },
+  { q: -2, r: -1, type: 'forested' },
+  // Caucasus and Altai highlands
+  { q: 0, r: 2, type: 'highland' },
+  { q: 1, r: 2, type: 'highland' },
+  { q: -1, r: 1, type: 'highland' },
+  { q: 4, r: 1, type: 'highland' },
+  // Central Asian steppe and desert
+  { q: 2, r: 1, type: 'arid' },
+  { q: 3, r: 1, type: 'arid' },
+  { q: 2, r: 2, type: 'arid' },
+  { q: 3, r: 2, type: 'arid' },
+  { q: 4, r: 2, type: 'arid' },
+  // Coastal (Baltic, Black Sea, Arctic)
+  { q: -2, r: 0, type: 'coastal' },
+  { q: -1, r: -2, type: 'coastal' },
+  { q: 0, r: -2, type: 'coastal' },
+  { q: 4, r: -1, type: 'coastal' },
+  { q: -1, r: 2, type: 'coastal' },
+];
+
+// ---------------------------------------------------------------------------
 // Gulf Consortium (Middle East)
 // Arid-dominated. Urban and industrial pockets. Coastal south and west.
 // ---------------------------------------------------------------------------
@@ -328,6 +372,7 @@ export const BLOC_MAPS: Record<string, TileLayout[]> = {
   africaCoalition,
   eurozone,
   southAsia,
+  sovietUnion,
   // Key matches the BLOC_DEFS map key in blocs.ts
   middlewEast: middleEast,
 };
