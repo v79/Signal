@@ -73,6 +73,9 @@ test('build facility — open picker, build, verify on map', async ({ page }) =>
   await page.waitForSelector('[aria-label="Facility Picker"]');
   await page.screenshot({ path: 'screenshots/04-facility-picker.png', fullPage: true });
 
+  // Expand the facility list
+  await page.click('.open-build-btn');
+
   // Click the first affordable BUILD button
   await page.locator('.build-btn:not([disabled])').first().click();
 
