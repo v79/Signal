@@ -380,13 +380,6 @@ export class EarthScene extends Phaser.Scene {
       this.tileGfx.fillPoints(verts, true);
     }
 
-    // Climate pressure: faint red tint at high climate
-    if (climate > 20) {
-      const climateTint = Math.min(0.35, (climate - 20) / 200);
-      this.tileGfx.fillStyle(0x4a0808, climateTint);
-      this.tileGfx.fillPoints(verts, true);
-    }
-
     // Stroke
     const strokeAlpha = selected ? 1.0 : hovered ? 0.85 : 0.4;
     const strokeColor = selected ? 0x88c8ff : hovered ? 0x6aaad8 : baseStroke;
@@ -394,46 +387,42 @@ export class EarthScene extends Phaser.Scene {
     this.tileGfx.lineStyle(strokeW, strokeColor, strokeAlpha);
     this.tileGfx.strokePoints(verts, true);
 
-    // Facility slots — rhombus rendering
+    // Facility slots — circle-cluster rendering
     {
-      // Shrunk rhombus offsets relative to hex centre (R=HEX_SIZE, h=R*√3/2, f=0.80)
-      const R = HEX_SIZE;
-      const h = R * Math.sqrt(3) / 2;
-      const SLOT_RHOMBUSES: [number, number][][] = [
-        // Slot 0: upper-right — C,v4,v5,v0 shrunk toward centroid(+R/4,-h/2)
-        [[R*0.05, -h*0.10], [-R*0.35, -h*0.90], [R*0.45, -h*0.90], [R*0.85, -h*0.10]],
-        // Slot 1: left — C,v2,v3,v4 shrunk toward centroid(-R/2,0)
-        [[-R*0.10, 0], [-R*0.50, h*0.80], [-R*0.90, 0], [-R*0.50, -h*0.80]],
-        // Slot 2: bottom — C,v0,v1,v2 shrunk toward centroid(+R/4,+h/2)
-        [[R*0.05, h*0.10], [R*0.85, h*0.10], [R*0.45, h*0.90], [-R*0.35, h*0.90]],
+      const CIRCLE_OFFSETS: [number, number][][] = [
+        [[0, 0]],
+        [[-11, 0], [11, 0]],
+        [[0, -11], [-11, 9], [11, 9]],
       ];
+      const CIRCLE_RADII = [14, 10, 9];
 
-      let isHq = false;
-      for (let si = 0; si < 3; si++) {
-        const instance = slotInstances[si];
-        const pts = SLOT_RHOMBUSES[si].map(([dx, dy]) => ({ x: cx + dx, y: cy + dy }));
-        if (instance) {
-          const fColor = FACILITY_COLORS[instance.defId] ?? 0xffffff;
-          const opacity = instance.defId === 'hq' ? 0.9 : Math.max(0.4, instance.condition * 0.9);
-          this.overlayGfx.fillStyle(fColor, opacity);
-          this.overlayGfx.fillPoints(pts, true);
-          if (instance.defId === 'hq') isHq = true;
-        } else if (!tile.destroyedStatus) {
-          // Empty slot indicator: faint outline
-          this.overlayGfx.lineStyle(0.75, 0x3a5878, 0.35);
-          this.overlayGfx.strokePoints(pts, true);
-        }
-      }
+      // Deduplicate slot instances to unique facilities
+      const unique = [...new Map(
+        slotInstances.filter(Boolean).map(f => [f!.id, f!])
+      ).values()];
 
-      // HQ cross at hex centre
+      const isHq = unique.some(f => f.defId === 'hq');
+
       if (isHq) {
+        // Large gold circle + cross + outer ring
+        this.overlayGfx.fillStyle(FACILITY_COLORS['hq'] ?? 0xffd060, 0.9);
+        this.overlayGfx.fillCircle(cx, cy, 16);
         const arm = HEX_SIZE * 0.18;
         this.overlayGfx.lineStyle(1.5, 0xfff0c0, 0.85);
         this.overlayGfx.lineBetween(cx - arm, cy, cx + arm, cy);
         this.overlayGfx.lineBetween(cx, cy - arm, cx, cy + arm);
-        // Outer ring hint
         this.overlayGfx.lineStyle(1.5, 0xffd060, 0.5);
         this.overlayGfx.strokePoints(verts, true);
+      } else if (unique.length > 0) {
+        const offsets = CIRCLE_OFFSETS[unique.length - 1];
+        const radius  = CIRCLE_RADII[unique.length - 1];
+        for (let i = 0; i < unique.length; i++) {
+          const [dx, dy] = offsets[i];
+          const fColor = FACILITY_COLORS[unique[i].defId] ?? 0xffffff;
+          const opacity = Math.max(0.4, unique[i].condition * 0.9);
+          this.overlayGfx.fillStyle(fColor, opacity);
+          this.overlayGfx.fillCircle(cx + dx, cy + dy, radius);
+        }
       }
     }
 
