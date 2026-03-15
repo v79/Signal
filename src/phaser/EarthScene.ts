@@ -394,7 +394,7 @@ export class EarthScene extends Phaser.Scene {
         [[-11, 0], [11, 0]],
         [[0, -11], [-11, 9], [11, 9]],
       ];
-      const CIRCLE_RADII = [14, 10, 9];
+      const CIRCLE_RADIUS = 10;
 
       // Deduplicate slot instances to unique facilities
       const unique = [...new Map(
@@ -415,13 +415,12 @@ export class EarthScene extends Phaser.Scene {
         this.overlayGfx.strokePoints(verts, true);
       } else if (unique.length > 0) {
         const offsets = CIRCLE_OFFSETS[unique.length - 1];
-        const radius  = CIRCLE_RADII[unique.length - 1];
         for (let i = 0; i < unique.length; i++) {
           const [dx, dy] = offsets[i];
           const fColor = FACILITY_COLORS[unique[i].defId] ?? 0xffffff;
           const opacity = Math.max(0.4, unique[i].condition * 0.9);
           this.overlayGfx.fillStyle(fColor, opacity);
-          this.overlayGfx.fillCircle(cx + dx, cy + dy, radius);
+          this.overlayGfx.fillCircle(cx + dx, cy + dy, CIRCLE_RADIUS);
         }
       }
     }

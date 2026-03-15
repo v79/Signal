@@ -65,6 +65,7 @@ This is a list of future requirements for the game but they are not to be implem
   BUGS:
 
   - Political will isn't reduced when accepting an event which is supposed to cost Will
+  - The funding crisis event mitigation does strange things when you don't actually have the funds
 
 
 
