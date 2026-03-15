@@ -182,7 +182,7 @@
                     </span>
                   {/if}
                   {#if slot.def.canDelete}
-                    <button class="demolish-btn" onclick={() => onDemolish(slot.idx)}>DEMOLISH</button>
+                    <button class="demolish-btn" onclick={() => onDemolish(slot.idx)}>DECOMMISSION</button>
                   {:else}
                     <span class="no-demolish">Permanent</span>
                   {/if}
