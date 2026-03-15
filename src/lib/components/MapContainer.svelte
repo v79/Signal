@@ -6,9 +6,7 @@
   import BoardPanel from './BoardPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
-  import { FACILITY_DEFS } from '../../data/facilities';
-  import { TECH_DEFS } from '../../data/technologies';
-  import { BOARD_DEFS } from '../../data/board';
+  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS } from '../../data/loader';
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';

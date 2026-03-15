@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { NARRATIVE_GAME_HELP } from '../src/data/narrative';
+import { NARRATIVE_GAME_HELP } from '../src/data/loader';
 
 // ---------------------------------------------------------------------------
 // Helper: navigate to /newgame, skip the opening narrative, start a game

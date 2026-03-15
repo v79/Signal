@@ -3,8 +3,7 @@
 // =============================================================================
 
 import { describe, it, expect } from 'vitest';
-import { BLOC_MAPS } from '../data/blocMaps';
-import { BLOC_DEFS } from '../data/blocs';
+import { BLOC_MAPS, BLOC_DEFS } from '../data/loader';
 
 const BLOC_IDS = [...BLOC_DEFS.keys()];
 

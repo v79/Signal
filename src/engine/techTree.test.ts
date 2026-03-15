@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getTechTier } from './techTree';
-import { TECH_DEFS } from '../data/technologies';
+import { TECH_DEFS } from '../data/loader';
 import type { TechDef } from './types';
 
 // ---------------------------------------------------------------------------

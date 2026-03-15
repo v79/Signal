@@ -16,11 +16,7 @@
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
 
   import { gameStore } from '$lib/stores/game.svelte';
-  import { CARD_DEFS } from '../data/cards';
-  import { EVENT_DEFS } from '../data/events';
-  import { FACILITY_DEFS } from '../data/facilities';
-  import { BLOC_DEFS } from '../data/blocs';
-  import { TECH_DEFS } from '../data/technologies';
+  import { CARD_DEFS, EVENT_DEFS, FACILITY_DEFS, BLOC_DEFS, TECH_DEFS } from '../data/loader';
   import {
     computeAdjacencyEffects,
     computeResourceBreakdown,

@@ -72,6 +72,8 @@ This is a list of future requirements for the game but they are not to be implem
 
   - Political will isn't reduced when accepting an event which is supposed to cost Will
   - The funding crisis event mitigation does strange things when you don't actually have the funds
+  - Tooltips can go off the bottom of the map
+  - Can I disable the back button, or at least warn of game loss?
 
 
 

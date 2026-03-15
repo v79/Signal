@@ -13,7 +13,6 @@ import type {
   OngoingAction,
   NewsItem,
 } from '../../engine/types';
-import { BLOC_MAPS } from '../../data/blocMaps';
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
 import { createRng } from '../../engine/rng';
@@ -29,33 +28,32 @@ import { generateWormholeOptions, commitSignalResponse } from '../../engine/sign
 import type { SignalResponseOption } from '../../engine/types';
 import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
 import { dismissNarrative, enqueueNarrative } from '../../engine/narrative';
-import {
-  NARRATIVE_SIGNAL_STRUCTURED,
-  NARRATIVE_SIGNAL_URGENT,
-  NARRATIVE_ERA_NEARSPACE,
-  NARRATIVE_ERA_DEEPSPACE,
-} from '../../data/narrative';
 import { initialiseTechs } from '../../engine/research';
-import { CARD_DEFS } from '../../data/cards';
-import { EVENT_DEFS } from '../../data/events';
 import {
   applyEventEffect,
   getEffectForResolution,
   formatEffectForNews,
 } from '../../engine/events';
-import { FACILITY_DEFS } from '../../data/facilities';
 import { getFacilitiesOnTile, findContiguousFreeStart } from '../../engine/facilities';
-import { BLOC_DEFS } from '../../data/blocs';
-import { BOARD_DEFS } from '../../data/board';
-import { TECH_DEFS } from '../../data/technologies';
+import {
+  BLOC_MAPS,
+  BLOC_DEFS,
+  BOARD_DEFS,
+  CARD_DEFS,
+  EVENT_DEFS,
+  FACILITY_DEFS,
+  TECH_DEFS,
+  NARRATIVE_SIGNAL_STRUCTURED,
+  NARRATIVE_SIGNAL_URGENT,
+  NARRATIVE_ERA_NEARSPACE,
+  NARRATIVE_ERA_DEEPSPACE,
+} from '../../data/loader';
 
 // ---------------------------------------------------------------------------
 // Re-export data for components that import from this store
 // ---------------------------------------------------------------------------
 
-export { CARD_DEFS as CARD_DEFS } from '../../data/cards';
-export { EVENT_DEFS as EVENT_DEFS } from '../../data/events';
-export { BOARD_DEFS as BOARD_DEFS } from '../../data/board';
+export { CARD_DEFS, EVENT_DEFS, BOARD_DEFS } from '../../data/loader';
 
 // ---------------------------------------------------------------------------
 // Map tile generation — bloc-specific layouts from blocMaps.ts
