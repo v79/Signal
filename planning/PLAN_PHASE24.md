@@ -15,6 +15,7 @@ The Earth map fills up too quickly and there are never enough urban tiles. Rathe
 | Construction queue | One action at a time per tile (existing `pendingActionId` lock) |
 | Intra-tile adjacency | Yes — same-tile facilities act as virtual adjacency neighbors |
 | Contiguous slots | Multi-slot facilities require contiguous free slots |
+| Duplicate facilities | A `defId` already present on a tile cannot be built there again |
 
 ---
 
@@ -116,10 +117,11 @@ facilitySlots: [hqFacilityId, hqFacilityId, hqFacilityId]
 
 **`buildFacility(coordKey, defId, slotIndex)`** — add `slotIndex` param:
 1. Validate tile exists, not destroyed, no pending action.
-2. `slotCost = def.slotCost ?? 1`.
-3. `start = findContiguousFreeStart(tile.facilitySlots, slotCost)` — if null, return.
-4. Fill slots `[start .. start+slotCost-1]` with instance ID.
-5. `OngoingAction.slotIndex = start` for multi-turn builds.
+2. Reject if `defId` is already present on the tile (`getFacilitiesOnTile` includes it).
+3. `slotCost = def.slotCost ?? 1`.
+4. `start = findContiguousFreeStart(tile.facilitySlots, slotCost)` — if null, return.
+5. Fill slots `[start .. start+slotCost-1]` with instance ID.
+6. `OngoingAction.slotIndex = start` for multi-turn builds.
 
 **`demolishFacility(coordKey, slotIndex)`** — add `slotIndex` param:
 1. Look up `tile.facilitySlots[slotIndex]` → instance ID.
@@ -128,21 +130,46 @@ facilitySlots: [hqFacilityId, hqFacilityId, hqFacilityId]
 
 ### Step 7 — Rendering: `src/phaser/EarthScene.ts`
 
-**Slot position constants:**
+Each tile is divided into **three equal rhombuses** (the isometric-cube look), one per slot. Every rhombus is scaled 80% toward its own centroid so the tile background shows through as gaps between them.
+
+**Rhombus geometry** (flat-top hex, vertices v0–v5 at 60° increments from the right):
+
+| Slot | Rhombus vertices | Centroid (relative to hex centre) |
+|------|-----------------|-----------------------------------|
+| 0 — upper-right | C, v4, v5, v0 | `(+R×0.25, −R×0.433)` |
+| 1 — left        | C, v2, v3, v4 | `(−R×0.50,  0)` |
+| 2 — bottom      | C, v0, v1, v2 | `(+R×0.25, +R×0.433)` |
+
+where `R = HEX_SIZE` and `sqrt(3)/2 ≈ 0.433`.
+
+**Shrink helper** — scale each vertex `P` of a rhombus toward its centroid `G` by factor `f = 0.80`:
 ```ts
-const SLOT_OFFSETS: [number, number][] = [
-  [0,               -HEX_SIZE * 0.35],  // slot 0: top-centre
-  [-HEX_SIZE * 0.30, HEX_SIZE * 0.20], // slot 1: bottom-left
-  [ HEX_SIZE * 0.30, HEX_SIZE * 0.20], // slot 2: bottom-right
+function shrinkPoint(p: [number,number], g: [number,number], f = 0.80): [number,number] {
+  return [g[0] + f * (p[0] - g[0]), g[1] + f * (p[1] - g[1])];
+}
+```
+
+Resulting shrunk offsets relative to hex centre (R = HEX_SIZE, h = R × √3/2):
+
+```ts
+const SLOT_RHOMBUSES: [[number,number],[number,number],[number,number],[number,number]][] = [
+  // slot 0: upper-right  (C, v4, v5, v0 shrunk toward centroid (+R/4, -h/2))
+  [[ R*0.05, -h*0.20], [-R*0.35, -h*0.90], [ R*0.45, -h*0.90], [ R*0.85, -h*0.20]],
+  // slot 1: left         (C, v2, v3, v4 shrunk toward centroid (-R/2, 0))
+  [[-R*0.10,  0      ], [-R*0.50,  h*0.80], [-R*0.90,  0      ], [-R*0.50, -h*0.80]],
+  // slot 2: bottom       (C, v0, v1, v2 shrunk toward centroid (+R/4, +h/2))
+  [[ R*0.05,  h*0.20 ], [ R*0.85,  h*0.20], [ R*0.45,  h*0.90], [-R*0.35,  h*0.90]],
 ];
 ```
 
 **Per-slot rendering in `drawTile`:**
-- Iterate slots 0–2; skip already-rendered instance IDs.
-- `slotCost === 3`: large circle (radius `HEX_SIZE*0.22`) at hex centre.
-- `slotCost === 2`: medium circle (radius `HEX_SIZE*0.18`) centred between the two slot offsets.
-- `slotCost === 1`: small circle (radius `HEX_SIZE*0.14`) at the slot's offset position.
-- Condition ring, HQ ring/cross: positioned at the derived draw point.
+- Collect unique occupied instance IDs from `tile.facilitySlots` (deduplicate).
+- For each unique facility, determine which slot indices it occupies (`facilitySlots` entries matching its ID).
+- For each slot index 0–2: draw the corresponding shrunk rhombus polygon.
+  - Occupied slot: fill with `FACILITY_COLORS[defId]`, opacity 0.9.
+  - Empty slot: no fill, faint dashed stroke (`#3a5878`, opacity 0.4) to indicate a free build slot.
+- **HQ special case**: after drawing all three gold rhombuses, draw a white cross at the hex centre.
+- **Condition indicator**: if `facility.condition < 1`, draw the rhombus fill at reduced opacity (e.g. `0.9 × condition`).
 
 **`EarthSceneCallbacks`**: add `getFacilityDefs: () => Map<string, FacilityDef>` so `drawTile` can read `slotCost`.
 
@@ -164,7 +191,7 @@ facilityInstances: FacilityInstance[];  // replaces occupyingInstance
 ```
 
 - Multi-slot facilities span their slots (e.g. "SLOTS 0–1" label); Demolish button only on the primary (lowest) slot.
-- Clicking `BUILD...` sets `activeSlot`, shows facility list filtered by `findContiguousFreeStart(slots, def.slotCost) !== null && allowedTileTypes includes tile.type`.
+- Clicking `BUILD...` sets `activeSlot`, shows facility list filtered by `findContiguousFreeStart(slots, def.slotCost) !== null && allowedTileTypes includes tile.type && defId not already present on tile`.
 - Clicking a facility calls `onBuild(defId, findContiguousFreeStart(...))`.
 - All slots locked (no button) if `tile.pendingActionId` is set.
 

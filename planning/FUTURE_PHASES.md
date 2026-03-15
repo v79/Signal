@@ -10,6 +10,11 @@ This is a list of future requirements for the game but they are not to be implem
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
   - Fix the height of the action had to be the height of a banked card
+  - Prevent the action card bar from ever having a scrollbar
+- Climate
+  - The climate scaling is too harsh and tile damage happens far too early
+  - Irradiated damage shouldn't exist without nuclear facilities
+  - Climate bar tooltip should show summary of pollution generators and mitigations
 - The Signal:
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Signal should not be decoded before era 3
@@ -27,22 +32,23 @@ This is a list of future requirements for the game but they are not to be implem
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
   - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
   - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
+- Earth era content pass
   - Technologies shouldn't require Computing until integrated circuits have been unlocked.
   - Technologies are too dependent on Computing but there are very few ways of getting Computing research
-- LEO content pass
+- LEO era content pass
   - Map improvement actions such as sea walls
 - Asteroid era content pass
   - Map improvement actions such as reforestation, radiation cleanup, floating cities
 - Game art:
   - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
-  - Show building icons on hex map
+  - Show building icons on hex map?
   - Generic profile pictures for board members
   - Flavour text for board members
 - Tech tree dependencies:
   - Most technologies will have prerequisite technologies that must be researched first
-  - Draw connecting lines between discovered technologies and progressing technologies
   - Clicking on a discovered or in progress technology in the tech tree should show more information
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
+  - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
 - News feed & ticker rework
   - The ticker is cute but not very functional
 - Debug view and logs:
@@ -65,6 +71,9 @@ This is a list of future requirements for the game but they are not to be implem
   BUGS:
 
   - Political will isn't reduced when accepting an event which is supposed to cost Will
+  - The funding crisis event mitigation does strange things when you don't actually have the funds
+  - Tooltips can go off the bottom of the map
+  - Can I disable the back button, or at least warn of game loss?
 
 
 

@@ -6,13 +6,12 @@
   import BoardPanel from './BoardPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
-  import { FACILITY_DEFS } from '../../data/facilities';
-  import { TECH_DEFS } from '../../data/technologies';
-  import { BOARD_DEFS } from '../../data/board';
+  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS } from '../../data/loader';
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
-  import type { Era, BoardRole } from '../../engine/types';
+  import type { Era, BoardRole, FacilityInstance } from '../../engine/types';
+  import { getFacilitiesOnTile } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
 
   type MapTab = 'earth' | 'space' | 'belt';
@@ -59,38 +58,53 @@
     const facilities = gameStore.state.player.facilities;
     const tiles = gameStore.state.map.earthTiles;
 
-    // Build coordKey → facility, skipping destroyed tiles
-    const keyToFacility = new Map<string, (typeof facilities)[0]>();
+    // Build coordKey → FacilityInstance[] (multiple per tile), skipping destroyed tiles
+    const keyToFacilities = new Map<string, FacilityInstance[]>();
     for (const tile of tiles) {
-      if (!tile.facilityId || tile.destroyedStatus !== null) continue;
-      const f = facilities.find((fac) => fac.id === tile.facilityId);
-      if (f) keyToFacility.set(`${tile.coord.q},${tile.coord.r}`, f);
+      if (tile.destroyedStatus !== null) continue;
+      const tileFacilities = getFacilitiesOnTile(tile, facilities);
+      if (tileFacilities.length > 0) {
+        keyToFacilities.set(`${tile.coord.q},${tile.coord.r}`, tileFacilities);
+      }
     }
 
     const result = new Map<string, AdjacencyIndicator[]>();
 
-    for (const [key, facility] of keyToFacility) {
-      const def = FACILITY_DEFS.get(facility.defId);
-      if (!def) continue;
+    for (const [key, tileFacilities] of keyToFacilities) {
       const [q, r] = key.split(',').map(Number);
+      const addedDirs = new Set<string>();
 
-      for (const dir of HEX_DIRS) {
-        const nKey = `${q + dir.q},${r + dir.r}`;
-        const neighbor = keyToFacility.get(nKey);
-        if (!neighbor) continue;
+      for (const facility of tileFacilities) {
+        const def = FACILITY_DEFS.get(facility.defId);
+        if (!def) continue;
 
-        for (const rule of def.adjacencyBonuses) {
-          if (rule.neighborDefId === neighbor.defId) {
-            if (!result.has(key)) result.set(key, []);
-            result.get(key)!.push({ direction: dir, type: 'bonus' });
-            break;
-          }
-        }
-        for (const rule of def.adjacencyPenalties) {
-          if (rule.neighborDefId === neighbor.defId) {
-            if (!result.has(key)) result.set(key, []);
-            result.get(key)!.push({ direction: dir, type: 'penalty' });
-            break;
+        for (const dir of HEX_DIRS) {
+          const nKey = `${q + dir.q},${r + dir.r}`;
+          const neighbors = keyToFacilities.get(nKey);
+          if (!neighbors) continue;
+
+          for (const neighbor of neighbors) {
+            const dirKey = `${dir.q},${dir.r}`;
+            for (const rule of def.adjacencyBonuses) {
+              if (rule.neighborDefId === neighbor.defId) {
+                const k = `${dirKey}:bonus`;
+                if (!addedDirs.has(k)) {
+                  addedDirs.add(k);
+                  if (!result.has(key)) result.set(key, []);
+                  result.get(key)!.push({ direction: dir, type: 'bonus' });
+                }
+              }
+            }
+            for (const rule of def.adjacencyPenalties) {
+              if (rule.neighborDefId === neighbor.defId) {
+                const k = `${dirKey}:penalty`;
+                if (!addedDirs.has(k)) {
+                  addedDirs.add(k);
+                  if (!result.has(key)) result.set(key, []);
+                  result.get(key)!.push({ direction: dir, type: 'penalty' });
+                }
+              }
+            }
           }
         }
       }
@@ -301,9 +315,7 @@
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
         playerResources={gameStore.state!.player.resources}
-        occupyingInstance={gameStore.state!.player.facilities.find(
-          (f) => f.id === selectedTile.facilityId,
-        ) ?? null}
+        facilityInstances={getFacilitiesOnTile(selectedTile, gameStore.state!.player.facilities)}
         discoveredTechIds={new Set(
           gameStore.state!.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
         )}
@@ -315,7 +327,7 @@
             .map((a) => a.facilityDefId),
         ])}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
-        onDemolish={() => gameStore.demolishFacility(gameStore.selectedCoordKey!)}
+        onDemolish={(slotIndex) => gameStore.demolishFacility(gameStore.selectedCoordKey!, slotIndex)}
         onClose={() => gameStore.selectTile(null)}
       />
     {/if}

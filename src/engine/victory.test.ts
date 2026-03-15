@@ -317,7 +317,7 @@ describe('tickEarthWelfare', () => {
             destroyedStatus: null,
             productivity: 1,
             mineDepletion: 1,
-            facilityId: 'f1',
+            facilitySlots: ['f1', null, null] as [string | null, string | null, string | null],
             pendingActionId: null,
           },
           {
@@ -326,7 +326,7 @@ describe('tickEarthWelfare', () => {
             destroyedStatus: null,
             productivity: 1,
             mineDepletion: 1,
-            facilityId: 'f2',
+            facilitySlots: ['f2', null, null] as [string | null, string | null, string | null],
             pendingActionId: null,
           },
         ],

@@ -4,7 +4,7 @@
   import { gameStore } from '$lib/stores/game.svelte';
   import type { VictoryCondition, LossCondition } from '../../engine/types';
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
-  import { VICTORY_NARRATIVES, LOSS_NARRATIVES } from '../../data/narrative';
+  import { VICTORY_NARRATIVES, LOSS_NARRATIVES } from '../../data/loader';
 
   onMount(() => {
     if (!gameStore.state) goto('/newgame');

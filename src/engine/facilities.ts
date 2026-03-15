@@ -48,12 +48,48 @@ function addPartialResources(acc: Resources, delta: Partial<Resources>): void {
 }
 
 // ---------------------------------------------------------------------------
+// Multi-slot helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the unique FacilityInstances present on a tile, deduplicating
+ * multi-slot entries that repeat the same instance ID.
+ */
+export function getFacilitiesOnTile(tile: MapTile, facilities: FacilityInstance[]): FacilityInstance[] {
+  const seen = new Set<string>();
+  const result: FacilityInstance[] = [];
+  for (const id of tile.facilitySlots) {
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      const f = facilities.find((fac) => fac.id === id);
+      if (f) result.push(f);
+    }
+  }
+  return result;
+}
+
+/**
+ * Find the lowest slot index where `slotCost` contiguous free slots exist.
+ * Returns null if no contiguous space is available.
+ */
+export function findContiguousFreeStart(
+  slots: [string | null, string | null, string | null],
+  slotCost: number,
+): number | null {
+  for (let i = 0; i <= 3 - slotCost; i++) {
+    if (slots.slice(i, i + slotCost).every((s) => s === null)) return i;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Adjacency
 // ---------------------------------------------------------------------------
 
 /**
  * Net adjacency effect on a single facility instance, accumulated across
- * all its hex neighbours. Applied after base output, not scaled by condition.
+ * all its hex neighbours and same-tile peers. Applied after base output,
+ * not scaled by condition.
  */
 export interface AdjacencyEffect {
   facilityInstanceId: string;
@@ -61,68 +97,85 @@ export interface AdjacencyEffect {
   resourceBonus: Resources;
 }
 
+/** Apply a facility's adjacency rules against a single neighbour. */
+function applyAdjacencyRules(
+  def: FacilityDef,
+  neighbor: FacilityInstance,
+  effect: AdjacencyEffect,
+): void {
+  for (const rule of def.adjacencyBonuses) {
+    if (rule.neighborDefId !== neighbor.defId) continue;
+    if (rule.fieldBonus) addPartialFields(effect.fieldBonus, rule.fieldBonus);
+    if (rule.resourceBonus) addPartialResources(effect.resourceBonus, rule.resourceBonus);
+  }
+  for (const rule of def.adjacencyPenalties) {
+    if (rule.neighborDefId !== neighbor.defId) continue;
+    if (rule.fieldPenalty) {
+      for (const k of Object.keys(rule.fieldPenalty) as (keyof FieldPoints)[]) {
+        effect.fieldBonus[k] -= rule.fieldPenalty[k] ?? 0;
+      }
+    }
+    if (rule.resourcePenalty) {
+      for (const k of Object.keys(rule.resourcePenalty) as (keyof Resources)[]) {
+        effect.resourceBonus[k] -= rule.resourcePenalty[k] ?? 0;
+      }
+    }
+  }
+}
+
 /**
  * Pre-compute adjacency effects for all Earth-map facilities.
  * Call once per World Phase before computeFacilityOutput.
  *
- * The adjacency rules are directional: a FacilityDef declares which
- * neighbour def IDs trigger its own bonuses/penalties. Both the University
- * and the Research Lab carry matching rules so both receive the bonus —
- * this mirrors the GDD intent without requiring symmetric auto-application.
+ * Checks both hex-adjacent tiles and same-tile peers (intra-tile adjacency).
  */
 export function computeAdjacencyEffects(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
   earthTiles: MapTile[],
 ): AdjacencyEffect[] {
-  // Build coord-key → facility lookup for Earth tiles
-  const keyToFacility = new Map<string, FacilityInstance>();
+  // Build coord-key → unique FacilityInstance[] per tile, skipping destroyed tiles
+  const keyToFacilities = new Map<string, FacilityInstance[]>();
   for (const tile of earthTiles) {
-    if (!tile.facilityId || tile.destroyedStatus !== null) continue;
-    const facility = facilities.find((f) => f.id === tile.facilityId);
-    if (facility) keyToFacility.set(coordKey(tile.coord), facility);
+    if (tile.destroyedStatus !== null) continue;
+    const tileFacilities = getFacilitiesOnTile(tile, facilities);
+    if (tileFacilities.length > 0) {
+      keyToFacilities.set(coordKey(tile.coord), tileFacilities);
+    }
   }
 
   const effects: AdjacencyEffect[] = [];
 
-  for (const [key, facility] of keyToFacility) {
-    const def = facilityDefs.get(facility.defId);
-    if (!def) continue;
-
+  for (const [key, tileFacilities] of keyToFacilities) {
     const coord = parseCoordKey(key);
-    const effect: AdjacencyEffect = {
-      facilityInstanceId: facility.id,
-      fieldBonus: { ...ZERO_FIELDS },
-      resourceBonus: { ...ZERO_RESOURCES },
-    };
 
-    for (const nKey of neighborKeys(coord)) {
-      const neighbor = keyToFacility.get(nKey);
-      if (!neighbor) continue;
+    for (const facility of tileFacilities) {
+      const def = facilityDefs.get(facility.defId);
+      if (!def) continue;
 
-      for (const rule of def.adjacencyBonuses) {
-        if (rule.neighborDefId !== neighbor.defId) continue;
-        if (rule.fieldBonus) addPartialFields(effect.fieldBonus, rule.fieldBonus);
-        if (rule.resourceBonus) addPartialResources(effect.resourceBonus, rule.resourceBonus);
-      }
+      const effect: AdjacencyEffect = {
+        facilityInstanceId: facility.id,
+        fieldBonus: { ...ZERO_FIELDS },
+        resourceBonus: { ...ZERO_RESOURCES },
+      };
 
-      for (const rule of def.adjacencyPenalties) {
-        if (rule.neighborDefId !== neighbor.defId) continue;
-        // Penalties subtract from the bonus accumulators
-        if (rule.fieldPenalty) {
-          for (const k of Object.keys(rule.fieldPenalty) as (keyof FieldPoints)[]) {
-            effect.fieldBonus[k] -= rule.fieldPenalty[k] ?? 0;
-          }
-        }
-        if (rule.resourcePenalty) {
-          for (const k of Object.keys(rule.resourcePenalty) as (keyof Resources)[]) {
-            effect.resourceBonus[k] -= rule.resourcePenalty[k] ?? 0;
-          }
+      // Hex neighbours
+      for (const nKey of neighborKeys(coord)) {
+        const neighbors = keyToFacilities.get(nKey);
+        if (!neighbors) continue;
+        for (const neighbor of neighbors) {
+          applyAdjacencyRules(def, neighbor, effect);
         }
       }
+
+      // Intra-tile peers
+      for (const peer of tileFacilities) {
+        if (peer.id === facility.id) continue;
+        applyAdjacencyRules(def, peer, effect);
+      }
+
+      effects.push(effect);
     }
-
-    effects.push(effect);
   }
 
   return effects;
@@ -145,6 +198,7 @@ export interface FacilityOutput {
  *   - facility.condition (0–1): depletion factor for mines; always 1 for others
  *   - tile.productivity (0–1): climate/exhaustion degradation of the tile
  *
+ * Facilities on destroyed tiles produce nothing (productivity = 0).
  * Adjacency bonuses are structural effects applied at full value regardless
  * of condition or productivity.
  *
@@ -162,11 +216,17 @@ export function computeFacilityOutput(
 
   const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
 
-  // Tile productivity by locationKey (coord string) for Earth facilities
+  // Tile productivity by locationKey for Earth facilities.
+  // Destroyed tiles get 0 so any remaining facilities produce nothing.
   const tileProductivity = new Map<string, number>();
   for (const tile of earthTiles) {
-    if (tile.facilityId && tile.destroyedStatus === null) {
-      tileProductivity.set(coordKey(tile.coord), tile.productivity);
+    const key = coordKey(tile.coord);
+    if (tile.destroyedStatus !== null) {
+      if (tile.facilitySlots.some((s) => s !== null)) {
+        tileProductivity.set(key, 0);
+      }
+    } else if (tile.facilitySlots.some((s) => s !== null)) {
+      tileProductivity.set(key, tile.productivity);
     }
   }
 
@@ -232,8 +292,13 @@ export function computeResourceBreakdown(
 
   const tileProductivity = new Map<string, number>();
   for (const tile of earthTiles) {
-    if (tile.facilityId && tile.destroyedStatus === null) {
-      tileProductivity.set(coordKey(tile.coord), tile.productivity);
+    const key = coordKey(tile.coord);
+    if (tile.destroyedStatus !== null) {
+      if (tile.facilitySlots.some((s) => s !== null)) {
+        tileProductivity.set(key, 0);
+      }
+    } else if (tile.facilitySlots.some((s) => s !== null)) {
+      tileProductivity.set(key, tile.productivity);
     }
   }
 
@@ -360,10 +425,10 @@ export function computeHqBonus(willProfile: WillProfile): HqBonus {
 
 export interface TileSummary {
   tileType: string;
-  facilityName: string | null;
-  /** Net field output per turn (base + adjacency). */
+  facilityNames: string[];
+  /** Net field output per turn (base + adjacency) aggregated across all tile facilities. */
   fieldOutput: Partial<FieldPoints>;
-  /** Net resource output per turn (base + adjacency - upkeep). */
+  /** Net resource output per turn (base + adjacency - upkeep) aggregated across all tile facilities. */
   resourceOutput: Partial<Resources>;
   productivity: number;
   destroyedStatus: string | null;
@@ -380,13 +445,12 @@ export function getTileSummary(
   facilityDefs: Map<string, FacilityDef>,
   adjacencyEffects: AdjacencyEffect[],
 ): TileSummary {
-  const key = coordKey(tile.coord);
-  const facility = facilities.find((f) => f.locationKey === key) ?? null;
+  const tileFacilities = getFacilitiesOnTile(tile, facilities);
 
-  if (!facility) {
+  if (tileFacilities.length === 0) {
     return {
       tileType: tile.type,
-      facilityName: null,
+      facilityNames: [],
       fieldOutput: {},
       resourceOutput: {},
       productivity: tile.productivity,
@@ -395,51 +459,44 @@ export function getTileSummary(
     };
   }
 
-  const def = facilityDefs.get(facility.defId);
-  if (!def) {
-    return {
-      tileType: tile.type,
-      facilityName: facility.defId,
-      fieldOutput: {},
-      resourceOutput: {},
-      productivity: tile.productivity,
-      destroyedStatus: tile.destroyedStatus,
-      canDelete: false,
-    };
-  }
+  const fieldOutput: Partial<FieldPoints> = {};
+  const resourceOutput: Partial<Resources> = {};
+  let canDelete = false;
 
-  // Start from base field/resource output
-  const fieldOutput: Partial<FieldPoints> = { ...def.fieldOutput };
-  const resourceOutput: Partial<Resources> = { ...def.resourceOutput };
+  for (const facility of tileFacilities) {
+    const def = facilityDefs.get(facility.defId);
+    if (!def) continue;
+    if (def.canDelete) canDelete = true;
 
-  // Apply adjacency bonus for this facility
-  const adj = adjacencyEffects.find((e) => e.facilityInstanceId === facility.id);
-  if (adj) {
-    for (const k of Object.keys(adj.fieldBonus) as (keyof FieldPoints)[]) {
-      if (adj.fieldBonus[k]) {
-        fieldOutput[k] = (fieldOutput[k] ?? 0) + adj.fieldBonus[k];
+    for (const k of Object.keys(def.fieldOutput) as (keyof FieldPoints)[]) {
+      fieldOutput[k] = (fieldOutput[k] ?? 0) + (def.fieldOutput[k] ?? 0);
+    }
+    for (const k of Object.keys(def.resourceOutput) as (keyof Resources)[]) {
+      resourceOutput[k] = (resourceOutput[k] ?? 0) + (def.resourceOutput[k] ?? 0);
+    }
+    for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
+      resourceOutput[k] = (resourceOutput[k] ?? 0) - (def.upkeepCost[k] ?? 0);
+    }
+
+    const adj = adjacencyEffects.find((e) => e.facilityInstanceId === facility.id);
+    if (adj) {
+      for (const k of Object.keys(adj.fieldBonus) as (keyof FieldPoints)[]) {
+        if (adj.fieldBonus[k]) fieldOutput[k] = (fieldOutput[k] ?? 0) + adj.fieldBonus[k];
+      }
+      for (const k of Object.keys(adj.resourceBonus) as (keyof Resources)[]) {
+        if (adj.resourceBonus[k]) resourceOutput[k] = (resourceOutput[k] ?? 0) + adj.resourceBonus[k];
       }
     }
-    for (const k of Object.keys(adj.resourceBonus) as (keyof Resources)[]) {
-      if (adj.resourceBonus[k]) {
-        resourceOutput[k] = (resourceOutput[k] ?? 0) + adj.resourceBonus[k];
-      }
-    }
-  }
-
-  // Subtract upkeep from resource output
-  for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
-    resourceOutput[k] = (resourceOutput[k] ?? 0) - (def.upkeepCost[k] ?? 0);
   }
 
   return {
     tileType: tile.type,
-    facilityName: def.name,
+    facilityNames: tileFacilities.map((f) => facilityDefs.get(f.defId)?.name ?? f.defId),
     fieldOutput,
     resourceOutput,
     productivity: tile.productivity,
     destroyedStatus: tile.destroyedStatus,
-    canDelete: def.canDelete,
+    canDelete,
   };
 }
 
@@ -457,8 +514,8 @@ export interface ConstructionTickResult {
 /**
  * Advance the construction queue by one turn.
  * For each action whose turnsRemaining reaches 0:
- *   - 'construct': creates a FacilityInstance and sets tile.facilityId.
- *   - 'demolish':  removes the FacilityInstance and clears tile.facilityId.
+ *   - 'construct': creates a FacilityInstance and fills the tile's facilitySlots.
+ *   - 'demolish':  removes the FacilityInstance and clears its slots.
  * In both cases tile.pendingActionId is cleared.
  * Returns new arrays — does not mutate inputs.
  */
@@ -488,6 +545,7 @@ export function tickConstructionQueue(
     if (action.type === 'construct') {
       const facilityId = `${action.facilityDefId}-${action.coordKey}-t${completedTurn}`;
       const def = facilityDefs.get(action.facilityDefId);
+      const slotCost = def?.slotCost ?? 1;
       const tile = updatedTiles.find((t) => coordKey(t.coord) === action.coordKey);
       const startCondition = def?.depletes && tile ? tile.mineDepletion : 1.0;
       const newInstance: FacilityInstance = {
@@ -498,19 +556,28 @@ export function tickConstructionQueue(
         builtTurn: completedTurn,
       };
       updatedFacilities = [...updatedFacilities, newInstance];
-      updatedTiles = updatedTiles.map((t) =>
-        coordKey(t.coord) === action.coordKey ? { ...t, facilityId, pendingActionId: null } : t,
-      );
+      updatedTiles = updatedTiles.map((t) => {
+        if (coordKey(t.coord) !== action.coordKey) return t;
+        const newSlots = [...t.facilitySlots] as [string | null, string | null, string | null];
+        for (let i = action.slotIndex; i < action.slotIndex + slotCost; i++) {
+          if (i < 3) newSlots[i] = facilityId;
+        }
+        return { ...t, facilitySlots: newSlots, pendingActionId: null };
+      });
     } else {
-      // demolish
-      updatedFacilities = updatedFacilities.filter(
-        (f) => !(f.defId === action.facilityDefId && f.locationKey === action.coordKey),
-      );
-      updatedTiles = updatedTiles.map((t) =>
-        coordKey(t.coord) === action.coordKey
-          ? { ...t, facilityId: null, pendingActionId: null }
-          : t,
-      );
+      // demolish: find the instance at slotIndex, remove it and clear all its slots
+      const targetTile = updatedTiles.find((t) => coordKey(t.coord) === action.coordKey);
+      const instanceId = targetTile?.facilitySlots[action.slotIndex] ?? null;
+      if (instanceId) {
+        updatedFacilities = updatedFacilities.filter((f) => f.id !== instanceId);
+      }
+      updatedTiles = updatedTiles.map((t) => {
+        if (coordKey(t.coord) !== action.coordKey) return t;
+        const newSlots = t.facilitySlots.map((s) =>
+          s === instanceId ? null : s,
+        ) as [string | null, string | null, string | null];
+        return { ...t, facilitySlots: newSlots, pendingActionId: null };
+      });
     }
   }
 

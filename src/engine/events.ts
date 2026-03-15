@@ -7,6 +7,7 @@ import type {
   FieldPoints,
   Era,
   PushFactor,
+  FacilityInstance,
 } from './types';
 import type { Rng } from './rng';
 
@@ -31,6 +32,7 @@ export function getEligibleEvents(
   playerBlocId: string,
   activeEventDefIds: Set<string>,
   hasCrisisActive: boolean,
+  climatePressure: number,
 ): EventDef[] {
   return pool.filter((def) => {
     if (activeEventDefIds.has(def.id)) return false;
@@ -38,6 +40,7 @@ export function getEligibleEvents(
     if (def.pushFactors !== null && !def.pushFactors.includes(pushFactor)) return false;
     if (def.blocIds !== null && !def.blocIds.includes(playerBlocId)) return false;
     if (hasCrisisActive && def.tags.includes('crisis')) return false;
+    if (def.minClimate != null && climatePressure < def.minClimate) return false;
     return true;
   });
 }
@@ -57,12 +60,13 @@ export function selectNewEvents(
   activeEvents: EventInstance[],
   rng: Rng,
   arrivedTurn: number,
+  climatePressure: number,
 ): EventInstance[] {
   const activeDefIds = new Set(activeEvents.map((e) => e.defId));
   const hasCrisisActive = activeEvents.some(
     (e) => !e.resolved && (pool.find((d) => d.id === e.defId)?.tags ?? []).includes('crisis'),
   );
-  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive);
+  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive, climatePressure);
   if (eligible.length === 0) return [];
 
   const rawCount = rng.nextInt(0, Math.min(MAX_NEW_EVENTS_PER_TURN, eligible.length));
@@ -196,13 +200,13 @@ export function applyEventEffect(
     const candidates = updatedTiles.filter((t) => {
       if (t.type !== effect.tileTypeTarget) return false;
       if (t.destroyedStatus !== null) return false;
-      // Exclude tiles that have the HQ on them
-      const f = updatedPlayer.facilities.find((fac) => fac.id === t.facilityId);
-      return !f || f.defId !== 'hq';
+      // Exclude tiles that have the HQ in any slot
+      if (t.facilitySlots.some((id) => id && updatedPlayer.facilities.find((f) => f.id === id)?.defId === 'hq')) return false;
+      return true;
     });
     if (candidates.length > 0) {
       const chosen = candidates[Math.floor(rng.next() * candidates.length)];
-      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, chosen, status);
+      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, chosen, status, rng);
       updatedTiles = destruction.tiles;
       updatedPlayer = destruction.player;
     }
@@ -215,7 +219,7 @@ export function applyEventEffect(
       (t) => `${t.coord.q},${t.coord.r}` === coordKey,
     );
     if (target && target.destroyedStatus === null) {
-      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, target, status);
+      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, target, status, rng);
       updatedTiles = destruction.tiles;
       updatedPlayer = destruction.player;
     }
@@ -225,34 +229,51 @@ export function applyEventEffect(
   return { player: updatedPlayer, mapTiles: updatedTiles };
 }
 
-/** Destroy a tile and remove any facility on it (except HQ). */
+/** Destroy a tile and remove one random non-HQ facility slot from it. */
 function destroyTileAndFacility(
   tiles: MapTile[],
   player: PlayerState,
   target: MapTile,
   status: import('./types').TileDestroyedStatus,
+  rng?: Rng,
 ): { tiles: MapTile[]; player: PlayerState } {
-  const coordKey = `${target.coord.q},${target.coord.r}`;
+  const tileCoordKey = `${target.coord.q},${target.coord.r}`;
 
-  const updatedTiles = tiles.map((t) =>
-    `${t.coord.q},${t.coord.r}` === coordKey
-      ? { ...t, destroyedStatus: status, facilityId: null, pendingActionId: null }
-      : t,
-  );
-
-  let updatedPlayer = player;
-  if (target.facilityId) {
-    const facility = player.facilities.find((f) => f.id === target.facilityId);
-    if (facility && facility.defId !== 'hq') {
-      updatedPlayer = {
-        ...player,
-        facilities: player.facilities.filter((f) => f.id !== target.facilityId),
-        // Also cancel any construction action on this tile
-        constructionQueue: player.constructionQueue.filter(
-          (a) => a.coordKey !== coordKey,
-        ),
-      };
+  // Collect unique non-HQ facility instances on this tile
+  const seen = new Set<string>();
+  const candidates: FacilityInstance[] = [];
+  for (const id of target.facilitySlots) {
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      const f = player.facilities.find((fac) => fac.id === id);
+      if (f && f.defId !== 'hq') candidates.push(f);
     }
+  }
+
+  // Pick one victim at random
+  let victimId: string | null = null;
+  if (candidates.length > 0) {
+    const idx = rng ? Math.floor(rng.next() * candidates.length) : 0;
+    victimId = candidates[idx].id;
+  }
+
+  // Mark tile destroyed, clear the victim's slots, clear pending action
+  const updatedTiles = tiles.map((t) => {
+    if (`${t.coord.q},${t.coord.r}` !== tileCoordKey) return t;
+    const newSlots = t.facilitySlots.map((s) =>
+      s === victimId ? null : s,
+    ) as [string | null, string | null, string | null];
+    return { ...t, destroyedStatus: status, facilitySlots: newSlots, pendingActionId: null };
+  });
+
+  // Remove victim from facilities list and cancel pending construction
+  let updatedPlayer = player;
+  if (victimId) {
+    updatedPlayer = {
+      ...player,
+      facilities: player.facilities.filter((f) => f.id !== victimId),
+      constructionQueue: player.constructionQueue.filter((a) => a.coordKey !== tileCoordKey),
+    };
   }
 
   return { tiles: updatedTiles, player: updatedPlayer };

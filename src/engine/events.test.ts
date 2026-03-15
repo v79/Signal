@@ -119,7 +119,7 @@ function makeEventInstance(defId: string, arrivedTurn = 1, countdown = 3): Event
 
 describe('getEligibleEvents', () => {
   it('returns events matching era, push factor, and bloc', () => {
-    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', new Set(), false);
+    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', new Set(), false, 100);
     // fundingCrisis, diplomaticOpportunity, euFragmentation — not sabotage (geopoliticalTension only)
     expect(eligible.map((e) => e.id)).toContain('fundingCrisis');
     expect(eligible.map((e) => e.id)).toContain('diplomaticOpportunity');
@@ -128,31 +128,31 @@ describe('getEligibleEvents', () => {
   });
 
   it('includes push-factor-specific events when push factor matches', () => {
-    const eligible = getEligibleEvents(pool, 'earth', 'geopoliticalTension', 'eu', new Set(), false);
+    const eligible = getEligibleEvents(pool, 'earth', 'geopoliticalTension', 'eu', new Set(), false, 100);
     expect(eligible.map((e) => e.id)).toContain('sabotage');
   });
 
   it('excludes bloc-specific events for non-matching blocs', () => {
-    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'northAmerica', new Set(), false);
+    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'northAmerica', new Set(), false, 100);
     expect(eligible.map((e) => e.id)).not.toContain('euFragmentation');
   });
 
   it('excludes already-active events', () => {
     const active = new Set(['fundingCrisis']);
-    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', active, false);
+    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', active, false, 100);
     expect(eligible.map((e) => e.id)).not.toContain('fundingCrisis');
   });
 
   it('excludes events not valid for the current era', () => {
     // sabotage is earth-only; test in nearSpace
-    const eligible = getEligibleEvents(pool, 'nearSpace', 'geopoliticalTension', 'eu', new Set(), false);
+    const eligible = getEligibleEvents(pool, 'nearSpace', 'geopoliticalTension', 'eu', new Set(), false, 100);
     expect(eligible.map((e) => e.id)).not.toContain('sabotage');
     expect(eligible.map((e) => e.id)).toContain('diplomaticOpportunity'); // era: earth + nearSpace
   });
 
   it('excludes all crisis-tagged events when hasCrisisActive is true', () => {
     // fundingCrisis and sabotage both have crisis tag; diplomaticOpportunity and euFragmentation do not
-    const eligible = getEligibleEvents(pool, 'earth', 'geopoliticalTension', 'eu', new Set(), true);
+    const eligible = getEligibleEvents(pool, 'earth', 'geopoliticalTension', 'eu', new Set(), true, 100);
     expect(eligible.map((e) => e.id)).not.toContain('fundingCrisis');
     expect(eligible.map((e) => e.id)).not.toContain('sabotage');
     expect(eligible.map((e) => e.id)).toContain('diplomaticOpportunity');
@@ -160,8 +160,21 @@ describe('getEligibleEvents', () => {
   });
 
   it('allows crisis events when hasCrisisActive is false', () => {
-    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', new Set(), false);
+    const eligible = getEligibleEvents(pool, 'earth', 'climateChange', 'eu', new Set(), false, 100);
     expect(eligible.map((e) => e.id)).toContain('fundingCrisis');
+  });
+
+  it('excludes events whose minClimate threshold has not been reached', () => {
+    const climateGated: EventDef = {
+      ...fundingCrisisDef,
+      id: 'climateGated',
+      minClimate: 25,
+    };
+    const below = getEligibleEvents([climateGated], 'earth', 'climateChange', 'eu', new Set(), false, 24);
+    expect(below.map((e) => e.id)).not.toContain('climateGated');
+
+    const above = getEligibleEvents([climateGated], 'earth', 'climateChange', 'eu', new Set(), false, 25);
+    expect(above.map((e) => e.id)).toContain('climateGated');
   });
 });
 
@@ -171,13 +184,13 @@ describe('getEligibleEvents', () => {
 
 describe('selectNewEvents', () => {
   it('returns deterministic results for the same seed', () => {
-    const r1 = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev1'), 5);
-    const r2 = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev1'), 5);
+    const r1 = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev1'), 5, 100);
+    const r2 = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev1'), 5, 100);
     expect(r1.map((e) => e.defId)).toEqual(r2.map((e) => e.defId));
   });
 
   it('returns events with correct arrivedTurn and countdown', () => {
-    const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev2'), 7);
+    const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ev2'), 7, 100);
     for (const event of events) {
       expect(event.arrivedTurn).toBe(7);
       expect(event.resolved).toBe(false);
@@ -186,19 +199,19 @@ describe('selectNewEvents', () => {
   });
 
   it('returns empty when no eligible events exist', () => {
-    const events = selectNewEvents([], 'earth', 'climateChange', 'eu', [], createRng('empty'), 1);
+    const events = selectNewEvents([], 'earth', 'climateChange', 'eu', [], createRng('empty'), 1, 100);
     expect(events).toHaveLength(0);
   });
 
   it('generates unique event IDs', () => {
-    const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ids'), 3);
+    const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng('ids'), 3, 100);
     const ids = events.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('limits to at most 1 event during the early-game protection window (turns 1–8)', () => {
     for (let turn = 1; turn <= 8; turn++) {
-      const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng(`early-${turn}`), turn);
+      const events = selectNewEvents(pool, 'earth', 'climateChange', 'eu', [], createRng(`early-${turn}`), turn, 100);
       expect(events.length).toBeLessThanOrEqual(1);
     }
   });
@@ -207,7 +220,7 @@ describe('selectNewEvents', () => {
     // Run many seeds and verify at least one produces 2 events after turn 8.
     let sawTwo = false;
     for (let i = 0; i < 200; i++) {
-      const events = selectNewEvents(pool, 'earth', 'geopoliticalTension', 'eu', [], createRng(`late-${i}`), 9);
+      const events = selectNewEvents(pool, 'earth', 'geopoliticalTension', 'eu', [], createRng(`late-${i}`), 9, 100);
       if (events.length === 2) { sawTwo = true; break; }
     }
     expect(sawTwo).toBe(true);
@@ -225,7 +238,7 @@ describe('selectNewEvents', () => {
     }];
     for (let i = 0; i < 200; i++) {
       const events = selectNewEvents(
-        pool, 'earth', 'geopoliticalTension', 'eu', activeCrisis, createRng(`crisis-cap-${i}`), 9,
+        pool, 'earth', 'geopoliticalTension', 'eu', activeCrisis, createRng(`crisis-cap-${i}`), 9, 100,
       );
       for (const e of events) {
         const def = pool.find((d) => d.id === e.defId);
@@ -359,8 +372,8 @@ describe('applyEventEffect', () => {
 
   it('destroyTile: marks the specific tile as destroyed and returns updated tiles', () => {
     const tiles = [
-      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
-      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
+      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
     const { mapTiles } = applyEventEffect({ destroyTile: { coordKey: '1,0', status: 'flooded' } }, basePlayer, tiles, 1, rng);
     expect(mapTiles.find(t => t.coord.q === 1 && t.coord.r === 0)?.destroyedStatus).toBe('flooded');
@@ -369,9 +382,9 @@ describe('applyEventEffect', () => {
 
   it('tileTypeTarget: destroys a random tile of the given type', () => {
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
-      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
-      { coord: { q: 2, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId: null, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
+      { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
+      { coord: { q: 2, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
@@ -386,7 +399,7 @@ describe('applyEventEffect', () => {
   it('tileTypeTarget: removes the facility on the destroyed tile', () => {
     const facilityId = 'fac-1';
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, facilityId, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [facilityId, null, null] as [string | null, string | null, string | null], pendingActionId: null },
     ];
     const playerWithFacility: PlayerState = {
       ...basePlayer,
@@ -397,14 +410,14 @@ describe('applyEventEffect', () => {
       playerWithFacility, tiles, 1, createRng('seed-b'),
     );
     expect(mapTiles[0].destroyedStatus).toBe('flooded');
-    expect(mapTiles[0].facilityId).toBeNull();
+    expect(mapTiles[0].facilitySlots.every((s) => s === null)).toBe(true);
     expect(player.facilities).toHaveLength(0);
   });
 
   it('tileTypeTarget: never destroys the HQ tile', () => {
     const facilityId = 'hq-inst';
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, facilityId, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [facilityId, facilityId, facilityId] as [string, string, string], pendingActionId: null },
     ];
     const playerWithHq: PlayerState = {
       ...basePlayer,
@@ -420,7 +433,7 @@ describe('applyEventEffect', () => {
 
   it('tileTypeTarget: skips already-destroyed tiles', () => {
     const tiles = [
-      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: 'flooded' as const, productivity: 1, facilityId: null, pendingActionId: null },
+      { coord: { q: 0, r: 0 }, type: 'coastal' as const, destroyedStatus: 'flooded' as const, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
@@ -503,6 +516,7 @@ describe('weighted event selection', () => {
         [],
         createRng(`weight-stat-${i}`),
         10,
+        100,
       );
       if (results.length === 1) {
         singlePickCounts[results[0].defId] = (singlePickCounts[results[0].defId] ?? 0) + 1;
@@ -531,6 +545,7 @@ describe('weighted event selection', () => {
         [],
         createRng(`weight-zero-${i}`),
         10,
+        100,
       );
       for (const e of results) {
         if (e.defId === 'zero') zeroCount++;
@@ -558,6 +573,7 @@ describe('weighted event selection', () => {
         [],
         createRng(`weight-equal-${i}`),
         10,
+        100,
       );
       if (results.length === 1) {
         singlePickCounts[results[0].defId] = (singlePickCounts[results[0].defId] ?? 0) + 1;
@@ -575,7 +591,7 @@ describe('weighted event selection', () => {
 
   it('weights do not bypass eligibility filters', () => {
     // High-weight event gated to geopoliticalTension push factor.
-    const gated = { ...makeWeightedDef('gated', 99.0), pushFactors: ['geopoliticalTension'] as const };
+    const gated = { ...makeWeightedDef('gated', 99.0), pushFactors: ['geopoliticalTension'] as import('./types').PushFactor[] };
     const open = makeWeightedDef('open', 1.0);
     const weightedPool = [gated, open];
 
@@ -588,6 +604,7 @@ describe('weighted event selection', () => {
         [],
         createRng(`weight-filter-${i}`),
         10,
+        100,
       );
       for (const e of results) {
         expect(e.defId).not.toBe('gated');

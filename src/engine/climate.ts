@@ -51,14 +51,11 @@ export function applyClimateDegradation(
   for (const rule of rules) {
     if (rng.next() >= rule.probability) continue;
 
-    // Candidates: non-destroyed tiles of the target type, excluding HQ tile
+    // Candidates: non-destroyed tiles of the target type, excluding any tile with HQ in a slot
     const candidates = updatedTiles.filter((t) => {
       if (t.type !== rule.tileType) return false;
       if (t.destroyedStatus !== null) return false;
-      if (t.facilityId) {
-        const f = updatedFacilities.find((fac) => fac.id === t.facilityId);
-        if (f?.defId === 'hq') return false;
-      }
+      if (t.facilitySlots.some((id) => id && updatedFacilities.find((f) => f.id === id)?.defId === 'hq')) return false;
       return true;
     });
 
@@ -67,24 +64,22 @@ export function applyClimateDegradation(
     const chosen = candidates[Math.floor(rng.next() * candidates.length)];
     const chosenKey = `${chosen.coord.q},${chosen.coord.r}`;
 
-    // Destroy the tile
+    // Collect all non-HQ facility IDs on the chosen tile
+    const slotIds = new Set(chosen.facilitySlots.filter(Boolean) as string[]);
+    const facilsToRemove = updatedFacilities.filter(
+      (f) => slotIds.has(f.id) && f.defId !== 'hq',
+    );
+    const removeIds = new Set(facilsToRemove.map((f) => f.id));
+
+    // Destroy the tile: clear all slots, set status
     updatedTiles = updatedTiles.map((t) =>
       `${t.coord.q},${t.coord.r}` === chosenKey
-        ? { ...t, destroyedStatus: rule.status, facilityId: null, pendingActionId: null }
+        ? { ...t, destroyedStatus: rule.status, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null }
         : t,
     );
 
-    // Remove any facility whose tile type no longer supports it
-    if (chosen.facilityId) {
-      const facility = updatedFacilities.find((f) => f.id === chosen.facilityId);
-      if (facility) {
-        const def = facilityDefs.get(facility.defId);
-        const tileStillValid = def?.allowedTileTypes.length === 0; // no restriction = always valid
-        if (!tileStillValid) {
-          updatedFacilities = updatedFacilities.filter((f) => f.id !== chosen.facilityId);
-        }
-      }
-    }
+    // Remove all non-HQ facilities from the destroyed tile
+    updatedFacilities = updatedFacilities.filter((f) => !removeIds.has(f.id));
 
     newsLines.push(`A ${rule.tileType} tile has been lost to ${rule.newsVerb}.`);
   }

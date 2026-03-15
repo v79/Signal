@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { TurnPhase } from '../../engine/types';
   import NarrativeModal from './NarrativeModal.svelte';
-  import { NARRATIVE_GAME_HELP } from '../../data/narrative';
+  import { NARRATIVE_GAME_HELP } from '../../data/loader';
 
   let showHelp = $state(false);
 

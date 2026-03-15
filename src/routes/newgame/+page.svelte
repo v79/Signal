@@ -1,9 +1,9 @@
 <script lang="ts">
   import { gameStore } from '$lib/stores/game.svelte';
-  import { BLOC_DEFS } from '../../data/blocs';
+  import { BLOC_DEFS } from '../../data/loader';
   import type { PushFactor } from '../../engine/types';
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
-  import { NARRATIVE_OPENING } from '../../data/narrative';
+  import { NARRATIVE_OPENING } from '../../data/loader';
 
   let showOpening = $state(true);
 

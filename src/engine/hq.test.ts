@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { computeHqBonus } from './facilities';
-import { FACILITY_DEFS } from '../data/facilities';
+import { FACILITY_DEFS } from '../data/loader';
 import { generateEarthTilesForBloc } from '../lib/stores/game.svelte';
 
 describe('HQ FacilityDef', () => {

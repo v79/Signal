@@ -124,6 +124,7 @@ export function executeEventPhase(
     tickedEvents,
     rng,
     state.turn,
+    state.climatePressure,
   );
 
   return {
@@ -254,7 +255,7 @@ export function executeWorldPhase(
   const activeFacilityDefIds = facilitiesAfterQueue
     .filter((f) => {
       // exclude facilities still under construction or being demolished
-      const tile = tilesAfterQueue.find((t) => t.facilityId === f.id);
+      const tile = tilesAfterQueue.find((t) => t.facilitySlots.some((s) => s === f.id));
       return tile ? tile.pendingActionId === null : true;
     })
     .map((f) => f.defId);
