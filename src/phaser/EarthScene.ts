@@ -57,13 +57,17 @@ const FACILITY_COLORS: Record<string, number> = {
   researchLab: 0x6aaad8,
   mine: 0xb06030,
   coalPowerStation: 0x806050,
+  fissionPowerStation: 0xc05010,
   solarFarm: 0xd8c840,
   offshoreWindFarm: 0x40c8d8,
   publicUniversity: 0xa070d8,
   engineeringWorks: 0xd87840,
-  bioResearchCentre: 0x50c878,
+  bioresearchCentre: 0x50c878,
+  socialPolicyUnit: 0x70a8d0,
+  agriculturalResearchStation: 0x80c850,
+  spaceLaunchCentre: 0xd06030,
+  dataCentre: 0x20d0a0,
   deepSpaceArray: 0x4060d8,
-  computingHub: 0x20d0a0,
 };
 
 // ---------------------------------------------------------------------------

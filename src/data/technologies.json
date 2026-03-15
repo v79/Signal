@@ -3,7 +3,7 @@
     "id": "integratedCircuits",
     "name": "Integrated Circuit Arrays",
     "rumourText": "Miniaturised components are being tested that may replace entire banks of discrete transistors.",
-    "baseRecipe": { "engineering": 40, "computing": 25, "physics": 20, "mathematics": 15 },
+    "baseRecipe": { "engineering": 30, "physics": 20, "mathematics": 15 },
     "recipeVariance": 0.2,
     "requiresSimultaneous": false,
     "unlocksCards": ["softwareGrant"],
@@ -26,12 +26,12 @@
       ]
     }
   },
-  "rocketGuidanceSystems": {
-    "id": "rocketGuidanceSystems",
-    "name": "Precision Rocket Guidance",
-    "rumourText": "Navigation accuracy beyond the atmosphere may soon allow reliable orbital insertion on first attempt.",
-    "baseRecipe": { "physics": 35, "mathematics": 30, "engineering": 40, "computing": 20 },
-    "recipeVariance": 0.15,
+  "liquidThrusters": {
+    "id": "liquidThrusters",
+    "name": "Liquid Hydrogen Thrusters",
+    "rumourText": "Propellant experiments suggest liquid hydrogen may achieve thrust-to-weight ratios previously considered theoretical.",
+    "baseRecipe": { "engineering": 30, "physics": 30, "mathematics": 10 },
+    "recipeVariance": 0.2,
     "requiresSimultaneous": false,
     "unlocksCards": [],
     "unlocksProjects": [],
@@ -40,62 +40,89 @@
     "tier": 1,
     "requiredTechIds": [],
     "narrative": {
-      "id": "narrative-tech-rocketGuidanceSystems",
-      "title": "Discovery — Precision Rocket Guidance",
+      "id": "narrative-tech-liquidThrusters",
+      "title": "Discovery — Liquid Hydrogen Thrusters",
       "skippable": true,
       "slides": [
         {
-          "text": "Orbital insertion on first attempt is now reliable. The mathematics of mid-course trajectory correction has been reduced to a procedure rather than an art."
+          "text": "Liquid hydrogen and liquid oxygen combustion has been mastered at scale. Specific impulse figures that were previously theoretical are now reproducible in sustained test burns."
         },
         {
-          "text": "Payload delivery to precise orbital positions is now achievable. Future deep-space probe placement can be calculated to within acceptable margins from the outset."
+          "text": "Reliable orbital insertion is within engineering reach. The performance envelope these engines open makes larger and more precise payloads viable for the first time."
         }
       ]
     }
   },
-  "satelliteCommunications": {
-    "id": "satelliteCommunications",
-    "name": "Satellite Communications",
-    "rumourText": "A relay station in orbit could link every ground facility on the globe simultaneously.",
-    "baseRecipe": { "physics": 45, "engineering": 50, "computing": 20, "mathematics": 25 },
+  "fibreglassComposites": {
+    "id": "fibreglassComposites",
+    "name": "Fibreglass Composites",
+    "rumourText": "Glass-reinforced polymer composites tested in aerospace applications weigh a fraction of aluminium for equivalent structural strength.",
+    "baseRecipe": { "engineering": 20, "physics": 30, "biochemistry": 30 },
     "recipeVariance": 0.2,
     "requiresSimultaneous": false,
-    "unlocksCards": ["globalBroadcast"],
+    "unlocksCards": [],
     "unlocksProjects": [],
-    "unlocksFacilities": ["deepSpaceArray"],
+    "unlocksFacilities": ["offshoreWindFarm"],
     "signalDerived": false,
     "tier": 1,
     "requiredTechIds": [],
     "narrative": {
-      "id": "narrative-tech-satelliteCommunications",
-      "title": "Discovery — Satellite Communications",
+      "id": "narrative-tech-fibreglassComposites",
+      "title": "Discovery — Fibreglass Composites",
       "skippable": true,
       "slides": [
         {
-          "text": "An orbital relay now links every ground facility simultaneously. Data that previously required physical transfer across continents arrives in seconds."
+          "text": "Glass-reinforced polymer matrices have proven viable for large structural components. The strength-to-weight ratio improvement over metals is consistent and reproducible across production batches."
         },
         {
-          "text": "An unexpected side effect: signal readings taken through the relay are cleaner than anything recorded from the ground. The atmosphere, it turns out, was obscuring more than we understood. Deep Space Array construction is now viable."
+          "text": "Composite fabrication now enables aerodynamic structures — including large-diameter wind turbine blades — that could not be manufactured from conventional materials at reasonable cost. Offshore wind infrastructure is now a practical capital investment."
+        }
+      ]
+    }
+  },
+  "recombinantDNA": {
+    "id": "recombinantDNA",
+    "name": "Recombinant DNA Technology",
+    "rumourText": "Genetic material from separate organisms has been successfully combined in a laboratory environment.",
+    "baseRecipe": { "biochemistry": 40, "mathematics": 30, "socialScience": 10 },
+    "recipeVariance": 0.2,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 1,
+    "requiredTechIds": [],
+    "narrative": {
+      "id": "narrative-tech-recombinantDNA",
+      "title": "Discovery — Recombinant DNA Technology",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Genetic material from two organisms has been spliced and successfully expressed in a host cell. The boundary between species has become a design parameter rather than an absolute constraint."
+        },
+        {
+          "text": "The team notes that what has been demonstrated is, at its core, the editing of a structured information system encoded in a physical substrate. Pattern recognition is pattern recognition, whatever the medium."
         }
       ]
     }
   },
   "microprocessors": {
     "id": "microprocessors",
-    "name": "Microprocessor Architecture",
+    "name": "Microprocessors",
     "rumourText": "A single chip carrying a complete instruction set has been demonstrated in prototype form.",
-    "baseRecipe": { "computing": 35, "mathematics": 40, "engineering": 30, "physics": 20 },
-    "recipeVariance": 0.2,
+    "baseRecipe": { "engineering": 20, "physics": 40, "computing": 20 },
+    "recipeVariance": 0.15,
     "requiresSimultaneous": false,
     "unlocksCards": ["computerModellingRun"],
     "unlocksProjects": [],
-    "unlocksFacilities": ["computingHub"],
+    "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 1,
+    "tier": 2,
     "requiredTechIds": ["integratedCircuits"],
     "narrative": {
       "id": "narrative-tech-microprocessors",
-      "title": "Discovery — Microprocessor Architecture",
+      "title": "Discovery — Microprocessors",
       "skippable": true,
       "slides": [
         {
@@ -107,164 +134,245 @@
       ]
     }
   },
-  "personalComputing": {
-    "id": "personalComputing",
-    "name": "Personal Computing",
-    "rumourText": "Desktop machines with sufficient power for scientific calculation may reach civilian researchers within years.",
-    "baseRecipe": { "computing": 80, "socialScience": 45, "engineering": 35 },
+  "cryogenicPropulsion": {
+    "id": "cryogenicPropulsion",
+    "name": "Cryogenic Propulsion Systems",
+    "rumourText": "Sustained burns with supercooled propellants have demonstrated specific impulse values that make outer-planet trajectories viable.",
+    "baseRecipe": { "physics": 40, "biochemistry": 20, "mathematics": 20, "computing": 10 },
+    "recipeVariance": 0.3,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["fissionPowerStation"],
+    "signalDerived": false,
+    "tier": 2,
+    "requiredTechIds": ["liquidThrusters"],
+    "narrative": {
+      "id": "narrative-tech-cryogenicPropulsion",
+      "title": "Discovery — Cryogenic Propulsion Systems",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Sustained burns using supercooled liquid hydrogen have demonstrated the specific impulse values needed for multi-stage deep-space trajectories. The propulsion problem for outer-planet missions is resolved."
+        },
+        {
+          "text": "The same cryogenic engineering principles required for these engines have yielded compact, high-efficiency thermal control systems. Dense energy generation — including nuclear fission plant design — benefits directly."
+        }
+      ]
+    }
+  },
+  "photovoltaicSolarCells": {
+    "id": "photovoltaicSolarCells",
+    "name": "Photovoltaic Solar Cells",
+    "rumourText": "Laboratory silicon cells have converted sunlight to electricity at efficiencies that would make large-scale ground solar economically viable.",
+    "baseRecipe": { "engineering": 10, "physics": 30, "biochemistry": 30, "computing": 20 },
     "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["solarFarm"],
+    "signalDerived": false,
+    "tier": 2,
+    "requiredTechIds": ["integratedCircuits"],
+    "narrative": {
+      "id": "narrative-tech-photovoltaicSolarCells",
+      "title": "Discovery — Photovoltaic Solar Cells",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Silicon photovoltaic cells have reached conversion efficiencies sufficient for economic ground-scale generation. The cost-per-watt trajectory makes large installations viable within a standard planning horizon."
+        },
+        {
+          "text": "Solar farm construction is now a realistic capital investment. Zero fuel cost and falling panel prices change the funding calculus for sustained programme operations significantly."
+        }
+      ]
+    }
+  },
+  "orbitalMechanics": {
+    "id": "orbitalMechanics",
+    "name": "Applied Orbital Mechanics",
+    "rumourText": "Sustained human habitation in low orbit is within theoretical reach — the mathematics is established; the engineering must follow.",
+    "baseRecipe": { "physics": 20, "mathematics": 50, "computing": 20 },
+    "recipeVariance": 0.15,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["spaceLaunchCentre", "orbitalPlatform", "lunarMine"],
+    "signalDerived": false,
+    "tier": 2,
+    "requiredTechIds": ["liquidThrusters"],
+    "narrative": {
+      "id": "narrative-tech-orbitalMechanics",
+      "title": "Discovery — Applied Orbital Mechanics",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "The mathematical framework for sustained human presence in low Earth orbit is complete. Trajectory planning, station-keeping, re-entry corridors — the theory is settled. The remaining work is engineering."
+        },
+        {
+          "text": "Space launch infrastructure, orbital platform construction, and lunar operations are now viable. The programme is no longer Earth-bound. Near Space access opens."
+        }
+      ]
+    }
+  },
+  "fibreOptics": {
+    "id": "fibreOptics",
+    "name": "Fibre Optics",
+    "rumourText": "Information transmitted as pulses of light through glass fibre has achieved bandwidths several orders of magnitude above copper cable.",
+    "baseRecipe": { "engineering": 20, "biochemistry": 20, "mathematics": 20, "computing": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": true,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["integratedCircuits", "fibreglassComposites"],
+    "narrative": {
+      "id": "narrative-tech-fibreOptics",
+      "title": "Discovery — Fibre Optics",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Optical data transmission through glass fibre has been demonstrated at bandwidths that make every copper-wire limitation obsolete. The communications infrastructure constraint for global coordination has been removed."
+        },
+        {
+          "text": "Fibre-based instruments also enable new classes of precision measurement. Interferometric arrays using fibre-linked sensors achieve resolutions previously requiring purpose-built facilities."
+        }
+      ]
+    }
+  },
+  "spaceImaging": {
+    "id": "spaceImaging",
+    "name": "Space Imaging",
+    "rumourText": "Optical systems above the atmosphere would resolve features impossible to detect from the ground, including the precise origin of anomalous transmissions.",
+    "baseRecipe": { "engineering": 30, "biochemistry": 20, "computing": 10, "socialScience": 20 },
+    "recipeVariance": 0.1,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": ["hubbleSpaceTelescope"],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["photovoltaicSolarCells"],
+    "narrative": {
+      "id": "narrative-tech-spaceImaging",
+      "title": "Discovery — Space Imaging",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "An orbital imaging platform resolves atmospheric distortion entirely. Features that required years of probabilistic ground-based observation can now be confirmed in a single pass."
+        },
+        {
+          "text": "A space telescope with precision spectroscopic capability can triangulate the transmission origin to a resolution previously unachievable. The outer solar system observation project is now funded."
+        }
+      ]
+    }
+  },
+  "personalComputers": {
+    "id": "personalComputers",
+    "name": "Personal Computers",
+    "rumourText": "Desktop machines with sufficient power for scientific calculation may reach civilian researchers within years.",
+    "baseRecipe": { "engineering": 20, "mathematics": 10, "computing": 40, "socialScience": 20 },
+    "recipeVariance": 0.2,
     "requiresSimultaneous": false,
     "unlocksCards": ["digitalCoordination"],
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 2,
-    "requiredTechIds": ["integratedCircuits", "microprocessors"],
+    "tier": 3,
+    "requiredTechIds": ["microprocessors"],
     "narrative": {
-      "id": "narrative-tech-personalComputing",
-      "title": "Discovery — Personal Computing",
+      "id": "narrative-tech-personalComputers",
+      "title": "Discovery — Personal Computers",
       "skippable": true,
       "slides": [
         {
           "text": "Scientific-grade computation is now available to individual researchers. The bottleneck of centralised processing has been removed."
         },
         {
-          "text": "Distributed analysis across the entire research staff is now possible. Problems that previously required weeks of scheduled mainframe time can be explored in parallel, in parallel, by anyone with a terminal."
+          "text": "Distributed analysis across the entire research staff is now possible. Problems that previously required weeks of scheduled mainframe time can be explored in parallel by anyone with a terminal."
         }
       ]
     }
   },
-  "geneticSequencing": {
-    "id": "geneticSequencing",
-    "name": "Genetic Sequencing Technology",
-    "rumourText": "The chemical language of DNA is almost legible — automated reading may be possible within a decade.",
-    "baseRecipe": { "biochemistry": 75, "computing": 55, "mathematics": 45, "socialScience": 40 },
-    "recipeVariance": 0.25,
+  "geneticEngineering": {
+    "id": "geneticEngineering",
+    "name": "Genetic Engineering",
+    "rumourText": "The capability to selectively alter an organism's genetic code has been demonstrated under reproducible laboratory conditions.",
+    "baseRecipe": { "physics": 10, "biochemistry": 60, "computing": 30, "socialScience": 20 },
+    "recipeVariance": 0.3,
     "requiresSimultaneous": false,
     "unlocksCards": ["biomedicalAdvance"],
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 2,
-    "requiredTechIds": ["integratedCircuits"],
+    "tier": 3,
+    "requiredTechIds": ["recombinantDNA"],
     "narrative": {
-      "id": "narrative-tech-geneticSequencing",
-      "title": "Discovery — Genetic Sequencing Technology",
+      "id": "narrative-tech-geneticEngineering",
+      "title": "Discovery — Genetic Engineering",
       "skippable": true,
       "slides": [
         {
-          "text": "The chemical language of DNA is now readable at speed. Automated sequencing has reduced a decade of laboratory work to a matter of hours."
+          "text": "Directed modification of an organism's genetic sequence has been achieved with reproducible precision. Biological systems can now be designed as well as observed."
         },
         {
-          "text": "The team notes, without irony, that decoding a structured biological information system is not entirely unlike decoding a structured electromagnetic transmission. Pattern recognition is pattern recognition, whatever the substrate."
+          "text": "The team notes, without irony, that what has been accomplished is the systematic editing of a structured information system encoded in a physical substrate. The analogy to transmission decoding does not go unremarked."
         }
       ]
     }
   },
-  "globalPositioningNetwork": {
-    "id": "globalPositioningNetwork",
-    "name": "Global Positioning Network",
-    "rumourText": "A constellation of precision timing satellites could yield metre-accuracy navigation across the entire planet.",
-    "baseRecipe": { "mathematics": 85, "physics": 65, "computing": 60, "engineering": 55, "socialScience": 40 },
-    "recipeVariance": 0.15,
+  "satelliteCommunications": {
+    "id": "satelliteCommunications",
+    "name": "Satellite Communications",
+    "rumourText": "A relay station in orbit could link every ground facility on the globe simultaneously.",
+    "baseRecipe": { "engineering": 20, "physics": 20, "computing": 60, "socialScience": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["globalBroadcast"],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["deepSpaceArray"],
+    "signalDerived": false,
+    "tier": 4,
+    "requiredTechIds": ["fibreOptics"],
+    "narrative": {
+      "id": "narrative-tech-satelliteCommunications",
+      "title": "Discovery — Satellite Communications",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "An orbital relay now links every ground facility simultaneously. Data that previously required physical transfer across continents arrives in seconds."
+        },
+        {
+          "text": "Signal readings taken through the relay are cleaner than anything recorded from the ground. The atmosphere was obscuring more than was previously understood. Deep Space Array construction is now viable."
+        }
+      ]
+    }
+  },
+  "particlePhysicsDetectors": {
+    "id": "particlePhysicsDetectors",
+    "name": "Particle Physics Detectors",
+    "rumourText": "Multi-kilometre collider arrays may be the only apparatus capable of probing the energy scales encoded in the signal's outer mathematical layers.",
+    "baseRecipe": { "engineering": 30, "physics": 60, "mathematics": 30, "computing": 30 },
+    "recipeVariance": 0.4,
     "requiresSimultaneous": false,
     "unlocksCards": [],
-    "unlocksProjects": [],
+    "unlocksProjects": ["cern"],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 2,
-    "requiredTechIds": ["rocketGuidanceSystems", "satelliteCommunications"],
+    "tier": 4,
+    "requiredTechIds": ["fibreOptics"],
     "narrative": {
-      "id": "narrative-tech-globalPositioningNetwork",
-      "title": "Discovery — Global Positioning Network",
+      "id": "narrative-tech-particlePhysicsDetectors",
+      "title": "Discovery — Particle Physics Detectors",
       "skippable": true,
       "slides": [
         {
-          "text": "Metre-accuracy positioning across the entire planet, derived from a constellation of precision timing satellites. Navigation has been solved."
+          "text": "A multi-kilometre particle collider has been constructed and validated. The energy scales it probes are consistent with the mathematical framework described in the signal's outer layers — not coincidentally."
         },
         {
-          "text": "The precise orbital baselines established by the network have an additional use: improved triangulation of the outer solar system transmission source. The signal origin has been refined to within a 200,000-kilometre radius of the heliopause boundary."
-        }
-      ]
-    }
-  },
-  "roboticsAutomation": {
-    "id": "roboticsAutomation",
-    "name": "Robotics and Remote Automation",
-    "rumourText": "Articulated machines capable of sustained remote operation in hostile environments have passed field trials.",
-    "baseRecipe": { "engineering": 90, "computing": 70, "physics": 55, "mathematics": 45 },
-    "recipeVariance": 0.2,
-    "requiresSimultaneous": false,
-    "unlocksCards": [],
-    "unlocksProjects": [],
-    "unlocksFacilities": ["asteroidMiner"],
-    "signalDerived": false,
-    "tier": 2,
-    "requiredTechIds": ["integratedCircuits", "rocketGuidanceSystems"],
-    "narrative": {
-      "id": "narrative-tech-roboticsAutomation",
-      "title": "Discovery — Robotics and Remote Automation",
-      "skippable": true,
-      "slides": [
-        {
-          "text": "Articulated machines capable of sustained autonomous operation in radiation, vacuum, and extreme temperatures have passed all field trials. The outer solar system becomes accessible without risking personnel."
-        },
-        {
-          "text": "Asteroid extraction becomes a viable materials source. What previously required a human crew can now be handled by equipment that does not need to come home."
-        }
-      ]
-    }
-  },
-  "internetProtocols": {
-    "id": "internetProtocols",
-    "name": "Global Internetwork Protocols",
-    "rumourText": "A common packet-routing standard may allow every research facility on Earth to share data in real time.",
-    "baseRecipe": { "computing": 130, "mathematics": 95, "socialScience": 75, "engineering": 60, "physics": 55 },
-    "recipeVariance": 0.2,
-    "requiresSimultaneous": false,
-    "unlocksCards": ["openSourceResearch"],
-    "unlocksProjects": [],
-    "unlocksFacilities": [],
-    "signalDerived": false,
-    "tier": 3,
-    "requiredTechIds": ["personalComputing"],
-    "narrative": {
-      "id": "narrative-tech-internetProtocols",
-      "title": "Discovery — Global Internetwork Protocols",
-      "skippable": true,
-      "slides": [
-        {
-          "text": "A common packet-routing standard now connects every research facility on Earth in real time. Data that previously required scheduled courier transfer moves instantaneously and continuously."
-        },
-        {
-          "text": "Signal analysis that previously required weeks of data aggregation now completes overnight. The global research network is, for the first time, functioning as a single instrument."
-        }
-      ]
-    }
-  },
-  "digitisedTelemetry": {
-    "id": "digitisedTelemetry",
-    "name": "Digitised Space Telemetry",
-    "rumourText": "Standardised digital transmission formats for deep-space probes would dramatically improve the precision of signal analysis.",
-    "baseRecipe": { "physics": 120, "computing": 100, "mathematics": 85, "engineering": 70 },
-    "recipeVariance": 0.15,
-    "requiresSimultaneous": false,
-    "unlocksCards": ["signalDeconvolution"],
-    "unlocksProjects": [],
-    "unlocksFacilities": [],
-    "signalDerived": false,
-    "tier": 3,
-    "requiredTechIds": ["globalPositioningNetwork", "roboticsAutomation"],
-    "narrative": {
-      "id": "narrative-tech-digitisedTelemetry",
-      "title": "Discovery — Digitised Space Telemetry",
-      "skippable": true,
-      "slides": [
-        {
-          "text": "Standardised digital transmission formats have transformed the probe feed data. Error correction and compression have dropped the noise floor to levels that were previously theoretical."
-        },
-        {
-          "text": "The signal now stands out more clearly than it ever has before. Features of the transmission that were previously indistinguishable from instrument noise are now unambiguously present. The outer structure is becoming legible."
+          "text": "Whatever transmitted the signal anticipated recipients who would eventually build this kind of instrument. The outer structure of the transmission is now legible at a level of precision that was previously inaccessible."
         }
       ]
     }
@@ -273,15 +381,15 @@
     "id": "signalPatternAnalysis",
     "name": "Signal Pattern Analysis",
     "rumourText": "The transmission is not random. The interval structure repeats at a period inconsistent with any known pulsar or natural source.",
-    "baseRecipe": { "computing": 150, "mathematics": 125, "physics": 100, "engineering": 80, "biochemistry": 60 },
-    "recipeVariance": 0.1,
-    "requiresSimultaneous": true,
-    "unlocksCards": [],
+    "baseRecipe": { "physics": 10, "mathematics": 60, "computing": 60, "socialScience": 10 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["signalDeconvolution"],
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": true,
-    "tier": 3,
-    "requiredTechIds": ["digitisedTelemetry"],
+    "tier": 4,
+    "requiredTechIds": ["satelliteCommunications"],
     "narrative": {
       "id": "narrative-tech-signalPatternAnalysis",
       "title": "Discovery — Signal Pattern Analysis",
@@ -296,29 +404,29 @@
       ]
     }
   },
-  "orbitalMechanics": {
-    "id": "orbitalMechanics",
-    "name": "Applied Orbital Mechanics",
-    "rumourText": "Sustained human habitation in low orbit is within theoretical reach — the mathematics is there; the engineering must follow.",
-    "baseRecipe": { "physics": 200, "mathematics": 140, "engineering": 120, "computing": 100, "socialScience": 80 },
-    "recipeVariance": 0.15,
-    "requiresSimultaneous": true,
-    "unlocksCards": [],
+  "internetProtocols": {
+    "id": "internetProtocols",
+    "name": "Internet Protocols",
+    "rumourText": "A common packet-routing standard may allow every research facility on Earth to share data in real time.",
+    "baseRecipe": { "engineering": 10, "physics": 20, "mathematics": 50, "computing": 40, "socialScience": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["openSourceResearch"],
     "unlocksProjects": [],
-    "unlocksFacilities": ["orbitalPlatform", "lunarMine"],
+    "unlocksFacilities": ["dataCentre"],
     "signalDerived": false,
     "tier": 4,
-    "requiredTechIds": ["internetProtocols", "digitisedTelemetry"],
+    "requiredTechIds": ["satelliteCommunications"],
     "narrative": {
-      "id": "narrative-tech-orbitalMechanics",
-      "title": "Discovery — Applied Orbital Mechanics",
+      "id": "narrative-tech-internetProtocols",
+      "title": "Discovery — Internet Protocols",
       "skippable": true,
       "slides": [
         {
-          "text": "The mathematical framework for sustained human presence in low Earth orbit is complete. Trajectory planning, station-keeping, re-entry corridors — the theory is settled. The remaining work is engineering."
+          "text": "A common packet-routing standard now connects every research facility on Earth in real time. Data that previously required scheduled courier transfer moves instantaneously and continuously."
         },
         {
-          "text": "Orbital platform construction and lunar operations are now viable. The programme is no longer Earth-bound. Near Space access opens."
+          "text": "Signal analysis that previously required weeks of data aggregation now completes overnight. The global research network is, for the first time, functioning as a single instrument."
         }
       ]
     }

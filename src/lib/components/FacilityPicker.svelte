@@ -114,6 +114,7 @@
   const buildableForTile = $derived(
     [...facilityDefs.values()].filter((def) => {
       if (def.id === 'hq') return false;
+      if (def.era !== 'earth') return false;
       if (def.allowedTileTypes.length > 0 && !def.allowedTileTypes.includes(tile.type)) return false;
       if (!isTechUnlocked(def)) return false;
       if (isUniqueBlocked(def)) return false;
@@ -125,6 +126,7 @@
   const lockedForTile = $derived(
     [...facilityDefs.values()].filter((def) => {
       if (def.id === 'hq') return false;
+      if (def.era !== 'earth') return false;
       if (def.allowedTileTypes.length > 0 && !def.allowedTileTypes.includes(tile.type)) return false;
       return !isTechUnlocked(def);
     }),

@@ -602,7 +602,7 @@ describe('checkBreakthroughConditions', () => {
     requiredTechIds: ['orbitalMechanics', 'lifeSupport'], // normally requires these
     breakthroughCondition: {
       fieldOutputThresholds: { physics: 20, computing: 15 },
-      facilityDefIds: ['computingHub'],
+      facilityDefIds: ['dataCentre'],
       facilityCount: 2,
     },
   };
@@ -610,7 +610,7 @@ describe('checkBreakthroughConditions', () => {
   const techDefsMap = new Map([['quantumComputing', breakthroughDef]]);
 
   const richFields = makeFields({ physics: 25, computing: 20 });
-  const activeFacilities = ['computingHub', 'researchLab'];
+  const activeFacilities = ['dataCentre', 'researchLab'];
 
   it('fires when field output thresholds met and required facilities present', () => {
     const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
@@ -634,14 +634,14 @@ describe('checkBreakthroughConditions', () => {
 
   it('does not fire when required facility not active', () => {
     const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
-    const noComputingHub = ['researchLab', 'observatory'];
-    const results = checkBreakthroughConditions([tech], techDefsMap, richFields, noComputingHub);
+    const noDataCentre = ['researchLab', 'observatory'];
+    const results = checkBreakthroughConditions([tech], techDefsMap, richFields, noDataCentre);
     expect(results).toHaveLength(0);
   });
 
   it('does not fire when facility count is below minimum', () => {
     const tech = makeTechState('quantumComputing', { computing: 200 }, 'unknown');
-    const oneFacility = ['computingHub']; // only 1, need 2
+    const oneFacility = ['dataCentre']; // only 1, need 2
     const results = checkBreakthroughConditions([tech], techDefsMap, richFields, oneFacility);
     expect(results).toHaveLength(0);
   });
