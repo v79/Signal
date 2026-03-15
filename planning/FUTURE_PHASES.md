@@ -24,17 +24,17 @@ This is a list of future requirements for the game but they are not to be implem
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
 - Era Gates
-  - We haven't yet given much thought to how to unlock and progress Eras.
+  - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
+  - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
+  - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
 - Competitor blocs
   - They are absent from the game so far.
 - Earth map
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
-  - Could each hex contain multiple facilities? Divide the hex into 3 or 6? Some facilities may span multiple sectors.
   - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
 - Earth era content pass
-  - Technologies shouldn't require Computing until integrated circuits have been unlocked.
-  - Technologies are too dependent on Computing but there are very few ways of getting Computing research
+  - More playtesting required; Computing remains a problem
 - LEO era content pass
   - Map improvement actions such as sea walls
 - Asteroid era content pass
@@ -50,7 +50,7 @@ This is a list of future requirements for the game but they are not to be implem
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
   - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
 - News feed & ticker rework
-  - The ticker is cute but not very functional
+  - The ticker is cute but not very useful
 - Debug view and logs:
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
 - Game menu:
@@ -65,6 +65,8 @@ This is a list of future requirements for the game but they are not to be implem
   - Postponed phase 20.2 on climate pressure scaling event severity
   - Events frequency may be affected by the current Climate or Global Will scores
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
+  - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
+  - Player should get a list of the biggest polluters
 
 
 
