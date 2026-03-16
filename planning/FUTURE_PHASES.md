@@ -51,7 +51,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
   - When the Narrative event for a technology discovery is shown, it should detail the cards, events, facilities that it unlocks/deprecates
   - Should be hard for Tier 3 techs to even reach rumour while still researching tier 1 techs. Techs get stuck too easily.
-  - I managed to research all Tier 3 techs before researching any of the Tier 2s
+  - I managed to research all Tier 3 techs before researching any of the Tier 2s - Genetic Engineering seems far too easy to reach
 - News feed & ticker rework
   - The ticker is cute but not very useful
 - Debug view and logs:

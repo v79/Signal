@@ -118,6 +118,10 @@ export function createGameState(config: GameConfig): GameState {
     availableBoardDefIds: [],
     boardGracePeriodEnds: 4,
     committeeNotifications: [],
+    boardProposalFired: false,
+    orbitalStationAuthorised: false,
+    orbitalStationDeferCount: 0,
+    orbitalStationDeferResurfaceTurn: null,
   };
 }
 

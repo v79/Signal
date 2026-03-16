@@ -711,10 +711,16 @@ export const gameStore = {
       updatedTiles = result.mapTiles;
     }
 
-    const summary = effect ? formatEffectForNews(effect) : 'no effect';
+    const isBoardProposal = def.id === 'boardProposalOrbitalStation';
+    const newsText = isBoardProposal
+      ? 'The Corporation has officially initiated the Permanent Orbital Station programme.'
+      : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
+
     _state = {
       ..._state,
       map: { ..._state.map, earthTiles: updatedTiles },
+      orbitalStationAuthorised: isBoardProposal ? true : _state.orbitalStationAuthorised,
+      orbitalStationDeferResurfaceTurn: isBoardProposal ? null : _state.orbitalStationDeferResurfaceTurn,
       player: {
         ...updatedPlayer,
         newsFeed: [
@@ -722,7 +728,7 @@ export const gameStore = {
           {
             id: `event-accepted-${eventId}-t${_state.turn}`,
             turn: _state.turn,
-            text: `${def.name} accepted — ${summary}.`,
+            text: newsText,
             category: 'event-gain' as const,
           },
         ],
@@ -731,6 +737,35 @@ export const gameStore = {
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
       ),
     };
+    autoSave(_state);
+  },
+
+  /** Defer the board proposal event — dismisses it and re-surfaces after 3 turns. */
+  deferBoardProposal(eventId: string): void {
+    if (!_state) return;
+    const event = _state.activeEvents.find((e) => e.id === eventId);
+    if (!event) return;
+    _state = {
+      ..._state,
+      orbitalStationDeferCount: _state.orbitalStationDeferCount + 1,
+      orbitalStationDeferResurfaceTurn: _state.turn + 3,
+      activeEvents: _state.activeEvents.map((e) =>
+        e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
+      ),
+      player: {
+        ..._state.player,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          {
+            id: `board-proposal-deferred-t${_state.turn}`,
+            turn: _state.turn,
+            text: 'The board proposal for the Orbital Station has been deferred. The matter will return to the agenda.',
+            category: 'board' as const,
+          },
+        ],
+      },
+    };
+    autoSave(_state);
   },
 
   declineEvent(eventId: string): void {

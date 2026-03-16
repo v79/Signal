@@ -814,4 +814,18 @@ export interface GameState {
   boardGracePeriodEnds: number;
   /** Active committee notifications from board members. */
   committeeNotifications: CommitteeNotification[];
+  /**
+   * Set to true the first time the Orbital Station board proposal fires.
+   * Prevents it from re-firing after the player has already seen it.
+   */
+  boardProposalFired: boolean;
+  /** Set to true when the player authorises the Orbital Station programme. */
+  orbitalStationAuthorised: boolean;
+  /** How many times the player has deferred the board proposal. */
+  orbitalStationDeferCount: number;
+  /**
+   * Turn on which the board proposal should resurface after a deferral.
+   * Null when not deferred.
+   */
+  orbitalStationDeferResurfaceTurn: number | null;
 }

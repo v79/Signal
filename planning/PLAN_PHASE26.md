@@ -77,7 +77,7 @@ Add the tech prerequisite and the warm-up Scientific Project that teaches the pl
 
 ---
 
-### Phase 26D — Board proposal event (Orbital Station)
+### ✅ Phase 26D — Board proposal event (Orbital Station)
 
 The board proposal is an **escalated notification** — it fires in the main event zone as a persistent (no-expiry) event when `orbitalMechanics` is discovered or when a Launch Facility is built (whichever comes first).
 

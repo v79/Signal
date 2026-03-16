@@ -44,6 +44,7 @@ import {
   applyBoardFieldMultipliers,
   applyBoardResourceMultipliers,
   tickBoardAges,
+  addCommitteeNotification,
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
 import { tickActiveProjects } from './projects';
@@ -299,6 +300,27 @@ export function executeWorldPhase(
     }
   }
 
+  // 7a. Board proposal: fire if orbitalMechanics just discovered OR Space Launch Centre
+  //     just completed, and the proposal has not been fired before.
+  const spaceLaunchJustBuilt =
+    !state.boardProposalFired &&
+    facilitiesAfterQueue.some((f) => f.defId === 'spaceLaunchCentre') &&
+    !player.facilities.some((f) => f.defId === 'spaceLaunchCentre');
+  const orbitalMechanicsJustDiscovered =
+    !state.boardProposalFired && newDiscoveries.includes('orbitalMechanics');
+
+  const shouldFireBoardProposal = orbitalMechanicsJustDiscovered || spaceLaunchJustBuilt;
+  const newBoardProposalEvent: typeof state.activeEvents[0] | null = shouldFireBoardProposal
+    ? {
+        id: `board-proposal-orbital-t${nextTurn}`,
+        defId: 'boardProposalOrbitalStation',
+        arrivedTurn: nextTurn,
+        countdownRemaining: 999,
+        resolved: false,
+        resolvedWith: null,
+      }
+    : null;
+
   // 7b. Project tick — advance active projects, apply completions + upkeep
   // Run against a temporary state with the post-card resources so upkeep is
   // deducted from the already-updated resource total.
@@ -384,6 +406,43 @@ export function executeWorldPhase(
   // 15. Board age ticking (retirements generate news)
   const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, boardDefs, nextTurn);
 
+  // 15b. Board proposal deferred re-surfacing: if the player deferred the proposal
+  //      and the resurfaceTurn has arrived, re-queue the proposal event and add a
+  //      committee notification from the active Chief Scientist.
+  const proposalResurfaces =
+    !state.orbitalStationAuthorised &&
+    state.boardProposalFired &&
+    state.orbitalStationDeferResurfaceTurn === nextTurn;
+
+  const resurfacedProposalEvent: typeof state.activeEvents[0] | null = proposalResurfaces
+    ? {
+        id: `board-proposal-orbital-resurface-t${nextTurn}`,
+        defId: 'boardProposalOrbitalStation',
+        arrivedTurn: nextTurn,
+        countdownRemaining: 999,
+        resolved: false,
+        resolvedWith: null,
+      }
+    : null;
+
+  let committeeNotificationsAfterBoard = state.committeeNotifications;
+  if (proposalResurfaces) {
+    const chiefScientistMember = updatedBoard.chiefScientist;
+    const chiefName = chiefScientistMember
+      ? (boardDefs.get(chiefScientistMember.defId)?.name ?? 'The Chief Scientist')
+      : 'The Chief Scientist';
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `board-proposal-reminder-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName} is again urging the board to authorise the Permanent Orbital Station programme. The proposal has been returned to the agenda.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+
   // 16. Signal progress tick — starts from post-project signal so project
   //     rewards (one-time signal boosts) are included before further ticking.
   const prevSignalProgress = state.signal.decodeProgress;
@@ -405,6 +464,13 @@ export function executeWorldPhase(
   // 17. Earth welfare tick
   const newEarthWelfare = tickEarthWelfare(state);
 
+  // Assemble updated active events list (carry over non-resolved + any new ones)
+  const eventsAfterWorld = [
+    ...state.activeEvents,
+    ...(newBoardProposalEvent ? [newBoardProposalEvent] : []),
+    ...(resurfacedProposalEvent ? [resurfacedProposalEvent] : []),
+  ];
+
   // Assemble the next state (outcome checked below)
   const nextState: GameState = {
     ...state,
@@ -415,7 +481,13 @@ export function executeWorldPhase(
     earthWelfareScore: newEarthWelfare,
     blocs: updatedBlocs,
     signal: newSignal,
+    activeEvents: eventsAfterWorld,
     map: { ...map, earthTiles: degradedTiles },
+    boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
+    orbitalStationAuthorised: state.orbitalStationAuthorised,
+    orbitalStationDeferCount: state.orbitalStationDeferCount,
+    orbitalStationDeferResurfaceTurn: proposalResurfaces ? null : state.orbitalStationDeferResurfaceTurn,
+    committeeNotifications: committeeNotificationsAfterBoard,
     player: {
       ...player,
       resources: playerAfterProjects.resources,

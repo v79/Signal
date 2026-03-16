@@ -144,6 +144,7 @@
           currentTurn={gs.turn}
           onMitigate={(id) => gameStore.mitigateEvent(id)}
           onAccept={(id) => gameStore.acceptEvent(id)}
+          onDefer={(id) => gameStore.deferBoardProposal(id)}
         />
 
         <OngoingActionsPanel
