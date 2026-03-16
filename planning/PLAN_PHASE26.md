@@ -99,7 +99,7 @@ The board proposal is an **escalated notification** — it fires in the main eve
 
 ---
 
-### Phase 26E — Permanent Orbital Station (multi-stage landmark)
+### ✅ Phase 26E — Permanent Orbital Station (multi-stage landmark)
 
 The three-stage project that gates the Era 1 → Era 2 transition. Only available after `orbitalStationAuthorised === true`.
 

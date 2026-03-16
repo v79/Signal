@@ -334,6 +334,44 @@ export function executeWorldPhase(
   const signalAfterProjects = projectTickResult.state.signal;
   const projectNews = playerAfterProjects.newsFeed.slice(player.newsFeed.length);
 
+  // 7c. Orbital Station: scripted engineering challenge fires on stage 2's second turn.
+  //     Only fires once — guarded by checking if the event is already in activeEvents.
+  const stage2OnSecondTurn = playerAfterProjects.activeProjects.some(
+    (p) => p.defId === 'orbitalStation_stage2' && p.turnsElapsed === 1,
+  );
+  const engineeringEventAlreadyFired = state.activeEvents.some(
+    (e) => e.defId === 'orbitalStationEngineeringChallenge' && !e.resolved,
+  );
+  const engineeringChallengeEvent: typeof state.activeEvents[0] | null =
+    stage2OnSecondTurn && !engineeringEventAlreadyFired
+      ? {
+          id: `orbital-engineering-challenge-t${nextTurn}`,
+          defId: 'orbitalStationEngineeringChallenge',
+          arrivedTurn: nextTurn,
+          countdownRemaining: 2,
+          resolved: false,
+          resolvedWith: null,
+        }
+      : null;
+
+  // 7d. Era transition: if a landmark project with opensEra2 completed this tick,
+  //     advance era to nearSpace and apply a Will boost.
+  const opensEra2 = projectTickResult.completedDefIds.some(
+    (id) => projectDefs.get(id)?.landmarkGate === 'opensEra2',
+  );
+  const eraAfterProjects = opensEra2 && state.era === 'earth' ? ('nearSpace' as const) : state.era;
+  const willBoostFromEraTransition = opensEra2 ? 30 : 0;
+  const eraTransitionNews: NewsItem[] = opensEra2
+    ? [
+        {
+          id: `era-transition-nearspace-t${nextTurn}`,
+          turn: nextTurn,
+          text: 'The Permanent Orbital Station is declared fully operational. Humanity has established a permanent presence in space. The Near Space era begins.',
+          category: 'discovery' as const,
+        },
+      ]
+    : [];
+
   // 8. News feed entries for research events
   const breakthroughNews: NewsItem[] = breakthroughs.map((b) => ({
     id: `${nextTurn}-breakthrough-${b.techId}`,
@@ -426,17 +464,42 @@ export function executeWorldPhase(
     : null;
 
   let committeeNotificationsAfterBoard = state.committeeNotifications;
+  const chiefScientistMember = updatedBoard.chiefScientist;
+  const chiefName = chiefScientistMember
+    ? (boardDefs.get(chiefScientistMember.defId)?.name ?? 'The Chief Scientist')
+    : 'The Chief Scientist';
+
   if (proposalResurfaces) {
-    const chiefScientistMember = updatedBoard.chiefScientist;
-    const chiefName = chiefScientistMember
-      ? (boardDefs.get(chiefScientistMember.defId)?.name ?? 'The Chief Scientist')
-      : 'The Chief Scientist';
     committeeNotificationsAfterBoard = addCommitteeNotification(
       committeeNotificationsAfterBoard,
       {
         id: `board-proposal-reminder-t${nextTurn}`,
         memberDefId: chiefScientistMember?.defId ?? 'unknown',
         text: `${chiefName} is again urging the board to authorise the Permanent Orbital Station programme. The proposal has been returned to the agenda.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (projectTickResult.completedDefIds.includes('orbitalStation_stage1')) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `orbital-stage1-complete-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: The Core Module is now in orbit. Phase one of the Orbital Station programme is complete. Construction of the Habitation Ring can begin immediately.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (projectTickResult.completedDefIds.includes('orbitalStation_stage2')) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `orbital-stage2-complete-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: The Habitation Ring has been successfully joined. The station is ready for final systems integration — one more phase and it becomes fully operational.`,
         turnCreated: nextTurn,
         dismissed: false,
       },
@@ -469,6 +532,7 @@ export function executeWorldPhase(
     ...state.activeEvents,
     ...(newBoardProposalEvent ? [newBoardProposalEvent] : []),
     ...(resurfacedProposalEvent ? [resurfacedProposalEvent] : []),
+    ...(engineeringChallengeEvent ? [engineeringChallengeEvent] : []),
   ];
 
   // Assemble the next state (outcome checked below)
@@ -476,6 +540,7 @@ export function executeWorldPhase(
     ...state,
     turn: nextTurn,
     year: state.year + 1,
+    era: eraAfterProjects,
     phase: 'event', // reset to start of next turn
     climatePressure: newClimatePressure,
     earthWelfareScore: newEarthWelfare,
@@ -492,7 +557,7 @@ export function executeWorldPhase(
       ...player,
       resources: playerAfterProjects.resources,
       fields: newFields,
-      will: newWill,
+      will: Math.min(100, newWill + willBoostFromEraTransition),
       facilities: facilitiesAfterDegradation,
       techs: updatedTechs,
       cards: playerAfterProjects.cards,
@@ -505,6 +570,7 @@ export function executeWorldPhase(
         ...breakthroughNews,
         ...researchNews,
         ...projectNews,
+        ...eraTransitionNews,
         ...degradationNews,
         ...blocNews,
         ...mergerNews,

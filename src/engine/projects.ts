@@ -66,6 +66,9 @@ export function canInitiateProject(state: GameState, def: ProjectDef): boolean {
     }
   }
 
+  // Orbital Station authorisation gate
+  if (prereqs.requiresOrbitalStationAuthorised && !state.orbitalStationAuthorised) return false;
+
   // Minimum resource prerequisites (separate from cost — e.g. "must have 50W to start")
   if (prereqs.minResources) {
     const r = prereqs.minResources;

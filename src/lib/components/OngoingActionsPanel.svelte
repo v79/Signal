@@ -2,12 +2,16 @@
   import type { OngoingAction, ProjectDef, ProjectInstance } from '../../engine/types';
   import type { FacilityDef } from '../../engine/types';
 
+  const ORBITAL_STAGE_IDS = ['orbitalStation_stage1', 'orbitalStation_stage2', 'orbitalStation_stage3'];
+
   let {
     queue,
     facilityDefs,
     availableProjects = [],
     activeProjects = [],
     projectDefs = new Map(),
+    completedProjectIds = [],
+    orbitalStationAuthorised = false,
     actionsRemaining = 0,
     onInitiateProject,
   }: {
@@ -16,9 +20,23 @@
     availableProjects?: ProjectDef[];
     activeProjects?: ProjectInstance[];
     projectDefs?: Map<string, ProjectDef>;
+    completedProjectIds?: string[];
+    orbitalStationAuthorised?: boolean;
     actionsRemaining?: number;
     onInitiateProject?: (defId: string) => void;
   } = $props();
+
+  // Filter orbital station stages out of the generic available projects list
+  const nonLandmarkAvailable = $derived(
+    availableProjects.filter((d) => !ORBITAL_STAGE_IDS.includes(d.id)),
+  );
+
+  function orbitalStageStatus(stageId: string): 'completed' | 'active' | 'available' | 'locked' {
+    if (completedProjectIds.includes(stageId)) return 'completed';
+    if (activeProjects.some((p) => p.defId === stageId)) return 'active';
+    if (availableProjects.some((d) => d.id === stageId)) return 'available';
+    return 'locked';
+  }
 
   let expandedProjectId = $state<string | null>(null);
 
@@ -52,7 +70,10 @@
   }
 
   const hasAnything = $derived(
-    queue.length > 0 || activeProjects.length > 0 || availableProjects.length > 0,
+    queue.length > 0 ||
+      activeProjects.length > 0 ||
+      availableProjects.length > 0 ||
+      orbitalStationAuthorised,
   );
 </script>
 
@@ -111,10 +132,54 @@
       {/each}
     {/if}
 
-    <!-- Available projects -->
-    {#if availableProjects.length > 0}
+    <!-- Orbital Station multi-stage tracker -->
+    {#if orbitalStationAuthorised}
+      <div class="section-header">ORBITAL STATION PROGRAMME</div>
+      {#each ORBITAL_STAGE_IDS as stageId (stageId)}
+        {@const def = projectDefs.get(stageId)}
+        {@const status = orbitalStageStatus(stageId)}
+        {@const activeInst = activeProjects.find((p) => p.defId === stageId)}
+        {#if def}
+          <div class="stage-row" class:stage-completed={status === 'completed'} class:stage-active={status === 'active'} class:stage-locked={status === 'locked'}>
+            <div class="stage-header">
+              <span class="stage-name">{def.name.replace('Orbital Station: ', '')}</span>
+              {#if status === 'completed'}
+                <span class="stage-badge done">✓</span>
+              {:else if status === 'active'}
+                <span class="stage-badge active">IN PROGRESS</span>
+              {:else if status === 'available'}
+                <span class="stage-badge available">READY</span>
+              {:else}
+                <span class="stage-badge locked">LOCKED</span>
+              {/if}
+            </div>
+            {#if status === 'active' && activeInst}
+              {@const progress = activeInst.turnsElapsed / activeInst.effectiveDuration}
+              {@const remaining = activeInst.effectiveDuration - activeInst.turnsElapsed}
+              <div class="progress-track">
+                <div class="progress-fill project-fill" style="width: {Math.round(progress * 100)}%"></div>
+              </div>
+              <div class="turns-left">{remaining} turn{remaining === 1 ? '' : 's'} remaining</div>
+            {:else if status === 'available'}
+              <div class="stage-cost">{costSummary(def)}</div>
+              <button
+                class="initiate-btn"
+                disabled={actionsRemaining <= 0}
+                title={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`}
+                onclick={() => onInitiateProject?.(def.id)}
+              >
+                BEGIN · {costSummary(def)}
+              </button>
+            {/if}
+          </div>
+        {/if}
+      {/each}
+    {/if}
+
+    <!-- Available projects (non-landmark) -->
+    {#if nonLandmarkAvailable.length > 0}
       <div class="section-header">AVAILABLE PROJECTS</div>
-      {#each availableProjects as def (def.id)}
+      {#each nonLandmarkAvailable as def (def.id)}
         <div class="project-card" class:expanded={expandedProjectId === def.id}>
           <button class="project-header" onclick={() => toggleExpand(def.id)}>
             <span class="project-name">{def.name}</span>
@@ -244,6 +309,77 @@
   .turns-left {
     font-size: 0.58rem;
     color: #3a5060;
+  }
+
+  /* Orbital Station stage tracker */
+  .stage-row {
+    border: 1px solid #1a3050;
+    border-radius: 2px;
+    padding: 0.3rem 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    background: #080f18;
+  }
+
+  .stage-row.stage-completed {
+    border-color: #1a4030;
+    opacity: 0.7;
+  }
+
+  .stage-row.stage-active {
+    border-color: #2a5080;
+  }
+
+  .stage-row.stage-locked {
+    opacity: 0.45;
+  }
+
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .stage-name {
+    font-size: 0.63rem;
+    color: #8aaabb;
+  }
+
+  .stage-badge {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    padding: 0.1rem 0.3rem;
+    border-radius: 1px;
+  }
+
+  .stage-badge.done {
+    color: #4ab870;
+    background: #0a1a10;
+    border: 1px solid #1a5030;
+  }
+
+  .stage-badge.active {
+    color: #4a9bd8;
+    background: #081828;
+    border: 1px solid #2a5080;
+  }
+
+  .stage-badge.available {
+    color: #8a8a4a;
+    background: #181808;
+    border: 1px solid #504010;
+  }
+
+  .stage-badge.locked {
+    color: #3a4050;
+    background: #080c10;
+    border: 1px solid #1a2030;
+  }
+
+  .stage-cost {
+    font-size: 0.58rem;
+    color: #4a7060;
   }
 
   /* Available project cards */

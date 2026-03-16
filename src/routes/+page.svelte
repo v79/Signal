@@ -153,6 +153,8 @@
           availableProjects={gs.phase === 'action' ? availableProjects : []}
           activeProjects={gs.player.activeProjects}
           projectDefs={PROJECT_DEFS}
+          completedProjectIds={gs.player.completedProjectIds}
+          orbitalStationAuthorised={gs.orbitalStationAuthorised}
           actionsRemaining={actionsRemaining}
           onInitiateProject={(defId) => gameStore.initiateProject(defId)}
         />

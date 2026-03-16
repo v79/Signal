@@ -37,6 +37,56 @@
       "requiredFacilityDefs": ["spaceLaunchCentre"]
     }
   },
+  "orbitalStation_stage1": {
+    "id": "orbitalStation_stage1",
+    "name": "Orbital Station: Core Module",
+    "description": "The pressurised core of the permanent orbital facility — life support, command systems, and docking collar. Once in orbit, it becomes humanity's first continuously-crewed outpost beyond the atmosphere.",
+    "type": "landmark",
+    "era": "earth",
+    "cost": { "funding": 60, "materials": 40 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "signalProgress": 5 },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiresOrbitalStationAuthorised": true,
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "orbitalStation_stage2": {
+    "id": "orbitalStation_stage2",
+    "name": "Orbital Station: Habitation Ring",
+    "description": "The rotating habitation ring extends crew capacity from four to twelve and provides a stable platform for long-duration scientific work. Construction is complex: multiple launches, on-orbit assembly, and a narrow window for the final joining manoeuvre.",
+    "type": "landmark",
+    "era": "earth",
+    "cost": { "funding": 40, "materials": 30 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "signalProgress": 5 },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiresOrbitalStationAuthorised": true,
+      "requiredProjects": ["orbitalStation_stage1"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "orbitalStation_stage3": {
+    "id": "orbitalStation_stage3",
+    "name": "Orbital Station: Operational",
+    "description": "Final systems integration, deep-space antenna calibration, and crew rotation protocols are established. The Permanent Orbital Station is declared fully operational. The era of Near Space begins.",
+    "type": "landmark",
+    "era": "earth",
+    "cost": { "funding": 20, "materials": 10 },
+    "upkeepCost": {},
+    "baseDuration": 1,
+    "reward": { "signalProgress": 10 },
+    "landmarkGate": "opensEra2",
+    "prerequisites": {
+      "requiresOrbitalStationAuthorised": true,
+      "requiredProjects": ["orbitalStation_stage2"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
   "cern": {
     "id": "cern",
     "name": "Particle Collider Complex",

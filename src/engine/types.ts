@@ -289,6 +289,8 @@ export interface ProjectPrerequisites {
   /** Project IDs that must be completed. */
   requiredProjects?: string[];
   minResources?: Partial<Resources>;
+  /** If true, the Orbital Station programme must have been authorised. */
+  requiresOrbitalStationAuthorised?: boolean;
 }
 
 export interface ProjectInstance {
