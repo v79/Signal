@@ -67,7 +67,7 @@ import type { Rng } from './rng';
 //   World Phase: (climate RNG — Phase 5) → (bloc RNG — Phase 7) → distributeResearchPoints (createRng(`${seed}-research-t${nextTurn}`))
 // ---------------------------------------------------------------------------
 
-const CLIMATE_PRESSURE_PER_TURN = 0.5;
+const CLIMATE_PRESSURE_PER_TURN = 0.2;
 
 // ---------------------------------------------------------------------------
 // Phase 1: Event Phase
