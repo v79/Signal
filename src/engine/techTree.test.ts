@@ -54,44 +54,56 @@ describe('getTechTier — Era 1 tech assignments', () => {
   it('integratedCircuits → tier 1', () => {
     expect(getTechTier(TECH_DEFS.get('integratedCircuits')!)).toBe(1);
   });
-  it('rocketGuidanceSystems → tier 1', () => {
-    expect(getTechTier(TECH_DEFS.get('rocketGuidanceSystems')!)).toBe(1);
+  it('liquidThrusters → tier 1', () => {
+    expect(getTechTier(TECH_DEFS.get('liquidThrusters')!)).toBe(1);
   });
-  it('satelliteCommunications → tier 1', () => {
-    expect(getTechTier(TECH_DEFS.get('satelliteCommunications')!)).toBe(1);
+  it('fibreglassComposites → tier 1', () => {
+    expect(getTechTier(TECH_DEFS.get('fibreglassComposites')!)).toBe(1);
   });
-  it('microprocessors → tier 1', () => {
-    expect(getTechTier(TECH_DEFS.get('microprocessors')!)).toBe(1);
+  it('recombinantDNA → tier 1', () => {
+    expect(getTechTier(TECH_DEFS.get('recombinantDNA')!)).toBe(1);
   });
 
   // Tier 2
-  it('personalComputing → tier 2', () => {
-    expect(getTechTier(TECH_DEFS.get('personalComputing')!)).toBe(2);
+  it('microprocessors → tier 2', () => {
+    expect(getTechTier(TECH_DEFS.get('microprocessors')!)).toBe(2);
   });
-  it('geneticSequencing → tier 2', () => {
-    expect(getTechTier(TECH_DEFS.get('geneticSequencing')!)).toBe(2);
+  it('cryogenicPropulsion → tier 2', () => {
+    expect(getTechTier(TECH_DEFS.get('cryogenicPropulsion')!)).toBe(2);
   });
-  it('globalPositioningNetwork → tier 2', () => {
-    expect(getTechTier(TECH_DEFS.get('globalPositioningNetwork')!)).toBe(2);
+  it('photovoltaicSolarCells → tier 2', () => {
+    expect(getTechTier(TECH_DEFS.get('photovoltaicSolarCells')!)).toBe(2);
   });
-  it('roboticsAutomation → tier 2', () => {
-    expect(getTechTier(TECH_DEFS.get('roboticsAutomation')!)).toBe(2);
+  it('orbitalMechanics → tier 2', () => {
+    expect(getTechTier(TECH_DEFS.get('orbitalMechanics')!)).toBe(2);
   });
 
   // Tier 3
-  it('internetProtocols → tier 3', () => {
-    expect(getTechTier(TECH_DEFS.get('internetProtocols')!)).toBe(3);
+  it('fibreOptics → tier 3', () => {
+    expect(getTechTier(TECH_DEFS.get('fibreOptics')!)).toBe(3);
   });
-  it('digitisedTelemetry → tier 3', () => {
-    expect(getTechTier(TECH_DEFS.get('digitisedTelemetry')!)).toBe(3);
+  it('spaceImaging → tier 3', () => {
+    expect(getTechTier(TECH_DEFS.get('spaceImaging')!)).toBe(3);
   });
-  it('signalPatternAnalysis → tier 3', () => {
-    expect(getTechTier(TECH_DEFS.get('signalPatternAnalysis')!)).toBe(3);
+  it('personalComputers → tier 3', () => {
+    expect(getTechTier(TECH_DEFS.get('personalComputers')!)).toBe(3);
+  });
+  it('geneticEngineering → tier 3', () => {
+    expect(getTechTier(TECH_DEFS.get('geneticEngineering')!)).toBe(3);
   });
 
   // Tier 4
-  it('orbitalMechanics → tier 4', () => {
-    expect(getTechTier(TECH_DEFS.get('orbitalMechanics')!)).toBe(4);
+  it('satelliteCommunications → tier 4', () => {
+    expect(getTechTier(TECH_DEFS.get('satelliteCommunications')!)).toBe(4);
+  });
+  it('particlePhysicsDetectors → tier 4', () => {
+    expect(getTechTier(TECH_DEFS.get('particlePhysicsDetectors')!)).toBe(4);
+  });
+  it('signalPatternAnalysis → tier 4', () => {
+    expect(getTechTier(TECH_DEFS.get('signalPatternAnalysis')!)).toBe(4);
+  });
+  it('internetProtocols → tier 4', () => {
+    expect(getTechTier(TECH_DEFS.get('internetProtocols')!)).toBe(4);
   });
 });
 
@@ -100,11 +112,11 @@ describe('getTechTier — Era 1 tech assignments', () => {
 // ---------------------------------------------------------------------------
 
 describe('getTechTier — Era 1 distribution', () => {
-  it('produces a 4/4/3/1 distribution across the four tiers', () => {
+  it('produces a 4/4/4/4 distribution across the four tiers', () => {
     const counts = [0, 0, 0, 0];
     for (const def of TECH_DEFS.values()) {
       counts[getTechTier(def) - 1]++;
     }
-    expect(counts).toEqual([4, 4, 3, 1]);
+    expect(counts).toEqual([4, 4, 4, 4]);
   });
 });

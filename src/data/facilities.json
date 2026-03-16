@@ -2,7 +2,7 @@
   "hq": {
     "id": "hq",
     "name": "Headquarters",
-    "description": "The organisational centre of your programme. Provides a steady trickle of resources each turn. Cannot be demolished.",
+    "description": "The organisational centre of your programme. Provides baseline research output across all scientific fields each turn, plus a small funding income. Cannot be demolished.",
     "era": "earth",
     "allowedTileTypes": ["urban"],
     "buildCost": {},
@@ -12,12 +12,12 @@
     "canDelete": false,
     "slotCost": 3,
     "fieldOutput": {
-      "physics": 1,
-      "mathematics": 1,
-      "engineering": 1,
-      "computing": 1,
-      "socialScience": 1,
-      "biochemistry": 1
+      "physics": 2,
+      "mathematics": 2,
+      "engineering": 2,
+      "computing": 2,
+      "socialScience": 2,
+      "biochemistry": 2
     },
     "resourceOutput": {},
     "adjacencyBonuses": [],
@@ -28,7 +28,7 @@
   "researchLab": {
     "id": "researchLab",
     "name": "Research Laboratory",
-    "description": "Generates Physics and Mathematics field points each turn.",
+    "description": "Primary field research facility. Generates strong Physics and Mathematics output each turn.",
     "era": "earth",
     "allowedTileTypes": ["urban", "highland"],
     "buildCost": { "funding": 30, "materials": 10 },
@@ -36,7 +36,7 @@
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
-    "fieldOutput": { "physics": 3, "mathematics": 2 },
+    "fieldOutput": { "physics": 3, "mathematics": 3, "computing": 1 },
     "resourceOutput": {},
     "adjacencyBonuses": [
       { "neighborDefId": "publicUniversity", "fieldBonus": { "physics": 2, "mathematics": 1 } }
@@ -48,9 +48,9 @@
   "mine": {
     "id": "mine",
     "name": "Resource Mine",
-    "description": "Extracts raw materials each turn. Output depletes over time.",
+    "description": "Extracts raw materials from highland, arid and forested terrain. Output depletes over time as the mineral seam is exhausted.",
     "era": "earth",
-    "allowedTileTypes": ["highland", "arid", "industrial"],
+    "allowedTileTypes": ["highland", "forested", "arid"],
     "buildCost": { "materials": 12 },
     "upkeepCost": { "funding": 2 },
     "buildTime": 1,
@@ -77,40 +77,65 @@
     "buildTime": 1,
     "deleteTime": 1,
     "canDelete": true,
-    "fieldOutput": { "engineering": 1 },
-    "resourceOutput": { "funding": 9 },
+    "climateImpact": 0.5,
+    "fieldOutput": {},
+    "resourceOutput": { "funding": 8 },
     "adjacencyBonuses": [],
     "adjacencyPenalties": [
       { "neighborDefId": "publicUniversity", "fieldPenalty": { "socialScience": 1 } },
-      { "neighborDefId": "bioResearchCentre", "fieldPenalty": { "biochemistry": 1 } }
+      { "neighborDefId": "bioresearchCentre", "fieldPenalty": { "biochemistry": 1 } }
     ],
     "depletes": false,
-    "requiredTechId": null,
-    "climateImpact": 0.5
+    "requiredTechId": null
+  },
+  "fissionPowerStation": {
+    "id": "fissionPowerStation",
+    "name": "Nuclear Fission Power Plant",
+    "description": "High-output nuclear power. Strong Funding income with Engineering and Physics research output. Lower climate footprint than fossil fuels, but proximity concerns apply.",
+    "era": "earth",
+    "allowedTileTypes": ["industrial", "arid"],
+    "buildCost": { "materials": 50, "funding": 40 },
+    "upkeepCost": { "funding": 5 },
+    "buildTime": 3,
+    "deleteTime": 2,
+    "canDelete": true,
+    "slotCost": 2,
+    "climateImpact": 0.15,
+    "fieldOutput": { "engineering": 2, "physics": 2 },
+    "resourceOutput": { "funding": 12 },
+    "adjacencyBonuses": [
+      { "neighborDefId": "engineeringWorks", "resourceBonus": { "materials": 1 } }
+    ],
+    "adjacencyPenalties": [
+      { "neighborDefId": "bioresearchCentre", "fieldPenalty": { "biochemistry": 2 } },
+      { "neighborDefId": "publicUniversity", "fieldPenalty": { "socialScience": 1 } }
+    ],
+    "depletes": false,
+    "requiredTechId": "cryogenicPropulsion"
   },
   "solarFarm": {
     "id": "solarFarm",
     "name": "Solar Farm",
-    "description": "Generates steady Funding and minor Engineering field points.",
+    "description": "Photovoltaic arrays generating clean Funding income and Physics research output. No ongoing fuel cost. Requires photovoltaic cell technology.",
     "era": "earth",
-    "allowedTileTypes": ["arid", "agricultural", "coastal"],
+    "allowedTileTypes": ["coastal", "highland", "arid"],
     "buildCost": { "materials": 15, "funding": 10 },
     "upkeepCost": {},
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
-    "fieldOutput": { "engineering": 1 },
+    "climateImpact": -0.1,
+    "fieldOutput": { "physics": 2 },
     "resourceOutput": { "funding": 5 },
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": false,
-    "requiredTechId": null,
-    "climateImpact": -0.1
+    "requiredTechId": "photovoltaicSolarCells"
   },
   "offshoreWindFarm": {
     "id": "offshoreWindFarm",
     "name": "Wind Farm",
-    "description": "Generates steady Funding and minor Engineering field points. Suitable for coastal and highland sites.",
+    "description": "Wind energy installation on coastal and highland sites. Engineering output and steady Funding income. No climate cost. Requires composite materials technology.",
     "era": "earth",
     "allowedTileTypes": ["coastal", "highland"],
     "buildCost": { "materials": 20, "funding": 15 },
@@ -118,30 +143,31 @@
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
+    "climateImpact": -0.1,
     "fieldOutput": { "engineering": 2 },
     "resourceOutput": { "funding": 3 },
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": false,
-    "requiredTechId": "roboticsAutomation",
-    "climateImpact": -0.1
+    "requiredTechId": "fibreglassComposites"
   },
   "publicUniversity": {
     "id": "publicUniversity",
     "name": "Public University",
-    "description": "Broad research output across multiple fields. High upkeep.",
+    "description": "Broad academic research output across Physics, Biochemistry, Mathematics, Computing, and Social Science. High upkeep; high reward.",
     "era": "earth",
-    "allowedTileTypes": ["urban", "agricultural"],
+    "allowedTileTypes": ["urban"],
     "buildCost": { "funding": 50, "materials": 5 },
-    "upkeepCost": { "funding": 8, "politicalWill": 2 },
+    "upkeepCost": { "funding": 6 },
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
     "slotCost": 2,
-    "fieldOutput": { "physics": 2, "mathematics": 2, "computing": 2, "socialScience": 3 },
+    "fieldOutput": { "physics": 3, "biochemistry": 2, "mathematics": 3, "computing": 2, "socialScience": 3 },
     "resourceOutput": {},
     "adjacencyBonuses": [
-      { "neighborDefId": "researchLab", "fieldBonus": { "physics": 2, "mathematics": 1, "computing": 1 } }
+      { "neighborDefId": "researchLab", "fieldBonus": { "physics": 2, "mathematics": 1, "computing": 1 } },
+      { "neighborDefId": "socialPolicyUnit", "fieldBonus": { "socialScience": 1 } }
     ],
     "adjacencyPenalties": [],
     "depletes": false,
@@ -150,50 +176,49 @@
   "engineeringWorks": {
     "id": "engineeringWorks",
     "name": "Engineering Works",
-    "description": "Heavy manufacturing; generates Engineering and Materials.",
+    "description": "Heavy manufacturing facility. Strong Engineering output with Funding income and Political Will generation from industrial employment.",
     "era": "earth",
     "allowedTileTypes": ["industrial", "urban"],
-    "buildCost": { "funding": 20, "materials": 30 },
-    "upkeepCost": { "funding": 3 },
+    "buildCost": { "funding": 15, "materials": 25 },
+    "upkeepCost": {},
     "buildTime": 1,
     "deleteTime": 1,
     "canDelete": true,
-    "slotCost": 2,
+    "climateImpact": 0.2,
     "fieldOutput": { "engineering": 4 },
-    "resourceOutput": { "materials": 4 },
+    "resourceOutput": { "funding": 3, "politicalWill": 2 },
     "adjacencyBonuses": [],
     "adjacencyPenalties": [
       { "neighborDefId": "publicUniversity", "fieldPenalty": { "socialScience": 1 } }
     ],
     "depletes": false,
-    "requiredTechId": null,
-    "climateImpact": 0.3
+    "requiredTechId": null
   },
-  "bioResearchCentre": {
-    "id": "bioResearchCentre",
+  "bioresearchCentre": {
+    "id": "bioresearchCentre",
     "name": "Bioresearch Centre",
-    "description": "Advanced life science research. Generates Biochemistry and Social Science.",
+    "description": "Life sciences research complex generating Biochemistry, Mathematics, and Social Science output. Located in natural environments.",
     "era": "earth",
-    "allowedTileTypes": ["forested", "agricultural", "coastal"],
+    "allowedTileTypes": ["agricultural", "coastal", "forested"],
     "buildCost": { "funding": 40, "materials": 15 },
-    "upkeepCost": { "funding": 6 },
+    "upkeepCost": { "funding": 3 },
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
-    "fieldOutput": { "biochemistry": 5, "socialScience": 2 },
+    "climateImpact": -0.1,
+    "fieldOutput": { "biochemistry": 5, "mathematics": 1, "socialScience": 1 },
     "resourceOutput": {},
     "adjacencyBonuses": [
       { "neighborDefId": "agriculturalResearchStation", "fieldBonus": { "biochemistry": 2, "socialScience": 1 } }
     ],
     "adjacencyPenalties": [],
     "depletes": false,
-    "requiredTechId": null,
-    "climateImpact": -0.1
+    "requiredTechId": null
   },
-  "policyInstitute": {
-    "id": "policyInstitute",
-    "name": "Policy Institute",
-    "description": "Dedicated social science research: governance modelling, public behaviour analysis, and international coordination studies. Generates strong Social Science output.",
+  "socialPolicyUnit": {
+    "id": "socialPolicyUnit",
+    "name": "Social Policy Unit",
+    "description": "Governance and social research institute. Strong Social Science output with Mathematics. Urban only. Benefits from proximity to a university.",
     "era": "earth",
     "allowedTileTypes": ["urban"],
     "buildCost": { "funding": 40, "materials": 5 },
@@ -201,7 +226,7 @@
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
-    "fieldOutput": { "socialScience": 5, "mathematics": 1 },
+    "fieldOutput": { "mathematics": 2, "socialScience": 5 },
     "resourceOutput": {},
     "adjacencyBonuses": [
       { "neighborDefId": "publicUniversity", "fieldBonus": { "socialScience": 2 } }
@@ -213,28 +238,72 @@
   "agriculturalResearchStation": {
     "id": "agriculturalResearchStation",
     "name": "Agricultural Research Station",
-    "description": "Field biology and crop science programmes. Generates Biochemistry; adjacent to a Bioresearch Centre it accelerates both.",
+    "description": "Field biology and crop science programmes. Biochemistry and Social Science output, with a small Materials income from applied research. Agricultural terrain only.",
     "era": "earth",
-    "allowedTileTypes": ["agricultural"],
+    "allowedTileTypes": ["agricultural", "forested"],
     "buildCost": { "funding": 25, "materials": 10 },
     "upkeepCost": { "funding": 4 },
     "buildTime": 2,
     "deleteTime": 1,
     "canDelete": true,
+    "climateImpact": 0.1,
     "fieldOutput": { "biochemistry": 3, "socialScience": 1 },
-    "resourceOutput": {},
+    "resourceOutput": { "materials": 1 },
     "adjacencyBonuses": [
-      { "neighborDefId": "bioResearchCentre", "fieldBonus": { "biochemistry": 2, "socialScience": 1 } }
+      { "neighborDefId": "bioresearchCentre", "fieldBonus": { "biochemistry": 2, "socialScience": 1 } }
     ],
     "adjacencyPenalties": [],
     "depletes": false,
-    "requiredTechId": null,
-    "climateImpact": 0.1
+    "requiredTechId": null
+  },
+  "spaceLaunchCentre": {
+    "id": "spaceLaunchCentre",
+    "name": "Space Launch Centre",
+    "description": "Full-scale orbital launch infrastructure. Engineering, Physics, and Mathematics research output, but consumes Materials each turn for ongoing launch operations. Required for Near Space access. Occupies a full tile.",
+    "era": "earth",
+    "allowedTileTypes": ["arid", "agricultural"],
+    "buildCost": { "funding": 80, "materials": 60 },
+    "upkeepCost": { "funding": 10 },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "slotCost": 3,
+    "climateImpact": 0.3,
+    "fieldOutput": { "engineering": 3, "physics": 4, "mathematics": 2 },
+    "resourceOutput": { "materials": -3 },
+    "adjacencyBonuses": [
+      { "neighborDefId": "researchLab", "fieldBonus": { "physics": 2, "engineering": 1 } }
+    ],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "orbitalMechanics"
+  },
+  "dataCentre": {
+    "id": "dataCentre",
+    "name": "Data Centre",
+    "description": "High-performance computing cluster. Exceptional Computing output with Mathematics. Requires global internet infrastructure.",
+    "era": "earth",
+    "allowedTileTypes": ["urban", "industrial"],
+    "buildCost": { "funding": 35, "materials": 20 },
+    "upkeepCost": { "funding": 6 },
+    "buildTime": 2,
+    "deleteTime": 1,
+    "canDelete": true,
+    "climateImpact": 0.1,
+    "fieldOutput": { "mathematics": 3, "computing": 10 },
+    "resourceOutput": {},
+    "adjacencyBonuses": [
+      { "neighborDefId": "researchLab", "fieldBonus": { "computing": 2, "mathematics": 1 } },
+      { "neighborDefId": "publicUniversity", "fieldBonus": { "computing": 2 } }
+    ],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "internetProtocols"
   },
   "deepSpaceArray": {
     "id": "deepSpaceArray",
     "name": "Deep Space Array",
-    "description": "Dedicated signal decoding infrastructure. Accelerates decode progress each turn. Requires satellite communications infrastructure.",
+    "description": "Dedicated signal analysis infrastructure. Accelerates decode progress each turn and generates strong Physics and Computing output. Only one can ever be built. Requires satellite communications.",
     "era": "earth",
     "allowedTileTypes": ["highland", "arid", "coastal"],
     "buildCost": { "funding": 60, "materials": 40 },
@@ -252,32 +321,10 @@
     "depletes": false,
     "requiredTechId": "satelliteCommunications"
   },
-  "computingHub": {
-    "id": "computingHub",
-    "name": "Computing Hub",
-    "description": "High-performance computing cluster. Strong Computing output; moderate Mathematics. Requires microprocessor architecture.",
-    "era": "earth",
-    "allowedTileTypes": ["urban", "industrial"],
-    "buildCost": { "funding": 35, "materials": 20 },
-    "upkeepCost": { "funding": 7 },
-    "buildTime": 2,
-    "deleteTime": 1,
-    "canDelete": true,
-    "fieldOutput": { "computing": 6, "mathematics": 3 },
-    "resourceOutput": {},
-    "adjacencyBonuses": [
-      { "neighborDefId": "deepSpaceArray", "fieldBonus": { "computing": 3 } },
-      { "neighborDefId": "solarFarm", "fieldBonus": { "computing": 2 } }
-    ],
-    "adjacencyPenalties": [],
-    "depletes": false,
-    "requiredTechId": "microprocessors",
-    "climateImpact": 0.1
-  },
   "orbitalPlatform": {
     "id": "orbitalPlatform",
     "name": "Orbital Research Platform",
-    "description": "Low-gravity environment enables unique materials science and physics research. Requires applied orbital mechanics.",
+    "description": "Low-gravity environment enables unique materials science and physics research impossible on the surface.",
     "era": "nearSpace",
     "allowedTileTypes": [],
     "buildCost": { "funding": 80, "materials": 60 },
@@ -295,7 +342,7 @@
   "lunarMine": {
     "id": "lunarMine",
     "name": "Lunar Extraction Facility",
-    "description": "Harvests regolith and subsurface ice. High yield, finite deposits. Requires applied orbital mechanics.",
+    "description": "Harvests regolith and subsurface ice. High materials yield, but finite deposits.",
     "era": "nearSpace",
     "allowedTileTypes": [],
     "buildCost": { "materials": 50, "funding": 30 },
@@ -313,7 +360,7 @@
   "asteroidMiner": {
     "id": "asteroidMiner",
     "name": "Asteroid Mining Rig",
-    "description": "Autonomous extraction from metallic asteroid bodies. Requires advanced robotics.",
+    "description": "Autonomous extraction from metallic asteroid bodies. Exceptional materials yield from finite asteroid seams.",
     "era": "deepSpace",
     "allowedTileTypes": [],
     "buildCost": { "materials": 80, "funding": 40 },
@@ -326,7 +373,7 @@
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": true,
-    "requiredTechId": "roboticsAutomation"
+    "requiredTechId": null
   },
   "heliopauseRelay": {
     "id": "heliopauseRelay",
@@ -350,18 +397,9 @@
       "id": "narrative-facility-heliopauseRelay",
       "title": "Heliopause Signal Relay — Online",
       "slides": [
-        {
-          "text": "There is only one location at the heliopause where the relay geometry achieves the required alignment with the source structure. Your team spent years determining which one. It is now operational.",
-          "imageColour": "#04050c"
-        },
-        {
-          "text": "Signal quality has improved by an order of magnitude. Features of the transmission that were previously theoretical artefacts are now confirmed structural elements. The interface is close.",
-          "imageColour": "#06070f"
-        },
-        {
-          "text": "There will not be a second one. The geometry does not permit it, and there is only one structure to relay to. This is the instrument the programme has been building toward since 1970.",
-          "imageColour": "#04050c"
-        }
+        { "text": "There is only one location at the heliopause where the relay geometry achieves the required alignment with the source structure. Your team spent years determining which one. It is now operational.", "imageColour": "#04050c" },
+        { "text": "Signal quality has improved by an order of magnitude. Features of the transmission that were previously theoretical artefacts are now confirmed structural elements. The interface is close.", "imageColour": "#06070f" },
+        { "text": "There will not be a second one. The geometry does not permit it, and there is only one structure to relay to. This is the instrument the programme has been building toward since 1970.", "imageColour": "#04050c" }
       ]
     }
   }
