@@ -12,6 +12,7 @@
     projectDefs = new Map(),
     completedProjectIds = [],
     orbitalStationAuthorised = false,
+    hasSpaceLaunchCentre = false,
     actionsRemaining = 0,
     onInitiateProject,
   }: {
@@ -22,6 +23,7 @@
     projectDefs?: Map<string, ProjectDef>;
     completedProjectIds?: string[];
     orbitalStationAuthorised?: boolean;
+    hasSpaceLaunchCentre?: boolean;
     actionsRemaining?: number;
     onInitiateProject?: (defId: string) => void;
   } = $props();
@@ -36,6 +38,15 @@
     if (activeProjects.some((p) => p.defId === stageId)) return 'active';
     if (availableProjects.some((d) => d.id === stageId)) return 'available';
     return 'locked';
+  }
+
+  function lockReason(stageId: string): string {
+    if (!hasSpaceLaunchCentre) return 'Requires: Space Launch Centre';
+    if (stageId === 'orbitalStation_stage2' && !completedProjectIds.includes('orbitalStation_stage1'))
+      return 'Requires: Core Module complete';
+    if (stageId === 'orbitalStation_stage3' && !completedProjectIds.includes('orbitalStation_stage2'))
+      return 'Requires: Habitation Ring complete';
+    return 'Prerequisites not met';
   }
 
   let expandedProjectId = $state<string | null>(null);
@@ -170,6 +181,8 @@
               >
                 BEGIN · {costSummary(def)}
               </button>
+            {:else if status === 'locked'}
+              <div class="lock-reason">{lockReason(stageId)}</div>
             {/if}
           </div>
         {/if}
@@ -380,6 +393,12 @@
   .stage-cost {
     font-size: 0.58rem;
     color: #4a7060;
+  }
+
+  .lock-reason {
+    font-size: 0.57rem;
+    color: #3a4858;
+    font-style: italic;
   }
 
   /* Available project cards */

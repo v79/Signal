@@ -37,6 +37,32 @@
       "requiredFacilityDefs": ["spaceLaunchCentre"]
     }
   },
+  "governmentResearchContract": {
+    "id": "governmentResearchContract",
+    "name": "Government Research Contract",
+    "description": "The programme secures a multi-year public funding commitment in exchange for open publication of non-classified research findings. No upfront cost; yields a substantial funding injection over two turns.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": {},
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "resources": { "funding": 50 } },
+    "landmarkGate": null,
+    "prerequisites": {}
+  },
+  "technologyExportAgreement": {
+    "id": "technologyExportAgreement",
+    "name": "Technology Export Agreement",
+    "description": "Licences derived technologies to allied industrial partners. The materials investment covers packaging and certification; the return is substantial and sustained. Requires established orbital mechanics capability to have anything worth licensing.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "materials": 10 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "resources": { "funding": 90 } },
+    "landmarkGate": null,
+    "prerequisites": { "requiredTechs": ["orbitalMechanics"] }
+  },
   "orbitalStation_stage1": {
     "id": "orbitalStation_stage1",
     "name": "Orbital Station: Core Module",
