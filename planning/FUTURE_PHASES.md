@@ -11,6 +11,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
+  - The only card I ever bank counters scandal. Need other options worth banking.
 - Climate
   - The climate scaling is too harsh and tile damage happens far too early
   - Irradiated damage shouldn't exist without nuclear facilities
@@ -36,7 +37,7 @@ This is a list of future requirements for the game but they are not to be implem
 - Earth era content pass
   - More playtesting required; Computing remains a problem
 - LEO era content pass
-  - Map improvement actions such as sea walls
+  - Map improvement actions such as sea walls for Earth
 - Asteroid era content pass
   - Map improvement actions such as reforestation, radiation cleanup, floating cities
 - Game art:
@@ -45,10 +46,12 @@ This is a list of future requirements for the game but they are not to be implem
   - Generic profile pictures for board members
   - Flavour text for board members
 - Tech tree dependencies:
-  - Most technologies will have prerequisite technologies that must be researched first
   - Clicking on a discovered or in progress technology in the tech tree should show more information
   - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
   - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
+  - When the Narrative event for a technology discovery is shown, it should detail the cards, events, facilities that it unlocks/deprecates
+  - Should be hard for Tier 3 techs to even reach rumour while still researching tier 1 techs. Techs get stuck too easily.
+  - I managed to research all Tier 3 techs before researching any of the Tier 2s
 - News feed & ticker rework
   - The ticker is cute but not very useful
 - Debug view and logs:
@@ -67,7 +70,10 @@ This is a list of future requirements for the game but they are not to be implem
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
-
+- Next Turn / Phase Control
+  - Move the Action Count here
+  - Proper, aligned layout.
+  - Add the turn counter down here too?
 
 
   BUGS:

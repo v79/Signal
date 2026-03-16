@@ -256,6 +256,31 @@
     "depletes": false,
     "requiredTechId": null
   },
+  "coastalTradingPort": {
+    "id": "coastalTradingPort",
+    "name": "Coastal Trading Port",
+    "description": "Commercial port infrastructure that converts raw materials into Funding through export contracts and trade operations. Consumes 4 Materials per turn and generates 10 Funding in return. Social Science output from trade economics. Coastal sites only.",
+    "era": "earth",
+    "allowedTileTypes": ["coastal"],
+    "buildCost": { "funding": 25, "materials": 30 },
+    "upkeepCost": { "funding": 2 },
+    "buildTime": 2,
+    "deleteTime": 1,
+    "canDelete": true,
+    "slotCost": 2,
+    "climateImpact": 0.15,
+    "fieldOutput": { "socialScience": 1 },
+    "resourceOutput": { "funding": 10, "materials": -4 },
+    "adjacencyBonuses": [
+      { "neighborDefId": "mine", "resourceBonus": { "funding": 2 } },
+      { "neighborDefId": "engineeringWorks", "resourceBonus": { "funding": 2 } }
+    ],
+    "adjacencyPenalties": [
+      { "neighborDefId": "bioresearchCentre", "fieldPenalty": { "biochemistry": 1 } }
+    ],
+    "depletes": false,
+    "requiredTechId": null
+  },
   "spaceLaunchCentre": {
     "id": "spaceLaunchCentre",
     "name": "Space Launch Centre",
