@@ -7,6 +7,7 @@ import type {
   FieldPoints,
   Resources,
   NewsItem,
+  CommitteeNotification,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -241,6 +242,57 @@ export function removeBoardMember(
   const member = board[role];
   if (!member || member.leftTurn !== null) return board;
   return { ...board, [role]: { ...member, leftTurn: turn, leftReason: reason } };
+}
+
+// ---------------------------------------------------------------------------
+// Committee notification helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Add a new committee notification to the list.
+ * Caller is responsible for ensuring the id is unique.
+ */
+export function addCommitteeNotification(
+  notifications: CommitteeNotification[],
+  notification: CommitteeNotification,
+): CommitteeNotification[] {
+  return [...notifications, notification];
+}
+
+export interface NotificationResolution {
+  notifications: CommitteeNotification[];
+  resourceDelta: Partial<Resources> | undefined;
+  newsText: string | undefined;
+}
+
+/**
+ * Resolve a committee notification by selecting one of its choices.
+ * Returns the updated list and the chosen option so the caller can apply effects.
+ */
+export function resolveCommitteeNotification(
+  notifications: CommitteeNotification[],
+  id: string,
+  choiceIndex: number,
+): NotificationResolution {
+  const notification = notifications.find((n) => n.id === id);
+  const choice = notification?.choices?.[choiceIndex];
+  return {
+    notifications: notifications.map((n) =>
+      n.id === id ? { ...n, dismissed: true } : n,
+    ),
+    resourceDelta: choice?.resourceDelta,
+    newsText: choice?.newsText,
+  };
+}
+
+/**
+ * Dismiss a committee notification without selecting a choice.
+ */
+export function dismissCommitteeNotification(
+  notifications: CommitteeNotification[],
+  id: string,
+): CommitteeNotification[] {
+  return notifications.map((n) => (n.id === id ? { ...n, dismissed: true } : n));
 }
 
 // ---------------------------------------------------------------------------

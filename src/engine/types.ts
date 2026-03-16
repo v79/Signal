@@ -583,6 +583,11 @@ export interface BoardMemberDef {
   recruitCost: { funding: number; politicalWill: number };
   /** Default starting age when auto-placed at game start. */
   startAge: number;
+  /**
+   * Tech def ID that must be discovered before this candidate appears in the
+   * recruitment pool. Null / omitted means available from game start.
+   */
+  techGate?: string;
 }
 
 export interface BoardMemberInstance {
@@ -600,6 +605,33 @@ export interface BoardMemberInstance {
 
 /** Board seats — a slot may be vacant. */
 export type BoardSlots = Partial<Record<BoardRole, BoardMemberInstance>>;
+
+// ---------------------------------------------------------------------------
+// Committee notifications
+// ---------------------------------------------------------------------------
+
+export interface CommitteeNotificationChoice {
+  label: string;
+  /** Resource delta applied if this choice is selected. */
+  resourceDelta?: Partial<Resources>;
+  /** News text added to the feed when this choice is selected. */
+  newsText?: string;
+}
+
+/**
+ * A lightweight, non-blocking notification surfaced by a committee member.
+ * Flavour-only notifications omit `choices` and are dismissed directly.
+ * Notifications with choices present simple Authorise/Decline decisions.
+ */
+export interface CommitteeNotification {
+  id: string;
+  /** defId of the board member surfacing this notification. */
+  memberDefId: string;
+  text: string;
+  choices?: CommitteeNotificationChoice[];
+  turnCreated: number;
+  dismissed: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Signal Track
@@ -780,4 +812,6 @@ export interface GameState {
    * Slots vacant before this turn are in a grace period and contribute no penalty.
    */
   boardGracePeriodEnds: number;
+  /** Active committee notifications from board members. */
+  committeeNotifications: CommitteeNotification[];
 }

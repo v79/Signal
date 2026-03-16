@@ -117,6 +117,7 @@ export function createGameState(config: GameConfig): GameState {
     narrativeQueue: [],
     availableBoardDefIds: [],
     boardGracePeriodEnds: 4,
+    committeeNotifications: [],
   };
 }
 

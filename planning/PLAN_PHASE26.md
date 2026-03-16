@@ -17,7 +17,7 @@ These are combined because the board-proposal event (the era gate trigger) is th
 
 ## Sub-phases
 
-### Phase 26A — Committee notification system
+### ✅ Phase 26A — Committee notification system
 
 Implement the lightweight notification model that committee members use to surface non-blocking prompts. Board proposals (the escalated variant) build on this same model.
 
@@ -47,7 +47,7 @@ Implement the lightweight notification model that committee members use to surfa
 
 ---
 
-### Phase 26B — Dr. Okonkwo tech gate
+### ✅ Phase 26B — Dr. Okonkwo tech gate
 
 The only remaining Era/tech gate deferred from Phase 25A.
 

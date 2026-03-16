@@ -23,7 +23,13 @@ import {
   executeEventPhase,
   executeDrawPhase,
 } from '../../engine/turn';
-import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../engine/board';
+import {
+  recruitBoardMember,
+  removeBoardMember,
+  isBoardSlotVacant,
+  resolveCommitteeNotification,
+  dismissCommitteeNotification,
+} from '../../engine/board';
 import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
 import type { SignalResponseOption } from '../../engine/types';
 import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
@@ -1057,6 +1063,45 @@ export const gameStore = {
           },
         ],
       },
+    };
+  },
+
+  /** Resolve a committee notification by selecting one of its choices. */
+  resolveCommitteeNotification(id: string, choiceIndex: number): void {
+    if (!_state) return;
+    const result = resolveCommitteeNotification(_state.committeeNotifications ?? [], id, choiceIndex);
+    let resources = { ..._state.player.resources };
+    if (result.resourceDelta) {
+      resources = {
+        funding: resources.funding + (result.resourceDelta.funding ?? 0),
+        materials: Math.max(0, resources.materials + (result.resourceDelta.materials ?? 0)),
+        politicalWill: Math.max(0, resources.politicalWill + (result.resourceDelta.politicalWill ?? 0)),
+      };
+    }
+    const newsFeed = result.newsText
+      ? [
+          ..._state.player.newsFeed,
+          {
+            id: `notification-resolved-${id}-t${_state.turn}`,
+            turn: _state.turn,
+            text: result.newsText,
+            category: 'board' as const,
+          },
+        ]
+      : _state.player.newsFeed;
+    _state = {
+      ..._state,
+      committeeNotifications: result.notifications,
+      player: { ..._state.player, resources, newsFeed },
+    };
+  },
+
+  /** Dismiss a committee notification without acting on it. */
+  dismissCommitteeNotification(id: string): void {
+    if (!_state) return;
+    _state = {
+      ..._state,
+      committeeNotifications: dismissCommitteeNotification(_state.committeeNotifications ?? [], id),
     };
   },
 

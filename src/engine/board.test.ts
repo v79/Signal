@@ -9,7 +9,11 @@ import {
   getBoardAutoCounterTags,
   isBoardSlotVacant,
   getActiveMembers,
+  addCommitteeNotification,
+  resolveCommitteeNotification,
+  dismissCommitteeNotification,
 } from './board';
+import type { CommitteeNotification } from './types';
 import type { BoardMemberDef, BoardSlots, FieldPoints, Resources } from './types';
 
 // ---------------------------------------------------------------------------
@@ -363,6 +367,79 @@ describe('isBoardSlotVacant', () => {
     };
     const board: BoardSlots = { chiefScientist: departed };
     expect(isBoardSlotVacant(board, 'chiefScientist')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Committee notifications
+// ---------------------------------------------------------------------------
+
+const FLAVOUR_NOTIFICATION: CommitteeNotification = {
+  id: 'notif-1',
+  memberDefId: 'ingMarkov',
+  text: 'Materials procurement is behind schedule.',
+  turnCreated: 5,
+  dismissed: false,
+};
+
+const CHOICE_NOTIFICATION: CommitteeNotification = {
+  id: 'notif-2',
+  memberDefId: 'drRamirez',
+  text: 'Dr. Ramirez requests additional laboratory funding.',
+  choices: [
+    { label: 'Authorise', resourceDelta: { funding: -20 }, newsText: 'Laboratory funding authorised.' },
+    { label: 'Decline' },
+  ],
+  turnCreated: 6,
+  dismissed: false,
+};
+
+describe('addCommitteeNotification', () => {
+  it('appends a notification to an empty list', () => {
+    const result = addCommitteeNotification([], FLAVOUR_NOTIFICATION);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('notif-1');
+  });
+
+  it('does not mutate the original array', () => {
+    const original: CommitteeNotification[] = [];
+    addCommitteeNotification(original, FLAVOUR_NOTIFICATION);
+    expect(original).toHaveLength(0);
+  });
+});
+
+describe('dismissCommitteeNotification', () => {
+  it('marks the notification as dismissed', () => {
+    const result = dismissCommitteeNotification([FLAVOUR_NOTIFICATION], 'notif-1');
+    expect(result[0].dismissed).toBe(true);
+  });
+
+  it('is a no-op for an unknown id', () => {
+    const result = dismissCommitteeNotification([FLAVOUR_NOTIFICATION], 'unknown');
+    expect(result[0].dismissed).toBe(false);
+  });
+});
+
+describe('resolveCommitteeNotification', () => {
+  it('marks the notification as dismissed', () => {
+    const { notifications } = resolveCommitteeNotification([CHOICE_NOTIFICATION], 'notif-2', 0);
+    expect(notifications[0].dismissed).toBe(true);
+  });
+
+  it('returns the resource delta for the chosen option', () => {
+    const { resourceDelta } = resolveCommitteeNotification([CHOICE_NOTIFICATION], 'notif-2', 0);
+    expect(resourceDelta?.funding).toBe(-20);
+  });
+
+  it('returns the news text for the chosen option', () => {
+    const { newsText } = resolveCommitteeNotification([CHOICE_NOTIFICATION], 'notif-2', 0);
+    expect(newsText).toBe('Laboratory funding authorised.');
+  });
+
+  it('returns undefined resourceDelta and newsText when choice has none', () => {
+    const { resourceDelta, newsText } = resolveCommitteeNotification([CHOICE_NOTIFICATION], 'notif-2', 1);
+    expect(resourceDelta).toBeUndefined();
+    expect(newsText).toBeUndefined();
   });
 });
 

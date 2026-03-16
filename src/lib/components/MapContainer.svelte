@@ -287,8 +287,15 @@
         gracePeriodEnds={gameStore.state.boardGracePeriodEnds ?? 4}
         turn={gameStore.state.turn}
         era={gameStore.state.era}
+        discoveredTechIds={gameStore.state.player.techs
+          .filter((t) => t.stage === 'discovered')
+          .map((t) => t.defId)}
+        committeeNotifications={gameStore.state.committeeNotifications ?? []}
         onRecruit={(defId) => gameStore.recruitMember(defId, BOARD_DEFS.get(defId)?.startAge ?? 40)}
         onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
+        onResolveNotification={(id, choiceIndex) =>
+          gameStore.resolveCommitteeNotification(id, choiceIndex)}
+        onDismissNotification={(id) => gameStore.dismissCommitteeNotification(id)}
       />
     </div>
   {/if}

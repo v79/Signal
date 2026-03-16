@@ -294,7 +294,8 @@
     "debuffs": [],
     "isAI": false,
     "recruitCost": { "funding": 25, "politicalWill": 20 },
-    "startAge": 38
+    "startAge": 38,
+    "techGate": "signalPatternAnalysis"
   },
   "drDiallo": {
     "id": "drDiallo",
