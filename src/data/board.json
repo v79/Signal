@@ -7,7 +7,9 @@
       { "description": "+20% Physics output per turn", "fieldMultipliers": { "physics": 1.2 } }
     ],
     "debuffs": [],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 20, "politicalWill": 15 },
+    "startAge": 42
   },
   "ingMarkov": {
     "id": "ingMarkov",
@@ -20,7 +22,9 @@
     "debuffs": [
       { "description": "-10% Funding income (bureaucratic friction)", "resourceMultipliers": { "funding": 0.9 } }
     ],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 15, "politicalWill": 10 },
+    "startAge": 47
   },
   "chairOsei": {
     "id": "chairOsei",
@@ -31,7 +35,9 @@
       { "description": "Auto-counters diplomatic interference", "autoCountersEventTag": "interference" }
     ],
     "debuffs": [],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 5, "politicalWill": 30 },
+    "startAge": 52
   },
   "drKowalski": {
     "id": "drKowalski",
@@ -43,7 +49,9 @@
     "debuffs": [
       { "description": "-5% Materials income (cost controls)", "resourceMultipliers": { "materials": 0.95 } }
     ],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 10, "politicalWill": 20 },
+    "startAge": 55
   },
   "dirBristow": {
     "id": "dirBristow",
@@ -54,7 +62,9 @@
       { "description": "+10% Computing field output", "fieldMultipliers": { "computing": 1.1 } }
     ],
     "debuffs": [],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 20, "politicalWill": 5 },
+    "startAge": 48
   },
   "drOkonkwo": {
     "id": "drOkonkwo",
@@ -65,7 +75,9 @@
       { "description": "+15% Physics output per turn", "fieldMultipliers": { "physics": 1.15 } }
     ],
     "debuffs": [],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 25, "politicalWill": 20 },
+    "startAge": 38
   },
   "mgChen": {
     "id": "mgChen",
@@ -75,7 +87,9 @@
       { "description": "+10% all facility resource output", "resourceMultipliers": { "funding": 1.1, "materials": 1.1 } }
     ],
     "debuffs": [],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 15, "politicalWill": 10 },
+    "startAge": 40
   },
   "drNakamura": {
     "id": "drNakamura",
@@ -87,7 +101,9 @@
     "debuffs": [
       { "description": "-10% Social Science output (tunnel vision)", "fieldMultipliers": { "socialScience": 0.9 } }
     ],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 20, "politicalWill": 15 },
+    "startAge": 35
   },
   "drAkintunde": {
     "id": "drAkintunde",
@@ -100,7 +116,9 @@
     "debuffs": [
       { "description": "-8% Materials output (conservative procurement)", "resourceMultipliers": { "materials": 0.92 } }
     ],
-    "isAI": false
+    "isAI": false,
+    "recruitCost": { "funding": 10, "politicalWill": 20 },
+    "startAge": 49
   },
   "aiSynthesis": {
     "id": "aiSynthesis",
@@ -114,6 +132,8 @@
     "debuffs": [
       { "description": "-15% Political Will income — public unease with AI governance", "resourceMultipliers": { "politicalWill": 0.85 } }
     ],
-    "isAI": true
+    "isAI": true,
+    "recruitCost": { "funding": 40, "politicalWill": 50 },
+    "startAge": 0
   }
 }

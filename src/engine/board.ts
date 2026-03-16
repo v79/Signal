@@ -18,9 +18,31 @@ import type {
 // resource outputs, and may auto-counter specific event tags.
 //
 // Buff/debuff multipliers compound multiplicatively across all active members.
+// Vacant slots (after the grace period) contribute negative multipliers.
 // ---------------------------------------------------------------------------
 
 const RETIREMENT_AGE = 70;
+
+/** Passive penalty multipliers applied when a role slot is vacant. */
+const VACANT_PENALTIES: Partial<Record<BoardRole, Partial<CharacterModifier>>> = {
+  chiefScientist: {
+    fieldMultipliers: { physics: 0.9, mathematics: 0.9 },
+  },
+  directorOfEngineering: {
+    fieldMultipliers: { engineering: 0.9 },
+  },
+  headOfFinance: {
+    resourceMultipliers: { funding: 0.9 },
+  },
+  politicalLiaison: {
+    resourceMultipliers: { politicalWill: 0.9 },
+  },
+  directorOfOperations: {
+    resourceMultipliers: { funding: 0.95, materials: 0.95 },
+  },
+  // securityDirector: no multiplier penalty — auto-counter absence is the penalty
+  // signalAnalyst: -10% signal progress — applied in signal.ts
+};
 
 // ---------------------------------------------------------------------------
 // Modifier aggregation
@@ -30,14 +52,20 @@ const RETIREMENT_AGE = 70;
  * Aggregate all active board members' buffs and debuffs into a single
  * combined CharacterModifier. Multipliers compound multiplicatively.
  * Only active members (leftTurn === null) are included.
+ *
+ * When `turn` and `gracePeriodEnds` are provided and `turn > gracePeriodEnds`,
+ * vacant role slots contribute negative penalty multipliers.
  */
 export function computeBoardModifiers(
   board: BoardSlots,
   defs: Map<string, BoardMemberDef>,
+  turn?: number,
+  gracePeriodEnds?: number,
 ): CharacterModifier {
   const fieldMultipliers: Partial<FieldPoints> = {};
   const resourceMultipliers: Partial<Resources> = {};
 
+  // Active member buffs/debuffs
   for (const member of Object.values(board) as (BoardMemberInstance | undefined)[]) {
     if (!member || member.leftTurn !== null) continue;
     const def = defs.get(member.defId);
@@ -52,6 +80,27 @@ export function computeBoardModifiers(
       }
       if (modifier.resourceMultipliers) {
         for (const [res, mult] of Object.entries(modifier.resourceMultipliers)) {
+          const k = res as keyof Resources;
+          resourceMultipliers[k] = (resourceMultipliers[k] ?? 1) * (mult ?? 1);
+        }
+      }
+    }
+  }
+
+  // Vacant slot penalties (only after grace period)
+  const penaltiesActive = turn !== undefined && gracePeriodEnds !== undefined && turn > gracePeriodEnds;
+  if (penaltiesActive) {
+    for (const [role, penalty] of Object.entries(VACANT_PENALTIES) as [BoardRole, Partial<CharacterModifier>][]) {
+      if (!isBoardSlotVacant(board, role)) continue;
+
+      if (penalty.fieldMultipliers) {
+        for (const [field, mult] of Object.entries(penalty.fieldMultipliers)) {
+          const k = field as keyof FieldPoints;
+          fieldMultipliers[k] = (fieldMultipliers[k] ?? 1) * (mult ?? 1);
+        }
+      }
+      if (penalty.resourceMultipliers) {
+        for (const [res, mult] of Object.entries(penalty.resourceMultipliers)) {
           const k = res as keyof Resources;
           resourceMultipliers[k] = (resourceMultipliers[k] ?? 1) * (mult ?? 1);
         }
@@ -124,9 +173,11 @@ export function applyBoardResourceMultipliers(
 /**
  * Tick ages on all active board members by one year. Members who reach or
  * exceed RETIREMENT_AGE are marked retired and a news item is generated.
+ * The character's display name is used in the news text (looked up from defs).
  */
 export function tickBoardAges(
   board: BoardSlots,
+  defs: Map<string, BoardMemberDef>,
   turn: number,
 ): { updatedBoard: BoardSlots; newNewsItems: NewsItem[] } {
   const updatedBoard: BoardSlots = { ...board };
@@ -139,10 +190,11 @@ export function tickBoardAges(
     const newAge = member.age + 1;
     if (newAge >= RETIREMENT_AGE) {
       updatedBoard[role] = { ...member, age: newAge, leftTurn: turn, leftReason: 'retired' };
+      const displayName = defs.get(member.defId)?.name ?? member.defId;
       newNewsItems.push({
         id: `retire-${member.id}-t${turn}`,
         turn,
-        text: `Board member ${member.id} has retired after a long and distinguished career.`,
+        text: `${displayName} has retired from the Steering Committee after a long and distinguished career.`,
         category: 'board' as const,
       });
     } else {

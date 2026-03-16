@@ -33,7 +33,7 @@ The Board panel is too easy to ignore. Members age and retire silently, recruitm
 
 ---
 
-## 1. Action cap extended
+## ✅ 1. Action cap extended
 
 Currently `actionsThisTurn` is only incremented by `playCard()`. Two additional actions must now consume an action slot:
 
@@ -47,7 +47,7 @@ The UI should show the action counter `ACTIONS {n}/{max}` prominently enough tha
 
 ---
 
-## 2. Per-character recruitment costs
+## ✅ 2. Per-character recruitment costs
 
 Recruitment cost moves from the hardcoded UI string `"15F · 10W"` to a field on each `BoardMemberDef`:
 
@@ -74,7 +74,7 @@ The UI greys out candidates the player cannot currently afford (resource check, 
 
 ---
 
-## 3. Dismissal cost
+## ✅ 3. Dismissal cost
 
 Dismissing a committee member costs **20 Political Will**. This is deducted immediately. The dismissal is still instant (no delay). The cost reflects the political consequence of publicly removing a named official.
 
@@ -82,7 +82,7 @@ Exception: if a member is dismissed in response to a scandal or event card, the 
 
 ---
 
-## 4. Vacant slot penalties
+## ✅ 4. Vacant slot penalties
 
 Each unfilled role slot applies a passive penalty. The penalty is visible directly on the slot row in the panel even when collapsed — the player sees it without expanding.
 
@@ -106,7 +106,7 @@ Penalties are calculated in `computeBoardModifiers()` — vacant slots contribut
 
 ---
 
-## 5. Seeded candidate pool
+## ✅ 5. Seeded candidate pool
 
 Currently all 10 characters are always available. Instead, the run seed determines which alternative candidate is available per role:
 
@@ -123,12 +123,12 @@ This means each run feels slightly different. The seed-based pick happens in `cr
 
 Some candidates should not appear until game conditions are met:
 
-| Character | Gate condition |
-|---|---|
-| SYNTHESIS-7 | Era 3 only (`era === 'deepSpace'`) |
-| Dr. Chidi Okonkwo | Signal Analyst — requires `signalAnalysis` tech discovered |
+| Character | Gate condition | Status |
+|---|---|---|
+| SYNTHESIS-7 | Era 3 only (`era === 'deepSpace'`) | ✅ Implemented |
+| Dr. Chidi Okonkwo | Signal Analyst — requires `signalAnalysis` tech discovered | Deferred to Phase B |
 
-The `availableForRole()` function in `BoardPanel.svelte` already filters by role; it should also filter by gating conditions passed in from the store.
+The `candidateForRole()` function in `BoardPanel.svelte` filters by role and era; tech gating (Dr. Okonkwo) is deferred to Phase B alongside the rest of the tech-gate plumbing.
 
 ---
 
@@ -151,7 +151,7 @@ This mechanic is defined here so the Committee rework and Era Transitions can sh
 
 ---
 
-## 8. Retirement news fix
+## ✅ 8. Retirement news fix
 
 `tickBoardAges()` currently generates:
 ```
@@ -161,7 +161,7 @@ This mechanic is defined here so the Committee rework and Era Transitions can sh
 This should use the character's display name, looked up from `defs`. The function needs to accept `defs` as a parameter (it currently does not).
 
 
-## 9. Panel visual design
+## ✅ 9. Panel visual design
 
 The current `BoardPanel.svelte` renders a plain vertical list of role names and member names. The redesigned panel uses the full available width to present each slot as a **card**, laid out in a **two-column grid** (so two slots sit side-by-side per row on a typical screen).
 
@@ -232,20 +232,20 @@ The two-column grid collapses to a single column if the panel width drops below 
 This design covers two separable implementation phases:
 
 ### Phase A — Mechanical foundations (recommended first)
-- Extend action cap to `buildFacility` and `recruitMember`
-- Add `recruitCost` to `BoardMemberDef` and enforce it properly
-- Add dismissal Will cost
-- Vacant slot penalties in `computeBoardModifiers()`
-- Seeded candidate pool in `createGameState()`
-- Rename "BOARD" → "COMMITTEE" in all display strings
-- Fix retirement news to use character name
-- Redesign `BoardPanel.svelte` to two-column card grid (§9)
+- ✅ Extend action cap to `buildFacility` and `recruitMember`
+- ✅ Add `recruitCost` to `BoardMemberDef` and enforce it properly
+- ✅ Add dismissal Will cost
+- ✅ Vacant slot penalties in `computeBoardModifiers()`
+- ✅ Seeded candidate pool in `createGameState()`
+- ✅ Rename "BOARD" → "COMMITTEE" in all display strings
+- ✅ Fix retirement news to use character name
+- ✅ Redesign `BoardPanel.svelte` to two-column card grid (§9)
 
 ### Phase B — Committee notifications + board proposals
 - Notification data model (lightweight, stored in `GameState`)
 - Committee tab renders active notifications
 - Board proposal event (Orbital Station) wired to tech discovery
-- Era/tech gating for candidates
+- Era gating for candidates — ✅ SYNTHESIS-7 Era 3 gate implemented; Dr. Okonkwo `signalAnalysis` tech gate still pending
 
 Phase B depends on Era Transitions design being finalised and is best done alongside it.
 

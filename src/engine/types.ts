@@ -579,6 +579,10 @@ export interface BoardMemberDef {
   debuffs: CharacterModifier[];
   /** Whether this is an AI board member (available only in Era 3). */
   isAI: boolean;
+  /** Resource cost to recruit this character. */
+  recruitCost: { funding: number; politicalWill: number };
+  /** Default starting age when auto-placed at game start. */
+  startAge: number;
 }
 
 export interface BoardMemberInstance {
@@ -765,4 +769,15 @@ export interface GameState {
   seenNarrativeIds: string[];
   /** Narratives queued for display, processed one at a time in order. */
   narrativeQueue: NarrativeDef[];
+  /**
+   * Seeded candidate pool — defIds available for recruitment in this run.
+   * For contested roles (chiefScientist, headOfFinance, signalAnalyst) only
+   * one candidate is included; determined at game creation by the run seed.
+   */
+  availableBoardDefIds: string[];
+  /**
+   * Turn number at which vacant-slot penalties begin applying.
+   * Slots vacant before this turn are in a grace period and contribute no penalty.
+   */
+  boardGracePeriodEnds: number;
 }

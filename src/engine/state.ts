@@ -115,6 +115,8 @@ export function createGameState(config: GameConfig): GameState {
     maxActionsPerTurn: 3,
     seenNarrativeIds: [],
     narrativeQueue: [],
+    availableBoardDefIds: [],
+    boardGracePeriodEnds: 4,
   };
 }
 
