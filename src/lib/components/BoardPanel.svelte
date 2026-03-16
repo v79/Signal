@@ -64,13 +64,21 @@
     onDismiss: (role: BoardRole) => void;
   } = $props();
 
-  /** The single available candidate for this role in this run, or null.
-   * AI members are only available in Era 3 (deepSpace). */
+  /** The next available candidate for this role, or null.
+   * Skips anyone currently active on the board (already recruited).
+   * AI members are only available in Era 3 (deepSpace).
+   * The seed-shuffled order of availableBoardDefIds determines who appears first. */
   function candidateForRole(role: BoardRole): BoardMemberDef | null {
+    const activeDefIds = new Set(
+      Object.values(board)
+        .filter((m): m is NonNullable<typeof m> => !!m && m.leftTurn === null)
+        .map((m) => m.defId),
+    );
     const defId = availableBoardDefIds.find((id) => {
       const def = boardDefs.get(id);
       if (!def || def.role !== role) return false;
       if (def.isAI && era !== 'deepSpace') return false;
+      if (activeDefIds.has(id)) return false;
       return true;
     });
     return defId ? (boardDefs.get(defId) ?? null) : null;

@@ -348,20 +348,12 @@ export const gameStore = {
         : undefined,
     });
 
-    // Seeded candidate pool: for contested roles, pick one candidate per run.
-    // Pairs: chiefScientist (drRamirez|drNakamura), headOfFinance (drKowalski|drAkintunde),
-    //        signalAnalyst (drOkonkwo|aiSynthesis)
+    // Seed-shuffle all candidates so each run presents them in a different order.
+    // candidateForRole() picks the first unoccupied match, so the shuffle determines
+    // which candidate appears after a retirement — giving run variety without
+    // permanently locking anyone out.
     const poolRng = createRng(`${seed}-board-pool`);
-    const poolPairs: [string, string][] = [
-      ['drRamirez', 'drNakamura'],
-      ['drKowalski', 'drAkintunde'],
-      ['drOkonkwo', 'aiSynthesis'],
-    ];
-    const uncontested = ['ingMarkov', 'chairOsei', 'dirBristow', 'mgChen'];
-    const availableBoardDefIds: string[] = [...uncontested];
-    for (const [a, b] of poolPairs) {
-      availableBoardDefIds.push(poolRng.next() < 0.5 ? a : b);
-    }
+    const availableBoardDefIds = poolRng.shuffle([...BOARD_DEFS.keys()]);
 
     const starterCards: GameState['player']['cards'] = [
       { id: 'lobbying-1', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
