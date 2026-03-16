@@ -280,7 +280,14 @@
         board={gameStore.state.player.board}
         boardDefs={BOARD_DEFS}
         phase={gameStore.state.phase}
-        onRecruit={(defId) => gameStore.recruitMember(defId, 40)}
+        playerResources={gameStore.state.player.resources}
+        actionsThisTurn={gameStore.state.actionsThisTurn ?? 0}
+        maxActionsPerTurn={gameStore.state.maxActionsPerTurn ?? 3}
+        availableBoardDefIds={gameStore.state.availableBoardDefIds ?? []}
+        gracePeriodEnds={gameStore.state.boardGracePeriodEnds ?? 4}
+        turn={gameStore.state.turn}
+        era={gameStore.state.era}
+        onRecruit={(defId) => gameStore.recruitMember(defId, BOARD_DEFS.get(defId)?.startAge ?? 40)}
         onDismiss={(role) => gameStore.dismissMember(role as BoardRole)}
       />
     </div>

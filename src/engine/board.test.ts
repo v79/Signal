@@ -28,6 +28,8 @@ const DEF_SCIENTIST: BoardMemberDef = {
   ],
   debuffs: [],
   isAI: false,
+  recruitCost: { funding: 20, politicalWill: 15 },
+  startAge: 42,
 };
 
 const DEF_ENGINEER: BoardMemberDef = {
@@ -51,6 +53,8 @@ const DEF_ENGINEER: BoardMemberDef = {
     },
   ],
   isAI: false,
+  recruitCost: { funding: 15, politicalWill: 10 },
+  startAge: 47,
 };
 
 const DEF_SECURITY: BoardMemberDef = {
@@ -65,6 +69,8 @@ const DEF_SECURITY: BoardMemberDef = {
   ],
   debuffs: [],
   isAI: false,
+  recruitCost: { funding: 20, politicalWill: 5 },
+  startAge: 48,
 };
 
 const DEFS: Map<string, BoardMemberDef> = new Map([
@@ -124,6 +130,32 @@ describe('computeBoardModifiers', () => {
     const board: BoardSlots = { chiefScientist: departed };
     const mod = computeBoardModifiers(board, DEFS);
     expect(mod.fieldMultipliers).toEqual({});
+  });
+
+  it('applies no vacant penalties within grace period', () => {
+    // turn=3, gracePeriodEnds=4 → still in grace period
+    const mod = computeBoardModifiers({}, DEFS, 3, 4);
+    expect(mod.fieldMultipliers).toEqual({});
+    expect(mod.resourceMultipliers).toEqual({});
+  });
+
+  it('applies vacant penalties after grace period', () => {
+    // turn=5, gracePeriodEnds=4 → penalties active; all slots vacant
+    const mod = computeBoardModifiers({}, DEFS, 5, 4);
+    // chiefScientist vacancy → physics and mathematics ×0.9
+    expect(mod.fieldMultipliers?.physics).toBeCloseTo(0.9);
+    expect(mod.fieldMultipliers?.mathematics).toBeCloseTo(0.9);
+    // headOfFinance vacancy (×0.9) compounded with directorOfOperations vacancy (×0.95)
+    // = 0.9 × 0.95 = 0.855
+    expect(mod.resourceMultipliers?.funding).toBeCloseTo(0.855);
+  });
+
+  it('does not double-penalise a filled role', () => {
+    // chiefScientist filled — should give +20% physics buff, not vacancy penalty
+    const board: BoardSlots = { chiefScientist: makeInstance('drRamirez', 'chiefScientist') };
+    const mod = computeBoardModifiers(board, DEFS, 5, 4);
+    // buff 1.2 — no -10% penalty stacked on top
+    expect(mod.fieldMultipliers?.physics).toBeCloseTo(1.2);
   });
 });
 
@@ -195,19 +227,25 @@ describe('applyBoardResourceMultipliers', () => {
 describe('tickBoardAges', () => {
   it('increments age for active members', () => {
     const board: BoardSlots = { chiefScientist: makeInstance('drRamirez', 'chiefScientist', 40) };
-    const { updatedBoard, newNewsItems } = tickBoardAges(board, 5);
+    const { updatedBoard, newNewsItems } = tickBoardAges(board, DEFS, 5);
     expect(updatedBoard.chiefScientist?.age).toBe(41);
     expect(newNewsItems).toHaveLength(0);
   });
 
   it('retires member at age 70', () => {
     const board: BoardSlots = { chiefScientist: makeInstance('drRamirez', 'chiefScientist', 69) };
-    const { updatedBoard, newNewsItems } = tickBoardAges(board, 10);
+    const { updatedBoard, newNewsItems } = tickBoardAges(board, DEFS, 10);
     expect(updatedBoard.chiefScientist?.age).toBe(70);
     expect(updatedBoard.chiefScientist?.leftTurn).toBe(10);
     expect(updatedBoard.chiefScientist?.leftReason).toBe('retired');
     expect(newNewsItems).toHaveLength(1);
     expect(newNewsItems[0].turn).toBe(10);
+  });
+
+  it('uses character display name in retirement news', () => {
+    const board: BoardSlots = { chiefScientist: makeInstance('drRamirez', 'chiefScientist', 69) };
+    const { newNewsItems } = tickBoardAges(board, DEFS, 10);
+    expect(newNewsItems[0].text).toContain('Dr. Elena Ramirez');
   });
 
   it('skips already-departed members', () => {
@@ -217,7 +255,7 @@ describe('tickBoardAges', () => {
       leftReason: 'resigned' as const,
     };
     const board: BoardSlots = { chiefScientist: departed };
-    const { updatedBoard, newNewsItems } = tickBoardAges(board, 7);
+    const { updatedBoard, newNewsItems } = tickBoardAges(board, DEFS, 7);
     expect(updatedBoard.chiefScientist?.age).toBe(65); // no change
     expect(newNewsItems).toHaveLength(0);
   });

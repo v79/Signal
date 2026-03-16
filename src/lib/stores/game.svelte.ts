@@ -348,6 +348,13 @@ export const gameStore = {
         : undefined,
     });
 
+    // Seed-shuffle all candidates so each run presents them in a different order.
+    // candidateForRole() picks the first unoccupied match, so the shuffle determines
+    // which candidate appears after a retirement — giving run variety without
+    // permanently locking anyone out.
+    const poolRng = createRng(`${seed}-board-pool`);
+    const availableBoardDefIds = poolRng.shuffle([...BOARD_DEFS.keys()]);
+
     const starterCards: GameState['player']['cards'] = [
       { id: 'lobbying-1', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
       { id: 'lobbying-2', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
@@ -417,14 +424,25 @@ export const gameStore = {
         : t,
     );
 
+    // Pre-fill Head of Finance and Director of Operations at game start.
+    const financeDefId = availableBoardDefIds.find((id) => BOARD_DEFS.get(id)?.role === 'headOfFinance') ?? 'drKowalski';
+    const opsDefId = availableBoardDefIds.find((id) => BOARD_DEFS.get(id)?.role === 'directorOfOperations') ?? 'mgChen';
+    const financeDef = BOARD_DEFS.get(financeDefId)!;
+    const opsDef = BOARD_DEFS.get(opsDefId)!;
+    let starterBoard = recruitBoardMember({}, financeDef, financeDef.startAge, 1);
+    starterBoard = recruitBoardMember(starterBoard, opsDef, opsDef.startAge, 1);
+
     let next: GameState = {
       ...base,
+      availableBoardDefIds,
+      boardGracePeriodEnds: 4,
       player: {
         ...base.player,
         cards: starterCards,
         techs,
         newsFeed: openingNews,
         facilities: [hqFacility],
+        board: starterBoard,
       },
       blocs: initialiseBlocStates([...BLOC_DEFS.values()]),
       map: {
@@ -453,6 +471,10 @@ export const gameStore = {
 
     // HQ is placed at game start only — never buildable by the player.
     if (def.id === 'hq') return;
+
+    // Building costs an action slot.
+    const cap = _state.maxActionsPerTurn ?? 3;
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     // Cannot build on a destroyed tile.
     const tile = _state.map.earthTiles.find(
@@ -489,6 +511,7 @@ export const gameStore = {
         _state.player.resources.politicalWill - (def.buildCost.politicalWill ?? 0),
       ),
     };
+    const newActionsThisTurn = (_state.actionsThisTurn ?? 0) + 1;
 
     if (def.buildTime === 0) {
       // Instant build
@@ -506,6 +529,7 @@ export const gameStore = {
       }
       _state = {
         ..._state,
+        actionsThisTurn: newActionsThisTurn,
         player: {
           ..._state.player,
           resources: newResources,
@@ -532,6 +556,7 @@ export const gameStore = {
       };
       _state = {
         ..._state,
+        actionsThisTurn: newActionsThisTurn,
         player: {
           ..._state.player,
           resources: newResources,
@@ -953,26 +978,41 @@ export const gameStore = {
     resetSelections();
   },
 
-  /** Recruit a board member. Deducts the recruit cost and adds the member to their role slot. */
+  /** Recruit a board member. Costs 1 action + per-character resource cost. */
   recruitMember(defId: string, startAge: number): void {
     if (!_state) return;
     const def = BOARD_DEFS.get(defId);
     if (!def) return;
     if (!isBoardSlotVacant(_state.player.board, def.role)) return;
 
-    const RECRUIT_COST = { funding: 15, materials: 0, politicalWill: 10 };
-    if (_state.player.resources.funding < RECRUIT_COST.funding) return;
-    if (_state.player.resources.politicalWill < RECRUIT_COST.politicalWill) return;
+    // Action cap check
+    const cap = _state.maxActionsPerTurn ?? 3;
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    // Per-character resource cost
+    const cost = def.recruitCost;
+    if (_state.player.resources.funding < cost.funding) return;
+    if (_state.player.resources.politicalWill < cost.politicalWill) return;
 
     const newBoard = recruitBoardMember(_state.player.board, def, startAge, _state.turn);
+    const ROLE_LABELS: Record<BoardRole, string> = {
+      chiefScientist: 'Chief Scientist',
+      directorOfEngineering: 'Dir. Engineering',
+      headOfFinance: 'Head of Finance',
+      politicalLiaison: 'Political Liaison',
+      directorOfOperations: 'Dir. Operations',
+      securityDirector: 'Security Director',
+      signalAnalyst: 'Signal Analyst',
+    };
     _state = {
       ..._state,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
       player: {
         ..._state.player,
         resources: {
           ..._state.player.resources,
-          funding: _state.player.resources.funding - RECRUIT_COST.funding,
-          politicalWill: _state.player.resources.politicalWill - RECRUIT_COST.politicalWill,
+          funding: _state.player.resources.funding - cost.funding,
+          politicalWill: _state.player.resources.politicalWill - cost.politicalWill,
         },
         board: newBoard,
         newsFeed: [
@@ -980,20 +1020,43 @@ export const gameStore = {
           {
             id: `recruit-${defId}-t${_state.turn}`,
             turn: _state.turn,
-            text: `${def.name} has joined the board as ${def.role}.`,
+            text: `${def.name} has joined the Steering Committee as ${ROLE_LABELS[def.role]}.`,
+            category: 'board' as const,
           },
         ],
       },
     };
   },
 
-  /** Remove a board member (resign or dismiss). */
+  /** Remove a board member (dismissed). Costs 20 Political Will. */
   dismissMember(role: BoardRole): void {
     if (!_state) return;
+    const DISMISS_COST = 20;
+    if (_state.player.resources.politicalWill < DISMISS_COST) return;
+
+    const member = _state.player.board[role];
+    const displayName = member ? (BOARD_DEFS.get(member.defId)?.name ?? member.defId) : 'Unknown';
+
     const newBoard = removeBoardMember(_state.player.board, role, 'resigned', _state.turn);
     _state = {
       ..._state,
-      player: { ..._state.player, board: newBoard },
+      player: {
+        ..._state.player,
+        resources: {
+          ..._state.player.resources,
+          politicalWill: _state.player.resources.politicalWill - DISMISS_COST,
+        },
+        board: newBoard,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          {
+            id: `dismiss-${role}-t${_state.turn}`,
+            turn: _state.turn,
+            text: `${displayName} has been dismissed from the Steering Committee.`,
+            category: 'board' as const,
+          },
+        ],
+      },
     };
   },
 

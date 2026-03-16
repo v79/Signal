@@ -233,8 +233,8 @@ export function executeWorldPhase(
     }
   }
 
-  // 3. Board multipliers applied to facility output
-  const boardMod = computeBoardModifiers(player.board, boardDefs);
+  // 3. Board multipliers applied to facility output (includes vacant slot penalties after grace period)
+  const boardMod = computeBoardModifiers(player.board, boardDefs, nextTurn, state.boardGracePeriodEnds);
   const boostedFields = applyBoardFieldMultipliers(totalFields, boardMod);
   const boostedResources = applyBoardResourceMultipliers(totalResources, boardMod);
 
@@ -367,7 +367,7 @@ export function executeWorldPhase(
   const mergerNews = checkBlocMergers(updatedBlocs, blocDefs, nextTurn);
 
   // 15. Board age ticking (retirements generate news)
-  const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, nextTurn);
+  const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, boardDefs, nextTurn);
 
   // 16. Signal progress tick
   const prevSignalProgress = state.signal.decodeProgress;
