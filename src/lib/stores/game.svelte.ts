@@ -41,6 +41,7 @@ import {
   formatEffectForNews,
 } from '../../engine/events';
 import { getFacilitiesOnTile, findContiguousFreeStart } from '../../engine/facilities';
+import { canInitiateProject, initiateProject } from '../../engine/projects';
 import {
   BLOC_MAPS,
   BLOC_DEFS,
@@ -1104,6 +1105,28 @@ export const gameStore = {
       ..._state,
       committeeNotifications: dismissCommitteeNotification(_state.committeeNotifications ?? [], id),
     };
+  },
+
+  /**
+   * Initiate a Scientific Project. Costs one action slot and deducts the
+   * upfront resource cost. No-ops if the project cannot be started.
+   */
+  initiateProject(defId: string): void {
+    if (!_state) return;
+    const def = PROJECT_DEFS.get(defId);
+    if (!def) return;
+
+    const cap = _state.maxActionsPerTurn ?? 3;
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    if (!canInitiateProject(_state, def)) return;
+
+    const next = initiateProject(_state, def);
+    _state = {
+      ...next,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+    };
+    autoSave(_state);
   },
 
   /**

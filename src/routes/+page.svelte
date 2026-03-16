@@ -16,7 +16,8 @@
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
 
   import { gameStore } from '$lib/stores/game.svelte';
-  import { CARD_DEFS, EVENT_DEFS, FACILITY_DEFS, BLOC_DEFS, TECH_DEFS } from '../data/loader';
+  import { CARD_DEFS, EVENT_DEFS, FACILITY_DEFS, BLOC_DEFS, TECH_DEFS, PROJECT_DEFS } from '../data/loader';
+  import { getAvailableProjects } from '../engine/projects';
   import {
     computeAdjacencyEffects,
     computeResourceBreakdown,
@@ -63,6 +64,18 @@
     }
     _knownResearchCount = count;
   });
+
+  // Available projects (filtered from full project pool based on current state).
+  const availableProjects = $derived(
+    gameStore.state ? getAvailableProjects(gameStore.state, PROJECT_DEFS) : [],
+  );
+
+  // Actions remaining this turn.
+  const actionsRemaining = $derived(
+    gameStore.state
+      ? (gameStore.state.maxActionsPerTurn ?? 3) - (gameStore.state.actionsThisTurn ?? 0)
+      : 0,
+  );
 
   // Tags of active fullCounter events — used to highlight matching counter cards in hand.
   const counterableTags = $derived(
@@ -133,9 +146,15 @@
           onAccept={(id) => gameStore.acceptEvent(id)}
         />
 
-        {#if gs.player.constructionQueue.length > 0}
-          <OngoingActionsPanel queue={gs.player.constructionQueue} facilityDefs={FACILITY_DEFS} />
-        {/if}
+        <OngoingActionsPanel
+          queue={gs.player.constructionQueue}
+          facilityDefs={FACILITY_DEFS}
+          availableProjects={gs.phase === 'action' ? availableProjects : []}
+          activeProjects={gs.player.activeProjects}
+          projectDefs={PROJECT_DEFS}
+          actionsRemaining={actionsRemaining}
+          onInitiateProject={(defId) => gameStore.initiateProject(defId)}
+        />
 
       </div>
 
