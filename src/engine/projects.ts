@@ -1,0 +1,295 @@
+import type {
+  GameState,
+  ProjectDef,
+  ProjectInstance,
+  PlayerState,
+  Resources,
+  NewsItem,
+} from './types';
+
+// ---------------------------------------------------------------------------
+// Projects
+//
+// Projects are finite, goal-oriented endeavours distinct from facilities.
+// They have a one-time cost, a multi-turn duration, and a one-time reward
+// on completion. Some have per-turn upkeep while active.
+//
+// Prerequisites are checked before initiation:
+//   - Era gate (player must be in the required era or later)
+//   - Required techs (must be at 'discovered' stage)
+//   - Required facility defs (at least one active instance must exist)
+//   - Cost affordability (player has enough resources to pay upfront)
+// ---------------------------------------------------------------------------
+
+const ERA_ORDER = ['earth', 'nearSpace', 'deepSpace'] as const;
+type Era = (typeof ERA_ORDER)[number];
+
+// ---------------------------------------------------------------------------
+// Prerequisite / availability checks
+// ---------------------------------------------------------------------------
+
+/**
+ * Return true if all prerequisites are met and the player can afford the
+ * upfront cost. Does NOT check whether the project is already active or
+ * completed — call site should guard against duplicates.
+ */
+export function canInitiateProject(state: GameState, def: ProjectDef): boolean {
+  const { player } = state;
+  const prereqs = def.prerequisites;
+
+  // Era gate
+  if (prereqs.era) {
+    const required = ERA_ORDER.indexOf(prereqs.era as Era);
+    const current = ERA_ORDER.indexOf(state.era as Era);
+    if (current < required) return false;
+  }
+
+  // Required techs
+  if (prereqs.requiredTechs) {
+    for (const techId of prereqs.requiredTechs) {
+      if (!player.techs.some((t) => t.defId === techId && t.stage === 'discovered')) return false;
+    }
+  }
+
+  // Required facility defs — at least one active (non-pending-demolition) instance
+  if (prereqs.requiredFacilityDefs) {
+    for (const defId of prereqs.requiredFacilityDefs) {
+      const hasActive = player.facilities.some((f) => {
+        if (f.defId !== defId) return false;
+        // Exclude facilities currently being demolished
+        const tile = state.map.earthTiles.find((t) =>
+          t.facilitySlots.some((s) => s === f.id),
+        );
+        return tile ? tile.pendingActionId === null : true;
+      });
+      if (!hasActive) return false;
+    }
+  }
+
+  // Minimum resource prerequisites (separate from cost — e.g. "must have 50W to start")
+  if (prereqs.minResources) {
+    const r = prereqs.minResources;
+    if ((r.funding ?? 0) > player.resources.funding) return false;
+    if ((r.materials ?? 0) > player.resources.materials) return false;
+    if ((r.politicalWill ?? 0) > player.resources.politicalWill) return false;
+  }
+
+  // Upfront cost affordability
+  if ((def.cost.funding ?? 0) > player.resources.funding) return false;
+  if ((def.cost.materials ?? 0) > player.resources.materials) return false;
+  if ((def.cost.politicalWill ?? 0) > player.resources.politicalWill) return false;
+
+  return true;
+}
+
+/**
+ * Return all projects from the defs map that:
+ *   - Are not already active
+ *   - Are not already completed
+ *   - Pass canInitiateProject
+ */
+export function getAvailableProjects(
+  state: GameState,
+  defs: Map<string, ProjectDef>,
+): ProjectDef[] {
+  const activeDefIds = new Set(state.player.activeProjects.map((p) => p.defId));
+  const completedIds = new Set(state.player.completedProjectIds);
+  return [...defs.values()].filter(
+    (def) => !activeDefIds.has(def.id) && !completedIds.has(def.id) && canInitiateProject(state, def),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Initiation
+// ---------------------------------------------------------------------------
+
+/**
+ * Initiate a project: deduct upfront cost, create the ProjectInstance,
+ * and add a news item. Caller must verify canInitiateProject first.
+ */
+export function initiateProject(state: GameState, def: ProjectDef): GameState {
+  const resources: Resources = {
+    funding: state.player.resources.funding - (def.cost.funding ?? 0),
+    materials: Math.max(0, state.player.resources.materials - (def.cost.materials ?? 0)),
+    politicalWill: Math.max(
+      0,
+      state.player.resources.politicalWill - (def.cost.politicalWill ?? 0),
+    ),
+  };
+
+  const instance: ProjectInstance = {
+    id: `${def.id}-t${state.turn}`,
+    defId: def.id,
+    startTurn: state.turn,
+    turnsElapsed: 0,
+    effectiveDuration: def.baseDuration,
+  };
+
+  const newsItem: NewsItem = {
+    id: `project-start-${def.id}-t${state.turn}`,
+    turn: state.turn,
+    text: `Project initiated: ${def.name}.`,
+    category: 'discovery',
+  };
+
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      resources,
+      activeProjects: [...state.player.activeProjects, instance],
+      newsFeed: [...state.player.newsFeed, newsItem],
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// World-phase tick
+// ---------------------------------------------------------------------------
+
+export interface ProjectTickResult {
+  state: GameState;
+  /** DefIds of projects that completed this tick. */
+  completedDefIds: string[];
+}
+
+/**
+ * Advance all active projects by one turn. Projects that reach their
+ * effectiveDuration are completed: rewards are applied, upkeep stops,
+ * and they move to completedProjectIds.
+ *
+ * Per-turn upkeep for still-active projects is also deducted here.
+ */
+export function tickActiveProjects(
+  state: GameState,
+  defs: Map<string, ProjectDef>,
+  turn: number,
+): ProjectTickResult {
+  const completedDefIds: string[] = [];
+  let player: PlayerState = { ...state.player };
+  let signal = { ...state.signal };
+  const stillActive: ProjectInstance[] = [];
+  const projectNews: NewsItem[] = [];
+
+  for (const project of player.activeProjects) {
+    const def = defs.get(project.defId);
+    if (!def) {
+      // Unknown def — keep as-is to avoid data loss
+      stillActive.push(project);
+      continue;
+    }
+
+    const advanced = { ...project, turnsElapsed: project.turnsElapsed + 1 };
+
+    if (advanced.turnsElapsed >= advanced.effectiveDuration) {
+      // ---- Completion ----
+      completedDefIds.push(def.id);
+      player = { ...player, completedProjectIds: [...player.completedProjectIds, def.id] };
+
+      // Deduct final turn upkeep before applying reward
+      if (def.upkeepCost.funding || def.upkeepCost.materials || def.upkeepCost.politicalWill) {
+        player = {
+          ...player,
+          resources: {
+            funding: player.resources.funding - (def.upkeepCost.funding ?? 0),
+            materials: Math.max(0, player.resources.materials - (def.upkeepCost.materials ?? 0)),
+            politicalWill: Math.max(0, player.resources.politicalWill - (def.upkeepCost.politicalWill ?? 0)),
+          },
+        };
+      }
+
+      // Apply resource reward
+      if (def.reward.resources) {
+        const r = def.reward.resources;
+        player = {
+          ...player,
+          resources: {
+            funding: player.resources.funding + (r.funding ?? 0),
+            materials: Math.max(0, player.resources.materials + (r.materials ?? 0)),
+            politicalWill: Math.max(
+              0,
+              player.resources.politicalWill + (r.politicalWill ?? 0),
+            ),
+          },
+        };
+      }
+
+      // Apply signal progress reward
+      if (def.reward.signalProgress) {
+        signal = {
+          ...signal,
+          decodeProgress: Math.min(100, signal.decodeProgress + def.reward.signalProgress),
+        };
+      }
+
+      // Add unlocked cards to deck
+      if (def.reward.unlocksCards) {
+        for (const cardDefId of def.reward.unlocksCards) {
+          player = {
+            ...player,
+            cards: [
+              ...player.cards,
+              { id: `${cardDefId}-proj-${def.id}-t${turn}`, defId: cardDefId, zone: 'deck' as const, bankedSinceTurn: null },
+            ],
+          };
+        }
+      }
+
+      projectNews.push({
+        id: `project-complete-${def.id}-t${turn}`,
+        turn,
+        text: `Project complete: ${def.name}. ${formatRewardForNews(def)}`.trimEnd(),
+        category: 'discovery',
+      });
+    } else {
+      stillActive.push(advanced);
+    }
+  }
+
+  // Deduct per-turn upkeep for projects still running
+  if (stillActive.length > 0) {
+    let upkeepFunding = 0;
+    let upkeepMaterials = 0;
+    let upkeepWill = 0;
+    for (const project of stillActive) {
+      const def = defs.get(project.defId);
+      if (!def) continue;
+      upkeepFunding += def.upkeepCost.funding ?? 0;
+      upkeepMaterials += def.upkeepCost.materials ?? 0;
+      upkeepWill += def.upkeepCost.politicalWill ?? 0;
+    }
+    player = {
+      ...player,
+      resources: {
+        funding: player.resources.funding - upkeepFunding,
+        materials: Math.max(0, player.resources.materials - upkeepMaterials),
+        politicalWill: Math.max(0, player.resources.politicalWill - upkeepWill),
+      },
+    };
+  }
+
+  player = {
+    ...player,
+    activeProjects: stillActive,
+    newsFeed: [...player.newsFeed, ...projectNews],
+  };
+
+  return {
+    state: { ...state, player, signal },
+    completedDefIds,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatRewardForNews(def: ProjectDef): string {
+  const parts: string[] = [];
+  if (def.reward.signalProgress) parts.push(`+${def.reward.signalProgress} signal progress`);
+  if (def.reward.resources?.funding) parts.push(`+${def.reward.resources.funding}F`);
+  if (def.reward.resources?.materials) parts.push(`+${def.reward.resources.materials}M`);
+  if (def.reward.resources?.politicalWill) parts.push(`+${def.reward.resources.politicalWill}W`);
+  if (def.reward.unlocksCards?.length) parts.push(`${def.reward.unlocksCards.length} new card(s) added to deck`);
+  return parts.length > 0 ? `(${parts.join(', ')})` : '';
+}

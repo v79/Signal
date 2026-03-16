@@ -1,0 +1,58 @@
+{
+  "orbitalTelescopeArray": {
+    "id": "orbitalTelescopeArray",
+    "name": "Orbital Telescope Array",
+    "description": "A constellation of imaging instruments placed in low orbit. Cheaper and faster than a full orbital platform, its primary value is signal: the array triangulates the transmission origin with an accuracy impossible from the ground. Requires a functioning Space Launch Centre.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 30, "materials": 20 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": {
+      "signalProgress": 10,
+      "resources": { "funding": 10 }
+    },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["orbitalMechanics"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "hubbleSpaceTelescope": {
+    "id": "hubbleSpaceTelescope",
+    "name": "Orbital Imaging Platform",
+    "description": "A precision space telescope with spectroscopic and deep-field imaging capability. Above the atmosphere, the resolution improvements are transformative — anomalies in the outer solar system that appeared as statistical noise from the ground become geometric certainties. Requires Space Imaging technology and a Space Launch Centre.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 50, "materials": 30 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": {
+      "signalProgress": 20,
+      "resources": { "funding": 15 }
+    },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["spaceImaging", "orbitalMechanics"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "cern": {
+    "id": "cern",
+    "name": "Particle Collider Complex",
+    "description": "A multi-kilometre underground ring accelerating particles to energies consistent with the mathematical framework in the signal's outer layers — not coincidentally. The outer structure of the transmission becomes legible at precision previously inaccessible. Expensive to construct and maintain, but the signal yield is substantial.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 80, "materials": 40 },
+    "upkeepCost": { "funding": 5 },
+    "baseDuration": 4,
+    "reward": {
+      "signalProgress": 15,
+      "resources": { "funding": 30 }
+    },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["particlePhysicsDetectors"]
+    }
+  }
+}

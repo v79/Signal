@@ -196,7 +196,7 @@
     "recipeVariance": 0.15,
     "requiresSimultaneous": false,
     "unlocksCards": [],
-    "unlocksProjects": [],
+    "unlocksProjects": ["orbitalTelescopeArray"],
     "unlocksFacilities": ["spaceLaunchCentre", "orbitalPlatform", "lunarMine"],
     "signalDerived": false,
     "tier": 2,

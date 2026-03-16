@@ -1,6 +1,7 @@
 import type {
   GameState,
   FacilityDef,
+  ProjectDef,
   TechDef,
   EventDef,
   CardDef,
@@ -45,6 +46,7 @@ import {
   tickBoardAges,
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
+import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
 import { ZERO_RESOURCES, ZERO_FIELDS } from './state';
@@ -194,6 +196,7 @@ export function executeWorldPhase(
   techDefs: Map<string, TechDef> = new Map(),
   blocDefs: Map<string, BlocDef> = new Map(),
   boardDefs: Map<string, BoardMemberDef> = new Map(),
+  projectDefs: Map<string, ProjectDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -238,17 +241,16 @@ export function executeWorldPhase(
   const boostedFields = applyBoardFieldMultipliers(totalFields, boardMod);
   const boostedResources = applyBoardResourceMultipliers(totalResources, boardMod);
 
-  // 4. Bank decay and project upkeep
+  // 4. Bank decay
   const bankDecay = computeBankDecay(player.cards);
-  const projectUpkeep = ZERO_RESOURCES; // Phase 4 extended: wire in actual project upkeep
 
-  // 5. Apply resource and field changes
+  // 5. Apply resource and field changes (facility output + bank decay)
   const newFields: FieldPoints = { ...ZERO_FIELDS, ...boostedFields };
   const newResources = applyResourceDeltas(
     player.resources,
     boostedResources,
     bankDecay,
-    projectUpkeep,
+    ZERO_RESOURCES,
   );
 
   // 6a. Breakthrough check — may promote 'unknown' techs to 'rumour' before distribution
@@ -296,6 +298,19 @@ export function executeWorldPhase(
       updatedCards = [...updatedCards, newCard];
     }
   }
+
+  // 7b. Project tick — advance active projects, apply completions + upkeep
+  // Run against a temporary state with the post-card resources so upkeep is
+  // deducted from the already-updated resource total.
+  const stateForProjectTick: GameState = {
+    ...state,
+    player: { ...player, resources: newResources, cards: updatedCards },
+    signal: state.signal,
+  };
+  const projectTickResult = tickActiveProjects(stateForProjectTick, projectDefs, nextTurn);
+  const playerAfterProjects = projectTickResult.state.player;
+  const signalAfterProjects = projectTickResult.state.signal;
+  const projectNews = playerAfterProjects.newsFeed.slice(player.newsFeed.length);
 
   // 8. News feed entries for research events
   const breakthroughNews: NewsItem[] = breakthroughs.map((b) => ({
@@ -369,9 +384,10 @@ export function executeWorldPhase(
   // 15. Board age ticking (retirements generate news)
   const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, boardDefs, nextTurn);
 
-  // 16. Signal progress tick
+  // 16. Signal progress tick — starts from post-project signal so project
+  //     rewards (one-time signal boosts) are included before further ticking.
   const prevSignalProgress = state.signal.decodeProgress;
-  const newSignal = tickSignalProgress(state.signal, newFields, newFacilities, facilityDefs);
+  const newSignal = tickSignalProgress(signalAfterProjects, newFields, newFacilities, facilityDefs);
   const signalNews: NewsItem[] = didCrossStrengthThreshold(
     prevSignalProgress,
     newSignal.decodeProgress,
@@ -402,18 +418,21 @@ export function executeWorldPhase(
     map: { ...map, earthTiles: degradedTiles },
     player: {
       ...player,
-      resources: newResources,
+      resources: playerAfterProjects.resources,
       fields: newFields,
       will: newWill,
       facilities: facilitiesAfterDegradation,
       techs: updatedTechs,
-      cards: updatedCards,
+      cards: playerAfterProjects.cards,
       board: updatedBoard,
       constructionQueue: updatedQueue,
+      activeProjects: playerAfterProjects.activeProjects,
+      completedProjectIds: playerAfterProjects.completedProjectIds,
       newsFeed: [
         ...player.newsFeed,
         ...breakthroughNews,
         ...researchNews,
+        ...projectNews,
         ...degradationNews,
         ...blocNews,
         ...mergerNews,

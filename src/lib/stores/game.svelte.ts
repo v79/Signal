@@ -48,6 +48,7 @@ import {
   CARD_DEFS,
   EVENT_DEFS,
   FACILITY_DEFS,
+  PROJECT_DEFS,
   TECH_DEFS,
   NARRATIVE_SIGNAL_STRUCTURED,
   NARRATIVE_SIGNAL_URGENT,
@@ -911,7 +912,7 @@ export const gameStore = {
       const prevEra = _state.era;
       const prevFacilities = _state.player.facilities;
 
-      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS);
 
       // ---------------------------------------------------------------------------
       // Enqueue narratives in prescribed order:
