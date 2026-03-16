@@ -32,7 +32,7 @@ This is a list of future requirements for the game but they are not to be implem
 - Earth map
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
-  - Need meaningful action cards for the first few turns; not just building. Actually, should building a facility cost an action? Yes.
+  - Need meaningful action cards for the first few turns; not just building. Building a facility costs an action (implemented in Steering Committee Phase A).
 - Earth era content pass
   - More playtesting required; Computing remains a problem
 - LEO era content pass
@@ -55,11 +55,11 @@ This is a list of future requirements for the game but they are not to be implem
   - Write the full news feed log to a file, plus information about resources and science fields each turn, to aid with debugging
 - Game menu:
   - Move the Import and Export options into the dropdown game menu; rename as Save and Load
-- Committee/Board:
-  - Make it more prominent, it's too easy to ignore
-  - Don't offer people if you can't afford the recruitment cost
-  - The Board moves to a tab in the main panel, [ Earth | Near Space | Asteroid Belt | ... | Board]
-  - This gives a lot more room for the Board - use it! Add placeholders for art (headshot pictures). Add a summary of the gains and losses provided by the current board members.
+- Steering Committee (formerly Board):
+  - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
+  - Phase A (mechanical): action cap extended to Build Facility + Recruit; per-character recruit costs; dismissal Will cost; explicit vacant slot penalties; seeded candidate pool; rename Board → Steering Committee; fix retirement news text.
+  - Phase B (notifications + proposals): lightweight committee notifications in tab; board proposal event for Era 1→2 transition; era/tech gating for candidates.
+  - Visual: Committee moves to a tab in the main panel [ Earth | Near Space | Asteroid Belt | Committee ]; headshot art placeholders; gains/losses summary per active member.
 - Climate management:
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
