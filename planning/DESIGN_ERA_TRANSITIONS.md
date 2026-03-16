@@ -81,10 +81,16 @@ Multi-stage means the player commits incrementally rather than all at once.
 ## Open questions
 
 1. Should the board proposal trigger on tech discovery (automatic), or on building something deliberate like a Launch Facility?
+    _Both should be options. We need triggers on both tech discovery, and on facility building, as this gives us more narrative options in the future_
 2. Is "Station Commander" a new board role, or does the Director of Operations absorb it?
+    _A new steering committee role; probably goes to a former astronaut or military figure_
 3. **Hard vs soft era gate:** Should the Near Space map be completely invisible until the landmark, or visible but inert (allowing earlier planning)?
+    _The Near Space map should be visible but inert; it gives the player a goal to strive for. Once the Near Space Map is active and playable, the Asteroid map should become visible but inert_
 4. Can NPC blocs beat the player to orbit? If so, do they gain permanent Era 2 advantages, or just first-mover narrative flavour?
+    _NPC blocs can beat the player to orbit, but just for narrative flavour just now_
 5. What is the equivalent guidance mechanic for Era 2 → Era 3 (Lunar Base / Deep Space Transit)?
+    _Era 3 guidance could be prompted by signal decoding? Current signal decode progress is too fast anyway_
+
 
 ---
 
