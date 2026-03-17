@@ -222,7 +222,7 @@
     { "q": -2, "r": 1, "type": "arid" },
     { "q": 0, "r": 2, "type": "arid" },
     { "q": -1, "r": 2, "type": "arid" },
-    { "q": -1, "r": -1, "type": "arid" },
+    { "q": -1, "r": -1, "type": "agricultural" },
     { "q": -2, "r": 0, "type": "arid" },
     { "q": 3, "r": -1, "type": "highland" },
     { "q": 3, "r": 0, "type": "highland" },

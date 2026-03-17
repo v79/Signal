@@ -10,6 +10,7 @@ import type {
   CardDef,
   EventDef,
   FacilityDef,
+  ProjectDef,
   TechDef,
   NarrativeDef,
   TileType,
@@ -21,6 +22,7 @@ import boardJson from './board.json' with { type: 'json' };
 import cardsJson from './cards.json' with { type: 'json' };
 import eventsJson from './events.json' with { type: 'json' };
 import facilitiesJson from './facilities.json' with { type: 'json' };
+import projectsJson from './projects.json' with { type: 'json' };
 import narrativeJson from './narrative.json' with { type: 'json' };
 import techsJson from './technologies.json' with { type: 'json' };
 
@@ -62,6 +64,10 @@ export const EVENT_DEFS: Map<string, EventDef> = new Map(
 
 export const FACILITY_DEFS: Map<string, FacilityDef> = new Map(
   Object.entries(facilitiesJson) as [string, FacilityDef][],
+);
+
+export const PROJECT_DEFS: Map<string, ProjectDef> = new Map(
+  Object.entries(projectsJson) as [string, ProjectDef][],
 );
 
 export const TECH_DEFS: Map<string, TechDef> = new Map(

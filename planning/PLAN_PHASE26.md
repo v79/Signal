@@ -17,7 +17,7 @@ These are combined because the board-proposal event (the era gate trigger) is th
 
 ## Sub-phases
 
-### Phase 26A — Committee notification system
+### ✅ Phase 26A — Committee notification system
 
 Implement the lightweight notification model that committee members use to surface non-blocking prompts. Board proposals (the escalated variant) build on this same model.
 
@@ -47,7 +47,7 @@ Implement the lightweight notification model that committee members use to surfa
 
 ---
 
-### Phase 26B — Dr. Okonkwo tech gate
+### ✅ Phase 26B — Dr. Okonkwo tech gate
 
 The only remaining Era/tech gate deferred from Phase 25A.
 
@@ -77,7 +77,7 @@ Add the tech prerequisite and the warm-up Scientific Project that teaches the pl
 
 ---
 
-### Phase 26D — Board proposal event (Orbital Station)
+### ✅ Phase 26D — Board proposal event (Orbital Station)
 
 The board proposal is an **escalated notification** — it fires in the main event zone as a persistent (no-expiry) event when `orbitalMechanics` is discovered or when a Launch Facility is built (whichever comes first).
 
@@ -99,7 +99,7 @@ The board proposal is an **escalated notification** — it fires in the main eve
 
 ---
 
-### Phase 26E — Permanent Orbital Station (multi-stage landmark)
+### ✅ Phase 26E — Permanent Orbital Station (multi-stage landmark)
 
 The three-stage project that gates the Era 1 → Era 2 transition. Only available after `orbitalStationAuthorised === true`.
 

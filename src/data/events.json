@@ -198,5 +198,36 @@
     "responseTier": "noCounter",
     "negativeEffect": {},
     "positiveEffect": { "signalProgress": 15, "fields": { "physics": 10, "mathematics": 8 } }
+  },
+  "orbitalStationEngineeringChallenge": {
+    "id": "orbitalStationEngineeringChallenge",
+    "name": "Habitation Ring: Supply Crisis",
+    "description": "A critical components shipment for the Habitation Ring assembly has been delayed — junction seals for the pressurisation system are missing from the manifest.",
+    "flavourText": "\"We cannot proceed with the joining manoeuvre until the seals arrive. We need either a resupply launch or an engineering workaround.\"",
+    "tags": ["construction", "orbital"],
+    "eras": ["earth"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 2,
+    "weight": 0,
+    "responseTier": "partialMitigation",
+    "negativeEffect": { "resources": { "materials": -20, "funding": -10 } },
+    "positiveEffect": null,
+    "mitigationCost": { "funding": 15 }
+  },
+  "boardProposalOrbitalStation": {
+    "id": "boardProposalOrbitalStation",
+    "name": "Board Proposal: Orbital Station",
+    "description": "The Chief Scientist formally proposes that the Corporation initiate the Permanent Orbital Station programme.",
+    "flavourText": "\"We have the science. What we need now is the political will and the materials to make it real.\"",
+    "tags": ["proposal"],
+    "eras": ["earth"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 999,
+    "weight": 0,
+    "responseTier": "noCounter",
+    "negativeEffect": {},
+    "positiveEffect": { "resources": { "funding": -50, "politicalWill": -30 } }
   }
 }

@@ -1,5 +1,12 @@
 <script lang="ts">
-  import type { BoardSlots, BoardMemberDef, BoardRole, TurnPhase, Resources } from '../../engine/types';
+  import type {
+    BoardSlots,
+    BoardMemberDef,
+    BoardRole,
+    TurnPhase,
+    Resources,
+    CommitteeNotification,
+  } from '../../engine/types';
 
   const ALL_ROLES: BoardRole[] = [
     'chiefScientist',
@@ -9,6 +16,7 @@
     'directorOfOperations',
     'securityDirector',
     'signalAnalyst',
+    'stationCommander',
   ];
 
   const ROLE_LABELS: Record<BoardRole, string> = {
@@ -19,6 +27,7 @@
     directorOfOperations: 'Dir. Operations',
     securityDirector: 'Security Director',
     signalAnalyst: 'Signal Analyst',
+    stationCommander: 'Station Commander',
   };
 
   /** Initial letter used in the portrait placeholder for each role. */
@@ -30,6 +39,7 @@
     directorOfOperations: 'DO',
     securityDirector: 'SD',
     signalAnalyst: 'SA',
+    stationCommander: 'SC',
   };
 
   const DISMISS_COST = 20;
@@ -47,8 +57,12 @@
     gracePeriodEnds,
     turn,
     era,
+    discoveredTechIds = [],
+    committeeNotifications = [],
     onRecruit,
     onDismiss,
+    onResolveNotification,
+    onDismissNotification,
   }: {
     board: BoardSlots;
     boardDefs: Map<string, BoardMemberDef>;
@@ -60,13 +74,20 @@
     gracePeriodEnds: number;
     turn: number;
     era: Era;
+    /** Tech def IDs that have been discovered this run (for tech-gate filtering). */
+    discoveredTechIds?: string[];
+    /** Active committee notifications to display on member cards. */
+    committeeNotifications?: CommitteeNotification[];
     onRecruit: (defId: string) => void;
     onDismiss: (role: BoardRole) => void;
+    onResolveNotification?: (id: string, choiceIndex: number) => void;
+    onDismissNotification?: (id: string) => void;
   } = $props();
 
   /** The next available candidate for this role, or null.
    * Skips anyone currently active on the board (already recruited).
    * AI members are only available in Era 3 (deepSpace).
+   * Tech-gated candidates are filtered out until the required tech is discovered.
    * The seed-shuffled order of availableBoardDefIds determines who appears first. */
   function candidateForRole(role: BoardRole): BoardMemberDef | null {
     const activeDefIds = new Set(
@@ -78,10 +99,42 @@
       const def = boardDefs.get(id);
       if (!def || def.role !== role) return false;
       if (def.isAI && era !== 'deepSpace') return false;
+      if (def.techGate && !discoveredTechIds.includes(def.techGate)) return false;
       if (activeDefIds.has(id)) return false;
       return true;
     });
     return defId ? (boardDefs.get(defId) ?? null) : null;
+  }
+
+  /**
+   * Return the tech gate label for the first gated candidate in the pool for
+   * this role, if no ungated candidate is available. Used to display a
+   * "requires X tech" message on vacant slots.
+   */
+  function techGateLabelForRole(role: BoardRole): string | null {
+    const activeDefIds = new Set(
+      Object.values(board)
+        .filter((m): m is NonNullable<typeof m> => !!m && m.leftTurn === null)
+        .map((m) => m.defId),
+    );
+    const gatedDef = availableBoardDefIds
+      .map((id) => boardDefs.get(id))
+      .find((def) => {
+        if (!def || def.role !== role) return false;
+        if (def.isAI && era !== 'deepSpace') return false;
+        if (!def.techGate) return false;
+        if (discoveredTechIds.includes(def.techGate)) return false;
+        if (activeDefIds.has(def.id)) return false;
+        return true;
+      });
+    return gatedDef?.techGate ?? null;
+  }
+
+  /** Active (non-dismissed) notifications for a given member defId. */
+  function notificationsForMember(memberDefId: string): CommitteeNotification[] {
+    return (committeeNotifications ?? []).filter(
+      (n) => n.memberDefId === memberDefId && !n.dismissed,
+    );
   }
 
   function isOccupied(role: BoardRole): boolean {
@@ -130,24 +183,35 @@
     directorOfOperations: '−5% all resource income',
     securityDirector: 'Security events cannot be auto-countered',
     signalAnalyst: '−10% signal decode progress',
+    stationCommander: '+10% Near Space launch costs',
   };
+
+  const visibleRoles = $derived(
+    era !== 'earth' ? ALL_ROLES : ALL_ROLES.filter((r) => r !== 'stationCommander'),
+  );
 </script>
 
 <div class="committee-panel">
   <h3 class="panel-title">COMMITTEE</h3>
   <div class="slots-grid">
-    {#each ALL_ROLES as role}
+    {#each visibleRoles as role}
       {@const member = board[role]}
       {@const active = member && member.leftTurn === null}
       {@const def = active ? boardDefs.get(member!.defId) : null}
       {@const candidate = !active ? candidateForRole(role) : null}
-      {@const graceActive = !penaltiesActive}
+      {@const memberNotifications = active && def ? notificationsForMember(def.id) : []}
+      {@const hasNotifications = memberNotifications.length > 0}
 
       <div class="slot-card" class:occupied={active} class:vacant={!active}>
         <!-- Role header bar -->
         <div class="card-header">
           <span class="role-label">{ROLE_LABELS[role]}</span>
           {#if active && def}
+            {#if hasNotifications}
+              <span class="notification-badge" title="{memberNotifications.length} notification{memberNotifications.length > 1 ? 's' : ''}">
+                {memberNotifications.length}
+              </span>
+            {/if}
             {@const disabledReason = dismissDisabledReason()}
             <button
               class="dismiss-btn"
@@ -210,11 +274,52 @@
                   1 action · {candidate.recruitCost.funding}F · {candidate.recruitCost.politicalWill}W
                 </div>
               {:else}
-                <div class="no-candidate">No candidate available</div>
+                {@const gateLabel = techGateLabelForRole(role)}
+                {#if gateLabel}
+                  <div class="no-candidate tech-gated">No candidate available<br><span class="tech-gate-hint">Requires: {gateLabel}</span></div>
+                {:else}
+                  <div class="no-candidate">No candidate available</div>
+                {/if}
               {/if}
             {/if}
           </div>
         </div>
+
+        <!-- Inline notifications (active member only) -->
+        {#if hasNotifications}
+          <div class="notifications-section">
+            {#each memberNotifications as notification}
+              <div class="notification-item">
+                <p class="notification-text">{notification.text}</p>
+                {#if notification.choices && notification.choices.length > 0}
+                  <div class="notification-choices">
+                    {#each notification.choices as choice, i}
+                      <button
+                        class="choice-btn"
+                        onclick={() => onResolveNotification?.(notification.id, i)}
+                      >
+                        {choice.label}
+                      </button>
+                    {/each}
+                    <button
+                      class="dismiss-notification-btn"
+                      onclick={() => onDismissNotification?.(notification.id)}
+                    >
+                      Ignore
+                    </button>
+                  </div>
+                {:else}
+                  <button
+                    class="dismiss-notification-btn"
+                    onclick={() => onDismissNotification?.(notification.id)}
+                  >
+                    Dismiss
+                  </button>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/if}
       </div>
     {/each}
   </div>
@@ -462,5 +567,96 @@
     font-size: 0.5rem;
     color: #2e4a5a;
     margin-top: 0.1rem;
+  }
+
+  .tech-gated {
+    line-height: 1.5;
+  }
+
+  .tech-gate-hint {
+    font-size: 0.5rem;
+    color: #3a5a6a;
+    font-style: normal;
+  }
+
+  /* ---- Notification badge on header ---- */
+
+  .notification-badge {
+    font-size: 0.48rem;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 50%;
+    width: 1.1rem;
+    height: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  /* ---- Inline notifications section ---- */
+
+  .notifications-section {
+    border-top: 1px solid #0e1820;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.4rem 0.5rem;
+    background: #06101a;
+  }
+
+  .notification-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .notification-text {
+    font-size: 0.55rem;
+    color: #7ab4d8;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .notification-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.1rem;
+  }
+
+  .choice-btn {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.52rem;
+    font-family: inherit;
+    letter-spacing: 0.06em;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid #1a5030;
+    background: #0a2e1a;
+    color: #5ad486;
+  }
+
+  .choice-btn:hover {
+    background: #0f4024;
+  }
+
+  .dismiss-notification-btn {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.52rem;
+    font-family: inherit;
+    letter-spacing: 0.06em;
+    border-radius: 2px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: #475569;
+    align-self: flex-start;
+  }
+
+  .dismiss-notification-btn:hover {
+    color: #94a3b8;
   }
 </style>

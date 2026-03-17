@@ -1,6 +1,8 @@
 import type {
   GameState,
+  EventInstance,
   FacilityDef,
+  ProjectDef,
   TechDef,
   EventDef,
   CardDef,
@@ -43,8 +45,10 @@ import {
   applyBoardFieldMultipliers,
   applyBoardResourceMultipliers,
   tickBoardAges,
+  addCommitteeNotification,
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
+import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
 import { ZERO_RESOURCES, ZERO_FIELDS } from './state';
@@ -65,7 +69,7 @@ import type { Rng } from './rng';
 //   World Phase: (climate RNG — Phase 5) → (bloc RNG — Phase 7) → distributeResearchPoints (createRng(`${seed}-research-t${nextTurn}`))
 // ---------------------------------------------------------------------------
 
-const CLIMATE_PRESSURE_PER_TURN = 0.5;
+const CLIMATE_PRESSURE_PER_TURN = 0.2;
 
 // ---------------------------------------------------------------------------
 // Phase 1: Event Phase
@@ -194,6 +198,7 @@ export function executeWorldPhase(
   techDefs: Map<string, TechDef> = new Map(),
   blocDefs: Map<string, BlocDef> = new Map(),
   boardDefs: Map<string, BoardMemberDef> = new Map(),
+  projectDefs: Map<string, ProjectDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -238,17 +243,16 @@ export function executeWorldPhase(
   const boostedFields = applyBoardFieldMultipliers(totalFields, boardMod);
   const boostedResources = applyBoardResourceMultipliers(totalResources, boardMod);
 
-  // 4. Bank decay and project upkeep
+  // 4. Bank decay
   const bankDecay = computeBankDecay(player.cards);
-  const projectUpkeep = ZERO_RESOURCES; // Phase 4 extended: wire in actual project upkeep
 
-  // 5. Apply resource and field changes
+  // 5. Apply resource and field changes (facility output + bank decay)
   const newFields: FieldPoints = { ...ZERO_FIELDS, ...boostedFields };
   const newResources = applyResourceDeltas(
     player.resources,
     boostedResources,
     bankDecay,
-    projectUpkeep,
+    ZERO_RESOURCES,
   );
 
   // 6a. Breakthrough check — may promote 'unknown' techs to 'rumour' before distribution
@@ -296,6 +300,78 @@ export function executeWorldPhase(
       updatedCards = [...updatedCards, newCard];
     }
   }
+
+  // 7a. Board proposal: fire if orbitalMechanics just discovered OR Space Launch Centre
+  //     just completed, and the proposal has not been fired before.
+  const spaceLaunchJustBuilt =
+    !state.boardProposalFired &&
+    facilitiesAfterQueue.some((f) => f.defId === 'spaceLaunchCentre') &&
+    !player.facilities.some((f) => f.defId === 'spaceLaunchCentre');
+  const orbitalMechanicsJustDiscovered =
+    !state.boardProposalFired && newDiscoveries.includes('orbitalMechanics');
+
+  const shouldFireBoardProposal = orbitalMechanicsJustDiscovered || spaceLaunchJustBuilt;
+  const newBoardProposalEvent: EventInstance | null = shouldFireBoardProposal
+    ? {
+        id: `board-proposal-orbital-t${nextTurn}`,
+        defId: 'boardProposalOrbitalStation',
+        arrivedTurn: nextTurn,
+        countdownRemaining: 999,
+        resolved: false,
+        resolvedWith: null,
+      }
+    : null;
+
+  // 7b. Project tick — advance active projects, apply completions + upkeep
+  // Run against a temporary state with the post-card resources so upkeep is
+  // deducted from the already-updated resource total.
+  const stateForProjectTick: GameState = {
+    ...state,
+    player: { ...player, resources: newResources, cards: updatedCards },
+    signal: state.signal,
+  };
+  const projectTickResult = tickActiveProjects(stateForProjectTick, projectDefs, nextTurn);
+  const playerAfterProjects = projectTickResult.state.player;
+  const signalAfterProjects = projectTickResult.state.signal;
+  const projectNews = playerAfterProjects.newsFeed.slice(player.newsFeed.length);
+
+  // 7c. Orbital Station: scripted engineering challenge fires on stage 2's second turn.
+  //     Only fires once — guarded by checking if the event is already in activeEvents.
+  const stage2OnSecondTurn = playerAfterProjects.activeProjects.some(
+    (p) => p.defId === 'orbitalStation_stage2' && p.turnsElapsed === 1,
+  );
+  const engineeringEventAlreadyFired = state.activeEvents.some(
+    (e) => e.defId === 'orbitalStationEngineeringChallenge' && !e.resolved,
+  );
+  const engineeringChallengeEvent: EventInstance | null =
+    stage2OnSecondTurn && !engineeringEventAlreadyFired
+      ? {
+          id: `orbital-engineering-challenge-t${nextTurn}`,
+          defId: 'orbitalStationEngineeringChallenge',
+          arrivedTurn: nextTurn,
+          countdownRemaining: 2,
+          resolved: false,
+          resolvedWith: null,
+        }
+      : null;
+
+  // 7d. Era transition: if a landmark project with opensEra2 completed this tick,
+  //     advance era to nearSpace and apply a Will boost.
+  const opensEra2 = projectTickResult.completedDefIds.some(
+    (id) => projectDefs.get(id)?.landmarkGate === 'opensEra2',
+  );
+  const eraAfterProjects = opensEra2 && state.era === 'earth' ? ('nearSpace' as const) : state.era;
+  const willBoostFromEraTransition = opensEra2 ? 30 : 0;
+  const eraTransitionNews: NewsItem[] = opensEra2
+    ? [
+        {
+          id: `era-transition-nearspace-t${nextTurn}`,
+          turn: nextTurn,
+          text: 'The Permanent Orbital Station is declared fully operational. Humanity has established a permanent presence in space. The Near Space era begins.',
+          category: 'discovery' as const,
+        },
+      ]
+    : [];
 
   // 8. News feed entries for research events
   const breakthroughNews: NewsItem[] = breakthroughs.map((b) => ({
@@ -369,9 +445,84 @@ export function executeWorldPhase(
   // 15. Board age ticking (retirements generate news)
   const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, boardDefs, nextTurn);
 
-  // 16. Signal progress tick
+  // 15b. Board proposal deferred re-surfacing: if the player deferred the proposal
+  //      and the resurfaceTurn has arrived, re-queue the proposal event and add a
+  //      committee notification from the active Chief Scientist.
+  const proposalResurfaces =
+    !state.orbitalStationAuthorised &&
+    state.boardProposalFired &&
+    state.orbitalStationDeferResurfaceTurn === nextTurn;
+
+  const resurfacedProposalEvent: EventInstance | null = proposalResurfaces
+    ? {
+        id: `board-proposal-orbital-resurface-t${nextTurn}`,
+        defId: 'boardProposalOrbitalStation',
+        arrivedTurn: nextTurn,
+        countdownRemaining: 999,
+        resolved: false,
+        resolvedWith: null,
+      }
+    : null;
+
+  let committeeNotificationsAfterBoard = state.committeeNotifications;
+  const chiefScientistMember = updatedBoard.chiefScientist;
+  const chiefName = chiefScientistMember
+    ? (boardDefs.get(chiefScientistMember.defId)?.name ?? 'The Chief Scientist')
+    : 'The Chief Scientist';
+
+  if (proposalResurfaces) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `board-proposal-reminder-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName} is again urging the board to authorise the Permanent Orbital Station programme. The proposal has been returned to the agenda.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (projectTickResult.completedDefIds.includes('orbitalStation_stage1')) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `orbital-stage1-complete-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: The Core Module is now in orbit. Phase one of the Orbital Station programme is complete. Construction of the Habitation Ring can begin immediately.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (projectTickResult.completedDefIds.includes('orbitalStation_stage2')) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `orbital-stage2-complete-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: The Habitation Ring has been successfully joined. The station is ready for final systems integration — one more phase and it becomes fully operational.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (opensEra2) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `station-commander-slot-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: With the Station now operational, we should appoint a Station Commander. The role is now open for recruitment.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+
+  // 16. Signal progress tick — starts from post-project signal so project
+  //     rewards (one-time signal boosts) are included before further ticking.
   const prevSignalProgress = state.signal.decodeProgress;
-  const newSignal = tickSignalProgress(state.signal, newFields, newFacilities, facilityDefs);
+  const newSignal = tickSignalProgress(signalAfterProjects, newFields, newFacilities, facilityDefs);
   const signalNews: NewsItem[] = didCrossStrengthThreshold(
     prevSignalProgress,
     newSignal.decodeProgress,
@@ -389,31 +540,50 @@ export function executeWorldPhase(
   // 17. Earth welfare tick
   const newEarthWelfare = tickEarthWelfare(state);
 
+  // Assemble updated active events list (carry over non-resolved + any new ones)
+  const eventsAfterWorld = [
+    ...state.activeEvents,
+    ...(newBoardProposalEvent ? [newBoardProposalEvent] : []),
+    ...(resurfacedProposalEvent ? [resurfacedProposalEvent] : []),
+    ...(engineeringChallengeEvent ? [engineeringChallengeEvent] : []),
+  ];
+
   // Assemble the next state (outcome checked below)
   const nextState: GameState = {
     ...state,
     turn: nextTurn,
     year: state.year + 1,
+    era: eraAfterProjects,
     phase: 'event', // reset to start of next turn
     climatePressure: newClimatePressure,
     earthWelfareScore: newEarthWelfare,
     blocs: updatedBlocs,
     signal: newSignal,
+    activeEvents: eventsAfterWorld,
     map: { ...map, earthTiles: degradedTiles },
+    boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
+    orbitalStationAuthorised: state.orbitalStationAuthorised,
+    orbitalStationDeferCount: state.orbitalStationDeferCount,
+    orbitalStationDeferResurfaceTurn: proposalResurfaces ? null : state.orbitalStationDeferResurfaceTurn,
+    committeeNotifications: committeeNotificationsAfterBoard,
     player: {
       ...player,
-      resources: newResources,
+      resources: playerAfterProjects.resources,
       fields: newFields,
-      will: newWill,
+      will: Math.min(100, newWill + willBoostFromEraTransition),
       facilities: facilitiesAfterDegradation,
       techs: updatedTechs,
-      cards: updatedCards,
+      cards: playerAfterProjects.cards,
       board: updatedBoard,
       constructionQueue: updatedQueue,
+      activeProjects: playerAfterProjects.activeProjects,
+      completedProjectIds: playerAfterProjects.completedProjectIds,
       newsFeed: [
         ...player.newsFeed,
         ...breakthroughNews,
         ...researchNews,
+        ...projectNews,
+        ...eraTransitionNews,
         ...degradationNews,
         ...blocNews,
         ...mergerNews,

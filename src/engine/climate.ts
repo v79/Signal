@@ -19,14 +19,14 @@ interface DegradationRule {
 function getRules(climatePressure: number): DegradationRule[] {
   const rules: DegradationRule[] = [];
 
-  if (climatePressure > 40) {
+  if (climatePressure > 55) {
     rules.push({ tileType: 'forested', status: 'dustbowl', probability: 0.03, newsVerb: 'drought' });
   }
-  if (climatePressure > 60) {
+  if (climatePressure > 70) {
     rules.push({ tileType: 'forested',     status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.03, newsVerb: 'drought' });
   }
-  if (climatePressure > 80) {
+  if (climatePressure > 85) {
     rules.push({ tileType: 'coastal',      status: 'flooded',  probability: 0.04, newsVerb: 'flooding' });
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
   }

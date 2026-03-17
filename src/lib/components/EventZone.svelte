@@ -8,12 +8,14 @@
     currentTurn,
     onMitigate,
     onAccept,
+    onDefer,
   }: {
     events: EventInstance[];
     eventDefs: Map<string, EventDef>;
     currentTurn: number;
     onMitigate: (eventId: string) => void;
     onAccept: (eventId: string) => void;
+    onDefer?: (eventId: string) => void;
   } = $props();
 
   const activeEvents = $derived(events.filter((e) => !e.resolved));
@@ -96,13 +98,21 @@
     {@const def = eventDefs.get(event.defId)}
     {@const isLeaving = leavingIds.has(event.id)}
     {@const isNew = !isLeaving && event.arrivedTurn === currentTurn}
+    {@const isProposal = def?.tags.includes('proposal') ?? false}
     {#if def}
-      <div class="event-card {urgencyClass(event.countdownRemaining)}" class:leaving={isLeaving}>
+      <div
+        class="event-card {isProposal ? 'proposal' : urgencyClass(event.countdownRemaining)}"
+        class:leaving={isLeaving}
+      >
         <div class="event-header">
           <span class="event-name">{def.name}</span>
-          <span class="countdown {urgencyClass(event.countdownRemaining)}">
-            ⏱ {event.countdownRemaining}
-          </span>
+          {#if !isProposal}
+            <span class="countdown {urgencyClass(event.countdownRemaining)}">
+              ⏱ {event.countdownRemaining}
+            </span>
+          {:else}
+            <span class="proposal-badge">PROPOSAL</span>
+          {/if}
         </div>
 
         {#if isNew}
@@ -128,7 +138,15 @@
 
         {#if !isLeaving}
           <div class="event-actions">
-            {#if def.responseTier === 'partialMitigation' && def.mitigationCost}
+            {#if isProposal}
+              <button class="btn btn-authorise" onclick={() => onAccept(event.id)}>
+                AUTHORISE<br />
+                <span class="btn-cost">(-50F · -30W)</span>
+              </button>
+              <button class="btn btn-defer" onclick={() => onDefer?.(event.id)}>
+                DEFER
+              </button>
+            {:else if def.responseTier === 'partialMitigation' && def.mitigationCost}
               <button class="btn btn-mitigate" onclick={() => onMitigate(event.id)}>
                 MITIGATE<br />
                 <span class="btn-cost">({formatCost(def.mitigationCost)})</span>
@@ -190,6 +208,10 @@
   }
   .event-card.normal {
     border-color: #2a3545;
+  }
+  .event-card.proposal {
+    border-color: #2a5080;
+    background: #080f18;
   }
 
   @keyframes slide-out-left {
@@ -312,6 +334,30 @@
   }
   .btn-accept:hover {
     background: #0a2018;
+  }
+
+  .btn-authorise {
+    color: #4a9bd8;
+    border-color: #2a5080;
+  }
+  .btn-authorise:hover {
+    background: #081828;
+  }
+
+  .btn-defer {
+    color: #8a8a9a;
+    border-color: #3a3a5a;
+  }
+  .btn-defer:hover {
+    background: #101018;
+  }
+
+  .proposal-badge {
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: #4a7aaa;
+    border: 1px solid #2a5080;
+    padding: 0.1rem 0.35rem;
   }
 
   .btn-cost {

@@ -23,7 +23,13 @@ import {
   executeEventPhase,
   executeDrawPhase,
 } from '../../engine/turn';
-import { recruitBoardMember, removeBoardMember, isBoardSlotVacant } from '../../engine/board';
+import {
+  recruitBoardMember,
+  removeBoardMember,
+  isBoardSlotVacant,
+  resolveCommitteeNotification,
+  dismissCommitteeNotification,
+} from '../../engine/board';
 import { generateWormholeOptions, commitSignalResponse } from '../../engine/signal';
 import type { SignalResponseOption } from '../../engine/types';
 import { autoSave, autoLoad, clearSave, exportSave, importSave } from '../../engine/save';
@@ -35,6 +41,7 @@ import {
   formatEffectForNews,
 } from '../../engine/events';
 import { getFacilitiesOnTile, findContiguousFreeStart } from '../../engine/facilities';
+import { canInitiateProject, initiateProject } from '../../engine/projects';
 import {
   BLOC_MAPS,
   BLOC_DEFS,
@@ -42,6 +49,7 @@ import {
   CARD_DEFS,
   EVENT_DEFS,
   FACILITY_DEFS,
+  PROJECT_DEFS,
   TECH_DEFS,
   NARRATIVE_SIGNAL_STRUCTURED,
   NARRATIVE_SIGNAL_URGENT,
@@ -703,10 +711,16 @@ export const gameStore = {
       updatedTiles = result.mapTiles;
     }
 
-    const summary = effect ? formatEffectForNews(effect) : 'no effect';
+    const isBoardProposal = def.id === 'boardProposalOrbitalStation';
+    const newsText = isBoardProposal
+      ? 'The Corporation has officially initiated the Permanent Orbital Station programme.'
+      : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
+
     _state = {
       ..._state,
       map: { ..._state.map, earthTiles: updatedTiles },
+      orbitalStationAuthorised: isBoardProposal ? true : _state.orbitalStationAuthorised,
+      orbitalStationDeferResurfaceTurn: isBoardProposal ? null : _state.orbitalStationDeferResurfaceTurn,
       player: {
         ...updatedPlayer,
         newsFeed: [
@@ -714,7 +728,7 @@ export const gameStore = {
           {
             id: `event-accepted-${eventId}-t${_state.turn}`,
             turn: _state.turn,
-            text: `${def.name} accepted — ${summary}.`,
+            text: newsText,
             category: 'event-gain' as const,
           },
         ],
@@ -723,6 +737,35 @@ export const gameStore = {
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
       ),
     };
+    autoSave(_state);
+  },
+
+  /** Defer the board proposal event — dismisses it and re-surfaces after 3 turns. */
+  deferBoardProposal(eventId: string): void {
+    if (!_state) return;
+    const event = _state.activeEvents.find((e) => e.id === eventId);
+    if (!event) return;
+    _state = {
+      ..._state,
+      orbitalStationDeferCount: _state.orbitalStationDeferCount + 1,
+      orbitalStationDeferResurfaceTurn: _state.turn + 3,
+      activeEvents: _state.activeEvents.map((e) =>
+        e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
+      ),
+      player: {
+        ..._state.player,
+        newsFeed: [
+          ..._state.player.newsFeed,
+          {
+            id: `board-proposal-deferred-t${_state.turn}`,
+            turn: _state.turn,
+            text: 'The board proposal for the Orbital Station has been deferred. The matter will return to the agenda.',
+            category: 'board' as const,
+          },
+        ],
+      },
+    };
+    autoSave(_state);
   },
 
   declineEvent(eventId: string): void {
@@ -905,7 +948,7 @@ export const gameStore = {
       const prevEra = _state.era;
       const prevFacilities = _state.player.facilities;
 
-      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS);
 
       // ---------------------------------------------------------------------------
       // Enqueue narratives in prescribed order:
@@ -1003,6 +1046,7 @@ export const gameStore = {
       directorOfOperations: 'Dir. Operations',
       securityDirector: 'Security Director',
       signalAnalyst: 'Signal Analyst',
+      stationCommander: 'Station Commander',
     };
     _state = {
       ..._state,
@@ -1058,6 +1102,67 @@ export const gameStore = {
         ],
       },
     };
+  },
+
+  /** Resolve a committee notification by selecting one of its choices. */
+  resolveCommitteeNotification(id: string, choiceIndex: number): void {
+    if (!_state) return;
+    const result = resolveCommitteeNotification(_state.committeeNotifications ?? [], id, choiceIndex);
+    let resources = { ..._state.player.resources };
+    if (result.resourceDelta) {
+      resources = {
+        funding: resources.funding + (result.resourceDelta.funding ?? 0),
+        materials: Math.max(0, resources.materials + (result.resourceDelta.materials ?? 0)),
+        politicalWill: Math.max(0, resources.politicalWill + (result.resourceDelta.politicalWill ?? 0)),
+      };
+    }
+    const newsFeed = result.newsText
+      ? [
+          ..._state.player.newsFeed,
+          {
+            id: `notification-resolved-${id}-t${_state.turn}`,
+            turn: _state.turn,
+            text: result.newsText,
+            category: 'board' as const,
+          },
+        ]
+      : _state.player.newsFeed;
+    _state = {
+      ..._state,
+      committeeNotifications: result.notifications,
+      player: { ..._state.player, resources, newsFeed },
+    };
+  },
+
+  /** Dismiss a committee notification without acting on it. */
+  dismissCommitteeNotification(id: string): void {
+    if (!_state) return;
+    _state = {
+      ..._state,
+      committeeNotifications: dismissCommitteeNotification(_state.committeeNotifications ?? [], id),
+    };
+  },
+
+  /**
+   * Initiate a Scientific Project. Costs one action slot and deducts the
+   * upfront resource cost. No-ops if the project cannot be started.
+   */
+  initiateProject(defId: string): void {
+    if (!_state) return;
+    const def = PROJECT_DEFS.get(defId);
+    if (!def) return;
+
+    const cap = _state.maxActionsPerTurn ?? 3;
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    if (!canInitiateProject(_state, def)) return;
+
+    const next = initiateProject(_state, def);
+    _state = {
+      ...next,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+    };
+    autoSave(_state);
   },
 
   /**

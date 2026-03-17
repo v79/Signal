@@ -294,7 +294,8 @@
     "debuffs": [],
     "isAI": false,
     "recruitCost": { "funding": 25, "politicalWill": 20 },
-    "startAge": 38
+    "startAge": 38,
+    "techGate": "signalPatternAnalysis"
   },
   "drDiallo": {
     "id": "drDiallo",
@@ -340,5 +341,50 @@
     "isAI": true,
     "recruitCost": { "funding": 40, "politicalWill": 50 },
     "startAge": 0
+  },
+  "cdrVance": {
+    "id": "cdrVance",
+    "name": "Col. Amara Vance (ret.)",
+    "role": "stationCommander",
+    "buffs": [
+      { "description": "+5% Engineering output (orbital construction expertise)", "fieldMultipliers": { "engineering": 1.05 } },
+      { "description": "−10% Near Space launch costs", "customModifierKey": "era2LaunchCostReduction" }
+    ],
+    "debuffs": [
+      { "description": "-8% Funding income (demanding programme overheads)", "resourceMultipliers": { "funding": 0.92 } }
+    ],
+    "isAI": false,
+    "recruitCost": { "funding": 25, "politicalWill": 20 },
+    "startAge": 51
+  },
+  "cdrOsei": {
+    "id": "cdrOsei",
+    "name": "Cmdr. Kwame Osei",
+    "role": "stationCommander",
+    "buffs": [
+      { "description": "+8% Engineering output (test pilot precision)", "fieldMultipliers": { "engineering": 1.08 } },
+      { "description": "Auto-counters orbital incident events", "autoCountersEventTag": "orbital" }
+    ],
+    "debuffs": [
+      { "description": "-5% Materials income (exacting safety requirements)", "resourceMultipliers": { "materials": 0.95 } }
+    ],
+    "isAI": false,
+    "recruitCost": { "funding": 25, "politicalWill": 20 },
+    "startAge": 44
+  },
+  "drSorokina": {
+    "id": "drSorokina",
+    "name": "Dr. Valentina Sorokina",
+    "role": "stationCommander",
+    "buffs": [
+      { "description": "+5% Engineering output", "fieldMultipliers": { "engineering": 1.05 } },
+      { "description": "+5% Physics output (aerospace systems background)", "fieldMultipliers": { "physics": 1.05 } }
+    ],
+    "debuffs": [
+      { "description": "-8% Political Will income (diplomatically abrasive)", "resourceMultipliers": { "politicalWill": 0.92 } }
+    ],
+    "isAI": false,
+    "recruitCost": { "funding": 25, "politicalWill": 20 },
+    "startAge": 46
   }
 }

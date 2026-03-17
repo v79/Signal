@@ -1,0 +1,134 @@
+{
+  "orbitalTelescopeArray": {
+    "id": "orbitalTelescopeArray",
+    "name": "Orbital Telescope Array",
+    "description": "A constellation of imaging instruments placed in low orbit. Cheaper and faster than a full orbital platform, its primary value is signal: the array triangulates the transmission origin with an accuracy impossible from the ground. Requires a functioning Space Launch Centre.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 30, "materials": 20 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": {
+      "signalProgress": 10,
+      "resources": { "funding": 10 }
+    },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["orbitalMechanics"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "hubbleSpaceTelescope": {
+    "id": "hubbleSpaceTelescope",
+    "name": "Orbital Imaging Platform",
+    "description": "A precision space telescope with spectroscopic and deep-field imaging capability. Above the atmosphere, the resolution improvements are transformative — anomalies in the outer solar system that appeared as statistical noise from the ground become geometric certainties. Requires Space Imaging technology and a Space Launch Centre.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 50, "materials": 30 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": {
+      "signalProgress": 20,
+      "resources": { "funding": 15 }
+    },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["spaceImaging", "orbitalMechanics"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "governmentResearchContract": {
+    "id": "governmentResearchContract",
+    "name": "Government Research Contract",
+    "description": "The programme secures a multi-year public funding commitment in exchange for open publication of non-classified research findings. No upfront cost; yields a substantial funding injection over two turns.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": {},
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "resources": { "funding": 50 } },
+    "landmarkGate": null,
+    "prerequisites": {}
+  },
+  "technologyExportAgreement": {
+    "id": "technologyExportAgreement",
+    "name": "Technology Export Agreement",
+    "description": "Licences derived technologies to allied industrial partners. The materials investment covers packaging and certification; the return is substantial and sustained. Requires established orbital mechanics capability to have anything worth licensing.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "materials": 10 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "resources": { "funding": 90 } },
+    "landmarkGate": null,
+    "prerequisites": { "requiredTechs": ["orbitalMechanics"] }
+  },
+  "orbitalStation_stage1": {
+    "id": "orbitalStation_stage1",
+    "name": "Orbital Station: Core Module",
+    "description": "The pressurised core of the permanent orbital facility — life support, command systems, and docking collar. Once in orbit, it becomes humanity's first continuously-crewed outpost beyond the atmosphere.",
+    "type": "landmark",
+    "era": "earth",
+    "cost": { "funding": 60, "materials": 40 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "signalProgress": 5 },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiresOrbitalStationAuthorised": true,
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "orbitalStation_stage2": {
+    "id": "orbitalStation_stage2",
+    "name": "Orbital Station: Habitation Ring",
+    "description": "The rotating habitation ring extends crew capacity from four to twelve and provides a stable platform for long-duration scientific work. Construction is complex: multiple launches, on-orbit assembly, and a narrow window for the final joining manoeuvre.",
+    "type": "landmark",
+    "era": "earth",
+    "cost": { "funding": 40, "materials": 30 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "signalProgress": 5 },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiresOrbitalStationAuthorised": true,
+      "requiredProjects": ["orbitalStation_stage1"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "orbitalStation_stage3": {
+    "id": "orbitalStation_stage3",
+    "name": "Orbital Station: Operational",
+    "description": "Final systems integration, deep-space antenna calibration, and crew rotation protocols are established. The Permanent Orbital Station is declared fully operational. The era of Near Space begins.",
+    "type": "landmark",
+    "era": "earth",
+    "cost": { "funding": 20, "materials": 10 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "signalProgress": 10 },
+    "landmarkGate": "opensEra2",
+    "prerequisites": {
+      "requiresOrbitalStationAuthorised": true,
+      "requiredProjects": ["orbitalStation_stage2"],
+      "requiredFacilityDefs": ["spaceLaunchCentre"]
+    }
+  },
+  "cern": {
+    "id": "cern",
+    "name": "Particle Collider Complex",
+    "description": "A multi-kilometre underground ring accelerating particles to energies consistent with the mathematical framework in the signal's outer layers — not coincidentally. The outer structure of the transmission becomes legible at precision previously inaccessible. Expensive to construct and maintain, but the signal yield is substantial.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 80, "materials": 40 },
+    "upkeepCost": { "funding": 5 },
+    "baseDuration": 4,
+    "reward": {
+      "signalProgress": 15,
+      "resources": { "funding": 30 }
+    },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["particlePhysicsDetectors"]
+    }
+  }
+}
