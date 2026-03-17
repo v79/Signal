@@ -112,6 +112,45 @@
     return result;
   });
 
+  /**
+   * Construction queue extended with virtual entries for active projects.
+   * Projects that require a specific facility show the building ring on that
+   * facility's tile. Computed reactively so Phaser callbacks don't recalculate
+   * on every render frame.
+   */
+  const projectVirtualQueue = $derived.by<OngoingAction[]>(() => {
+    const state = gameStore.state;
+    if (!state) return [];
+    const baseQueue = state.player.constructionQueue;
+    const occupiedCoordKeys = new Set(baseQueue.map((a) => a.coordKey));
+    const virtualActions: OngoingAction[] = [];
+    for (const project of state.player.activeProjects) {
+      const def = PROJECT_DEFS.get(project.defId);
+      const requiredFacilityDefs = def?.prerequisites.requiredFacilityDefs ?? [];
+      for (const facilityDefId of requiredFacilityDefs) {
+        const facility = state.player.facilities.find((f) => f.defId === facilityDefId);
+        if (!facility) continue;
+        const tile = state.map.earthTiles.find((t) => t.facilitySlots.includes(facility.id));
+        if (!tile) continue;
+        const coordKey = `${tile.coord.q},${tile.coord.r}`;
+        // First project to require a given tile wins; avoids visual clutter when
+        // multiple active projects share the same required facility.
+        if (occupiedCoordKeys.has(coordKey)) continue;
+        occupiedCoordKeys.add(coordKey);
+        virtualActions.push({
+          id: `project-ring-${project.defId}-${facilityDefId}`,
+          type: 'construct',
+          facilityDefId,
+          coordKey,
+          turnsRemaining: project.effectiveDuration - project.turnsElapsed,
+          totalTurns: project.effectiveDuration,
+          slotIndex: 0,
+        });
+      }
+    }
+    return virtualActions.length > 0 ? [...baseQueue, ...virtualActions] : baseQueue;
+  });
+
   const SCENE_KEYS: Record<MapTab, string> = {
     earth: 'EarthScene',
     space: 'SpaceScene',
@@ -203,36 +242,7 @@
       earth.setCallbacks({
         getTiles: () => gameStore.state?.map.earthTiles ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
-        getQueue: () => {
-          const state = gameStore.state;
-          if (!state) return [];
-          const baseQueue = state.player.constructionQueue;
-          const occupiedCoordKeys = new Set(baseQueue.map((a) => a.coordKey));
-          const virtualActions: OngoingAction[] = [];
-          for (const project of state.player.activeProjects) {
-            const def = PROJECT_DEFS.get(project.defId);
-            const requiredFacilityDefs = def?.prerequisites.requiredFacilityDefs ?? [];
-            for (const facilityDefId of requiredFacilityDefs) {
-              const facility = state.player.facilities.find((f) => f.defId === facilityDefId);
-              if (!facility) continue;
-              const tile = state.map.earthTiles.find((t) => t.facilitySlots.includes(facility.id));
-              if (!tile) continue;
-              const coordKey = `${tile.coord.q},${tile.coord.r}`;
-              if (occupiedCoordKeys.has(coordKey)) continue;
-              occupiedCoordKeys.add(coordKey);
-              virtualActions.push({
-                id: `project-ring-${project.defId}-${facilityDefId}`,
-                type: 'construct',
-                facilityDefId,
-                coordKey,
-                turnsRemaining: project.effectiveDuration - project.turnsElapsed,
-                totalTurns: project.effectiveDuration,
-                slotIndex: 0,
-              });
-            }
-          }
-          return virtualActions.length > 0 ? [...baseQueue, ...virtualActions] : baseQueue;
-        },
+        getQueue: () => projectVirtualQueue,
         getSelected: () => gameStore.selectedCoordKey,
         getClimate: () => gameStore.state?.climatePressure ?? 0,
         getAdjacencyMap: () => adjacencyMap,

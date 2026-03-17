@@ -1,5 +1,6 @@
 import type {
   GameState,
+  EventInstance,
   FacilityDef,
   ProjectDef,
   TechDef,
@@ -310,7 +311,7 @@ export function executeWorldPhase(
     !state.boardProposalFired && newDiscoveries.includes('orbitalMechanics');
 
   const shouldFireBoardProposal = orbitalMechanicsJustDiscovered || spaceLaunchJustBuilt;
-  const newBoardProposalEvent: typeof state.activeEvents[0] | null = shouldFireBoardProposal
+  const newBoardProposalEvent: EventInstance | null = shouldFireBoardProposal
     ? {
         id: `board-proposal-orbital-t${nextTurn}`,
         defId: 'boardProposalOrbitalStation',
@@ -342,7 +343,7 @@ export function executeWorldPhase(
   const engineeringEventAlreadyFired = state.activeEvents.some(
     (e) => e.defId === 'orbitalStationEngineeringChallenge' && !e.resolved,
   );
-  const engineeringChallengeEvent: typeof state.activeEvents[0] | null =
+  const engineeringChallengeEvent: EventInstance | null =
     stage2OnSecondTurn && !engineeringEventAlreadyFired
       ? {
           id: `orbital-engineering-challenge-t${nextTurn}`,
@@ -452,7 +453,7 @@ export function executeWorldPhase(
     state.boardProposalFired &&
     state.orbitalStationDeferResurfaceTurn === nextTurn;
 
-  const resurfacedProposalEvent: typeof state.activeEvents[0] | null = proposalResurfaces
+  const resurfacedProposalEvent: EventInstance | null = proposalResurfaces
     ? {
         id: `board-proposal-orbital-resurface-t${nextTurn}`,
         defId: 'boardProposalOrbitalStation',
