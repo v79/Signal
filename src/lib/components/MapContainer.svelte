@@ -6,11 +6,11 @@
   import BoardPanel from './BoardPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
-  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS } from '../../data/loader';
+  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS, PROJECT_DEFS } from '../../data/loader';
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
-  import type { Era, BoardRole, FacilityInstance } from '../../engine/types';
+  import type { Era, BoardRole, FacilityInstance, OngoingAction } from '../../engine/types';
   import { getFacilitiesOnTile } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
 
@@ -203,7 +203,36 @@
       earth.setCallbacks({
         getTiles: () => gameStore.state?.map.earthTiles ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
-        getQueue: () => gameStore.state?.player.constructionQueue ?? [],
+        getQueue: () => {
+          const state = gameStore.state;
+          if (!state) return [];
+          const baseQueue = state.player.constructionQueue;
+          const occupiedCoordKeys = new Set(baseQueue.map((a) => a.coordKey));
+          const virtualActions: OngoingAction[] = [];
+          for (const project of state.player.activeProjects) {
+            const def = PROJECT_DEFS.get(project.defId);
+            const requiredFacilityDefs = def?.prerequisites.requiredFacilityDefs ?? [];
+            for (const facilityDefId of requiredFacilityDefs) {
+              const facility = state.player.facilities.find((f) => f.defId === facilityDefId);
+              if (!facility) continue;
+              const tile = state.map.earthTiles.find((t) => t.facilitySlots.includes(facility.id));
+              if (!tile) continue;
+              const coordKey = `${tile.coord.q},${tile.coord.r}`;
+              if (occupiedCoordKeys.has(coordKey)) continue;
+              occupiedCoordKeys.add(coordKey);
+              virtualActions.push({
+                id: `project-ring-${project.defId}-${facilityDefId}`,
+                type: 'construct',
+                facilityDefId,
+                coordKey,
+                turnsRemaining: project.effectiveDuration - project.turnsElapsed,
+                totalTurns: project.effectiveDuration,
+                slotIndex: 0,
+              });
+            }
+          }
+          return virtualActions.length > 0 ? [...baseQueue, ...virtualActions] : baseQueue;
+        },
         getSelected: () => gameStore.selectedCoordKey,
         getClimate: () => gameStore.state?.climatePressure ?? 0,
         getAdjacencyMap: () => adjacencyMap,

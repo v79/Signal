@@ -104,7 +104,7 @@
     "era": "earth",
     "cost": { "funding": 20, "materials": 10 },
     "upkeepCost": {},
-    "baseDuration": 1,
+    "baseDuration": 2,
     "reward": { "signalProgress": 10 },
     "landmarkGate": "opensEra2",
     "prerequisites": {
