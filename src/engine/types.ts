@@ -556,7 +556,8 @@ export type BoardRole =
   | 'politicalLiaison'
   | 'directorOfOperations'
   | 'securityDirector'
-  | 'signalAnalyst';
+  | 'signalAnalyst'
+  | 'stationCommander';
 
 /** A character's buff or debuff expressed as modifiers to game outputs. */
 export interface CharacterModifier {

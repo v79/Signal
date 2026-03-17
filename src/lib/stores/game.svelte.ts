@@ -1046,6 +1046,7 @@ export const gameStore = {
       directorOfOperations: 'Dir. Operations',
       securityDirector: 'Security Director',
       signalAnalyst: 'Signal Analyst',
+      stationCommander: 'Station Commander',
     };
     _state = {
       ..._state,

@@ -32,6 +32,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
 - **Competitor blocs**
   - They are absent from the game so far.
+  - Phase 26F was to introduce pressure events (first to orbital, etc) but nothing around other blocs has been implemented at all
 - **Earth map**
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
@@ -39,6 +40,7 @@ This is a list of future requirements for the game but they are not to be implem
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
 - **Earth era content pass**
   - More playtesting required; Computing remains a problem
+- **Near Earth/LEO Map**
 - **LEO era content pass**
   - Map improvement actions such as sea walls for Earth
 - **Asteroid era content pass**
@@ -62,6 +64,7 @@ This is a list of future requirements for the game but they are not to be implem
 - **Game menu:**
 - **Steering Committee (formerly Board):**
   - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
+  - Some board members 'auto counter' negative events. But I don't think this is implemented.
 - **Climate management:**
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity

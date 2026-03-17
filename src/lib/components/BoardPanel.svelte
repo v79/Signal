@@ -16,6 +16,7 @@
     'directorOfOperations',
     'securityDirector',
     'signalAnalyst',
+    'stationCommander',
   ];
 
   const ROLE_LABELS: Record<BoardRole, string> = {
@@ -26,6 +27,7 @@
     directorOfOperations: 'Dir. Operations',
     securityDirector: 'Security Director',
     signalAnalyst: 'Signal Analyst',
+    stationCommander: 'Station Commander',
   };
 
   /** Initial letter used in the portrait placeholder for each role. */
@@ -37,6 +39,7 @@
     directorOfOperations: 'DO',
     securityDirector: 'SD',
     signalAnalyst: 'SA',
+    stationCommander: 'SC',
   };
 
   const DISMISS_COST = 20;
@@ -180,13 +183,18 @@
     directorOfOperations: '−5% all resource income',
     securityDirector: 'Security events cannot be auto-countered',
     signalAnalyst: '−10% signal decode progress',
+    stationCommander: '+10% Near Space launch costs',
   };
+
+  const visibleRoles = $derived(
+    era !== 'earth' ? ALL_ROLES : ALL_ROLES.filter((r) => r !== 'stationCommander'),
+  );
 </script>
 
 <div class="committee-panel">
   <h3 class="panel-title">COMMITTEE</h3>
   <div class="slots-grid">
-    {#each ALL_ROLES as role}
+    {#each visibleRoles as role}
       {@const member = board[role]}
       {@const active = member && member.leftTurn === null}
       {@const def = active ? boardDefs.get(member!.defId) : null}

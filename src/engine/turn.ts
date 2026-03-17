@@ -506,6 +506,18 @@ export function executeWorldPhase(
       },
     );
   }
+  if (opensEra2) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `station-commander-slot-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: With the Station now operational, we should appoint a Station Commander. The role is now open for recruitment.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
 
   // 16. Signal progress tick — starts from post-project signal so project
   //     rewards (one-time signal boosts) are included before further ticking.
