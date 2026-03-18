@@ -250,12 +250,12 @@ describe('prerequisitesMet', () => {
     expect(prerequisitesMet(tier1TechDef, allTechs)).toBe(true);
   });
 
-  it('returns true when all prerequisites are at progress', () => {
+  it('returns false when all prerequisites are at progress (not yet discovered)', () => {
     const allTechs = [
       makeTechState('orbitalMechanics', { physics: 40 }, 'progress'),
       lifeSupportProgress,
     ];
-    expect(prerequisitesMet(prereqDef, allTechs)).toBe(true);
+    expect(prerequisitesMet(prereqDef, allTechs)).toBe(false);
   });
 
   it('returns true when all prerequisites are at discovered', () => {
@@ -442,7 +442,7 @@ describe('distributeResearchPoints', () => {
     expect(b.fieldProgress['physics'] ?? 0).toBeGreaterThanOrEqual(MIN_POINTS_PER_TECH_PER_FIELD);
   });
 
-  it('remainder goes to one random eligible tech', () => {
+  it('remainder is fully distributed across eligible techs', () => {
     const techs = [
       makeTechState('techA', { physics: 100 }, 'rumour'),
       makeTechState('techB', { physics: 100 }, 'rumour'),
