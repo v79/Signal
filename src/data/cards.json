@@ -63,7 +63,7 @@
     "description": "Send a team to remote locations to explore exotic flora and fauna",
     "flavourText": "There is still so much life on Earth to be discovered.",
     "era": "earth",
-    "effect": { "fields": { "biology": 10, "chemistry": 8 }, "resources": { "funding": -2 } },
+    "effect": { "fields": { "biochemistry": 10, "physics": 2 }, "resources": { "funding": -2 } },
     "counterEffect": null,
     "upgradesFrom": null
   },

@@ -183,8 +183,6 @@
           activeProjects={gs.player.activeProjects}
           projectDefs={PROJECT_DEFS}
           completedProjectIds={gs.player.completedProjectIds}
-          orbitalStationAuthorised={gs.orbitalStationAuthorised}
-          hasSpaceLaunchCentre={gs.player.facilities.some((f) => f.defId === 'spaceLaunchCentre')}
           actionsRemaining={actionsRemaining}
           onInitiateProject={(defId) => gameStore.initiateProject(defId)}
         />

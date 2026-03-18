@@ -2,8 +2,6 @@
   import type { OngoingAction, ProjectDef, ProjectInstance } from '../../engine/types';
   import type { FacilityDef } from '../../engine/types';
 
-  const ORBITAL_STAGE_IDS = ['orbitalStation_stage1', 'orbitalStation_stage2', 'orbitalStation_stage3'];
-
   let {
     queue,
     facilityDefs,
@@ -11,8 +9,6 @@
     activeProjects = [],
     projectDefs = new Map(),
     completedProjectIds = [],
-    orbitalStationAuthorised = false,
-    hasSpaceLaunchCentre = false,
     actionsRemaining = 0,
     onInitiateProject,
   }: {
@@ -22,32 +18,64 @@
     activeProjects?: ProjectInstance[];
     projectDefs?: Map<string, ProjectDef>;
     completedProjectIds?: string[];
-    orbitalStationAuthorised?: boolean;
-    hasSpaceLaunchCentre?: boolean;
     actionsRemaining?: number;
     onInitiateProject?: (defId: string) => void;
   } = $props();
 
-  // Filter orbital station stages out of the generic available projects list
-  const nonLandmarkAvailable = $derived(
-    availableProjects.filter((d) => !ORBITAL_STAGE_IDS.includes(d.id)),
-  );
+  // ---------------------------------------------------------------------------
+  // Group logic — generic, driven by groupId on ProjectDef
+  // ---------------------------------------------------------------------------
 
-  function orbitalStageStatus(stageId: string): 'completed' | 'active' | 'available' | 'locked' {
-    if (completedProjectIds.includes(stageId)) return 'completed';
-    if (activeProjects.some((p) => p.defId === stageId)) return 'active';
-    if (availableProjects.some((d) => d.id === stageId)) return 'available';
+  type GroupEntry = { groupId: string; groupName: string; defs: ProjectDef[] };
+
+  /**
+   * Build an ordered list of visible project groups. A group is visible when
+   * at least one of its members is active, available, or completed.
+   * Defs within each group are sorted by their appearance order in projectDefs.
+   */
+  const visibleGroups = $derived((): GroupEntry[] => {
+    const activeDefIds = new Set(activeProjects.map((p) => p.defId));
+    const completedSet = new Set(completedProjectIds);
+    const availableSet = new Set(availableProjects.map((d) => d.id));
+
+    const groupMap = new Map<string, GroupEntry>();
+    for (const def of projectDefs.values()) {
+      if (!def.groupId) continue;
+      if (!groupMap.has(def.groupId)) {
+        groupMap.set(def.groupId, {
+          groupId: def.groupId,
+          groupName: def.groupName ?? def.groupId,
+          defs: [],
+        });
+      }
+      groupMap.get(def.groupId)!.defs.push(def);
+    }
+
+    return [...groupMap.values()].filter(({ defs }) =>
+      defs.some(
+        (d) => activeDefIds.has(d.id) || completedSet.has(d.id) || availableSet.has(d.id),
+      ),
+    );
+  });
+
+  /** Available projects that don't belong to any group. */
+  const ungroupedAvailable = $derived(availableProjects.filter((d) => !d.groupId));
+
+  /** Active projects that don't belong to any group. */
+  const ungroupedActive = $derived(activeProjects.filter((p) => !projectDefs.get(p.defId)?.groupId));
+
+  function groupMemberStatus(
+    defId: string,
+  ): 'completed' | 'active' | 'available' | 'locked' {
+    if (completedProjectIds.includes(defId)) return 'completed';
+    if (activeProjects.some((p) => p.defId === defId)) return 'active';
+    if (availableProjects.some((d) => d.id === defId)) return 'available';
     return 'locked';
   }
 
-  function lockReason(stageId: string): string {
-    if (!hasSpaceLaunchCentre) return 'Requires: Space Launch Centre';
-    if (stageId === 'orbitalStation_stage2' && !completedProjectIds.includes('orbitalStation_stage1'))
-      return 'Requires: Core Module complete';
-    if (stageId === 'orbitalStation_stage3' && !completedProjectIds.includes('orbitalStation_stage2'))
-      return 'Requires: Habitation Ring complete';
-    return 'Prerequisites not met';
-  }
+  // ---------------------------------------------------------------------------
+  // Display helpers
+  // ---------------------------------------------------------------------------
 
   let expandedProjectId = $state<string | null>(null);
 
@@ -84,7 +112,7 @@
     queue.length > 0 ||
       activeProjects.length > 0 ||
       availableProjects.length > 0 ||
-      orbitalStationAuthorised,
+      visibleGroups().length > 0,
   );
 </script>
 
@@ -118,10 +146,10 @@
       {/each}
     {/if}
 
-    <!-- Active projects -->
-    {#if activeProjects.length > 0}
+    <!-- Active projects (ungrouped only — grouped ones shown in their group section) -->
+    {#if ungroupedActive.length > 0}
       <div class="section-header">PROJECTS IN PROGRESS</div>
-      {#each activeProjects as proj (proj.id)}
+      {#each ungroupedActive as proj (proj.id)}
         {@const def = projectDefs.get(proj.defId)}
         {@const progress = proj.turnsElapsed / proj.effectiveDuration}
         {@const remaining = proj.effectiveDuration - proj.turnsElapsed}
@@ -134,7 +162,7 @@
             </div>
             <div class="turns-left">
               {remaining} turn{remaining === 1 ? '' : 's'} remaining
-              {#if def && (def.upkeepCost.funding || def.upkeepCost.materials)}
+              {#if def && upkeepSummary(def)}
                 · upkeep {upkeepSummary(def)}
               {/if}
             </div>
@@ -143,56 +171,56 @@
       {/each}
     {/if}
 
-    <!-- Orbital Station multi-stage tracker -->
-    {#if orbitalStationAuthorised}
-      <div class="section-header">ORBITAL STATION PROGRAMME</div>
-      {#each ORBITAL_STAGE_IDS as stageId (stageId)}
-        {@const def = projectDefs.get(stageId)}
-        {@const status = orbitalStageStatus(stageId)}
-        {@const activeInst = activeProjects.find((p) => p.defId === stageId)}
-        {#if def}
-          <div class="stage-row" class:stage-completed={status === 'completed'} class:stage-active={status === 'active'} class:stage-locked={status === 'locked'}>
-            <div class="stage-header">
-              <span class="stage-name">{def.name.replace('Orbital Station: ', '')}</span>
-              {#if status === 'completed'}
-                <span class="stage-badge done">✓</span>
-              {:else if status === 'active'}
-                <span class="stage-badge active">IN PROGRESS</span>
-              {:else if status === 'available'}
-                <span class="stage-badge available">READY</span>
-              {:else}
-                <span class="stage-badge locked">LOCKED</span>
-              {/if}
-            </div>
-            {#if status === 'active' && activeInst}
-              {@const progress = activeInst.turnsElapsed / activeInst.effectiveDuration}
-              {@const remaining = activeInst.effectiveDuration - activeInst.turnsElapsed}
-              <div class="progress-track">
-                <div class="progress-fill project-fill" style="width: {Math.round(progress * 100)}%"></div>
-              </div>
-              <div class="turns-left">{remaining} turn{remaining === 1 ? '' : 's'} remaining</div>
+    <!-- Project groups (e.g. Orbital Station Programme) -->
+    {#each visibleGroups() as group (group.groupId)}
+      <div class="section-header">{group.groupName}</div>
+      {#each group.defs as def (def.id)}
+        {@const status = groupMemberStatus(def.id)}
+        {@const activeInst = activeProjects.find((p) => p.defId === def.id)}
+        <div
+          class="stage-row"
+          class:stage-completed={status === 'completed'}
+          class:stage-active={status === 'active'}
+          class:stage-locked={status === 'locked'}
+        >
+          <div class="stage-header">
+            <span class="stage-name">{def.name}</span>
+            {#if status === 'completed'}
+              <span class="stage-badge done">✓</span>
+            {:else if status === 'active'}
+              <span class="stage-badge active">IN PROGRESS</span>
             {:else if status === 'available'}
-              <div class="stage-cost">{costSummary(def)}</div>
-              <button
-                class="initiate-btn"
-                disabled={actionsRemaining <= 0}
-                title={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`}
-                onclick={() => onInitiateProject?.(def.id)}
-              >
-                BEGIN · {costSummary(def)}
-              </button>
-            {:else if status === 'locked'}
-              <div class="lock-reason">{lockReason(stageId)}</div>
+              <span class="stage-badge available">READY</span>
+            {:else}
+              <span class="stage-badge locked">LOCKED</span>
             {/if}
           </div>
-        {/if}
+          {#if status === 'active' && activeInst}
+            {@const progress = activeInst.turnsElapsed / activeInst.effectiveDuration}
+            {@const remaining = activeInst.effectiveDuration - activeInst.turnsElapsed}
+            <div class="progress-track">
+              <div class="progress-fill project-fill" style="width: {Math.round(progress * 100)}%"></div>
+            </div>
+            <div class="turns-left">{remaining} turn{remaining === 1 ? '' : 's'} remaining</div>
+          {:else if status === 'available'}
+            <div class="stage-cost">{costSummary(def)}</div>
+            <button
+              class="initiate-btn"
+              disabled={actionsRemaining <= 0}
+              title={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`}
+              onclick={() => onInitiateProject?.(def.id)}
+            >
+              BEGIN · {costSummary(def)}
+            </button>
+          {/if}
+        </div>
       {/each}
-    {/if}
+    {/each}
 
-    <!-- Available projects (non-landmark) -->
-    {#if nonLandmarkAvailable.length > 0}
+    <!-- Available projects (ungrouped) -->
+    {#if ungroupedAvailable.length > 0}
       <div class="section-header">AVAILABLE PROJECTS</div>
-      {#each nonLandmarkAvailable as def (def.id)}
+      {#each ungroupedAvailable as def (def.id)}
         <div class="project-card" class:expanded={expandedProjectId === def.id}>
           <button class="project-header" onclick={() => toggleExpand(def.id)}>
             <span class="project-name">{def.name}</span>
@@ -324,7 +352,7 @@
     color: #3a5060;
   }
 
-  /* Orbital Station stage tracker */
+  /* Project group (stage tracker) */
   .stage-row {
     border: 1px solid #1a3050;
     border-radius: 2px;
@@ -393,12 +421,6 @@
   .stage-cost {
     font-size: 0.58rem;
     color: #4a7060;
-  }
-
-  .lock-reason {
-    font-size: 0.57rem;
-    color: #3a4858;
-    font-style: italic;
   }
 
   /* Available project cards */

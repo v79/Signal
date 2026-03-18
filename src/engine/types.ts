@@ -259,7 +259,7 @@ export interface ProjectDef {
   cost: Partial<Resources>;
   /** Additional per-turn resource cost while the project is in progress. */
   upkeepCost: Partial<Resources>;
-  /** Estimated turns to complete (may vary with Will). */
+  /** Estimated turns to complete. */
   baseDuration: number;
   /** One-time rewards on completion. */
   reward: ProjectReward;
@@ -267,6 +267,14 @@ export interface ProjectDef {
   landmarkGate: LandmarkGate;
   /** Conditions that must be true for this project to be available. */
   prerequisites: ProjectPrerequisites;
+  /**
+   * Optional group identifier. Projects sharing a groupId are displayed
+   * together in the UI with groupName as the section header.
+   * Prerequisites (requiredProjects) enforce the initiation order.
+   */
+  groupId?: string;
+  /** Human-readable label for the group header (required when groupId is set). */
+  groupName?: string;
 }
 
 export interface ProjectReward {

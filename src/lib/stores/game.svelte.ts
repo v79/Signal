@@ -367,30 +367,17 @@ export const gameStore = {
       { id: 'lobbying-1', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
       { id: 'lobbying-2', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
       { id: 'publicAppeal-1', defId: 'publicAppeal', zone: 'deck', bankedSinceTurn: null },
-      {
-        id: 'emergencyProcurement-1',
-        defId: 'emergencyProcurement',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
-      {
-        id: 'coalitionBuilding-1',
-        defId: 'coalitionBuilding',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
-      {
-        id: 'emergencyAppeal-1',
-        defId: 'emergencyAppeal',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
-      {
-        id: 'emergencySourcing-1',
-        defId: 'emergencySourcing',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
+      { id: 'emergencyProcurement-1', defId: 'emergencyProcurement', zone: 'deck', bankedSinceTurn: null },
+      { id: 'coalitionBuilding-1', defId: 'coalitionBuilding', zone: 'deck', bankedSinceTurn: null },
+      { id: 'emergencyAppeal-1', defId: 'emergencyAppeal', zone: 'deck', bankedSinceTurn: null },
+      { id: 'emergencySourcing-1', defId: 'emergencySourcing', zone: 'deck', bankedSinceTurn: null },
+      { id: 'academicConference-1', defId: 'academicConference', zone: 'deck', bankedSinceTurn: null },
+      { id: 'voxPopuli-1', defId: 'voxPopuli', zone: 'deck', bankedSinceTurn: null },
+      { id: 'jungleExpedition-1', defId: 'jungleExpedition', zone: 'deck', bankedSinceTurn: null },
+      { id: 'peerReview-1', defId: 'peerReview', zone: 'deck', bankedSinceTurn: null },
+      { id: 'industrialContracts-1', defId: 'industrialContracts', zone: 'deck', bankedSinceTurn: null },
+      { id: 'backChannelNegotiation-1', defId: 'backChannelNegotiation', zone: 'deck', bankedSinceTurn: null },
+      { id: 'executiveOverride-1', defId: 'executiveOverride', zone: 'deck', bankedSinceTurn: null },
     ];
 
     // Tech recipes are generated with a dedicated RNG slice so they are
@@ -888,6 +875,18 @@ export const gameStore = {
       def.effect.customEffectKey === 'extraAction'
         ? (_state.bonusActionsNextTurn ?? 0) + 1
         : (_state.bonusActionsNextTurn ?? 0);
+
+    if (def.effect.customEffectKey === 'extraAction') {
+      newsFeed = [
+        ...newsFeed,
+        {
+          id: crypto.randomUUID(),
+          turn: _state.turn,
+          text: 'Executive Override authorised — one additional action available next turn.',
+          category: 'event-gain' as const,
+        },
+      ];
+    }
 
     _state = {
       ..._state,
