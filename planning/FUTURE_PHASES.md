@@ -29,6 +29,7 @@ This is a list of future requirements for the game but they are not to be implem
 - **Era Gates**
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
+  - Orbital Station modules (and other multi-stage landmarks) should not be completable in parallel. Only one module project can be in progress at any one time.
   - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
 - **Competitor blocs**
   - They are absent from the game so far.
@@ -75,7 +76,8 @@ This is a list of future requirements for the game but they are not to be implem
 - **Next Turn / Phase Control**
   - Move the Action Count here
   - Proper, aligned layout.
-  - Add the turn counter down here too?
+  - Move the action turn counter down here too
+  - Action turn counter should count down, not up, e.g. show turns remaining, not turns used
 
 
 ## BUGS:
