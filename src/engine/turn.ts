@@ -157,6 +157,8 @@ export function executeDrawPhase(state: GameState, rng: Rng): GameState {
     ...state,
     phase: 'action',
     actionsThisTurn: 0,
+    bonusActionsThisTurn: state.bonusActionsNextTurn ?? 0,
+    bonusActionsNextTurn: 0,
     player: { ...state.player, cards: newCards },
   };
 }
@@ -227,9 +229,19 @@ export function executeWorldPhase(
 
   // 2b. HQ bonus — applies if the player has an HQ facility on the map.
   //     Output varies by will profile (democratic vs authoritarian).
+  //     Discovered technologies may add permanent field bonuses via hqFieldBonus.
   const hasHq = player.facilities.some((f) => f.defId === 'hq');
   if (hasHq) {
-    const hqBonus = computeHqBonus(player.willProfile);
+    const techFieldBonus: Partial<FieldPoints> = {};
+    for (const ts of player.techs) {
+      if (ts.stage !== 'discovered') continue;
+      const bonus = techDefs.get(ts.defId)?.hqFieldBonus;
+      if (!bonus) continue;
+      for (const k of Object.keys(bonus) as (keyof FieldPoints)[]) {
+        techFieldBonus[k] = (techFieldBonus[k] ?? 0) + (bonus[k] ?? 0);
+      }
+    }
+    const hqBonus = computeHqBonus(player.willProfile, techFieldBonus);
     for (const k of Object.keys(hqBonus.resources) as (keyof Resources)[]) {
       totalResources[k] = (totalResources[k] ?? 0) + (hqBonus.resources[k] ?? 0);
     }

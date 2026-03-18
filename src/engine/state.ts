@@ -113,6 +113,8 @@ export function createGameState(config: GameConfig): GameState {
     climatePressure: 10,
     actionsThisTurn: 0,
     maxActionsPerTurn: 3,
+    bonusActionsNextTurn: 0,
+    bonusActionsThisTurn: 0,
     seenNarrativeIds: [],
     narrativeQueue: [],
     availableBoardDefIds: [],

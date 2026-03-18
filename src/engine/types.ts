@@ -349,6 +349,11 @@ export interface TechDef {
   requiredTechIds: string[];
   /** Only on Tier 3+ techs. Allows bypass of normal prerequisite chain. */
   breakthroughCondition?: BreakthroughCondition;
+  /**
+   * Permanent field output bonus added to the HQ each turn once this tech
+   * is discovered. Stacks with other tech bonuses.
+   */
+  hqFieldBonus?: Partial<FieldPoints>;
 }
 
 /** Per-run recipe generated from TechDef.baseRecipe + RNG. */
@@ -800,6 +805,16 @@ export interface GameState {
   actionsThisTurn: number;
   /** Maximum card plays allowed per action phase (default 3). Board members may modify. */
   maxActionsPerTurn: number;
+  /**
+   * Extra actions staged by a card play this turn to be applied next turn.
+   * Consumed into bonusActionsThisTurn at the start of each Draw Phase.
+   */
+  bonusActionsNextTurn: number;
+  /**
+   * Extra actions available this action phase, consumed from bonusActionsNextTurn
+   * at the start of Draw Phase. Reset to 0 each Draw Phase.
+   */
+  bonusActionsThisTurn: number;
   /** IDs of narratives already seen this run. Prevents re-triggering after save/load. */
   seenNarrativeIds: string[];
   /** Narratives queued for display, processed one at a time in order. */

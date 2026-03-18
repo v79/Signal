@@ -73,7 +73,7 @@
   // Actions remaining this turn.
   const actionsRemaining = $derived(
     gameStore.state
-      ? (gameStore.state.maxActionsPerTurn ?? 3) - (gameStore.state.actionsThisTurn ?? 0)
+      ? (gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0) - (gameStore.state.actionsThisTurn ?? 0)
       : 0,
   );
 
@@ -205,7 +205,7 @@
         phase={gs.phase}
         activeEventTags={counterableTags}
         actionsThisTurn={gs.actionsThisTurn ?? 0}
-        maxActionsPerTurn={gs.maxActionsPerTurn ?? 3}
+        maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
         playerResources={gs.player.resources}
         onPlay={(id) => gameStore.playCard(id)}
         onBank={(id) => gameStore.bankCard(id)}

@@ -321,7 +321,7 @@
         phase={gameStore.state.phase}
         playerResources={gameStore.state.player.resources}
         actionsThisTurn={gameStore.state.actionsThisTurn ?? 0}
-        maxActionsPerTurn={gameStore.state.maxActionsPerTurn ?? 3}
+        maxActionsPerTurn={(gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0)}
         availableBoardDefIds={gameStore.state.availableBoardDefIds ?? []}
         gracePeriodEnds={gameStore.state.boardGracePeriodEnds ?? 4}
         turn={gameStore.state.turn}

@@ -254,5 +254,15 @@
     "effect": { "resources": { "politicalWill": -25, "materials": 20 } },
     "counterEffect": null,
     "upgradesFrom": null
+  },
+  "executiveOverride": {
+    "id": "executiveOverride",
+    "name": "Executive Override",
+    "description": "Spend 30 Political Will to authorise one additional action next turn.",
+    "flavourText": "Some decisions cannot wait for consensus.",
+    "era": "earth",
+    "effect": { "resources": { "politicalWill": -30 }, "customEffectKey": "extraAction" },
+    "counterEffect": null,
+    "upgradesFrom": null
   }
 }

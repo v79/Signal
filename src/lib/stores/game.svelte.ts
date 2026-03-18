@@ -481,7 +481,7 @@ export const gameStore = {
     if (def.id === 'hq') return;
 
     // Building costs an action slot.
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     // Cannot build on a destroyed tile.
@@ -811,7 +811,7 @@ export const gameStore = {
   playCard(cardId: string): void {
     if (!_state) return;
     // Enforce per-turn action cap (old saves default to 3 if field missing)
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     const card = _state.player.cards.find((c) => c.id === cardId);
@@ -879,9 +879,15 @@ export const gameStore = {
       }
     }
 
+    const bonusActionsNextTurn =
+      def.effect.customEffectKey === 'extraAction'
+        ? (_state.bonusActionsNextTurn ?? 0) + 1
+        : (_state.bonusActionsNextTurn ?? 0);
+
     _state = {
       ..._state,
       actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      bonusActionsNextTurn,
       activeEvents,
       player: {
         ..._state.player,
@@ -1029,7 +1035,7 @@ export const gameStore = {
     if (!isBoardSlotVacant(_state.player.board, def.role)) return;
 
     // Action cap check
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     // Per-character resource cost
@@ -1152,7 +1158,7 @@ export const gameStore = {
     const def = PROJECT_DEFS.get(defId);
     if (!def) return;
 
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     if (!canInitiateProject(_state, def)) return;
