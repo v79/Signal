@@ -648,10 +648,15 @@ export const gameStore = {
 
     // Deduct the mitigation cost from resources
     const cost = def.mitigationCost ?? {};
+
+    // Afford check: materials and Will cannot go negative
+    if ((cost.materials ?? 0) > 0 && _state.player.resources.materials < (cost.materials ?? 0)) return;
+    if ((cost.politicalWill ?? 0) > 0 && _state.player.resources.politicalWill < (cost.politicalWill ?? 0)) return;
+
     let playerAfterCost = {
       ..._state.player,
       resources: {
-        funding: Math.max(0, _state.player.resources.funding - (cost.funding ?? 0)),
+        funding: _state.player.resources.funding - (cost.funding ?? 0),
         materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
         politicalWill: Math.max(
           0,

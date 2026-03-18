@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
   import HUD from '$lib/components/HUD.svelte';
   import EventZone from '$lib/components/EventZone.svelte';
   import ResearchFeed from '$lib/components/ResearchFeed.svelte';
@@ -25,8 +26,36 @@
   } from '../engine/facilities';
   import { isSignalClimax } from '../engine/signal';
   // Redirect to /newgame if there is no active game state (cold start).
+  // Also register back-button / unload guards during the action phase.
+  function beforeUnloadHandler(e: BeforeUnloadEvent): string | undefined {
+    if (gameStore.state?.phase === 'action') {
+      e.preventDefault();
+      return (e.returnValue = 'Game in progress — leave and lose unsaved turn?');
+    }
+  }
+
+  function popstateHandler(): void {
+    if (gameStore.state?.phase === 'action') {
+      const leave = window.confirm('Game in progress — leave and lose unsaved turn?');
+      if (!leave) {
+        // Push the current URL back so the browser URL doesn't change.
+        history.pushState(null, '', window.location.href);
+      }
+    }
+  }
+
   onMount(() => {
     if (!gameStore.state) goto('/newgame');
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    window.addEventListener('popstate', popstateHandler);
+    // Ensure there is a history entry to intercept popstate.
+    history.pushState(null, '', window.location.href);
+  });
+
+  onDestroy(() => {
+    if (!browser) return;
+    window.removeEventListener('beforeunload', beforeUnloadHandler);
+    window.removeEventListener('popstate', popstateHandler);
   });
 
   const resourceBreakdown = $derived<ResourceBreakdown>(
@@ -212,7 +241,12 @@
         onUnbank={(id) => gameStore.unbankCard(id)}
       />
 
-      <PhaseControls phase={gs.phase} onAdvance={() => gameStore.advancePhase()} />
+      <PhaseControls
+        phase={gs.phase}
+        actionsThisTurn={gs.actionsThisTurn ?? 0}
+        maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
+        onAdvance={() => gameStore.advancePhase()}
+      />
     </div>
   </div>
 {/if}

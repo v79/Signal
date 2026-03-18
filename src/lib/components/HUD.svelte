@@ -130,6 +130,10 @@
     return Math.round(n).toLocaleString();
   }
 
+  function netIncome(lines: ResourceBreakdown['funding']): number {
+    return lines.reduce((s, l) => s + l.amount, 0);
+  }
+
   function breakdownTooltip(
     lines: ResourceBreakdown['funding'],
     header: string,
@@ -267,7 +271,7 @@
       direction="below"
     >
       <div class="resource">
-        <span class="res-label">FUND</span>
+        <span class="res-label" class:negative-income={netIncome(resourceBreakdown.funding) < 0}>FUND</span>
         <span class="res-value fund" class:fund-negative={resources.funding < 0}>{fmt(resources.funding)}</span>
       </div>
     </Tooltip>
@@ -280,7 +284,7 @@
       direction="below"
     >
       <div class="resource">
-        <span class="res-label">MAT</span>
+        <span class="res-label" class:negative-income={netIncome(resourceBreakdown.materials) < 0}>MAT</span>
         <span class="res-value mat">{fmt(resources.materials)}</span>
       </div>
     </Tooltip>
@@ -293,7 +297,7 @@
       direction="below"
     >
       <div class="resource">
-        <span class="res-label">WILL</span>
+        <span class="res-label" class:negative-income={netIncome(resourceBreakdown.politicalWill) < 0}>WILL</span>
         <span class="res-value will">{fmt(resources.politicalWill)}</span>
       </div>
     </Tooltip>
@@ -611,6 +615,10 @@
   .res-label {
     color: #6a7888;
     font-size: 0.68rem;
+  }
+
+  .res-label.negative-income {
+    color: #c87050;
   }
 
   .res-value {

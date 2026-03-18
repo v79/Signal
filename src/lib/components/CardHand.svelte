@@ -128,11 +128,7 @@
   <div class="hand-section">
     <div class="hand-header">
       <span class="zone-label">HAND ({handCards.length})</span>
-      {#if inAction}
-        <span class="action-counter" class:at-cap={atActionCap}>
-          ACTIONS {actionsThisTurn}/{maxActionsPerTurn}
-        </span>
-      {:else}
+      {#if !inAction}
         <span class="phase-hint">Cards available during Action phase.</span>
       {/if}
     </div>
@@ -240,16 +236,6 @@
 
   .hand-header .zone-label {
     margin-bottom: 0;
-  }
-
-  .action-counter {
-    font-size: 0.6rem;
-    letter-spacing: 0.12em;
-    color: #4a8ab4;
-  }
-
-  .action-counter.at-cap {
-    color: #c84a4a;
   }
 
   .phase-hint {

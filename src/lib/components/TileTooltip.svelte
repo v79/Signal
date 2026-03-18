@@ -7,12 +7,13 @@
     Resources,
   } from '../../engine/types';
   import { FIELD_ABBR } from '../fieldColours';
-  import { getFacilitiesOnTile } from '../../engine/facilities';
+  import { getFacilitiesOnTile, type HqBonus } from '../../engine/facilities';
 
   let {
     tile,
     facilities,
     facilityDefs,
+    hqBonus,
     x,
     y,
     containerWidth,
@@ -21,6 +22,7 @@
     tile: MapTile | null;
     facilities: FacilityInstance[];
     facilityDefs: Map<string, FacilityDef>;
+    hqBonus: HqBonus;
     x: number;
     y: number;
     containerWidth: number;
@@ -28,12 +30,12 @@
   } = $props();
 
   const TOOLTIP_W = 200;
-  const TOOLTIP_H = 130; // approximate, used for clamping
+  const TOOLTIP_H = 320; // safe maximum for a fully-occupied 3-slot tile
   const OFFSET_X = 16;
   const OFFSET_Y = 8;
 
   const left = $derived(Math.min(x + OFFSET_X, containerWidth - TOOLTIP_W - 4));
-  const top = $derived(Math.min(y + OFFSET_Y, containerHeight - TOOLTIP_H - 4));
+  const top = $derived(Math.max(0, Math.min(y + OFFSET_Y, containerHeight - TOOLTIP_H - 4)));
 
   /** Unique facility instances on this tile (deduplicates multi-slot entries). */
   const tileInstances = $derived(
@@ -44,9 +46,12 @@
     tile ? tile.facilitySlots.filter((s) => s === null).length : 3,
   );
 
+  /** True when the HQ facility is on this tile. */
+  const tileHasHq = $derived(tileInstances.some((inst) => inst.defId === 'hq'));
+
   /**
    * Aggregate field output across all facilities on the tile (base only, no adjacency here).
-   * Scaled by condition × productivity per facility.
+   * Scaled by condition × productivity per facility. HQ bonus added when tile has the HQ.
    */
   const aggFields = $derived.by<Partial<FieldPoints>>(() => {
     if (!tile) return {};
@@ -59,11 +64,17 @@
         if (v) out[k] = Math.round(((out[k] ?? 0) + v * scale) * 10) / 10;
       }
     }
+    if (tileHasHq) {
+      for (const [k, v] of Object.entries(hqBonus.fields) as [keyof FieldPoints, number][]) {
+        if (v) out[k] = Math.round(((out[k] ?? 0) + v) * 10) / 10;
+      }
+    }
     return out;
   });
 
   /**
    * Aggregate net resource output (income - upkeep) across all facilities on the tile.
+   * HQ bonus added when tile has the HQ.
    */
   const aggResources = $derived.by<Partial<Resources>>(() => {
     if (!tile) return {};
@@ -77,6 +88,11 @@
       }
       for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
         if (v) out[k] = (out[k] ?? 0) - v;
+      }
+    }
+    if (tileHasHq) {
+      for (const [k, v] of Object.entries(hqBonus.resources) as [keyof Resources, number][]) {
+        if (v) out[k] = Math.round(((out[k] ?? 0) + v) * 10) / 10;
       }
     }
     return out;

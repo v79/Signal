@@ -192,7 +192,7 @@
 </script>
 
 <div class="committee-panel">
-  <h3 class="panel-title">COMMITTEE</h3>
+  <h3 class="panel-title">STANDING COMMITTEE</h3>
   <div class="slots-grid">
     {#each visibleRoles as role}
       {@const member = board[role]}
