@@ -62,6 +62,23 @@ describe('computeHqBonus', () => {
     expect(bonus.fields.computing ?? 0).toBe(0);
     expect(bonus.fields.socialScience ?? 0).toBe(0);
   });
+
+  it('tech field bonus stacks on top of base fields', () => {
+    const bonus = computeHqBonus('democratic', { computing: 3 });
+    expect(bonus.fields.computing).toBe(4); // 1 base + 3 from tech
+  });
+
+  it('tech field bonus applies to authoritarian (no base fields)', () => {
+    const bonus = computeHqBonus('authoritarian', { computing: 2 });
+    expect(bonus.fields.computing).toBe(2);
+    expect(bonus.resources.materials).toBeGreaterThan(0); // unchanged
+  });
+
+  it('no tech bonus leaves base fields unchanged', () => {
+    const with_ = computeHqBonus('democratic', {});
+    const without = computeHqBonus('democratic');
+    expect(with_.fields).toEqual(without.fields);
+  });
 });
 
 describe('generateEarthTilesForBloc', () => {
