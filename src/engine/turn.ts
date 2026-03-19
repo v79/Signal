@@ -409,7 +409,7 @@ export function executeWorldPhase(
     ...newDiscoveries.map((defId) => ({
       id: `${nextTurn}-discovery-${defId}`,
       turn: nextTurn,
-      text: `Breakthrough: ${techDefs.get(defId)?.name ?? 'Unknown technology'} has been achieved.`,
+      text: `New horizons: ${techDefs.get(defId)?.name ?? 'Unknown technology'} is ready to be exploited.`,
       category: 'discovery' as const,
     })),
   ];
