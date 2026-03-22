@@ -311,7 +311,13 @@
       class:active={activeTab === 'board'}
       onclick={() => switchTab('board')}
     >
-      COMMITTEE
+      {#if gameStore.state}
+        {@const filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
+        {@const total = 8}
+        COMMITTEE ({filled}/{total})
+      {:else}
+        COMMITTEE
+      {/if}
     </button>
   </div>
   {#if activeTab === 'earth' && gameStore.state}
