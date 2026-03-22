@@ -31,7 +31,7 @@ import {
   applyStageTransitions,
   checkBreakthroughConditions,
 } from './research';
-import { drawCards } from './cards';
+import { drawCards, retireObsoleteCards } from './cards';
 import {
   selectNewEvents,
   tickEventCountdowns,
@@ -264,6 +264,7 @@ export function executeWorldPhase(
   blocDefs: Map<string, BlocDef> = new Map(),
   boardDefs: Map<string, BoardMemberDef> = new Map(),
   projectDefs: Map<string, ProjectDef> = new Map(),
+  cardDefs: Map<string, CardDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -397,7 +398,7 @@ export function executeWorldPhase(
       }
     : null;
 
-  // 7b. Project tick — advance active projects, apply completions + upkeep
+  // 7c. Project tick — advance active projects, apply completions + upkeep
   // Run against a temporary state with the post-card resources so upkeep is
   // deducted from the already-updated resource total.
   const stateForProjectTick: GameState = {
@@ -410,7 +411,7 @@ export function executeWorldPhase(
   const signalAfterProjects = projectTickResult.state.signal;
   const projectNews = playerAfterProjects.newsFeed.slice(player.newsFeed.length);
 
-  // 7c. Orbital Station: scripted engineering challenge fires on stage 2's second turn.
+  // 7d. Orbital Station: scripted engineering challenge fires on stage 2's second turn.
   //     Only fires once — guarded by checking if the event is already in activeEvents.
   const stage2OnSecondTurn = playerAfterProjects.activeProjects.some(
     (p) => p.defId === 'orbitalStation_stage2' && p.turnsElapsed === 1,
@@ -430,7 +431,7 @@ export function executeWorldPhase(
         }
       : null;
 
-  // 7d. Era transition: if a landmark project with opensEra2 completed this tick,
+  // 7e. Era transition: if a landmark project with opensEra2 completed this tick,
   //     advance era to nearSpace and apply a Will boost.
   const opensEra2 = projectTickResult.completedDefIds.some(
     (id) => projectDefs.get(id)?.landmarkGate === 'opensEra2',
@@ -447,6 +448,25 @@ export function executeWorldPhase(
         },
       ]
     : [];
+
+  // 7f. Retire cards made obsolete by newly discovered techs or the era transition.
+  //     Applied to playerAfterProjects.cards so project-unlocked cards are included.
+  //     Passes ALL discovered tech IDs so the check is idempotent on save/load.
+  const allDiscoveredTechIds = updatedTechs
+    .filter((t) => t.stage === 'discovered')
+    .map((t) => t.defId);
+  const { cards: cardsAfterRetirement, retiredDefIds } = retireObsoleteCards(
+    playerAfterProjects.cards,
+    cardDefs,
+    allDiscoveredTechIds,
+    eraAfterProjects,
+  );
+  const retirementNews: NewsItem[] = retiredDefIds.map((defId) => ({
+    id: `card-retired-${defId}-t${nextTurn}`,
+    turn: nextTurn,
+    text: `${cardDefs.get(defId)?.name ?? defId} has been retired from the deck — superseded by new capabilities.`,
+    category: 'research' as const,
+  }));
 
   // 8. News feed entries for research events
   const breakthroughNews: NewsItem[] = breakthroughs.map((b) => ({
@@ -648,7 +668,7 @@ export function executeWorldPhase(
       will: Math.min(100, newWill + willBoostFromEraTransition),
       facilities: facilitiesAfterDegradation,
       techs: updatedTechs,
-      cards: playerAfterProjects.cards,
+      cards: cardsAfterRetirement,
       board: updatedBoard,
       constructionQueue: updatedQueue,
       activeProjects: playerAfterProjects.activeProjects,
@@ -657,6 +677,7 @@ export function executeWorldPhase(
         ...player.newsFeed,
         ...breakthroughNews,
         ...researchNews,
+        ...retirementNews,
         ...projectNews,
         ...eraTransitionNews,
         ...degradationNews,

@@ -65,7 +65,8 @@
     "era": "earth",
     "effect": { "fields": { "biochemistry": 10, "physics": 2 }, "resources": { "funding": -2 } },
     "counterEffect": null,
-    "upgradesFrom": null
+    "upgradesFrom": null,
+    "obsoletedByTech": "orbitalMechanics"
   },
   "coalitionBuilding": {
     "id": "coalitionBuilding",
@@ -263,6 +264,20 @@
     "era": "earth",
     "effect": { "resources": { "politicalWill": -30 }, "customEffectKey": "extraAction" },
     "counterEffect": null,
+    "upgradesFrom": null
+  },
+  "contingencyRouting": {
+    "id": "contingencyRouting",
+    "name": "Contingency Routing",
+    "description": "Activate reserve supply contracts and reroute shipments through alternate channels.",
+    "flavourText": "A good logistics officer plans for the disruption before it arrives.",
+    "era": "earth",
+    "effect": { "resources": { "materials": 10, "funding": -5 } },
+    "counterEffect": {
+      "countersEventTag": "logistics",
+      "additionalCost": {},
+      "fullNeutralise": true
+    },
     "upgradesFrom": null
   }
 }

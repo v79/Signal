@@ -983,7 +983,7 @@ export const gameStore = {
       const prevEra = _state.era;
       const prevFacilities = _state.player.facilities;
 
-      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS, CARD_DEFS);
 
       // ---------------------------------------------------------------------------
       // Enqueue narratives in prescribed order:

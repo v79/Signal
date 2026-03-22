@@ -386,7 +386,7 @@ export interface TechState {
 // Cards
 // ---------------------------------------------------------------------------
 
-export type CardZone = 'deck' | 'hand' | 'bank' | 'discard';
+export type CardZone = 'deck' | 'hand' | 'bank' | 'discard' | 'retired';
 
 export interface CardDef {
   id: string;
@@ -407,6 +407,15 @@ export interface CardDef {
    * the relevant technology is discovered.
    */
   upgradesFrom: string | null;
+  /**
+   * If set, this card is retired (moved out of the draw pool) when the
+   * specified technology is discovered.
+   */
+  obsoletedByTech?: string;
+  /**
+   * If set, this card is retired when the game reaches this era or beyond.
+   */
+  obsoletedByEra?: Era;
 }
 
 export interface CardEffect {
