@@ -5,33 +5,14 @@ This is a list of future requirements for the game but they are not to be implem
 - **UI visual flare:**
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
   - The game is just too dark, the colour scheme is too muted
-  - On the HUD, highlight resources which have a negative income
 - **Card rework:**
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
-  - The only card I ever bank counters scandal. Need other options worth banking.
+  - The only card I ever bank counters scandal. Need other options worth banking. (Partial: Contingency Routing logistics counter added.)
   - Ensure duplicate cards are not drawn at the same time
-  - Cards may be made obsolete, or upgraded to other cards, as technology progresses:
-    - For instance, the Jungle Expedition card should be made obsolete and replaced with a Deep Sea Expedition card by the Orbital Mechanics technology
-
-● That's the full picture. Neither CardDef nor EventDef has any tech-gate, obsolescence, or expiry mechanism. The only gating that exists
-   anywhere is:
-
-  - era on cards — determines which era a card belongs to, but there's no engine code that removes it from the deck when an era ends
-  - eras on events — controls which eras an event can appear in (so earth-only events stop spawning in Near Space), but events already
-  active when the era changes aren't removed
-  - techGate on board members only — gates recruitment into the board pool
-
-  No card is ever removed from the deck due to tech discovery or era change. The upgradesFrom field exists on CardDef but only marks
-  which card a given card replaces when a tech is discovered — it's an upgrade path, not an expiry. The upgradeCard() function in
-  cards.ts swaps the defId in-place, so the upgraded card inherits the same zone (hand, bank, etc.).
-
-  So to directly answer your question: nothing goes obsolete or gets removed. A card drawn in Era 1 stays in the deck forever. An event
-  that started in Era 1 will still be active after an era transition (though no new ones of that era will spawn).
-
-
+  - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
 - **Research:**
   - What to do once all the tech for an era has been researched?
 - **Climate:**
@@ -74,9 +55,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Generic profile pictures for board members
   - Flavour text for board members
 - **Tech tree dependencies:**
-  - Clicking on a discovered or in progress technology in the tech tree should show more information
-  - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
-  - When the Narrative event for a technology discovery is shown, it should detail the cards, events, facilities that it unlocks/deprecates
+  - Clicking on a discovered or in progress technology in the tech tree should show more information (visual display works; no detail modal yet)
 - **News feed & ticker rework**
   - The ticker is cute but not very useful
 - **Debug view and logs:**
@@ -84,7 +63,6 @@ This is a list of future requirements for the game but they are not to be implem
 - **Game menu:**
 - **Steering Committee (formerly Board):**
   - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
-  - On the Committee tab, show the number of filled vs total positions (e.g. 3/7)
 - **Climate management:**
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
