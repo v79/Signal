@@ -395,7 +395,7 @@
     "unlocksFacilities": [],
     "signalDerived": true,
     "tier": 4,
-    "requiredTechIds": ["satelliteCommunications"],
+    "requiredTechIds": ["satelliteCommunications", "spaceImaging"],
     "narrative": {
       "id": "narrative-tech-signalPatternAnalysis",
       "title": "Discovery — Signal Pattern Analysis",
@@ -422,7 +422,7 @@
     "unlocksFacilities": ["dataCentre"],
     "signalDerived": false,
     "tier": 4,
-    "requiredTechIds": ["satelliteCommunications"],
+    "requiredTechIds": ["satelliteCommunications", "personalComputers"],
     "hqFieldBonus": { "socialScience": 2, "computing": 1 },
     "narrative": {
       "id": "narrative-tech-internetProtocols",
