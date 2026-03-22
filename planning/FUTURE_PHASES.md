@@ -12,6 +12,26 @@ This is a list of future requirements for the game but they are not to be implem
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
   - The only card I ever bank counters scandal. Need other options worth banking.
+  - Ensure duplicate cards are not drawn at the same time
+  - Cards may be made obsolete, or upgraded to other cards, as technology progresses:
+    - For instance, the Jungle Expedition card should be made obsolete and replaced with a Deep Sea Expedition card by the Orbital Mechanics technology
+
+● That's the full picture. Neither CardDef nor EventDef has any tech-gate, obsolescence, or expiry mechanism. The only gating that exists
+   anywhere is:
+
+  - era on cards — determines which era a card belongs to, but there's no engine code that removes it from the deck when an era ends
+  - eras on events — controls which eras an event can appear in (so earth-only events stop spawning in Near Space), but events already
+  active when the era changes aren't removed
+  - techGate on board members only — gates recruitment into the board pool
+
+  No card is ever removed from the deck due to tech discovery or era change. The upgradesFrom field exists on CardDef but only marks
+  which card a given card replaces when a tech is discovered — it's an upgrade path, not an expiry. The upgradeCard() function in
+  cards.ts swaps the defId in-place, so the upgraded card inherits the same zone (hand, bank, etc.).
+
+  So to directly answer your question: nothing goes obsolete or gets removed. A card drawn in Era 1 stays in the deck forever. An event
+  that started in Era 1 will still be active after an era transition (though no new ones of that era will spawn).
+
+
 - **Research:**
   - What to do once all the tech for an era has been researched?
 - **Climate:**
@@ -26,6 +46,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Political Will should have a cap (100?)
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
+  - Tooltip isn't showing the incomes and debits
 - **Era Gates**
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
@@ -41,7 +62,7 @@ This is a list of future requirements for the game but they are not to be implem
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
 - **Earth era content pass**
-  - More playtesting required; Computing remains a problem
+  - More playtesting required; Computing and physics remain a problem
 - **Near Earth/LEO Map**
 - **LEO era content pass**
   - Map improvement actions such as sea walls for Earth
@@ -63,7 +84,7 @@ This is a list of future requirements for the game but they are not to be implem
 - **Game menu:**
 - **Steering Committee (formerly Board):**
   - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
-  - Some board members 'auto counter' negative events. But I don't think this is implemented.
+  - On the Committee tab, show the number of filled vs total positions (e.g. 3/7)
 - **Climate management:**
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity

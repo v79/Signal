@@ -74,7 +74,8 @@
     "weight": 0.7,
     "responseTier": "fullCounter",
     "negativeEffect": { "resources": { "politicalWill": -25, "funding": -10 } },
-    "positiveEffect": null
+    "positiveEffect": null,
+    "mitigationCost": { "politicalWill": 10 }
   },
   "industrialAccident": {
     "id": "industrialAccident",
@@ -229,5 +230,35 @@
     "responseTier": "noCounter",
     "negativeEffect": {},
     "positiveEffect": { "resources": { "funding": -50, "politicalWill": -30 } }
+  },
+  "supplyChainDisruption": {
+    "id": "supplyChainDisruption",
+    "name": "Supply Chain Disruption",
+    "description": "A cascade of delays and shortages has brought critical material transit to a standstill.",
+    "flavourText": "The ships are waiting. The trucks are waiting. Somewhere, a spreadsheet is to blame.",
+    "tags": ["logistics", "crisis"],
+    "eras": ["earth", "nearSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 3,
+    "weight": 0.5,
+    "responseTier": "fullCounter",
+    "negativeEffect": { "resources": { "materials": -30 } },
+    "positiveEffect": null
+  },
+  "cyberIntrusion": {
+    "id": "cyberIntrusion",
+    "name": "Cyber Intrusion",
+    "description": "Hostile actors have infiltrated programme systems, exfiltrating research data and disrupting operations.",
+    "flavourText": "The breach was silent. The damage was not.",
+    "tags": ["security", "crisis"],
+    "eras": ["earth", "nearSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 2,
+    "weight": 0.4,
+    "responseTier": "fullCounter",
+    "negativeEffect": { "resources": { "funding": -20 }, "fields": { "computing": -15 } },
+    "positiveEffect": null
   }
 }

@@ -7,7 +7,7 @@
     "era": "earth",
     "effect": { "resources": { "politicalWill": 5 } },
     "counterEffect": {
-      "countersEventTag": "interference",
+      "countersEventTag": "signal",
       "additionalCost": { "politicalWill": 10 },
       "fullNeutralise": true
     },
@@ -137,7 +137,7 @@
     "era": "nearSpace",
     "effect": { "fields": { "computing": 8, "mathematics": 6 }, "signalProgress": 8 },
     "counterEffect": {
-      "countersEventTag": "interference",
+      "countersEventTag": "signal",
       "additionalCost": {},
       "fullNeutralise": true
     },
@@ -161,7 +161,7 @@
     "era": "earth",
     "effect": { "resources": { "politicalWill": 10, "funding": 8 } },
     "counterEffect": {
-      "countersEventTag": "interference",
+      "countersEventTag": "signal",
       "additionalCost": { "politicalWill": 8 },
       "fullNeutralise": false
     },

@@ -106,13 +106,15 @@
       : 0,
   );
 
-  // Tags of active fullCounter events — used to highlight matching counter cards in hand.
+  // Tags of active counterable events — used to highlight matching counter cards in hand.
   const counterableTags = $derived(
     gameStore.state
       ? gameStore.state.activeEvents
-          .filter(
-            (e) => !e.resolved && EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter',
-          )
+          .filter((e) => {
+            if (e.resolved) return false;
+            const tier = EVENT_DEFS.get(e.defId)?.responseTier;
+            return tier === 'fullCounter' || tier === 'partialMitigation';
+          })
           .flatMap((e) => EVENT_DEFS.get(e.defId)?.tags ?? [])
       : [],
   );

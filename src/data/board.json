@@ -162,7 +162,7 @@
     "role": "politicalLiaison",
     "buffs": [
       { "description": "+10% Political Will income", "resourceMultipliers": { "politicalWill": 1.1 } },
-      { "description": "Auto-counters diplomatic interference", "autoCountersEventTag": "interference" }
+      { "description": "Auto-counters signal interference events", "autoCountersEventTag": "signal" }
     ],
     "debuffs": [],
     "isAI": false,
@@ -175,7 +175,7 @@
     "role": "politicalLiaison",
     "buffs": [
       { "description": "+15% Political Will income", "resourceMultipliers": { "politicalWill": 1.15 } },
-      { "description": "Auto-counters diplomatic interference", "autoCountersEventTag": "interference" }
+      { "description": "Auto-counters signal interference events", "autoCountersEventTag": "signal" }
     ],
     "debuffs": [
       { "description": "-8% Funding income (costly diplomatic operations)", "resourceMultipliers": { "funding": 0.92 } }
@@ -333,7 +333,7 @@
     "buffs": [
       { "description": "+30% Mathematics output — AI-accelerated signal analysis", "fieldMultipliers": { "mathematics": 1.3 } },
       { "description": "+20% Computing output", "fieldMultipliers": { "computing": 1.2 } },
-      { "description": "Auto-counters signal interference events", "autoCountersEventTag": "interference" }
+      { "description": "Auto-counters signal interference events", "autoCountersEventTag": "signal" }
     ],
     "debuffs": [
       { "description": "-15% Political Will income — public unease with AI governance", "resourceMultipliers": { "politicalWill": 0.85 } }

@@ -837,7 +837,7 @@ export const gameStore = {
       }
     }
 
-    // Check if this card counters an active fullCounter event
+    // Check if this card counters an active fullCounter or partialMitigation event
     let activeEvents = [..._state.activeEvents];
     let newsFeed = [..._state.player.newsFeed];
     if (def.counterEffect) {
@@ -845,7 +845,8 @@ export const gameStore = {
       const matchIdx = activeEvents.findIndex(
         (e) =>
           !e.resolved &&
-          EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter' &&
+          (EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter' ||
+            EVENT_DEFS.get(e.defId)?.responseTier === 'partialMitigation') &&
           (EVENT_DEFS.get(e.defId)?.tags ?? []).includes(tag),
       );
       if (matchIdx !== -1) {
@@ -857,17 +858,41 @@ export const gameStore = {
           politicalWill: Math.max(0, resources.politicalWill - (addl.politicalWill ?? 0)),
         };
         const matched = activeEvents[matchIdx];
-        activeEvents = activeEvents.map((e) =>
-          e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'counter' as const } : e,
-        );
         const eventName = EVENT_DEFS.get(matched.defId)?.name ?? matched.defId;
-        const counterNews: NewsItem = {
-          id: crypto.randomUUID(),
-          turn: _state.turn,
-          text: `${eventName} countered by ${def.name}.`,
-          category: 'event-gain',
-        };
-        newsFeed = [...newsFeed, counterNews];
+        if (def.counterEffect.fullNeutralise) {
+          activeEvents = activeEvents.map((e) =>
+            e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'counter' as const } : e,
+          );
+          const counterNews: NewsItem = {
+            id: crypto.randomUUID(),
+            turn: _state.turn,
+            text: `${eventName} countered by ${def.name}.`,
+            category: 'event-gain',
+          };
+          newsFeed = [...newsFeed, counterNews];
+        } else {
+          const mitigationCost = EVENT_DEFS.get(matched.defId)?.mitigationCost ?? {};
+          resources = {
+            funding: resources.funding - (mitigationCost.funding ?? 0),
+            materials: Math.max(0, resources.materials - (mitigationCost.materials ?? 0)),
+            politicalWill: Math.max(0, resources.politicalWill - (mitigationCost.politicalWill ?? 0)),
+          };
+          activeEvents = activeEvents.map((e) =>
+            e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'mitigation' as const } : e,
+          );
+          const costParts: string[] = [];
+          if (mitigationCost.funding) costParts.push(`${mitigationCost.funding} Funding`);
+          if (mitigationCost.materials) costParts.push(`${mitigationCost.materials} Materials`);
+          if (mitigationCost.politicalWill) costParts.push(`${mitigationCost.politicalWill} Political Will`);
+          const costStr = costParts.length > 0 ? ` (cost: ${costParts.join(', ')})` : '';
+          const mitigationNews: NewsItem = {
+            id: crypto.randomUUID(),
+            turn: _state.turn,
+            text: `${eventName} partially mitigated by ${def.name}${costStr}.`,
+            category: 'event-neutral',
+          };
+          newsFeed = [...newsFeed, mitigationNews];
+        }
       }
     }
 
@@ -1005,7 +1030,7 @@ export const gameStore = {
         goto('/summary');
         return;
       }
-      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], rng);
+      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], BOARD_DEFS, rng);
       next = executeDrawPhase(next, rng);
       _state = next;
       // Auto-save after each completed World Phase.

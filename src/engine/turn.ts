@@ -8,6 +8,7 @@ import type {
   CardDef,
   BlocDef,
   BoardMemberDef,
+  BoardSlots,
   NewsItem,
   Resources,
   FieldPoints,
@@ -46,6 +47,7 @@ import {
   applyBoardResourceMultipliers,
   tickBoardAges,
   addCommitteeNotification,
+  getBoardAutoCounterTags,
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
 import { tickActiveProjects } from './projects';
@@ -75,6 +77,22 @@ const CLIMATE_PRESSURE_PER_TURN = 0.2;
 // Phase 1: Event Phase
 // ---------------------------------------------------------------------------
 
+function getAutoCounterMemberName(
+  board: BoardSlots,
+  defs: Map<string, BoardMemberDef>,
+  tag: string,
+): string {
+  for (const member of Object.values(board) as (import('./types').BoardMemberInstance | undefined)[]) {
+    if (!member || member.leftTurn !== null) continue;
+    const def = defs.get(member.defId);
+    if (!def) continue;
+    for (const buff of def.buffs) {
+      if (buff.autoCountersEventTag === tag) return def.name;
+    }
+  }
+  return 'a board member';
+}
+
 /**
  * Automated portion of the Event Phase:
  *   1. Tick countdowns on all active events.
@@ -89,12 +107,37 @@ export function executeEventPhase(
   state: GameState,
   eventDefs: Map<string, EventDef>,
   eventPool: EventDef[],
+  boardDefs: Map<string, BoardMemberDef>,
   rng: Rng,
 ): GameState {
   const { player } = state;
 
+  // 0. Board auto-counter — resolve matching active events before the countdown tick.
+  const autoCounterTags = getBoardAutoCounterTags(player.board, boardDefs);
+  let eventsBeforeTick = [...state.activeEvents];
+  const autoCounterNews: NewsItem[] = [];
+
+  if (autoCounterTags.length > 0) {
+    for (let i = 0; i < eventsBeforeTick.length; i++) {
+      const e = eventsBeforeTick[i];
+      if (e.resolved) continue;
+      const evDef = eventDefs.get(e.defId);
+      if (!evDef || evDef.responseTier === 'noCounter') continue;
+      const matchingTag = evDef.tags.find((t) => autoCounterTags.includes(t));
+      if (!matchingTag) continue;
+      const memberName = getAutoCounterMemberName(player.board, boardDefs, matchingTag);
+      eventsBeforeTick[i] = { ...e, resolved: true, resolvedWith: 'counter' as const };
+      autoCounterNews.push({
+        id: `auto-counter-${e.id}-t${state.turn}`,
+        turn: state.turn,
+        text: `${evDef.name} automatically countered by ${memberName}.`,
+        category: 'event-gain' as const,
+      });
+    }
+  }
+
   // 1. Tick countdowns
-  const tickedEvents = tickEventCountdowns(state.activeEvents);
+  const tickedEvents = tickEventCountdowns(eventsBeforeTick);
 
   // 2. Apply effects of events that just expired
   let updatedPlayer = { ...player };
@@ -131,14 +174,34 @@ export function executeEventPhase(
     state.climatePressure,
   );
 
+  // Auto-counter newly arrived events.
+  let finalNewEvents = newEvents;
+  if (autoCounterTags.length > 0) {
+    for (let i = 0; i < finalNewEvents.length; i++) {
+      const e = finalNewEvents[i];
+      const evDef = eventDefs.get(e.defId);
+      if (!evDef || evDef.responseTier === 'noCounter') continue;
+      const matchingTag = evDef.tags.find((t) => autoCounterTags.includes(t));
+      if (!matchingTag) continue;
+      const memberName = getAutoCounterMemberName(player.board, boardDefs, matchingTag);
+      finalNewEvents[i] = { ...e, resolved: true, resolvedWith: 'counter' as const };
+      autoCounterNews.push({
+        id: `auto-counter-new-${e.id}-t${state.turn}`,
+        turn: state.turn,
+        text: `${evDef.name} intercepted and countered by ${memberName} before it could take effect.`,
+        category: 'event-gain' as const,
+      });
+    }
+  }
+
   return {
     ...state,
     phase: 'draw',
-    activeEvents: [...tickedEvents.filter((e) => !e.resolved), ...newEvents],
+    activeEvents: [...tickedEvents.filter((e) => !e.resolved), ...finalNewEvents],
     map: { ...state.map, earthTiles: updatedTiles },
     player: {
       ...updatedPlayer,
-      newsFeed: [...updatedPlayer.newsFeed, ...expiryNews],
+      newsFeed: [...updatedPlayer.newsFeed, ...expiryNews, ...autoCounterNews],
     },
   };
 }
