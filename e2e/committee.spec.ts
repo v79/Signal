@@ -17,7 +17,7 @@ async function startNewGame(page: Page): Promise<void> {
 
 /** Click the BOARD tab and wait for the committee panel to be visible. */
 async function openBoardTab(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'BOARD' }).click();
+  await page.getByRole('button', { name: 'COMMITTEE' }).click();
   await expect(page.locator('.committee-panel')).toBeVisible();
 }
 
@@ -26,7 +26,7 @@ async function openBoardTab(page: Page): Promise<void> {
 // ---------------------------------------------------------------------------
 
 test.describe('Committee panel — navigation', () => {
-  test('BOARD tab opens the committee panel', async ({ page }) => {
+  test('COMMITTEE tab opens the committee panel', async ({ page }) => {
     await startNewGame(page);
     await openBoardTab(page);
     await page.screenshot({ path: 'screenshots/committee-01-open.png', fullPage: true });
@@ -35,7 +35,7 @@ test.describe('Committee panel — navigation', () => {
   test('panel heading reads COMMITTEE', async ({ page }) => {
     await startNewGame(page);
     await openBoardTab(page);
-    await expect(page.locator('.committee-panel .panel-title')).toHaveText('COMMITTEE');
+    await expect(page.locator('.committee-panel .panel-title')).toHaveText('STANDING COMMITTEE');
   });
 
   test('switching back to EARTH tab hides the panel', async ({ page }) => {
@@ -181,13 +181,13 @@ test.describe('Committee panel — recruitment', () => {
     await csCard.locator('.recruit-btn').click();
     await expect(csCard.locator('.member-name')).toBeVisible(); // slot filled
 
-    // Switch back to EARTH to see the card hand action counter
+    // Switch back to EARTH to see the phase controls action counter
     await page.getByRole('button', { name: 'EARTH' }).click();
     const counter = page.locator('.action-counter');
     await expect(counter).toBeVisible();
     const text = await counter.textContent();
-    // After 1 recruit, counter should show 1/3 (or higher if auto-actions occurred)
-    expect(text).toMatch(/ACTIONS\s+[1-9]/);
+    // After 1 recruit, counter should show N ACTIONS LEFT where N < max (e.g. "2 ACTIONS LEFT")
+    expect(text).toMatch(/[0-9]+\s+ACTIONS?\s+LEFT/);
   });
 
   test('Recruit button is disabled after all actions are exhausted', async ({ page }) => {

@@ -8,10 +8,7 @@
     "cost": { "funding": 30, "materials": 20 },
     "upkeepCost": {},
     "baseDuration": 2,
-    "reward": {
-      "signalProgress": 10,
-      "resources": { "funding": 10 }
-    },
+    "reward": { "signalProgress": 10, "resources": { "funding": 10 } },
     "landmarkGate": null,
     "prerequisites": {
       "requiredTechs": ["orbitalMechanics"],
@@ -27,10 +24,7 @@
     "cost": { "funding": 50, "materials": 30 },
     "upkeepCost": {},
     "baseDuration": 3,
-    "reward": {
-      "signalProgress": 20,
-      "resources": { "funding": 15 }
-    },
+    "reward": { "signalProgress": 20, "resources": { "funding": 15 } },
     "landmarkGate": null,
     "prerequisites": {
       "requiredTechs": ["spaceImaging", "orbitalMechanics"],
@@ -65,7 +59,7 @@
   },
   "orbitalStation_stage1": {
     "id": "orbitalStation_stage1",
-    "name": "Orbital Station: Core Module",
+    "name": "Core Module",
     "description": "The pressurised core of the permanent orbital facility — life support, command systems, and docking collar. Once in orbit, it becomes humanity's first continuously-crewed outpost beyond the atmosphere.",
     "type": "landmark",
     "era": "earth",
@@ -74,6 +68,8 @@
     "baseDuration": 3,
     "reward": { "signalProgress": 5 },
     "landmarkGate": null,
+    "groupId": "orbitalStation",
+    "groupName": "Orbital Station Programme",
     "prerequisites": {
       "requiresOrbitalStationAuthorised": true,
       "requiredFacilityDefs": ["spaceLaunchCentre"]
@@ -81,7 +77,7 @@
   },
   "orbitalStation_stage2": {
     "id": "orbitalStation_stage2",
-    "name": "Orbital Station: Habitation Ring",
+    "name": "Habitation Ring",
     "description": "The rotating habitation ring extends crew capacity from four to twelve and provides a stable platform for long-duration scientific work. Construction is complex: multiple launches, on-orbit assembly, and a narrow window for the final joining manoeuvre.",
     "type": "landmark",
     "era": "earth",
@@ -90,6 +86,8 @@
     "baseDuration": 2,
     "reward": { "signalProgress": 5 },
     "landmarkGate": null,
+    "groupId": "orbitalStation",
+    "groupName": "Orbital Station Programme",
     "prerequisites": {
       "requiresOrbitalStationAuthorised": true,
       "requiredProjects": ["orbitalStation_stage1"],
@@ -98,7 +96,7 @@
   },
   "orbitalStation_stage3": {
     "id": "orbitalStation_stage3",
-    "name": "Orbital Station: Operational",
+    "name": "Operational",
     "description": "Final systems integration, deep-space antenna calibration, and crew rotation protocols are established. The Permanent Orbital Station is declared fully operational. The era of Near Space begins.",
     "type": "landmark",
     "era": "earth",
@@ -107,6 +105,8 @@
     "baseDuration": 2,
     "reward": { "signalProgress": 10 },
     "landmarkGate": "opensEra2",
+    "groupId": "orbitalStation",
+    "groupName": "Orbital Station Programme",
     "prerequisites": {
       "requiresOrbitalStationAuthorised": true,
       "requiredProjects": ["orbitalStation_stage2"],
@@ -122,10 +122,7 @@
     "cost": { "funding": 80, "materials": 40 },
     "upkeepCost": { "funding": 5 },
     "baseDuration": 4,
-    "reward": {
-      "signalProgress": 15,
-      "resources": { "funding": 30 }
-    },
+    "reward": { "signalProgress": 15, "resources": { "funding": 30 } },
     "landmarkGate": null,
     "prerequisites": {
       "requiredTechs": ["particlePhysicsDetectors"]

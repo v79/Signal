@@ -405,18 +405,23 @@ export interface HqBonus {
   fields: Partial<FieldPoints>;
 }
 
-export function computeHqBonus(willProfile: WillProfile): HqBonus {
-  if (willProfile === 'authoritarian') {
-    return {
-      resources: { funding: 2, politicalWill: 1, materials: 2 },
-      fields: {},
-    };
+export function computeHqBonus(
+  willProfile: WillProfile,
+  techFieldBonus: Partial<FieldPoints> = {},
+): HqBonus {
+  const baseFields: Partial<FieldPoints> =
+    willProfile === 'democratic' ? { computing: 1, socialScience: 1 } : {};
+  const baseResources: Partial<Resources> =
+    willProfile === 'authoritarian'
+      ? { funding: 2, politicalWill: 1, materials: 2 }
+      : { funding: 2, politicalWill: 1 };
+
+  const fields: Partial<FieldPoints> = { ...baseFields };
+  for (const k of Object.keys(techFieldBonus) as (keyof FieldPoints)[]) {
+    fields[k] = (fields[k] ?? 0) + (techFieldBonus[k] ?? 0);
   }
-  // democratic
-  return {
-    resources: { funding: 2, politicalWill: 1 },
-    fields: { computing: 1, socialScience: 1 },
-  };
+
+  return { resources: baseResources, fields };
 }
 
 // ---------------------------------------------------------------------------

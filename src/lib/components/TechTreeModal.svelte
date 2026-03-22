@@ -141,6 +141,26 @@
         <button class="zoom-btn" onclick={() => scene?.zoomOut()} aria-label="Zoom out">−</button>
       </div>
     </div>
+
+    <div class="tech-legend">
+      <span class="legend-item">
+        <span class="legend-dot" style="background:#d4a820; box-shadow: 0 0 4px #d4a82066;"></span>
+        Discovered
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot" style="background:#4a8090;"></span>
+        In Progress
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot" style="background:#2a4460;"></span>
+        Rumoured
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot" style="background:#14222e; border: 1px solid #2a3a50;"></span>
+        Unknown
+      </span>
+      <span class="legend-scroll-hint">DRAG · SCROLL TO ZOOM</span>
+    </div>
   </div>
 </div>
 
@@ -366,7 +386,7 @@
 
   .zoom-controls {
     position: absolute;
-    bottom: 52px; /* sits above the Phaser legend strip */
+    bottom: 12px;
     right: 12px;
     z-index: 2;
     display: flex;
@@ -403,5 +423,40 @@
   .zoom-reset {
     font-size: 0.8rem;
     color: #2e5060;
+  }
+
+  .tech-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.45rem 1rem;
+    background: #040810;
+    border-top: 1px solid #0e1c28;
+    flex-shrink: 0;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: #587888;
+  }
+
+  .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-scroll-hint {
+    margin-left: auto;
+    font-family: monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: #1e3040;
   }
 </style>

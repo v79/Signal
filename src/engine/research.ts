@@ -81,7 +81,7 @@ export function prerequisitesMet(
   if (techDef.requiredTechIds.length === 0) return true;
   return techDef.requiredTechIds.every((reqId) => {
     const t = allTechs.find((s) => s.defId === reqId);
-    return t?.stage === 'progress' || t?.stage === 'discovered';
+    return t?.stage === 'discovered';
   });
 }
 
@@ -190,8 +190,9 @@ export function distributeResearchPoints(
   }
 
   // Step 3: distribute remaining — prefer progress techs over rumour techs.
-  // All remainder for a field goes to one random eligible tech from the
-  // higher-priority pool (progress if any remain eligible, else rumour).
+  // Remainder for a field is spread evenly across all eligible techs in the
+  // higher-priority pool (progress if any remain eligible, else rumour),
+  // with any integer rounding leftover given to a random tech in the pool.
   for (const field of Object.keys(fieldOutput) as (keyof FieldPoints)[]) {
     const rem = remaining[field] ?? 0;
     if (rem <= 0) continue;
@@ -199,8 +200,15 @@ export function distributeResearchPoints(
     const eligibleRumour   = rumourTechs.filter((t) => needsField(t, field, progressMap));
     const pool = eligibleProgress.length > 0 ? eligibleProgress : eligibleRumour;
     if (pool.length === 0) continue; // discard remainder
-    const chosen = pool[Math.floor(rng.nextFloat(0, 1) * pool.length)];
-    progressMap.get(chosen.defId)![field] = (progressMap.get(chosen.defId)![field] ?? 0) + rem;
+    const share = Math.floor(rem / pool.length);
+    const leftover = rem - share * pool.length;
+    for (const tech of pool) {
+      progressMap.get(tech.defId)![field] = (progressMap.get(tech.defId)![field] ?? 0) + share;
+    }
+    if (leftover > 0) {
+      const lucky = pool[Math.floor(rng.nextFloat(0, 1) * pool.length)];
+      progressMap.get(lucky.defId)![field] = (progressMap.get(lucky.defId)![field] ?? 0) + leftover;
+    }
     remaining[field] = 0;
   }
 

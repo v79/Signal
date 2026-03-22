@@ -47,7 +47,6 @@ export { FIELD_COLOURS_PHASER as FIELD_COLOURS } from '../lib/fieldColours';
 // ---------------------------------------------------------------------------
 
 const TOP_MARGIN = 52; // space above first node (tier headers live here)
-const LEGEND_H = 40; // fixed legend strip at bottom of screen
 const NODE_W = 188;
 const NODE_H = 160;
 const NODE_GAP = 14;
@@ -76,8 +75,6 @@ const C_BG_FILL = 0x050a10; // deep space canvas fill
 const C_BG_DOT = 0x0f1e2a; // dot-grid dots
 const C_COL_DIVIDER = 0x0d1e2a; // vertical column dividers
 const C_HEADER_LINE = 0x1a3040; // tier header underline
-const C_LEGEND_FILL = 0x040810; // legend strip background
-const C_LEGEND_SEP = 0x0e1c28; // legend separator line
 
 // Node fills (by discovery stage)
 const C_NODE_SIGNAL = 0x060d18; // signal-hidden
@@ -109,8 +106,6 @@ const C_WAVE_MID = 0x2a5880; // middle wave
 const C_WAVE_BRIGHT = 0x3a7098; // front wave
 const C_WAVE_DOTS = 0x2a5070; // zero-crossing dots
 
-// Legend indicator dots (In Progress has no matching node border colour)
-const C_LEGEND_INPROG = 0x4a8090;
 
 // ---------------------------------------------------------------------------
 // Font sizes — edit these to rescale all text in one place
@@ -122,8 +117,6 @@ const FS_TIER_HEADER = '14px';
 const FS_NODE_NAME = '13px';
 /** Field abbreviation labels next to progress bars. */
 const FS_FIELD_LABEL = '12px';
-/** Legend entries at the bottom of the canvas. */
-const FS_LEGEND = '13px';
 /** Secondary text: rumour descriptions, stage badges, signal labels, unlock list. */
 const FS_SECONDARY = '11px';
 
@@ -324,7 +317,6 @@ export class TechTreeScene extends Phaser.Scene {
       }
     }
 
-    this.drawLegend(W, H);
   }
 
   // -------------------------------------------------------------------------
@@ -666,9 +658,7 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.lineStyle(1, C_SEP_DISC, 1);
     this.worldGfx.lineBetween(x + NODE_PAD, sepY, x + NODE_W - NODE_PAD, sepY);
 
-    const recipe = tech.recipe ?? def.baseRecipe;
     let barY = sepY + 8;
-    barY = this.drawFieldBars(recipe, tech.fieldProgress, true, x, barY);
 
     const unlocks: string[] = [
       ...def.unlocksCards.map((id) => d.cardDefs.get(id)?.name ?? id),
@@ -752,50 +742,6 @@ export class TechTreeScene extends Phaser.Scene {
       else this.worldGfx.lineTo(px, py);
     }
     this.worldGfx.strokePath();
-  }
-
-  // -------------------------------------------------------------------------
-  // Legend — drawn on uiGfx (screen-fixed, scroll factor 0)
-  // -------------------------------------------------------------------------
-
-  private drawLegend(W: number, H: number): void {
-    const ly = H - LEGEND_H / 2;
-
-    // Legend area fill + separator — screen coordinates
-    this.uiGfx.fillStyle(C_LEGEND_FILL, 1);
-    this.uiGfx.fillRect(0, H - LEGEND_H, W, LEGEND_H);
-    this.uiGfx.lineStyle(1, C_LEGEND_SEP, 1);
-    this.uiGfx.lineBetween(0, H - LEGEND_H, W, H - LEGEND_H);
-
-    const items: { color: number; css: string; label: string }[] = [
-      { color: C_GOLD, css: '#d4a820', label: 'Discovered' },
-      { color: C_LEGEND_INPROG, css: '#4a8090', label: 'In Progress' },
-      { color: C_BORDER_RUMOUR, css: '#2a4460', label: 'Rumoured' },
-      { color: C_BORDER_UNKNOWN, css: '#14222e', label: 'Unknown' },
-    ];
-
-    const spacing = W / (items.length + 1);
-    for (let i = 0; i < items.length; i++) {
-      const lx = spacing * (i + 1);
-
-      this.uiGfx.lineStyle(1, items[i].color, 0.6);
-      this.uiGfx.strokeCircle(lx - 36, ly, 5.5);
-      this.uiGfx.fillStyle(items[i].color, 0.8);
-      this.uiGfx.fillCircle(lx - 36, ly, 4);
-
-      this.addUIText(lx - 26, ly, items[i].label, {
-        fontFamily: 'monospace',
-        fontSize: FS_LEGEND,
-        color: '#587888',
-      }).setOrigin(0, 0.5);
-    }
-
-    // Subtle scroll hint on the right
-    this.addUIText(W - 10, ly, 'DRAG · SCROLL TO ZOOM', {
-      fontFamily: 'monospace',
-      fontSize: FS_SECONDARY,
-      color: '#1e3040',
-    }).setOrigin(1, 0.5);
   }
 
   // -------------------------------------------------------------------------

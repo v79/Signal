@@ -152,7 +152,13 @@
                 <span class="btn-cost">({formatCost(def.mitigationCost)})</span>
               </button>
             {:else if def.responseTier === 'noCounter' && def.positiveEffect}
-              <button class="btn btn-accept" onclick={() => onAccept(event.id)}> ACCEPT </button>
+              {@const acceptCost = Object.entries(def.positiveEffect.resources ?? {}).filter(([, v]) => (v as number) < 0)}
+              <button class="btn btn-accept" onclick={() => onAccept(event.id)}>
+                ACCEPT
+                {#if acceptCost.length > 0}
+                  <br /><span class="btn-cost">({acceptCost.map(([k, v]) => `${v} ${k === 'funding' ? 'F' : k === 'materials' ? 'Mat' : 'W'}`).join(' · ')})</span>
+                {/if}
+              </button>
             {:else if def.responseTier === 'fullCounter'}
               <span class="counter-hint">Counter with a <strong>{counterTagLabel(def)}</strong> card.</span>
             {/if}

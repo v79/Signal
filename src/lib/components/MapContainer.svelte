@@ -11,7 +11,7 @@
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
   import type { Era, BoardRole, FacilityInstance, OngoingAction } from '../../engine/types';
-  import { getFacilitiesOnTile } from '../../engine/facilities';
+  import { getFacilitiesOnTile, computeHqBonus, type HqBonus } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
 
   type MapTab = 'earth' | 'space' | 'belt';
@@ -42,6 +42,22 @@
   let mapReady = $state(false);
   /** Whether the facility overview panel is open. */
   let showFacilityOverview = $state(false);
+
+  /** HQ bonus including tech field bonuses — passed to TileTooltip for the HQ tile. */
+  const hqBonus = $derived.by<HqBonus>(() => {
+    const s = gameStore.state;
+    if (!s) return { resources: {}, fields: {} };
+    const techFieldBonus: Partial<import('../../engine/types').FieldPoints> = {};
+    for (const ts of s.player.techs) {
+      if (ts.stage !== 'discovered') continue;
+      const bonus = TECH_DEFS.get(ts.defId)?.hqFieldBonus;
+      if (!bonus) continue;
+      for (const k of Object.keys(bonus) as (keyof import('../../engine/types').FieldPoints)[]) {
+        techFieldBonus[k] = (techFieldBonus[k] ?? 0) + (bonus[k] ?? 0);
+      }
+    }
+    return computeHqBonus(s.player.willProfile, techFieldBonus);
+  });
 
   const HEX_DIRS = [
     { q: 1, r: 0 }, { q: -1, r: 0 },
@@ -295,7 +311,13 @@
       class:active={activeTab === 'board'}
       onclick={() => switchTab('board')}
     >
-      BOARD
+      {#if gameStore.state}
+        {@const filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
+        {@const total = 8}
+        COMMITTEE ({filled}/{total})
+      {:else}
+        COMMITTEE
+      {/if}
     </button>
   </div>
   {#if activeTab === 'earth' && gameStore.state}
@@ -321,7 +343,7 @@
         phase={gameStore.state.phase}
         playerResources={gameStore.state.player.resources}
         actionsThisTurn={gameStore.state.actionsThisTurn ?? 0}
-        maxActionsPerTurn={gameStore.state.maxActionsPerTurn ?? 3}
+        maxActionsPerTurn={(gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0)}
         availableBoardDefIds={gameStore.state.availableBoardDefIds ?? []}
         gracePeriodEnds={gameStore.state.boardGracePeriodEnds ?? 4}
         turn={gameStore.state.turn}
@@ -391,6 +413,7 @@
         ) ?? null}
         facilities={gameStore.state.player.facilities}
         facilityDefs={FACILITY_DEFS}
+        {hqBonus}
         x={mouseX}
         y={mouseY}
         containerWidth={container?.clientWidth ?? 600}

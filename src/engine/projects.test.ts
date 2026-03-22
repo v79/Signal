@@ -57,12 +57,19 @@ const DEF_ERA_GATED: ProjectDef = {
   prerequisites: { era: 'nearSpace' },
 };
 
+/** A project gated behind a required completed project. */
+const DEF_PROJECT_GATED: ProjectDef = {
+  ...DEF_SIMPLE,
+  id: 'projectGatedProject',
+  prerequisites: { requiredProjects: ['testProject'] },
+};
+
 /** A project with a multi-turn duration and upkeep. */
 const DEF_LONG: ProjectDef = {
   ...DEF_SIMPLE,
   id: 'longProject',
-  baseDuration: 3,
   upkeepCost: { funding: 5 },
+  baseDuration: 3,
   reward: { signalProgress: 20, resources: { funding: 30 } },
   prerequisites: {},
 };
@@ -72,6 +79,7 @@ const ALL_DEFS: Map<string, ProjectDef> = new Map([
   [DEF_TECH_GATED.id, DEF_TECH_GATED],
   [DEF_FACILITY_GATED.id, DEF_FACILITY_GATED],
   [DEF_ERA_GATED.id, DEF_ERA_GATED],
+  [DEF_PROJECT_GATED.id, DEF_PROJECT_GATED],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -103,7 +111,6 @@ function withFacility(state: GameState, defId: string): GameState {
     condition: 1.0,
     builtTurn: 1,
   };
-  // Also add a tile at 0,0 with no pendingActionId
   const tile: MapTile = {
     coord: { q: 0, r: 0 },
     type: 'urban',
@@ -167,6 +174,15 @@ describe('canInitiateProject', () => {
     const state = { ...makeState(), era: 'nearSpace' as const };
     expect(canInitiateProject(state, DEF_ERA_GATED)).toBe(true);
   });
+
+  it('returns false when required project is not completed', () => {
+    expect(canInitiateProject(makeState(), DEF_PROJECT_GATED)).toBe(false);
+  });
+
+  it('returns true when required project is completed', () => {
+    const state = { ...makeState(), player: { ...makeState().player, completedProjectIds: ['testProject'] } };
+    expect(canInitiateProject(state, DEF_PROJECT_GATED)).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -179,6 +195,7 @@ describe('getAvailableProjects', () => {
     expect(available.map((d) => d.id)).toContain(DEF_SIMPLE.id);
     expect(available.map((d) => d.id)).not.toContain(DEF_TECH_GATED.id);
     expect(available.map((d) => d.id)).not.toContain(DEF_ERA_GATED.id);
+    expect(available.map((d) => d.id)).not.toContain(DEF_PROJECT_GATED.id);
   });
 
   it('excludes projects already active', () => {
@@ -193,6 +210,12 @@ describe('getAvailableProjects', () => {
     const done = { ...state, player: { ...state.player, completedProjectIds: [DEF_SIMPLE.id] } };
     const available = getAvailableProjects(done, ALL_DEFS);
     expect(available.map((d) => d.id)).not.toContain(DEF_SIMPLE.id);
+  });
+
+  it('unlocks a project-gated project once its prerequisite is completed', () => {
+    const state = { ...makeState(), player: { ...makeState().player, completedProjectIds: ['testProject'] } };
+    const available = getAvailableProjects(state, ALL_DEFS);
+    expect(available.map((d) => d.id)).toContain(DEF_PROJECT_GATED.id);
   });
 });
 
@@ -239,7 +262,6 @@ describe('tickActiveProjects', () => {
   it('completes a project when turnsElapsed reaches effectiveDuration', () => {
     let state = initiateProject(makeState(), DEF_SIMPLE);
     const defs = new Map([[DEF_SIMPLE.id, DEF_SIMPLE]]);
-    // Advance to completion (baseDuration = 2)
     const { state: after1 } = tickActiveProjects(state, defs, 2);
     const { state: after2, completedDefIds } = tickActiveProjects(after1, defs, 3);
     expect(completedDefIds).toContain(DEF_SIMPLE.id);
@@ -270,7 +292,6 @@ describe('tickActiveProjects', () => {
     const fundingAfterInitiate = state.player.resources.funding;
     const defs = new Map([[DEF_SIMPLE.id, DEF_SIMPLE]]);
     const { state: after1 } = tickActiveProjects(state, defs, 2);
-    // One tick — upkeep 2F deducted, not yet complete
     expect(after1.player.resources.funding).toBe(fundingAfterInitiate - 2);
   });
 
@@ -287,7 +308,6 @@ describe('tickActiveProjects', () => {
 
   it('handles unknown project defs gracefully (keeps project in active list)', () => {
     const state = initiateProject(makeState(), DEF_SIMPLE);
-    // Pass an empty defs map — the project should remain in place
     const { state: next } = tickActiveProjects(state, new Map(), 2);
     expect(next.player.activeProjects).toHaveLength(1);
   });

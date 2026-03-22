@@ -12,6 +12,26 @@ This is a list of future requirements for the game but they are not to be implem
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
   - The only card I ever bank counters scandal. Need other options worth banking.
+  - Ensure duplicate cards are not drawn at the same time
+  - Cards may be made obsolete, or upgraded to other cards, as technology progresses:
+    - For instance, the Jungle Expedition card should be made obsolete and replaced with a Deep Sea Expedition card by the Orbital Mechanics technology
+
+● That's the full picture. Neither CardDef nor EventDef has any tech-gate, obsolescence, or expiry mechanism. The only gating that exists
+   anywhere is:
+
+  - era on cards — determines which era a card belongs to, but there's no engine code that removes it from the deck when an era ends
+  - eras on events — controls which eras an event can appear in (so earth-only events stop spawning in Near Space), but events already
+  active when the era changes aren't removed
+  - techGate on board members only — gates recruitment into the board pool
+
+  No card is ever removed from the deck due to tech discovery or era change. The upgradesFrom field exists on CardDef but only marks
+  which card a given card replaces when a tech is discovered — it's an upgrade path, not an expiry. The upgradeCard() function in
+  cards.ts swaps the defId in-place, so the upgraded card inherits the same zone (hand, bank, etc.).
+
+  So to directly answer your question: nothing goes obsolete or gets removed. A card drawn in Era 1 stays in the deck forever. An event
+  that started in Era 1 will still be active after an era transition (though no new ones of that era will spawn).
+
+
 - **Research:**
   - What to do once all the tech for an era has been researched?
 - **Climate:**
@@ -26,20 +46,23 @@ This is a list of future requirements for the game but they are not to be implem
   - Political Will should have a cap (100?)
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
+  - Tooltip isn't showing the incomes and debits
 - **Era Gates**
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
   - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
+- **Projects**
+  - Projects need to be visible on the Maps
+  - The Facilities that support projects (space launch centre) need to be visually distinct
 - **Competitor blocs**
   - They are absent from the game so far.
   - Phase 26F was to introduce pressure events (first to orbital, etc) but nothing around other blocs has been implemented at all
 - **Earth map**
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
-  - Need meaningful action cards for the first few turns; not just building. Building a facility costs an action (implemented in Steering Committee Phase A).
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
 - **Earth era content pass**
-  - More playtesting required; Computing remains a problem
+  - More playtesting required; Computing and physics remain a problem
 - **Near Earth/LEO Map**
 - **LEO era content pass**
   - Map improvement actions such as sea walls for Earth
@@ -52,11 +75,8 @@ This is a list of future requirements for the game but they are not to be implem
   - Flavour text for board members
 - **Tech tree dependencies:**
   - Clicking on a discovered or in progress technology in the tech tree should show more information
-  - The Discovered/In Progress/Rumoured/Unknown legend at the bottom should be part of the HTML modal and not the Phaser canvas
   - Once a technology is discovered, do not show the progress bars, freeing up space for the events/facilities/actions it unlocks
   - When the Narrative event for a technology discovery is shown, it should detail the cards, events, facilities that it unlocks/deprecates
-  - Should be hard for Tier 3 techs to even reach rumour while still researching tier 1 techs. Techs get stuck too easily.
-  - I managed to research all Tier 3 techs before researching any of the Tier 2s - Genetic Engineering seems far too easy to reach
 - **News feed & ticker rework**
   - The ticker is cute but not very useful
 - **Debug view and logs:**
@@ -64,7 +84,7 @@ This is a list of future requirements for the game but they are not to be implem
 - **Game menu:**
 - **Steering Committee (formerly Board):**
   - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
-  - Some board members 'auto counter' negative events. But I don't think this is implemented.
+  - On the Committee tab, show the number of filled vs total positions (e.g. 3/7)
 - **Climate management:**
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
@@ -73,18 +93,12 @@ This is a list of future requirements for the game but they are not to be implem
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
 - **Next Turn / Phase Control**
-  - Move the Action Count here
   - Proper, aligned layout.
-  - Add the turn counter down here too?
 
 
 ## BUGS:
 
-- Political will isn't reduced when accepting an event which is supposed to cost Will
-- The funding crisis event mitigation does strange things when you don't actually have the funds
-- Tooltips can go off the bottom of the map
-- Can I disable the back button, or at least warn of game loss?
-- Events and projects should be willing to take funding into the negative; seems to cap at 0
+
 
 
 

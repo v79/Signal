@@ -3,8 +3,11 @@ import type {
   CardDef,
   CardEffect,
   CounterEffect,
+  Era,
 } from './types';
 import type { Rng } from './rng';
+
+const ERA_ORDER: Record<Era, number> = { earth: 0, nearSpace: 1, deepSpace: 2 };
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -164,5 +167,44 @@ export function upgradeCard(
   newDefId: string,
 ): CardInstance[] {
   return cards.map((c) => (c.defId === oldDefId ? { ...c, defId: newDefId } : c));
+}
+
+// ---------------------------------------------------------------------------
+// Card retirement — obsolescence by tech or era
+// ---------------------------------------------------------------------------
+
+/**
+ * Move cards that have become obsolete into the 'retired' zone so they can
+ * no longer be drawn. Only cards in 'deck' or 'discard' are retired; cards
+ * already in 'hand' or 'bank' are left so the player keeps what they drew.
+ *
+ * Safe to call every world phase — already-retired cards are skipped and
+ * the result is idempotent given the same inputs.
+ *
+ * Returns the updated card list and the def IDs of cards newly retired this
+ * call (for news generation by the caller).
+ */
+export function retireObsoleteCards(
+  cards: CardInstance[],
+  cardDefs: Map<string, CardDef>,
+  allDiscoveredTechIds: string[],
+  currentEra: Era,
+): { cards: CardInstance[]; retiredDefIds: string[] } {
+  const retiredDefIds: string[] = [];
+  const updated = cards.map((c) => {
+    if (c.zone !== 'deck' && c.zone !== 'discard') return c;
+    const def = cardDefs.get(c.defId);
+    if (!def) return c;
+    const obsoleteByTech = def.obsoletedByTech && allDiscoveredTechIds.includes(def.obsoletedByTech);
+    const obsoleteByEra =
+      def.obsoletedByEra !== undefined &&
+      ERA_ORDER[currentEra] >= ERA_ORDER[def.obsoletedByEra];
+    if (obsoleteByTech || obsoleteByEra) {
+      if (!retiredDefIds.includes(c.defId)) retiredDefIds.push(c.defId);
+      return { ...c, zone: 'retired' as const };
+    }
+    return c;
+  });
+  return { cards: updated, retiredDefIds };
 }
 

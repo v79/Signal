@@ -259,7 +259,7 @@ export interface ProjectDef {
   cost: Partial<Resources>;
   /** Additional per-turn resource cost while the project is in progress. */
   upkeepCost: Partial<Resources>;
-  /** Estimated turns to complete (may vary with Will). */
+  /** Estimated turns to complete. */
   baseDuration: number;
   /** One-time rewards on completion. */
   reward: ProjectReward;
@@ -267,6 +267,14 @@ export interface ProjectDef {
   landmarkGate: LandmarkGate;
   /** Conditions that must be true for this project to be available. */
   prerequisites: ProjectPrerequisites;
+  /**
+   * Optional group identifier. Projects sharing a groupId are displayed
+   * together in the UI with groupName as the section header.
+   * Prerequisites (requiredProjects) enforce the initiation order.
+   */
+  groupId?: string;
+  /** Human-readable label for the group header (required when groupId is set). */
+  groupName?: string;
 }
 
 export interface ProjectReward {
@@ -349,6 +357,11 @@ export interface TechDef {
   requiredTechIds: string[];
   /** Only on Tier 3+ techs. Allows bypass of normal prerequisite chain. */
   breakthroughCondition?: BreakthroughCondition;
+  /**
+   * Permanent field output bonus added to the HQ each turn once this tech
+   * is discovered. Stacks with other tech bonuses.
+   */
+  hqFieldBonus?: Partial<FieldPoints>;
 }
 
 /** Per-run recipe generated from TechDef.baseRecipe + RNG. */
@@ -373,7 +386,7 @@ export interface TechState {
 // Cards
 // ---------------------------------------------------------------------------
 
-export type CardZone = 'deck' | 'hand' | 'bank' | 'discard';
+export type CardZone = 'deck' | 'hand' | 'bank' | 'discard' | 'retired';
 
 export interface CardDef {
   id: string;
@@ -394,6 +407,15 @@ export interface CardDef {
    * the relevant technology is discovered.
    */
   upgradesFrom: string | null;
+  /**
+   * If set, this card is retired (moved out of the draw pool) when the
+   * specified technology is discovered.
+   */
+  obsoletedByTech?: string;
+  /**
+   * If set, this card is retired when the game reaches this era or beyond.
+   */
+  obsoletedByEra?: Era;
 }
 
 export interface CardEffect {
@@ -800,6 +822,16 @@ export interface GameState {
   actionsThisTurn: number;
   /** Maximum card plays allowed per action phase (default 3). Board members may modify. */
   maxActionsPerTurn: number;
+  /**
+   * Extra actions staged by a card play this turn to be applied next turn.
+   * Consumed into bonusActionsThisTurn at the start of each Draw Phase.
+   */
+  bonusActionsNextTurn: number;
+  /**
+   * Extra actions available this action phase, consumed from bonusActionsNextTurn
+   * at the start of Draw Phase. Reset to 0 each Draw Phase.
+   */
+  bonusActionsThisTurn: number;
   /** IDs of narratives already seen this run. Prevents re-triggering after save/load. */
   seenNarrativeIds: string[];
   /** Narratives queued for display, processed one at a time in order. */

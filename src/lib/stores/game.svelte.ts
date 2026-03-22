@@ -367,30 +367,17 @@ export const gameStore = {
       { id: 'lobbying-1', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
       { id: 'lobbying-2', defId: 'lobbying', zone: 'deck', bankedSinceTurn: null },
       { id: 'publicAppeal-1', defId: 'publicAppeal', zone: 'deck', bankedSinceTurn: null },
-      {
-        id: 'emergencyProcurement-1',
-        defId: 'emergencyProcurement',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
-      {
-        id: 'coalitionBuilding-1',
-        defId: 'coalitionBuilding',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
-      {
-        id: 'emergencyAppeal-1',
-        defId: 'emergencyAppeal',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
-      {
-        id: 'emergencySourcing-1',
-        defId: 'emergencySourcing',
-        zone: 'deck',
-        bankedSinceTurn: null,
-      },
+      { id: 'emergencyProcurement-1', defId: 'emergencyProcurement', zone: 'deck', bankedSinceTurn: null },
+      { id: 'coalitionBuilding-1', defId: 'coalitionBuilding', zone: 'deck', bankedSinceTurn: null },
+      { id: 'emergencyAppeal-1', defId: 'emergencyAppeal', zone: 'deck', bankedSinceTurn: null },
+      { id: 'emergencySourcing-1', defId: 'emergencySourcing', zone: 'deck', bankedSinceTurn: null },
+      { id: 'academicConference-1', defId: 'academicConference', zone: 'deck', bankedSinceTurn: null },
+      { id: 'voxPopuli-1', defId: 'voxPopuli', zone: 'deck', bankedSinceTurn: null },
+      { id: 'jungleExpedition-1', defId: 'jungleExpedition', zone: 'deck', bankedSinceTurn: null },
+      { id: 'peerReview-1', defId: 'peerReview', zone: 'deck', bankedSinceTurn: null },
+      { id: 'industrialContracts-1', defId: 'industrialContracts', zone: 'deck', bankedSinceTurn: null },
+      { id: 'backChannelNegotiation-1', defId: 'backChannelNegotiation', zone: 'deck', bankedSinceTurn: null },
+      { id: 'executiveOverride-1', defId: 'executiveOverride', zone: 'deck', bankedSinceTurn: null },
     ];
 
     // Tech recipes are generated with a dedicated RNG slice so they are
@@ -481,7 +468,7 @@ export const gameStore = {
     if (def.id === 'hq') return;
 
     // Building costs an action slot.
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     // Cannot build on a destroyed tile.
@@ -648,10 +635,15 @@ export const gameStore = {
 
     // Deduct the mitigation cost from resources
     const cost = def.mitigationCost ?? {};
+
+    // Afford check: materials and Will cannot go negative
+    if ((cost.materials ?? 0) > 0 && _state.player.resources.materials < (cost.materials ?? 0)) return;
+    if ((cost.politicalWill ?? 0) > 0 && _state.player.resources.politicalWill < (cost.politicalWill ?? 0)) return;
+
     let playerAfterCost = {
       ..._state.player,
       resources: {
-        funding: Math.max(0, _state.player.resources.funding - (cost.funding ?? 0)),
+        funding: _state.player.resources.funding - (cost.funding ?? 0),
         materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
         politicalWill: Math.max(
           0,
@@ -811,7 +803,7 @@ export const gameStore = {
   playCard(cardId: string): void {
     if (!_state) return;
     // Enforce per-turn action cap (old saves default to 3 if field missing)
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     const card = _state.player.cards.find((c) => c.id === cardId);
@@ -845,7 +837,7 @@ export const gameStore = {
       }
     }
 
-    // Check if this card counters an active fullCounter event
+    // Check if this card counters an active fullCounter or partialMitigation event
     let activeEvents = [..._state.activeEvents];
     let newsFeed = [..._state.player.newsFeed];
     if (def.counterEffect) {
@@ -853,7 +845,8 @@ export const gameStore = {
       const matchIdx = activeEvents.findIndex(
         (e) =>
           !e.resolved &&
-          EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter' &&
+          (EVENT_DEFS.get(e.defId)?.responseTier === 'fullCounter' ||
+            EVENT_DEFS.get(e.defId)?.responseTier === 'partialMitigation') &&
           (EVENT_DEFS.get(e.defId)?.tags ?? []).includes(tag),
       );
       if (matchIdx !== -1) {
@@ -865,23 +858,65 @@ export const gameStore = {
           politicalWill: Math.max(0, resources.politicalWill - (addl.politicalWill ?? 0)),
         };
         const matched = activeEvents[matchIdx];
-        activeEvents = activeEvents.map((e) =>
-          e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'counter' as const } : e,
-        );
         const eventName = EVENT_DEFS.get(matched.defId)?.name ?? matched.defId;
-        const counterNews: NewsItem = {
+        if (def.counterEffect.fullNeutralise) {
+          activeEvents = activeEvents.map((e) =>
+            e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'counter' as const } : e,
+          );
+          const counterNews: NewsItem = {
+            id: crypto.randomUUID(),
+            turn: _state.turn,
+            text: `${eventName} countered by ${def.name}.`,
+            category: 'event-gain',
+          };
+          newsFeed = [...newsFeed, counterNews];
+        } else {
+          const mitigationCost = EVENT_DEFS.get(matched.defId)?.mitigationCost ?? {};
+          resources = {
+            funding: resources.funding - (mitigationCost.funding ?? 0),
+            materials: Math.max(0, resources.materials - (mitigationCost.materials ?? 0)),
+            politicalWill: Math.max(0, resources.politicalWill - (mitigationCost.politicalWill ?? 0)),
+          };
+          activeEvents = activeEvents.map((e) =>
+            e.id === matched.id ? { ...e, resolved: true, resolvedWith: 'mitigation' as const } : e,
+          );
+          const costParts: string[] = [];
+          if (mitigationCost.funding) costParts.push(`${mitigationCost.funding} Funding`);
+          if (mitigationCost.materials) costParts.push(`${mitigationCost.materials} Materials`);
+          if (mitigationCost.politicalWill) costParts.push(`${mitigationCost.politicalWill} Political Will`);
+          const costStr = costParts.length > 0 ? ` (cost: ${costParts.join(', ')})` : '';
+          const mitigationNews: NewsItem = {
+            id: crypto.randomUUID(),
+            turn: _state.turn,
+            text: `${eventName} partially mitigated by ${def.name}${costStr}.`,
+            category: 'event-neutral',
+          };
+          newsFeed = [...newsFeed, mitigationNews];
+        }
+      }
+    }
+
+    const bonusActionsNextTurn =
+      def.effect.customEffectKey === 'extraAction'
+        ? (_state.bonusActionsNextTurn ?? 0) + 1
+        : (_state.bonusActionsNextTurn ?? 0);
+
+    if (def.effect.customEffectKey === 'extraAction') {
+      newsFeed = [
+        ...newsFeed,
+        {
           id: crypto.randomUUID(),
           turn: _state.turn,
-          text: `${eventName} countered by ${def.name}.`,
-          category: 'event-gain',
-        };
-        newsFeed = [...newsFeed, counterNews];
-      }
+          text: 'Executive Override authorised — one additional action available next turn.',
+          category: 'event-gain' as const,
+        },
+      ];
     }
 
     _state = {
       ..._state,
       actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      bonusActionsNextTurn,
       activeEvents,
       player: {
         ..._state.player,
@@ -948,7 +983,7 @@ export const gameStore = {
       const prevEra = _state.era;
       const prevFacilities = _state.player.facilities;
 
-      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS, CARD_DEFS);
 
       // ---------------------------------------------------------------------------
       // Enqueue narratives in prescribed order:
@@ -995,7 +1030,7 @@ export const gameStore = {
         goto('/summary');
         return;
       }
-      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], rng);
+      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], BOARD_DEFS, rng);
       next = executeDrawPhase(next, rng);
       _state = next;
       // Auto-save after each completed World Phase.
@@ -1029,7 +1064,7 @@ export const gameStore = {
     if (!isBoardSlotVacant(_state.player.board, def.role)) return;
 
     // Action cap check
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     // Per-character resource cost
@@ -1152,7 +1187,7 @@ export const gameStore = {
     const def = PROJECT_DEFS.get(defId);
     if (!def) return;
 
-    const cap = _state.maxActionsPerTurn ?? 3;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
     if ((_state.actionsThisTurn ?? 0) >= cap) return;
 
     if (!canInitiateProject(_state, def)) return;

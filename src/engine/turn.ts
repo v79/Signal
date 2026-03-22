@@ -8,6 +8,7 @@ import type {
   CardDef,
   BlocDef,
   BoardMemberDef,
+  BoardSlots,
   NewsItem,
   Resources,
   FieldPoints,
@@ -30,7 +31,7 @@ import {
   applyStageTransitions,
   checkBreakthroughConditions,
 } from './research';
-import { drawCards } from './cards';
+import { drawCards, retireObsoleteCards } from './cards';
 import {
   selectNewEvents,
   tickEventCountdowns,
@@ -46,6 +47,7 @@ import {
   applyBoardResourceMultipliers,
   tickBoardAges,
   addCommitteeNotification,
+  getBoardAutoCounterTags,
 } from './board';
 import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
 import { tickActiveProjects } from './projects';
@@ -75,6 +77,22 @@ const CLIMATE_PRESSURE_PER_TURN = 0.2;
 // Phase 1: Event Phase
 // ---------------------------------------------------------------------------
 
+function getAutoCounterMemberName(
+  board: BoardSlots,
+  defs: Map<string, BoardMemberDef>,
+  tag: string,
+): string {
+  for (const member of Object.values(board) as (import('./types').BoardMemberInstance | undefined)[]) {
+    if (!member || member.leftTurn !== null) continue;
+    const def = defs.get(member.defId);
+    if (!def) continue;
+    for (const buff of def.buffs) {
+      if (buff.autoCountersEventTag === tag) return def.name;
+    }
+  }
+  return 'a board member';
+}
+
 /**
  * Automated portion of the Event Phase:
  *   1. Tick countdowns on all active events.
@@ -89,12 +107,37 @@ export function executeEventPhase(
   state: GameState,
   eventDefs: Map<string, EventDef>,
   eventPool: EventDef[],
+  boardDefs: Map<string, BoardMemberDef>,
   rng: Rng,
 ): GameState {
   const { player } = state;
 
+  // 0. Board auto-counter — resolve matching active events before the countdown tick.
+  const autoCounterTags = getBoardAutoCounterTags(player.board, boardDefs);
+  let eventsBeforeTick = [...state.activeEvents];
+  const autoCounterNews: NewsItem[] = [];
+
+  if (autoCounterTags.length > 0) {
+    for (let i = 0; i < eventsBeforeTick.length; i++) {
+      const e = eventsBeforeTick[i];
+      if (e.resolved) continue;
+      const evDef = eventDefs.get(e.defId);
+      if (!evDef || evDef.responseTier === 'noCounter') continue;
+      const matchingTag = evDef.tags.find((t) => autoCounterTags.includes(t));
+      if (!matchingTag) continue;
+      const memberName = getAutoCounterMemberName(player.board, boardDefs, matchingTag);
+      eventsBeforeTick[i] = { ...e, resolved: true, resolvedWith: 'counter' as const };
+      autoCounterNews.push({
+        id: `auto-counter-${e.id}-t${state.turn}`,
+        turn: state.turn,
+        text: `${evDef.name} automatically countered by ${memberName}.`,
+        category: 'event-gain' as const,
+      });
+    }
+  }
+
   // 1. Tick countdowns
-  const tickedEvents = tickEventCountdowns(state.activeEvents);
+  const tickedEvents = tickEventCountdowns(eventsBeforeTick);
 
   // 2. Apply effects of events that just expired
   let updatedPlayer = { ...player };
@@ -131,14 +174,34 @@ export function executeEventPhase(
     state.climatePressure,
   );
 
+  // Auto-counter newly arrived events.
+  let finalNewEvents = newEvents;
+  if (autoCounterTags.length > 0) {
+    for (let i = 0; i < finalNewEvents.length; i++) {
+      const e = finalNewEvents[i];
+      const evDef = eventDefs.get(e.defId);
+      if (!evDef || evDef.responseTier === 'noCounter') continue;
+      const matchingTag = evDef.tags.find((t) => autoCounterTags.includes(t));
+      if (!matchingTag) continue;
+      const memberName = getAutoCounterMemberName(player.board, boardDefs, matchingTag);
+      finalNewEvents[i] = { ...e, resolved: true, resolvedWith: 'counter' as const };
+      autoCounterNews.push({
+        id: `auto-counter-new-${e.id}-t${state.turn}`,
+        turn: state.turn,
+        text: `${evDef.name} intercepted and countered by ${memberName} before it could take effect.`,
+        category: 'event-gain' as const,
+      });
+    }
+  }
+
   return {
     ...state,
     phase: 'draw',
-    activeEvents: [...tickedEvents.filter((e) => !e.resolved), ...newEvents],
+    activeEvents: [...tickedEvents.filter((e) => !e.resolved), ...finalNewEvents],
     map: { ...state.map, earthTiles: updatedTiles },
     player: {
       ...updatedPlayer,
-      newsFeed: [...updatedPlayer.newsFeed, ...expiryNews],
+      newsFeed: [...updatedPlayer.newsFeed, ...expiryNews, ...autoCounterNews],
     },
   };
 }
@@ -157,6 +220,8 @@ export function executeDrawPhase(state: GameState, rng: Rng): GameState {
     ...state,
     phase: 'action',
     actionsThisTurn: 0,
+    bonusActionsThisTurn: state.bonusActionsNextTurn ?? 0,
+    bonusActionsNextTurn: 0,
     player: { ...state.player, cards: newCards },
   };
 }
@@ -199,6 +264,7 @@ export function executeWorldPhase(
   blocDefs: Map<string, BlocDef> = new Map(),
   boardDefs: Map<string, BoardMemberDef> = new Map(),
   projectDefs: Map<string, ProjectDef> = new Map(),
+  cardDefs: Map<string, CardDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -227,9 +293,19 @@ export function executeWorldPhase(
 
   // 2b. HQ bonus — applies if the player has an HQ facility on the map.
   //     Output varies by will profile (democratic vs authoritarian).
+  //     Discovered technologies may add permanent field bonuses via hqFieldBonus.
   const hasHq = player.facilities.some((f) => f.defId === 'hq');
   if (hasHq) {
-    const hqBonus = computeHqBonus(player.willProfile);
+    const techFieldBonus: Partial<FieldPoints> = {};
+    for (const ts of player.techs) {
+      if (ts.stage !== 'discovered') continue;
+      const bonus = techDefs.get(ts.defId)?.hqFieldBonus;
+      if (!bonus) continue;
+      for (const k of Object.keys(bonus) as (keyof FieldPoints)[]) {
+        techFieldBonus[k] = (techFieldBonus[k] ?? 0) + (bonus[k] ?? 0);
+      }
+    }
+    const hqBonus = computeHqBonus(player.willProfile, techFieldBonus);
     for (const k of Object.keys(hqBonus.resources) as (keyof Resources)[]) {
       totalResources[k] = (totalResources[k] ?? 0) + (hqBonus.resources[k] ?? 0);
     }
@@ -322,7 +398,7 @@ export function executeWorldPhase(
       }
     : null;
 
-  // 7b. Project tick — advance active projects, apply completions + upkeep
+  // 7c. Project tick — advance active projects, apply completions + upkeep
   // Run against a temporary state with the post-card resources so upkeep is
   // deducted from the already-updated resource total.
   const stateForProjectTick: GameState = {
@@ -335,7 +411,7 @@ export function executeWorldPhase(
   const signalAfterProjects = projectTickResult.state.signal;
   const projectNews = playerAfterProjects.newsFeed.slice(player.newsFeed.length);
 
-  // 7c. Orbital Station: scripted engineering challenge fires on stage 2's second turn.
+  // 7d. Orbital Station: scripted engineering challenge fires on stage 2's second turn.
   //     Only fires once — guarded by checking if the event is already in activeEvents.
   const stage2OnSecondTurn = playerAfterProjects.activeProjects.some(
     (p) => p.defId === 'orbitalStation_stage2' && p.turnsElapsed === 1,
@@ -355,7 +431,7 @@ export function executeWorldPhase(
         }
       : null;
 
-  // 7d. Era transition: if a landmark project with opensEra2 completed this tick,
+  // 7e. Era transition: if a landmark project with opensEra2 completed this tick,
   //     advance era to nearSpace and apply a Will boost.
   const opensEra2 = projectTickResult.completedDefIds.some(
     (id) => projectDefs.get(id)?.landmarkGate === 'opensEra2',
@@ -372,6 +448,25 @@ export function executeWorldPhase(
         },
       ]
     : [];
+
+  // 7f. Retire cards made obsolete by newly discovered techs or the era transition.
+  //     Applied to playerAfterProjects.cards so project-unlocked cards are included.
+  //     Passes ALL discovered tech IDs so the check is idempotent on save/load.
+  const allDiscoveredTechIds = updatedTechs
+    .filter((t) => t.stage === 'discovered')
+    .map((t) => t.defId);
+  const { cards: cardsAfterRetirement, retiredDefIds } = retireObsoleteCards(
+    playerAfterProjects.cards,
+    cardDefs,
+    allDiscoveredTechIds,
+    eraAfterProjects,
+  );
+  const retirementNews: NewsItem[] = retiredDefIds.map((defId) => ({
+    id: `card-retired-${defId}-t${nextTurn}`,
+    turn: nextTurn,
+    text: `${cardDefs.get(defId)?.name ?? defId} has been retired from the deck — superseded by new capabilities.`,
+    category: 'research' as const,
+  }));
 
   // 8. News feed entries for research events
   const breakthroughNews: NewsItem[] = breakthroughs.map((b) => ({
@@ -397,7 +492,7 @@ export function executeWorldPhase(
     ...newDiscoveries.map((defId) => ({
       id: `${nextTurn}-discovery-${defId}`,
       turn: nextTurn,
-      text: `Breakthrough: ${techDefs.get(defId)?.name ?? 'Unknown technology'} has been achieved.`,
+      text: `New horizons: ${techDefs.get(defId)?.name ?? 'Unknown technology'} is ready to be exploited.`,
       category: 'discovery' as const,
     })),
   ];
@@ -573,7 +668,7 @@ export function executeWorldPhase(
       will: Math.min(100, newWill + willBoostFromEraTransition),
       facilities: facilitiesAfterDegradation,
       techs: updatedTechs,
-      cards: playerAfterProjects.cards,
+      cards: cardsAfterRetirement,
       board: updatedBoard,
       constructionQueue: updatedQueue,
       activeProjects: playerAfterProjects.activeProjects,
@@ -582,6 +677,7 @@ export function executeWorldPhase(
         ...player.newsFeed,
         ...breakthroughNews,
         ...researchNews,
+        ...retirementNews,
         ...projectNews,
         ...eraTransitionNews,
         ...degradationNews,

@@ -12,6 +12,7 @@
     "signalDerived": false,
     "tier": 1,
     "requiredTechIds": [],
+    "hqFieldBonus": { "engineering": 1 },
     "narrative": {
       "id": "narrative-tech-integratedCircuits",
       "title": "Discovery — Integrated Circuit Arrays",
@@ -93,6 +94,7 @@
     "signalDerived": false,
     "tier": 1,
     "requiredTechIds": [],
+    "hqFieldBonus": { "biochemistry": 1 },
     "narrative": {
       "id": "narrative-tech-recombinantDNA",
       "title": "Discovery — Recombinant DNA Technology",
@@ -120,6 +122,7 @@
     "signalDerived": false,
     "tier": 2,
     "requiredTechIds": ["integratedCircuits"],
+    "hqFieldBonus": { "computing": 1 },
     "narrative": {
       "id": "narrative-tech-microprocessors",
       "title": "Discovery — Microprocessors",
@@ -195,7 +198,7 @@
     "baseRecipe": { "physics": 20, "mathematics": 50, "computing": 20 },
     "recipeVariance": 0.15,
     "requiresSimultaneous": false,
-    "unlocksCards": [],
+    "unlocksCards": ["orbitDeploy"],
     "unlocksProjects": ["orbitalTelescopeArray"],
     "unlocksFacilities": ["spaceLaunchCentre", "orbitalPlatform", "lunarMine"],
     "signalDerived": false,
@@ -228,6 +231,7 @@
     "signalDerived": false,
     "tier": 3,
     "requiredTechIds": ["integratedCircuits", "fibreglassComposites"],
+    "hqFieldBonus": { "mathematics": 1 },
     "narrative": {
       "id": "narrative-tech-fibreOptics",
       "title": "Discovery — Fibre Optics",
@@ -282,6 +286,7 @@
     "signalDerived": false,
     "tier": 3,
     "requiredTechIds": ["microprocessors"],
+    "hqFieldBonus": { "computing": 2 },
     "narrative": {
       "id": "narrative-tech-personalComputers",
       "title": "Discovery — Personal Computers",
@@ -309,6 +314,7 @@
     "signalDerived": false,
     "tier": 3,
     "requiredTechIds": ["recombinantDNA"],
+    "hqFieldBonus": { "biochemistry": 2 },
     "narrative": {
       "id": "narrative-tech-geneticEngineering",
       "title": "Discovery — Genetic Engineering",
@@ -330,7 +336,7 @@
     "baseRecipe": { "engineering": 20, "physics": 20, "computing": 60, "socialScience": 20 },
     "recipeVariance": 0.25,
     "requiresSimultaneous": false,
-    "unlocksCards": ["globalBroadcast"],
+    "unlocksCards": ["globalBroadcast", "mediaBlitz"],
     "unlocksProjects": [],
     "unlocksFacilities": ["deepSpaceArray"],
     "signalDerived": false,
@@ -384,12 +390,12 @@
     "baseRecipe": { "physics": 10, "mathematics": 60, "computing": 60, "socialScience": 10 },
     "recipeVariance": 0.25,
     "requiresSimultaneous": false,
-    "unlocksCards": ["signalDeconvolution"],
+    "unlocksCards": ["signalDeconvolution", "signalFilter"],
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": true,
     "tier": 4,
-    "requiredTechIds": ["satelliteCommunications"],
+    "requiredTechIds": ["satelliteCommunications", "spaceImaging"],
     "narrative": {
       "id": "narrative-tech-signalPatternAnalysis",
       "title": "Discovery — Signal Pattern Analysis",
@@ -416,7 +422,8 @@
     "unlocksFacilities": ["dataCentre"],
     "signalDerived": false,
     "tier": 4,
-    "requiredTechIds": ["satelliteCommunications"],
+    "requiredTechIds": ["satelliteCommunications", "personalComputers"],
+    "hqFieldBonus": { "socialScience": 2, "computing": 1 },
     "narrative": {
       "id": "narrative-tech-internetProtocols",
       "title": "Discovery — Internet Protocols",

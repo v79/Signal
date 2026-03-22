@@ -7,11 +7,17 @@
 
   let {
     phase,
+    actionsThisTurn,
+    maxActionsPerTurn,
     onAdvance,
   }: {
     phase: TurnPhase;
+    actionsThisTurn: number;
+    maxActionsPerTurn: number;
     onAdvance: () => void;
   } = $props();
+
+  const actionsRemaining = $derived(maxActionsPerTurn - actionsThisTurn);
 
   const label = $derived(phase === 'action' ? 'END TURN ⟳' : phase.toUpperCase());
 
@@ -41,6 +47,11 @@
     {label}
   </button>
   <div class="phase-desc">{phaseDesc}</div>
+  {#if phase === 'action'}
+    <div class="action-counter" class:at-zero={actionsRemaining <= 0} class:at-one={actionsRemaining === 1}>
+      {actionsRemaining} ACTION{actionsRemaining !== 1 ? 'S' : ''} LEFT
+    </div>
+  {/if}
   <button class="help-btn" onclick={() => (showHelp = true)} title="Help">?</button>
 </div>
 
@@ -102,6 +113,20 @@
     color: #3a4858;
     letter-spacing: 0.05em;
     font-style: italic;
+  }
+
+  .action-counter {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: #4a8ab4;
+  }
+
+  .action-counter.at-one {
+    color: #c8a040;
+  }
+
+  .action-counter.at-zero {
+    color: #c84a4a;
   }
 
   .help-btn {

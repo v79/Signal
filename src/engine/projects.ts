@@ -14,10 +14,14 @@ import type {
 // They have a one-time cost, a multi-turn duration, and a one-time reward
 // on completion. Some have per-turn upkeep while active.
 //
+// Related projects may share a groupId — the UI groups and sequences them,
+// with requiredProjects prerequisites enforcing initiation order.
+//
 // Prerequisites are checked before initiation:
 //   - Era gate (player must be in the required era or later)
 //   - Required techs (must be at 'discovered' stage)
 //   - Required facility defs (at least one active instance must exist)
+//   - Required projects (must be completed)
 //   - Cost affordability (player has enough resources to pay upfront)
 // ---------------------------------------------------------------------------
 
@@ -56,7 +60,6 @@ export function canInitiateProject(state: GameState, def: ProjectDef): boolean {
     for (const defId of prereqs.requiredFacilityDefs) {
       const hasActive = player.facilities.some((f) => {
         if (f.defId !== defId) return false;
-        // Exclude facilities currently being demolished
         const tile = state.map.earthTiles.find((t) =>
           t.facilitySlots.some((s) => s === f.id),
         );
@@ -66,10 +69,18 @@ export function canInitiateProject(state: GameState, def: ProjectDef): boolean {
     }
   }
 
+  // Required completed projects
+  if (prereqs.requiredProjects) {
+    const completedSet = new Set(player.completedProjectIds);
+    for (const projId of prereqs.requiredProjects) {
+      if (!completedSet.has(projId)) return false;
+    }
+  }
+
   // Orbital Station authorisation gate
   if (prereqs.requiresOrbitalStationAuthorised && !state.orbitalStationAuthorised) return false;
 
-  // Minimum resource prerequisites (separate from cost — e.g. "must have 50W to start")
+  // Minimum resource prerequisites (separate from cost)
   if (prereqs.minResources) {
     const r = prereqs.minResources;
     if ((r.funding ?? 0) > player.resources.funding) return false;
