@@ -117,7 +117,7 @@
     "recipeVariance": 0.15,
     "requiresSimultaneous": false,
     "unlocksCards": ["computerModellingRun"],
-    "unlocksProjects": [],
+    "unlocksProjects": ["computingResearchProgramme"],
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 2,
