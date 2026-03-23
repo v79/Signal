@@ -113,6 +113,22 @@
       "requiredFacilityDefs": ["spaceLaunchCentre"]
     }
   },
+  "computingResearchProgramme": {
+    "id": "computingResearchProgramme",
+    "name": "Computing Research Programme",
+    "description": "Microprocessor clusters are reconfigured as dedicated scientific workstations — an order of magnitude faster than the mainframe batch-processing they replace. The Research Lab's existing experimental frameworks are rewritten to run on the new architecture; the payoff in computational research output is immediate and substantial.",
+    "type": "scientific",
+    "era": "earth",
+    "cost": { "funding": 25, "materials": 10 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "fields": { "computing": 20 } },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["microprocessors"],
+      "requiredFacilityDefs": ["researchLab"]
+    }
+  },
   "cern": {
     "id": "cern",
     "name": "Particle Collider Complex",
