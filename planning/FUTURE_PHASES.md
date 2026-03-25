@@ -18,7 +18,7 @@ This is a list of future requirements for the game but they are not to be implem
 - **Climate:**
   - The climate scaling is too harsh and tile damage happens far too early
   - Irradiated damage shouldn't exist without nuclear facilities
-  - Climate bar tooltip should show summary of pollution generators and mitigations
+  - Climate bar tooltip should show a summary of pollution generators and mitigations
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Signal should not be decoded before era 3

@@ -22,8 +22,11 @@
   import {
     computeAdjacencyEffects,
     computeResourceBreakdown,
+    computeClimateBreakdown,
     type ResourceBreakdown,
+    type ClimateBreakdown,
   } from '../engine/facilities';
+  import { CLIMATE_PRESSURE_PER_TURN } from '../engine/turn';
   import { isSignalClimax } from '../engine/signal';
   // Redirect to /newgame if there is no active game state (cold start).
   // Also register back-button / unload guards during the action phase.
@@ -71,6 +74,12 @@
           gameStore.state.map.earthTiles,
         )
       : { funding: [], materials: [], politicalWill: [] },
+  );
+
+  const climateBreakdown = $derived<ClimateBreakdown>(
+    gameStore.state
+      ? computeClimateBreakdown(gameStore.state.player.facilities, FACILITY_DEFS, CLIMATE_PRESSURE_PER_TURN)
+      : { base: CLIMATE_PRESSURE_PER_TURN, entries: [] },
   );
 
   // Generate wormhole options once when the climax is reached (deterministic seed).
@@ -158,6 +167,7 @@
       seed={gs.seed}
       blocName={BLOC_DEFS.get(gs.player.blocDefId)?.name ?? ''}
       {resourceBreakdown}
+      {climateBreakdown}
       onExport={() => gameStore.exportSave()}
       onImport={(file) => gameStore.importSaveFile(file)}
       onRestart={() => gameStore.startNewGame(gs.seed, gs.player.blocDefId, gs.pushFactor)}

@@ -353,6 +353,51 @@ export function computeResourceBreakdown(
 }
 
 // ---------------------------------------------------------------------------
+// Climate pressure breakdown (for HUD tooltip)
+// ---------------------------------------------------------------------------
+
+export interface ClimateBreakdownEntry {
+  label: string;
+  /** Per-turn contribution. Positive = pollution, negative = mitigation. */
+  amount: number;
+}
+
+export interface ClimateBreakdown {
+  /** Base climate pressure added every turn regardless of facilities. */
+  base: number;
+  /** Per-facility-type contributions (grouped and summed). */
+  entries: ClimateBreakdownEntry[];
+}
+
+/**
+ * Returns the base rate and per-facility-type climate contributions for use
+ * in the HUD climate tooltip.
+ */
+export function computeClimateBreakdown(
+  facilities: FacilityInstance[],
+  facilityDefs: Map<string, FacilityDef>,
+  base: number,
+): ClimateBreakdown {
+  const nameToAmount = new Map<string, number>();
+
+  for (const facility of facilities) {
+    const def = facilityDefs.get(facility.defId);
+    const impact = def?.climateImpact;
+    if (!def || impact === undefined || impact === 0) continue;
+    nameToAmount.set(def.name, (nameToAmount.get(def.name) ?? 0) + impact);
+  }
+
+  const entries: ClimateBreakdownEntry[] = [];
+  for (const [label, amount] of nameToAmount) {
+    entries.push({ label, amount });
+  }
+  // Polluters first (descending), then mitigators (ascending)
+  entries.sort((a, b) => b.amount - a.amount);
+
+  return { base, entries };
+}
+
+// ---------------------------------------------------------------------------
 // Mine depletion
 // ---------------------------------------------------------------------------
 
