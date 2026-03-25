@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Resources, FieldPoints, Era, TurnPhase } from '../../engine/types';
-  import type { ResourceBreakdown } from '../../engine/facilities';
+  import type { ResourceBreakdown, ClimateBreakdown } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
   import { FIELD_ABBR, FIELD_COLOURS_CSS } from '../fieldColours';
 
@@ -16,6 +16,7 @@
     seed,
     blocName,
     resourceBreakdown,
+    climateBreakdown,
     onExport,
     onImport,
     onRestart,
@@ -38,6 +39,7 @@
     onNewGame: () => void;
     onSettings: () => void;
     resourceBreakdown: ResourceBreakdown;
+    climateBreakdown: ClimateBreakdown;
   } = $props();
 
   let menuOpen = $state(false);
@@ -113,6 +115,18 @@
     computing: 'Computing — accelerates all research; essential for signal analysis.',
     socialScience: 'Social Science — improves Political Will generation and diplomacy.',
   };
+
+  function climateTooltip(bd: ClimateBreakdown): string {
+    const net = bd.base + bd.entries.reduce((s, e) => s + e.amount, 0);
+    const sign = (n: number) => (n >= 0 ? '+' : '');
+    const header = `Climate pressure (${sign(net)}${net.toFixed(2)}/turn)`;
+    const baseRow = `  Base industrial rate: +${bd.base.toFixed(2)}/turn`;
+    if (bd.entries.length === 0) return `${header}\n${baseRow}`;
+    const rows = bd.entries.map(
+      (e) => `  ${e.label}: ${sign(e.amount)}${e.amount.toFixed(2)}/turn`,
+    );
+    return `${header}\n${baseRow}\n${rows.join('\n')}`;
+  }
 
   function climateColor(p: number): string {
     if (p < 30) return '#4a9b7a';
@@ -232,25 +246,26 @@
     {#if blocName}
       <span class="bloc-name">{blocName}</span>
     {/if}
-    <span class="phase-badge">{PHASE_LABELS[phase]}</span>
+    {#if phase !== 'action'}
+      <span class="phase-badge">{PHASE_LABELS[phase]}</span>
+    {/if}
   </div>
 
   <div class="hud-center">
-    <Tooltip
-      text="Earth climate index. Rises as you industrialise; affects event probabilities."
-      direction="below"
-    >
-      <span class="label">CLIMATE</span>
+    <Tooltip text={climateTooltip(climateBreakdown)} direction="below">
+      <div class="climate-group">
+        <span class="label">CLIMATE</span>
+        <div class="bar-track climate-track">
+          <div
+            class="bar-fill"
+            style="width: {climatePressure}%; background: {climateColor(climatePressure)}"
+          ></div>
+        </div>
+        <span class="value" style="color: {climateColor(climatePressure)}"
+          >{climatePressure.toFixed(0)}%</span
+        >
+      </div>
     </Tooltip>
-    <div class="bar-track climate-track">
-      <div
-        class="bar-fill"
-        style="width: {climatePressure}%; background: {climateColor(climatePressure)}"
-      ></div>
-    </div>
-    <span class="value" style="color: {climateColor(climatePressure)}"
-      >{climatePressure.toFixed(0)}%</span
-    >
 
     <Tooltip text="Global political will level." direction="below">
       <span class="label" style="margin-left: 1rem">WILL</span>
@@ -589,6 +604,12 @@
     background: #1a2030;
     border-radius: 2px;
     overflow: hidden;
+  }
+
+  .climate-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
 
   .climate-track {
