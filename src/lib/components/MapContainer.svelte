@@ -370,6 +370,8 @@
   <!-- Phaser canvas mount point (hidden when board tab active, preserving scene state) -->
   <div
     class="map-container"
+    role="application"
+    aria-label="Game map"
     style="display: {activeTab === 'board' ? 'none' : 'flex'}"
     bind:this={container}
     onmousemove={(e) => {
