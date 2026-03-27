@@ -39,56 +39,142 @@
 {/if}
 
 <div class="phase-controls">
-  <button
-    class="advance-btn end-turn"
-    disabled={!canAdvance}
-    onclick={onAdvance}
-  >
-    {label}
-  </button>
-  <div class="phase-desc">{phaseDesc}</div>
-  {#if phase === 'action'}
-    <div class="action-counter" class:at-zero={actionsRemaining <= 0} class:at-one={actionsRemaining === 1}>
-      {actionsRemaining} ACTION{actionsRemaining !== 1 ? 'S' : ''} LEFT
-    </div>
-  {/if}
-  <button class="help-btn" onclick={() => (showHelp = true)} title="Help">?</button>
+  <div class="top-row">
+    <span class="phase-desc">{phaseDesc}</span>
+    <button class="help-btn" onclick={() => (showHelp = true)} title="Help">?</button>
+  </div>
+
+  <div class="bottom-row">
+    {#if phase === 'action'}
+      <div class="action-counter" class:at-zero={actionsRemaining <= 0} class:at-one={actionsRemaining === 1}>
+        <span class="count">{actionsRemaining}</span>
+        <span class="label">ACTION{actionsRemaining !== 1 ? 'S' : ''} LEFT</span>
+      </div>
+    {:else}
+      <div></div>
+    {/if}
+
+    <button
+      class="advance-btn"
+      class:end-turn={canAdvance}
+      disabled={!canAdvance}
+      onclick={onAdvance}
+    >
+      {label}
+    </button>
+  </div>
 </div>
 
 <style>
   .phase-controls {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.3rem;
-    padding: 0.5rem 1rem;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem 0.5rem 0.75rem;
     background: #070b12;
     border-left: 1px solid #1e2530;
     flex-shrink: 0;
+    min-width: 13rem;
+    gap: 0.5rem;
   }
 
-  .advance-btn {
-    padding: 0.4rem 1rem;
+  .top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .phase-desc {
+    font-size: 0.6rem;
+    color: #3a4858;
+    letter-spacing: 0.04em;
+    font-style: italic;
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .help-btn {
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid #3a2020;
+    color: #6a4040;
+    font-family: monospace;
     font-size: 0.7rem;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+
+  .help-btn:hover {
+    background: #1a0a0a;
+    border-color: #804040;
+    color: #c07070;
+  }
+
+  .bottom-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .action-counter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.1;
+  }
+
+  .action-counter .count {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: #4a8ab4;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .action-counter .label {
+    font-size: 0.5rem;
+    letter-spacing: 0.14em;
+    color: #2a5070;
+    text-transform: uppercase;
+  }
+
+  .action-counter.at-one .count { color: #c8a040; }
+  .action-counter.at-one .label { color: #7a6020; }
+
+  .action-counter.at-zero .count { color: #c84a4a; }
+  .action-counter.at-zero .label { color: #702828; }
+
+  .advance-btn {
+    padding: 0.45rem 1.1rem;
+    font-size: 0.65rem;
     font-family: inherit;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-    background: #0d2a40;
-    color: #5ab4e0;
-    border: 1px solid #1e4060;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    background: #0d1e30;
+    color: #2a5070;
+    border: 1px solid #1a3050;
     border-radius: 2px;
     cursor: pointer;
     white-space: nowrap;
-    transition:
-      background 0.15s,
-      color 0.15s,
-      border-color 0.15s;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
   }
 
-  .advance-btn:hover:not(:disabled) {
-    background: #143550;
-    color: #8ed4f8;
-    border-color: #2a6090;
+  .advance-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
   }
 
   .advance-btn.end-turn {
@@ -101,57 +187,6 @@
     background: #0f4024;
     color: #90f0aa;
     border-color: #2a7040;
-  }
-
-  .advance-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-
-  .phase-desc {
-    font-size: 0.6rem;
-    color: #3a4858;
-    letter-spacing: 0.05em;
-    font-style: italic;
-  }
-
-  .action-counter {
-    font-size: 0.6rem;
-    letter-spacing: 0.12em;
-    color: #4a8ab4;
-  }
-
-  .action-counter.at-one {
-    color: #c8a040;
-  }
-
-  .action-counter.at-zero {
-    color: #c84a4a;
-  }
-
-  .help-btn {
-    width: 1.4rem;
-    height: 1.4rem;
-    border-radius: 50%;
-    background: #6a1a1a;
-    border: 1px solid #a03030;
-    color: #f0a0a0;
-    font-family: monospace;
-    font-size: 0.75rem;
-    font-weight: bold;
-    line-height: 1;
-    cursor: pointer;
-    padding: 0;
-    margin-top: 0.4rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, border-color 0.15s;
-    flex-shrink: 0;
-  }
-
-  .help-btn:hover {
-    background: #8a2020;
-    border-color: #c04040;
+    box-shadow: 0 0 8px #1a5030;
   }
 </style>
