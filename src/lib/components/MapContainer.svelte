@@ -17,17 +17,23 @@
   type MapTab = 'earth' | 'space' | 'belt';
   type AllTab = MapTab | 'board';
 
-  const MAP_TABS: { id: MapTab; label: string; requiredEra: Era | null }[] = [
+  type MapTabDef = { id: MapTab; label: string; requiredEra: Era | null; requiredProject?: string };
+
+  const MAP_TABS: MapTabDef[] = [
     { id: 'earth', label: 'EARTH', requiredEra: null },
-    { id: 'space', label: 'NEAR SPACE', requiredEra: 'nearSpace' },
+    { id: 'space', label: 'NEAR SPACE', requiredEra: 'nearSpace', requiredProject: 'orbitalStation_stage1' },
     { id: 'belt', label: 'ASTEROID BELT', requiredEra: 'deepSpace' },
   ];
 
   const ERA_ORDER: Era[] = ['earth', 'nearSpace', 'deepSpace'];
 
-  function eraUnlocked(requiredEra: Era | null): boolean {
-    if (!requiredEra) return true;
-    return ERA_ORDER.indexOf(gameStore.state!.era) >= ERA_ORDER.indexOf(requiredEra);
+  function tabUnlocked(tab: MapTabDef): boolean {
+    if (!tab.requiredEra) return true;
+    const state = gameStore.state;
+    if (!state) return false;
+    if (ERA_ORDER.indexOf(state.era) >= ERA_ORDER.indexOf(tab.requiredEra)) return true;
+    if (tab.requiredProject && state.player.completedProjectIds.includes(tab.requiredProject)) return true;
+    return false;
   }
 
   let container: HTMLDivElement;
@@ -287,7 +293,7 @@
   <div class="tab-bar">
     {#each MAP_TABS as tab}
       <Tooltip
-        text={eraUnlocked(tab.requiredEra)
+        text={tabUnlocked(tab)
           ? `Switch to ${tab.label} view`
           : `Unlock the ${tab.label} era to access this view`}
         direction="below"
@@ -295,12 +301,12 @@
         <button
           class="tab"
           class:active={activeTab === tab.id}
-          class:locked={!eraUnlocked(tab.requiredEra)}
-          disabled={!eraUnlocked(tab.requiredEra)}
+          class:locked={!tabUnlocked(tab)}
+          disabled={!tabUnlocked(tab)}
           onclick={() => switchTab(tab.id)}
         >
           {tab.label}
-          {#if !eraUnlocked(tab.requiredEra)}
+          {#if !tabUnlocked(tab)}
             <span class="lock">&#x1F512;</span>
           {/if}
         </button>
