@@ -238,6 +238,7 @@
         getNodes: () => gameStore.state?.map.spaceNodes ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
+        getCompletedProjects: () => gameStore.state?.player.completedProjectIds ?? [],
         onNodeClick: (id: string) => {
           gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
         },
