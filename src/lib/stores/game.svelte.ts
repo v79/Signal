@@ -151,13 +151,6 @@ export function generateSpaceNodes(): SpaceNode[] {
     { id: 'l1', type: 'lagrangePoint', label: 'L1', launchCost: 20, facilityId: null },
     { id: 'l2', type: 'lagrangePoint', label: 'L2', launchCost: 20, facilityId: null },
     {
-      id: 'lunarOrbit',
-      type: 'lunarOrbit',
-      label: 'Lunar Orbit',
-      launchCost: 30,
-      facilityId: null,
-    },
-    {
       id: 'lunarSurface',
       type: 'lunarSurface',
       label: 'Lunar Surface',

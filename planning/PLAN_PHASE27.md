@@ -6,92 +6,98 @@ _Created: 2026-03-29_
 
 ## Context
 
-The Near Space (`SpaceScene`) map is functional but visually underdeveloped. Three specific improvements are planned:
+The Near Space (`SpaceScene`) map is functional but visually underdeveloped. Four improvements are planned:
 
 1. **Earth** — replace the plain dark-blue circle with a blue/green layered rendering with an atmosphere glow ring.
 2. **Orbital Station** — draw the station graphically at the LEO node, growing in complexity as each of the three project stages completes.
-3. **Orbital Telescope Array** — render a small constellation arc near the LEO node when the project is complete.
+3. **Earth orbit arc** — a faint elliptical ring around Earth, auto-populated with icons for completed orbital projects (Telescope Array, Hubble, future). Max 5–6 slots. Replaces the old standalone telescope array placement.
+4. **Moon orbit arc** — a smaller faint ring around Lunar Surface. Always visible as an affordance; auto-populated from future lunar orbit projects. Max 3 slots.
+5. **Remove Lunar Orbit node** — Lunar Orbit is not a meaningful interactive node. Remove it from the transit graph and data. Transit becomes `LEO → Lunar Surface` directly.
 
-All rendering is done via Phaser's Graphics API (no external art assets). A new callback is required on `SpaceSceneCallbacks` to expose completed project IDs to the scene.
+**Design rules:**
+- LEO remains a full interactive node. The Orbital Station is its visual identity once built; further facilities are built there in Era 2.
+- Orbit arcs are purely visual — populated automatically from `completedProjectIds`. Players do not click slots to build.
+- Breaking save game state is acceptable for this phase.
+
+All rendering is via Phaser's Graphics API (no external art assets).
 
 ---
 
 ## Sub-phases
 
-### Phase 27A — Callback extension
+### ✅ Phase 27A — Callback extension
 
-Add `getCompletedProjects: () => string[]` to the `SpaceSceneCallbacks` interface in `SpaceScene.ts`, and wire it in `MapContainer.svelte` (or wherever the scene callbacks are constructed) to return `state.player.completedProjectIds`.
+Add `getCompletedProjects: () => string[]` to the `SpaceSceneCallbacks` interface in `SpaceScene.ts`, and wire it in `MapContainer.svelte` to return `state.player.completedProjectIds`.
 
 **Files touched:**
-- `src/phaser/SpaceScene.ts` — interface + usage
-- Svelte component that constructs the callbacks (likely `MapContainer.svelte` or `+page.svelte`)
+- `src/phaser/SpaceScene.ts`
+- `src/lib/components/MapContainer.svelte`
 
 ---
 
-### Phase 27B — Earth visual
+### ✅ Phase 27B — Earth visual
 
-Replace the current flat `fillCircle(0x204060)` Earth with a layered rendering:
+Replace the flat `fillCircle(0x204060)` Earth with a layered rendering:
 
-**Layers (bottom to top):**
-1. **Ocean base** — filled circle, deep blue (`#1a4a7a`)
-2. **Continent blobs** — 4–5 irregular filled arcs/polygons in muted green (`#2d6e3a`), positioned to loosely suggest Africa/Europe, the Americas, Asia, and Antarctica. Use fixed coordinates (no RNG) so the Earth looks the same every run.
-3. **Polar caps** — small white-ish filled circles at top and bottom of the Earth circle (`#c8dde8`, low opacity)
-4. **Atmosphere ring** — `strokeCircle` slightly larger than Earth radius, pale blue-white (`#aad4f0`), low opacity (~0.3), 3px wide
+1. **Ocean base** — deep blue (`#1a4a7a`)
+2. **Continent blobs** — 5 muted green (`#2d6e3a`) ellipses at fixed positions (Africa/Europe, Americas, Asia, Antarctica, Australia)
+3. **Polar caps** — pale ellipses top and bottom
+4. **Atmosphere ring** — `strokeCircle` slightly outside radius, pale blue-white, low opacity
 
-The Earth label (`EARTH`) remains centred on the circle.
-
-**Files touched:**
-- `src/phaser/SpaceScene.ts` — `create()` method, Earth drawing block
+**Files touched:** `src/phaser/SpaceScene.ts`
 
 ---
 
-### Phase 27C — Orbital Station visual
+### ✅ Phase 27C — Orbital Station visual
 
-The LEO node currently draws as a plain circle. When one or more orbital station stages are complete, the node should be rendered as a growing station structure instead of (or on top of) the plain circle.
+LEO node renders a growing station graphic based on completed stages:
 
-**Stage states:**
-
-| Completed projects | Visual |
+| Completed | Visual |
 |---|---|
-| None | Current plain circle (dim, `lowEarthOrbit` colour) |
-| `orbitalStation_stage1` (Core) | Central cylindrical module — a small filled rectangle or rounded rect, plus a short vertical line (docking collar). The node circle becomes a faint selection ring only. |
-| `orbitalStation_stage2` (Habitation Ring) | Core module + a ring drawn around it (ellipse/arc to suggest a torus, since it's 2D). |
-| `orbitalStation_stage3` (Operational) | Full station: core + ring + horizontal solar panel wings (two thin rectangles extending left and right), plus a subtle glow. |
+| None | Plain dim circle |
+| `orbitalStation_stage1` | Core module (filled rect) + docking collar line |
+| `orbitalStation_stage2` | + full ellipse habitation ring |
+| `orbitalStation_stage3` | + solar panel wings with grid lines + glow |
 
-The station graphic is drawn centred on `NODE_POSITIONS['leo']`. The click hit zone remains the same (invisible circle). A selection ring (the current `strokeCircle` with `0x88c8ff`) still renders when selected.
-
-**Files touched:**
-- `src/phaser/SpaceScene.ts` — `renderScene()` method; extract a `drawOrbitalStation(cx, cy, r, stage)` helper
+**Files touched:** `src/phaser/SpaceScene.ts`
 
 ---
 
-### Phase 27D — Orbital Telescope Array visual
+### Phase 27D — Remove Lunar Orbit node + orbit arcs
 
-When `orbitalTelescopeArray` is in `completedProjectIds`, draw a small constellation of 3–4 instrument dots in an arc above and to the right of the LEO node, connected by faint dashed lines.
+**Data cleanup:**
+- Remove `'lunarOrbit'` from `SpaceNodeType` union in `src/engine/types.ts`
+- Remove `lunarOrbit` entry from `generateSpaceNodes()` in `src/lib/stores/game.svelte.ts`
+- Update transit connections in `SpaceScene.ts`: remove `['leo','lunarOrbit']` and `['lunarOrbit','lunarSurface']`; add `['leo','lunarSurface']`
+- Remove `lunarOrbit` from `NODE_POSITIONS` and `NODE_COLOURS` in `SpaceScene.ts`
 
-**Rendering:**
-- 4 small diamond shapes (or filled circles, radius ~3px) positioned in a gentle arc, offset from the LEO node position (e.g. arc from roughly `{x: 260, y: 180}` to `{x: 340, y: 175}` in logical coords)
-- Connected by faint dotted/dashed lines between them (`lineStyle` with short segments manually drawn, or very low alpha solid line)
-- Colour: pale teal (`#60b0a8`), low opacity (~0.7) — distinct from station white and node colours
-- A small label `TELESCOPE ARRAY` in the same style as node labels, above the arc
+**Earth orbit arc:**
+- Draw a faint ellipse around Earth (below the L1/L2 transit line, above Earth body)
+- Up to 6 slot positions evenly spaced around the arc
+- Map of project IDs → arc slot icons (defined in scene):
+  - `orbitalTelescopeArray` → 4 diamond instruments with dashed connecting lines
+  - `hubbleSpaceTelescope` → single larger diamond with cross-hair detail
+- Each populated slot shows a small label below it
+- Replace standalone `drawTelescopeArray` with `drawEarthOrbitArc(completed)`
 
-The telescope array graphic is drawn in `renderScene()` after nodes, so it sits above the connection lines but below node labels.
+**Moon orbit arc:**
+- Draw a smaller faint ellipse around Lunar Surface node
+- Always visible (empty ring is the affordance)
+- Up to 3 slot positions
+- No projects mapped yet — arc draws empty
 
 **Files touched:**
-- `src/phaser/SpaceScene.ts` — `renderScene()` method; extract a `drawTelescopeArray(completedProjects)` helper
+- `src/engine/types.ts`
+- `src/lib/stores/game.svelte.ts`
+- `src/phaser/SpaceScene.ts`
 
 ---
 
 ## Implementation order
 
 ```
-27A (callback extension — needed by 27C and 27D)
-  → 27B (Earth visual — standalone, no dependencies)
-  → 27C (Orbital Station — depends on 27A)
-  → 27D (Telescope Array — depends on 27A)
+27A ✅ → 27B ✅ → 27C ✅ → 27D (Lunar Orbit removal + orbit arcs)
 ```
-
-27B can be done in parallel with 27A since it has no dependency on the new callback.
 
 ---
 
@@ -107,4 +113,8 @@ The telescope array graphic is drawn in `renderScene()` after nodes, so it sits 
 
 3. Should the telescope array arc position shift slightly if the LEO node is selected, to avoid overlap with the selection ring glow?
 
-   _Yes — simplest fix possible (small static offset is fine)._
+   _Yes — simplest fix possible (small static offset is fine). Now moot — telescope array moves to Earth orbit arc._
+
+4. Should the moon orbit arc be visible before any lunar orbit projects exist?
+
+   _Yes — show the empty ring as an affordance from the start._
