@@ -44,8 +44,9 @@ export function getEligibleEvents(
     if (def.blocIds !== null && !def.blocIds.includes(playerBlocId)) return false;
     if (hasCrisisActive && def.tags.includes('crisis')) return false;
     if (def.minClimate != null && climatePressure < def.minClimate) return false;
-    // NPC bloc gating: skip if associated bloc is eliminated or below will threshold
+    // NPC bloc gating: skip if associated bloc is the player, eliminated, or below will threshold
     if (def.npcBlocId) {
+      if (def.npcBlocId === playerBlocId) return false;
       const bloc = blocs.find((b) => b.defId === def.npcBlocId);
       if (!bloc || bloc.eliminated) return false;
       if (def.blocMinWill != null && bloc.will < def.blocMinWill) return false;

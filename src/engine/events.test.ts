@@ -198,6 +198,14 @@ describe('getEligibleEvents', () => {
     expect(result.map((e) => e.id)).toContain('blocEvent');
   });
 
+  it('excludes npcBlocId events when the npcBlocId matches the player bloc', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
+    const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;
+    // Player IS eastAsia — should not receive events from their own bloc
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eastAsia', new Set(), false, 0, [activeBloc]);
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
+
   it('excludes npcBlocId events when defId is in recentlyFiredDefIds', () => {
     const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
     const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;

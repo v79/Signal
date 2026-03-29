@@ -65,11 +65,11 @@
                   style="width: {willWidth(playerBloc.will, def.willCeiling)}; background: {willColor(playerBloc.will, def.willCeiling)};"
                 ></div>
               </div>
-              <div class="will-value">{playerBloc.will}</div>
+              <div class="will-value">{Math.round(playerBloc.will)}</div>
             </div>
             <div class="funding-stat">
               <span class="stat-label">F</span>
-              <span class="stat-value">{playerBloc.resources.funding}</span>
+              <span class="stat-value">{Math.round(playerBloc.resources.funding)}</span>
             </div>
             <div class="era-badge">{ERA_LABELS[playerBloc.era] ?? playerBloc.era}</div>
           </div>
@@ -103,11 +103,11 @@
                     style="width: {willWidth(bloc.will, def.willCeiling)}; background: {willColor(bloc.will, def.willCeiling)};"
                   ></div>
                 </div>
-                <div class="will-value">{bloc.will}</div>
+                <div class="will-value">{Math.round(bloc.will)}</div>
               </div>
               <div class="funding-stat">
                 <span class="stat-label">F</span>
-                <span class="stat-value">{bloc.resources.funding}</span>
+                <span class="stat-value">{Math.round(bloc.resources.funding)}</span>
               </div>
               <div class="era-badge">{ERA_LABELS[bloc.era] ?? bloc.era}</div>
             </div>
@@ -264,7 +264,7 @@
   .will-value {
     font-size: 0.55rem;
     color: #6a8aa8;
-    width: 20px;
+    width: 24px;
     text-align: right;
     flex-shrink: 0;
   }
@@ -274,6 +274,7 @@
     align-items: center;
     gap: 2px;
     flex-shrink: 0;
+    margin-left: 4px;
   }
 
   .stat-label {
@@ -284,7 +285,7 @@
   .stat-value {
     font-size: 0.6rem;
     color: #8aacca;
-    min-width: 24px;
+    min-width: 28px;
   }
 
   .era-badge {

@@ -13,6 +13,8 @@ This is a list of future requirements for the game but they are not to be implem
   - The only card I ever bank counters scandal. Need other options worth banking. (Partial: Contingency Routing logistics counter added.)
   - Ensure duplicate cards are not drawn at the same time
   - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
+- **Events:**
+  - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
 - **Research:**
   - What to do once all the tech for an era has been researched?
 - **Climate:**
