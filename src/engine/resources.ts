@@ -63,10 +63,10 @@ export function tickWill(will: number, config: WillConfig): number {
 
 /**
  * Cost in Political Will of holding cards in the bank for one turn.
- * 1 Will per banked card (GDD §13.3).
+ * 10 Will per banked card.
  */
 export function computeBankDecay(cards: CardInstance[]): number {
-  return cards.filter((c) => c.zone === 'bank').length;
+  return cards.filter((c) => c.zone === 'bank').length * 10;
 }
 
 // ---------------------------------------------------------------------------

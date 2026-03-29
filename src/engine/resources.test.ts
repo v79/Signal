@@ -68,9 +68,9 @@ describe('computeBankDecay', () => {
     expect(computeBankDecay(cards)).toBe(0);
   });
 
-  it('returns 1 Funding per banked card', () => {
+  it('returns 10 Will per banked card per turn', () => {
     const cards = [makeCard('c1', 'bank'), makeCard('c2', 'bank'), makeCard('c3', 'hand')];
-    expect(computeBankDecay(cards)).toBe(2);
+    expect(computeBankDecay(cards)).toBe(20);
   });
 
   it('returns 0 with an empty card list', () => {
