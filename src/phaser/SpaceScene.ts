@@ -8,6 +8,9 @@ import type { SpaceNode, FacilityInstance } from '../engine/types';
 // Node positions are purely visual (canvas coordinates); game state for each
 // node is read from SpaceNode via callbacks.
 //
+// Orbit arcs around Earth and the Moon are purely visual — auto-populated
+// from completedProjectIds. Players do not interact with arc slots directly.
+//
 // Scene key: 'SpaceScene'
 // ---------------------------------------------------------------------------
 
@@ -16,35 +19,49 @@ export interface SpaceSceneCallbacks {
   getFacilities: () => FacilityInstance[];
   getSelectedNode: () => string | null;
   onNodeClick: (id: string) => void;
+  getCompletedProjects: () => string[];
 }
 
 // Fixed canvas positions for each node id (normalised to 600 × 400 logical px)
 const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  leo: { x: 300, y: 240 },
-  l1: { x: 110, y: 230 },
-  l2: { x: 490, y: 230 },
-  lunarOrbit: { x: 300, y: 130 },
-  lunarSurface: { x: 300, y: 60 },
+  leo: { x: 300, y: 220 },
+  l1: { x: 110, y: 220 },
+  l2: { x: 490, y: 220 },
+  lunarSurface: { x: 300, y: 70 },
 };
 
-// Which nodes are directly connected by transit lines
+// Transit connections between nodes
 const CONNECTIONS: [string, string][] = [
   ['leo', 'l1'],
   ['leo', 'l2'],
-  ['leo', 'lunarOrbit'],
-  ['lunarOrbit', 'lunarSurface'],
+  ['leo', 'lunarSurface'],
 ];
 
-// Type colours
+// Node type colours
 const NODE_COLOURS: Record<string, number> = {
   lowEarthOrbit: 0x4a90c0,
   lagrangePoint: 0x7a60c0,
-  lunarOrbit: 0x8090a0,
   lunarSurface: 0xb0b8c0,
 };
 
 const NODE_RADIUS = 18;
 const EARTH_RADIUS = 40;
+
+// Orbital station stage project IDs in order
+const STATION_STAGES = [
+  'orbitalStation_stage1',
+  'orbitalStation_stage2',
+  'orbitalStation_stage3',
+];
+
+// Earth orbit arc — projects with fixed angles (degrees, canvas convention).
+// Upper arc spans roughly 200°–340°; angles assigned symmetrically so items
+// spread left-to-right above Earth. Max 6 items before crowding.
+// Canvas angles: 270° = directly above, 230° = upper-left, 310° = upper-right.
+const EARTH_ORBIT_PROJECTS: { id: string; angle: number; label: string; icon: 'telescope' | 'hubble' }[] = [
+  { id: 'orbitalTelescopeArray', angle: 230, label: 'TELESCOPE ARRAY', icon: 'telescope' },
+  { id: 'hubbleSpaceTelescope',  angle: 310, label: 'IMAGING PLATFORM', icon: 'hubble'    },
+];
 
 export class SpaceScene extends Phaser.Scene {
   private callbacks: SpaceSceneCallbacks | null = null;
@@ -71,24 +88,8 @@ export class SpaceScene extends Phaser.Scene {
     this.gfx = this.add.graphics();
     this.labelGroup = this.add.group();
 
-    // Draw stars (deterministic using fixed list)
     this.drawStars(w, h);
-
-    // Earth circle at bottom-centre
-    const earthGfx = this.add.graphics();
-    const ex = w / 2;
-    const ey = h - 50;
-    earthGfx.fillStyle(0x204060, 1);
-    earthGfx.fillCircle(ex, ey, EARTH_RADIUS * this.scaleX);
-    earthGfx.lineStyle(1.5, 0x3a6888, 1);
-    earthGfx.strokeCircle(ex, ey, EARTH_RADIUS * this.scaleX);
-    this.add
-      .text(ex, ey, 'EARTH', {
-        fontSize: `${Math.round(9 * this.scaleX)}px`,
-        color: '#6aB0d8',
-        fontFamily: 'monospace',
-      })
-      .setOrigin(0.5);
+    this.drawEarth(w, h);
 
     this.game.events.emit('spaceSceneReady');
   }
@@ -98,9 +99,63 @@ export class SpaceScene extends Phaser.Scene {
     this.renderScene();
   }
 
+  // ---------------------------------------------------------------------------
+  // Earth (static — drawn once in create)
+  // ---------------------------------------------------------------------------
+
+  private drawEarth(w: number, h: number): void {
+    const sx = this.scaleX;
+    const sy = this.scaleY;
+    const ex = w / 2;
+    const ey = h - 50 * sy;
+    const r = EARTH_RADIUS * Math.min(sx, sy);
+
+    const g = this.add.graphics();
+
+    // Ocean base
+    g.fillStyle(0x1a4a7a, 1);
+    g.fillCircle(ex, ey, r);
+
+    // Continent blobs — fixed offsets relative to Earth centre (fraction of r)
+    const blobs = [
+      { ox: 0.05, oy: -0.25, rx: 0.28, ry: 0.38 }, // Africa/Europe
+      { ox: -0.42, oy: -0.1,  rx: 0.22, ry: 0.45 }, // Americas
+      { ox: 0.3,  oy: -0.3,  rx: 0.38, ry: 0.30 }, // Asia
+      { ox: 0.0,  oy: 0.62,  rx: 0.45, ry: 0.18 }, // Antarctica
+      { ox: 0.42, oy: 0.28,  rx: 0.20, ry: 0.16 }, // Australia
+    ];
+    g.fillStyle(0x2d6e3a, 1);
+    for (const b of blobs) {
+      g.fillEllipse(ex + b.ox * r, ey + b.oy * r, b.rx * r * 2, b.ry * r * 2);
+    }
+
+    // Polar caps
+    g.fillStyle(0xc8dde8, 0.55);
+    g.fillEllipse(ex, ey - r * 0.78, r * 0.7,  r * 0.32);
+    g.fillEllipse(ex, ey + r * 0.82, r * 0.8,  r * 0.24);
+
+    // Atmosphere glow ring
+    g.lineStyle(3 * Math.min(sx, sy), 0xaad4f0, 0.3);
+    g.strokeCircle(ex, ey, r + 4 * Math.min(sx, sy));
+
+    // Label
+    this.add
+      .text(ex, ey, 'EARTH', {
+        fontSize: `${Math.round(9 * sx)}px`,
+        color: '#6ab0d8',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main render loop
+  // ---------------------------------------------------------------------------
+
   private renderScene(): void {
     const nodes = this.callbacks!.getNodes();
     const selectedId = this.callbacks!.getSelectedNode();
+    const completed = this.callbacks!.getCompletedProjects();
 
     this.gfx.clear();
     this.hitZones.forEach((z) => z.destroy());
@@ -119,6 +174,10 @@ export class SpaceScene extends Phaser.Scene {
       this.gfx.strokePath();
     }
 
+    // Orbit arcs (drawn before nodes)
+    this.drawEarthOrbitArc(completed);
+    this.drawMoonOrbitArc(nodes);
+
     // Nodes
     for (const node of nodes) {
       const pos = NODE_POSITIONS[node.id];
@@ -131,25 +190,18 @@ export class SpaceScene extends Phaser.Scene {
       const colour = NODE_COLOURS[node.type] ?? 0x6080a0;
       const hasFacility = node.facilityId !== null;
 
-      // Glow ring if selected
-      if (isSelected) {
-        this.gfx.lineStyle(2, 0x88c8ff, 0.9);
-        this.gfx.strokeCircle(cx, cy, r + 5);
+      if (node.id === 'leo') {
+        const stageCount = STATION_STAGES.filter((s) => completed.includes(s)).length;
+        if (stageCount > 0) {
+          this.drawOrbitalStation(cx, cy, r, stageCount, isSelected);
+        } else {
+          this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected);
+        }
+      } else {
+        this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected);
       }
 
-      // Node body
-      this.gfx.fillStyle(colour, hasFacility ? 1 : 0.55);
-      this.gfx.fillCircle(cx, cy, r);
-      this.gfx.lineStyle(1.5, isSelected ? 0x88c8ff : colour, 1);
-      this.gfx.strokeCircle(cx, cy, r);
-
-      // Facility dot
-      if (hasFacility) {
-        this.gfx.fillStyle(0xffffff, 0.85);
-        this.gfx.fillCircle(cx, cy, r * 0.35);
-      }
-
-      // Launch cost label under node
+      // Launch cost label
       const costLabel = this.add
         .text(cx, cy + r + 4, `${node.launchCost}M`, {
           fontSize: `${Math.round(8 * this.scaleX)}px`,
@@ -159,7 +211,7 @@ export class SpaceScene extends Phaser.Scene {
         .setOrigin(0.5, 0);
       this.labelGroup.add(costLabel);
 
-      // Node name above
+      // Node name
       const nameLabel = this.add
         .text(cx, cy - r - 5, node.label, {
           fontSize: `${Math.round(9 * this.scaleX)}px`,
@@ -169,7 +221,7 @@ export class SpaceScene extends Phaser.Scene {
         .setOrigin(0.5, 1);
       this.labelGroup.add(nameLabel);
 
-      // Invisible hit zone
+      // Hit zone
       const hit = this.add.circle(cx, cy, r + 8, 0xffffff, 0);
       hit.setInteractive({ cursor: 'pointer' });
       hit.on('pointerup', () => this.callbacks?.onNodeClick(node.id));
@@ -181,34 +233,229 @@ export class SpaceScene extends Phaser.Scene {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Plain node
+  // ---------------------------------------------------------------------------
+
+  private drawPlainNode(
+    cx: number, cy: number, r: number,
+    colour: number, hasFacility: boolean, isSelected: boolean
+  ): void {
+    if (isSelected) {
+      this.gfx.lineStyle(2, 0x88c8ff, 0.9);
+      this.gfx.strokeCircle(cx, cy, r + 5);
+    }
+    this.gfx.fillStyle(colour, hasFacility ? 1 : 0.55);
+    this.gfx.fillCircle(cx, cy, r);
+    this.gfx.lineStyle(1.5, isSelected ? 0x88c8ff : colour, 1);
+    this.gfx.strokeCircle(cx, cy, r);
+    if (hasFacility) {
+      this.gfx.fillStyle(0xffffff, 0.85);
+      this.gfx.fillCircle(cx, cy, r * 0.35);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Orbital station (LEO node, stages 1–3)
+  // ---------------------------------------------------------------------------
+
+  private drawOrbitalStation(
+    cx: number, cy: number, r: number,
+    stageCount: number, isSelected: boolean
+  ): void {
+    const s = Math.min(this.scaleX, this.scaleY);
+
+    if (isSelected) {
+      this.gfx.lineStyle(2, 0x88c8ff, 0.9);
+      this.gfx.strokeCircle(cx, cy, r + 5);
+    }
+
+    // Stage 1+: core module
+    const cw = r * 0.55;
+    const ch = r * 0.38;
+    this.gfx.fillStyle(0x8ab8d8, 1);
+    this.gfx.fillRect(cx - cw, cy - ch, cw * 2, ch * 2);
+    this.gfx.lineStyle(1.5 * s, 0xaad4f0, 1);
+    this.gfx.strokeRect(cx - cw, cy - ch, cw * 2, ch * 2);
+    // Docking collar
+    this.gfx.lineStyle(2 * s, 0xaad4f0, 0.8);
+    this.gfx.beginPath();
+    this.gfx.moveTo(cx, cy - ch);
+    this.gfx.lineTo(cx, cy - ch - r * 0.3);
+    this.gfx.strokePath();
+
+    // Stage 2+: habitation ring
+    if (stageCount >= 2) {
+      this.gfx.lineStyle(2 * s, 0x60a0c8, 0.9);
+      this.gfx.strokeEllipse(cx, cy, r * 2.2, r * 1.4);
+    }
+
+    // Stage 3: solar panel wings + glow
+    if (stageCount >= 3) {
+      const pw = r * 1.6;
+      const ph = r * 0.22;
+      const py = cy - r * 0.05;
+
+      for (const side of [-1, 1]) {
+        const px = side === -1 ? cx - cw - pw : cx + cw;
+        this.gfx.fillStyle(0x3a6888, 1);
+        this.gfx.fillRect(px, py - ph, pw, ph * 2);
+        this.gfx.lineStyle(1 * s, 0x60a8d0, 0.8);
+        this.gfx.strokeRect(px, py - ph, pw, ph * 2);
+        this.gfx.lineStyle(0.5 * s, 0x60a8d0, 0.4);
+        for (let i = 1; i < 3; i++) {
+          const lx = px + (pw / 3) * i;
+          this.gfx.beginPath();
+          this.gfx.moveTo(lx, py - ph);
+          this.gfx.lineTo(lx, py + ph);
+          this.gfx.strokePath();
+        }
+      }
+
+      this.gfx.lineStyle(6 * s, 0x88d4ff, 0.12);
+      this.gfx.strokeCircle(cx, cy, r * 1.8);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Earth orbit arc — auto-populated from completed projects
+  // ---------------------------------------------------------------------------
+
+  private drawEarthOrbitArc(completed: string[]): void {
+    const w = this.scale.width;
+    const h = this.scale.height;
+    const s = Math.min(this.scaleX, this.scaleY);
+
+    // Centred on Earth body. arcRy is tall enough that the upper arc sits
+    // clearly between Earth and the LEO node.
+    const ex = w / 2;
+    const ey = h - 50 * this.scaleY;
+    const arcRx = 110 * this.scaleX;
+    const arcRy = 55 * this.scaleY;
+
+    // Full ellipse — Earth (drawn once in create()) is on top in the display
+    // list, so it naturally masks the lower half of the ring.
+    this.gfx.lineStyle(1 * s, 0x2a5878, 0.55);
+    this.gfx.strokeEllipse(ex, ey, arcRx * 2, arcRy * 2);
+
+    // Populated project icons
+    for (const proj of EARTH_ORBIT_PROJECTS) {
+      if (!completed.includes(proj.id)) continue;
+
+      const rad = (proj.angle * Math.PI) / 180;
+      const ix = ex + Math.cos(rad) * arcRx;
+      const iy = ey + Math.sin(rad) * arcRy;
+
+      if (proj.icon === 'telescope') {
+        this.drawTelescopeIcon(ix, iy, s);
+      } else if (proj.icon === 'hubble') {
+        this.drawHubbleIcon(ix, iy, s);
+      }
+
+      // Label placed radially outside the arc
+      const lx = ex + Math.cos(rad) * (arcRx + 18 * this.scaleX);
+      const ly = ey + Math.sin(rad) * (arcRy + 18 * this.scaleY);
+      const label = this.add
+        .text(lx, ly, proj.label, {
+          fontSize: `${Math.round(6.5 * this.scaleX)}px`,
+          color: '#60b0a8',
+          fontFamily: 'monospace',
+          align: 'center',
+        })
+        .setOrigin(0.5, 0.5);
+      this.labelGroup.add(label);
+    }
+  }
+
+  private drawTelescopeIcon(cx: number, cy: number, s: number): void {
+    // 3 small diamonds connected by dashes
+    const dr = 2.5 * s;
+    const spacing = 7 * s;
+    const positions = [-spacing, 0, spacing];
+
+    // Dashes between diamonds
+    this.gfx.lineStyle(0.8 * s, 0x60b0a8, 0.4);
+    for (let i = 0; i < positions.length - 1; i++) {
+      const ax = cx + positions[i];
+      const bx = cx + positions[i + 1];
+      this.gfx.beginPath();
+      this.gfx.moveTo(ax + dr, cy);
+      this.gfx.lineTo(bx - dr, cy);
+      this.gfx.strokePath();
+    }
+
+    this.gfx.fillStyle(0x60b0a8, 0.85);
+    for (const ox of positions) {
+      const ix = cx + ox;
+      this.gfx.beginPath();
+      this.gfx.moveTo(ix, cy - dr);
+      this.gfx.lineTo(ix + dr, cy);
+      this.gfx.lineTo(ix, cy + dr);
+      this.gfx.lineTo(ix - dr, cy);
+      this.gfx.closePath();
+      this.gfx.fillPath();
+    }
+  }
+
+  private drawHubbleIcon(cx: number, cy: number, s: number): void {
+    // Single larger diamond with crosshair lines
+    const dr = 4 * s;
+    this.gfx.fillStyle(0xa0c8e0, 0.85);
+    this.gfx.beginPath();
+    this.gfx.moveTo(cx, cy - dr);
+    this.gfx.lineTo(cx + dr, cy);
+    this.gfx.lineTo(cx, cy + dr);
+    this.gfx.lineTo(cx - dr, cy);
+    this.gfx.closePath();
+    this.gfx.fillPath();
+
+    // Crosshair
+    this.gfx.lineStyle(0.8 * s, 0xd0eeff, 0.6);
+    this.gfx.beginPath();
+    this.gfx.moveTo(cx - dr * 1.5, cy);
+    this.gfx.lineTo(cx + dr * 1.5, cy);
+    this.gfx.strokePath();
+    this.gfx.beginPath();
+    this.gfx.moveTo(cx, cy - dr * 1.5);
+    this.gfx.lineTo(cx, cy + dr * 1.5);
+    this.gfx.strokePath();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Moon orbit arc — always visible, auto-populated from future lunar projects
+  // ---------------------------------------------------------------------------
+
+  private drawMoonOrbitArc(nodes: SpaceNode[]): void {
+    const lunarNode = nodes.find((n) => n.id === 'lunarSurface');
+    if (!lunarNode) return;
+
+    const pos = NODE_POSITIONS['lunarSurface'];
+    const s = Math.min(this.scaleX, this.scaleY);
+    const mx = pos.x * this.scaleX;
+    const my = pos.y * this.scaleY;
+    const arcRx = 38 * this.scaleX;
+    const arcRy = 12 * this.scaleY;
+
+    // Faint ring — full ellipse (moon is smaller, ring can wrap around)
+    this.gfx.lineStyle(1 * s, 0x506070, 0.45);
+    this.gfx.strokeEllipse(mx, my, arcRx * 2, arcRy * 2);
+
+    // 3 slot positions (upper arc) — empty for now, ready for future projects
+    // No icons drawn until lunar orbit projects are defined
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stars (static)
+  // ---------------------------------------------------------------------------
+
   private drawStars(w: number, h: number): void {
     const starGfx = this.add.graphics();
-    starGfx.fillStyle(0xffffff, 1);
-    // Fixed star positions derived from a simple hash — no RNG state consumed
     const stars = [
-      [42, 18],
-      [88, 52],
-      [155, 31],
-      [210, 75],
-      [280, 22],
-      [350, 44],
-      [420, 15],
-      [490, 67],
-      [540, 38],
-      [20, 88],
-      [70, 120],
-      [140, 95],
-      [200, 140],
-      [330, 100],
-      [500, 120],
-      [570, 85],
-      [60, 170],
-      [160, 155],
-      [380, 165],
-      [550, 175],
-      [30, 200],
-      [450, 210],
-      [580, 195],
+      [42, 18], [88, 52], [155, 31], [210, 75], [280, 22],
+      [350, 44], [420, 15], [490, 67], [540, 38], [20, 88],
+      [70, 120], [140, 95], [200, 140], [330, 100], [500, 120],
+      [570, 85], [60, 170], [160, 155], [380, 165], [550, 175],
+      [30, 200], [450, 210], [580, 195],
     ];
     for (const [sx, sy] of stars) {
       const opacity = ((sx * 7 + sy * 13) % 5) * 0.15 + 0.2;
