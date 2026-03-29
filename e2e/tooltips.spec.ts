@@ -131,7 +131,7 @@ test.describe('HUD bar tooltips', () => {
   test('CLIMATE bar tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.hud-center .tooltip-host').first();
     const text = await assertTooltipInViewport(page, host);
-    expect(text).toContain('climate index');
+    expect(text).toContain('Climate pressure');
   });
 
   test('WILL bar tooltip is visible and on screen', async ({ page }) => {
