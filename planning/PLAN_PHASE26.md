@@ -60,7 +60,7 @@ The only remaining Era/tech gate deferred from Phase 25A.
 
 ---
 
-### Phase 26C — Orbital Mechanics tech + Orbital Telescope Array
+### ✅ Phase 26C — Orbital Mechanics tech + Orbital Telescope Array
 
 Add the tech prerequisite and the warm-up Scientific Project that teaches the player space projects exist before the landmark commitment.
 
@@ -74,6 +74,8 @@ Add the tech prerequisite and the warm-up Scientific Project that teaches the pl
   - Effects on completion: +15% signal decode progress for the rest of Era 1; news item naming it; small Physics/Maths buff while operational.
   - Teaches the player multi-turn space projects exist before the landmark asks them to commit.
 - Add a news item on completion: flavour text about the telescope coming online and detecting anomalous signal characteristics.
+
+**Implementation note:** Rewards simplified on delivery — one-time `+10 signalProgress` and `+10 funding` rather than the planned ongoing Physics/Maths field buff. The persistent buff was not implemented.
 
 ---
 
@@ -126,24 +128,25 @@ The three-stage project that gates the Era 1 → Era 2 transition. Only availabl
 
 ---
 
-### Phase 26F — Era transition mechanics
+### Phase 26F — Era transition mechanics (partially complete)
 
 The mechanics that make the map unlock feel meaningful and guide the player toward Era 3.
 
 **Tasks:**
 
-**Map visibility:**
-- Near Space map/scene: already rendered but inactive pre-transition. Confirm it is visible but inert (tiles/nodes greyed out, not interactable) from turn 1. If not currently implemented this way, adjust `SpaceScene.ts` or `MapContainer.svelte` accordingly.
-- Asteroid Belt map: becomes visible-but-inert when `era === 'nearSpace'` (same pattern — greyed out, locked, shows as future goal).
+**Map visibility:** ✅
+- ~~Near Space map/scene: already rendered but inactive pre-transition. Confirm it is visible but inert (tiles/nodes greyed out, not interactable) from turn 1. If not currently implemented this way, adjust `SpaceScene.ts` or `MapContainer.svelte` accordingly.~~ _Implemented differently: Near Space tab unlocks when `orbitalStation_stage1` is complete (cleaner than always-visible-but-inert)._
+- ~~Asteroid Belt map: becomes visible-but-inert when `era === 'nearSpace'` (same pattern — greyed out, locked, shows as future goal).~~ _Implemented: Asteroid Belt tab requires `era === 'deepSpace'` (more appropriate than nearSpace)._
 
-**Station Commander role:**
-- Add `stationCommander` as a new role slot in the committee.
-- Slot is hidden (not rendered) until `era === 'nearSpace'`.
-- Candidate: one named character (former astronaut or military background — write def in `src/data/board.ts`). Recruit cost: 25F · 20W.
-- Buffs: −10% Era 2 launch costs; +5% Engineering output.
-- Vacant penalty: +10% launch cost in Era 2 (mild — slot is new and player needs time to recruit).
+**Station Commander role:** ✅
+- ~~Add `stationCommander` as a new role slot in the committee.~~
+- ~~Slot is hidden (not rendered) until `era === 'nearSpace'`.~~
+- ~~Candidate: one named character (former astronaut or military background — write def in `src/data/board.ts`). Recruit cost: 25F · 20W.~~
+- ~~Buffs: −10% Era 2 launch costs; +5% Engineering output.~~
+- ~~Vacant penalty: +10% launch cost in Era 2 (mild — slot is new and player needs time to recruit).~~
+- _Three seeded candidates added to `src/data/board.json`; slot hidden until `era !== 'earth'`._
 
-**Competitor pressure events:**
+**Competitor pressure events:** ❌ Not implemented
 - After turn ~15 (exact turn TBD; tune in playtesting), if `orbitalStationAuthorised === false`, NPC blocs begin completing orbital projects:
   - Announce via news ticker: "[Bloc name] has established an orbital presence."
   - Effect: −5W drain (public pressure); player loses eligibility for "first to orbit" bonus.
@@ -151,8 +154,8 @@ The mechanics that make the map unlock feel meaningful and guide the player towa
 - "First to orbit" bonus: if the player completes the Orbital Station before any NPC bloc orbital announcement, award a one-time +20W and a news item.
 - Add `firstToOrbit: boolean` and `npcOrbitalCount: number` to `GameState`.
 
-**Era 2 → Era 3 placeholder:**
-- Add a `// TODO Phase 27+: Era 2 → Era 3 transition (Lunar Base / Deep Space Transit)` comment in `turn.ts` at the appropriate hook point.
+**Era 2 → Era 3 placeholder:** ❌ Not added
+- Add a `// TODO Phase 28+: Era 2 → Era 3 transition (Lunar Base / Deep Space Transit)` comment in `turn.ts` at the appropriate hook point.
 - Era 3 guidance will likely be prompted by signal decoding milestones — left for a future phase.
 
 ---
