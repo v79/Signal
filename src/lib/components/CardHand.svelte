@@ -114,7 +114,7 @@
                 </button>
               </div>
               {#if card.bankedSinceTurn != null}
-                <div class="bank-since">Banked T{card.bankedSinceTurn} · −1 Will/turn</div>
+                <div class="bank-since">Banked T{card.bankedSinceTurn} · −10 Will/turn</div>
               {/if}
             </div>
           {/if}
@@ -173,7 +173,7 @@
                 class:disabled={!inAction || bankFull}
                 disabled={!inAction || bankFull}
                 onclick={() => onBank(card.id)}
-                title={bankFull ? 'Bank is full' : 'Hold for next turn (costs 1 Will/turn)'}
+                title={bankFull ? 'Bank is full' : 'Hold for next turn (costs 10 Will/turn)'}
               >
                 BANK
               </button>
