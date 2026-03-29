@@ -54,10 +54,13 @@ const STATION_STAGES = [
   'orbitalStation_stage3',
 ];
 
-// Earth orbit arc — projects and their slot indices (0-based, max 6 slots)
-const EARTH_ORBIT_PROJECTS: { id: string; slot: number; label: string; icon: 'telescope' | 'hubble' }[] = [
-  { id: 'orbitalTelescopeArray', slot: 0, label: 'TELESCOPE ARRAY', icon: 'telescope' },
-  { id: 'hubbleSpaceTelescope', slot: 1, label: 'IMAGING PLATFORM', icon: 'hubble' },
+// Earth orbit arc — projects with fixed angles (degrees, canvas convention).
+// Upper arc spans roughly 200°–340°; angles assigned symmetrically so items
+// spread left-to-right above Earth. Max 6 items before crowding.
+// Canvas angles: 270° = directly above, 230° = upper-left, 310° = upper-right.
+const EARTH_ORBIT_PROJECTS: { id: string; angle: number; label: string; icon: 'telescope' | 'hubble' }[] = [
+  { id: 'orbitalTelescopeArray', angle: 230, label: 'TELESCOPE ARRAY', icon: 'telescope' },
+  { id: 'hubbleSpaceTelescope',  angle: 310, label: 'IMAGING PLATFORM', icon: 'hubble'    },
 ];
 
 export class SpaceScene extends Phaser.Scene {
@@ -323,42 +326,25 @@ export class SpaceScene extends Phaser.Scene {
     const h = this.scale.height;
     const s = Math.min(this.scaleX, this.scaleY);
 
-    // Arc centred on Earth body position
+    // Centred on Earth body. arcRy is tall enough that the upper arc sits
+    // clearly between Earth and the LEO node.
     const ex = w / 2;
     const ey = h - 50 * this.scaleY;
-    const arcRx = 105 * this.scaleX; // horizontal radius
-    const arcRy = 28 * this.scaleY;  // vertical radius (flat ellipse)
+    const arcRx = 110 * this.scaleX;
+    const arcRy = 55 * this.scaleY;
 
-    // Draw the faint orbit ring (upper arc only — the lower half is inside Earth)
+    // Full ellipse — Earth (drawn once in create()) is on top in the display
+    // list, so it naturally masks the lower half of the ring.
     this.gfx.lineStyle(1 * s, 0x2a5878, 0.55);
-    this.gfx.beginPath();
-    // Draw arc from ~210° to ~330° (upper portion, in radians)
-    const startAngle = Math.PI + Math.PI * 0.15;
-    const endAngle = Math.PI * 2 - Math.PI * 0.15;
-    const steps = 40;
-    for (let i = 0; i <= steps; i++) {
-      const angle = startAngle + ((endAngle - startAngle) * i) / steps;
-      const px = ex + Math.cos(angle) * arcRx;
-      const py = ey + Math.sin(angle) * arcRy;
-      if (i === 0) this.gfx.moveTo(px, py);
-      else this.gfx.lineTo(px, py);
-    }
-    this.gfx.strokePath();
+    this.gfx.strokeEllipse(ex, ey, arcRx * 2, arcRy * 2);
 
-    // 6 evenly-spaced slot positions across the arc
-    const SLOT_COUNT = 6;
-    const slotAngles: number[] = [];
-    for (let i = 0; i < SLOT_COUNT; i++) {
-      slotAngles.push(startAngle + ((endAngle - startAngle) * (i + 0.5)) / SLOT_COUNT);
-    }
-
-    // Draw populated slots
+    // Populated project icons
     for (const proj of EARTH_ORBIT_PROJECTS) {
       if (!completed.includes(proj.id)) continue;
-      const angle = slotAngles[proj.slot];
-      if (angle === undefined) continue;
-      const ix = ex + Math.cos(angle) * arcRx;
-      const iy = ey + Math.sin(angle) * arcRy;
+
+      const rad = (proj.angle * Math.PI) / 180;
+      const ix = ex + Math.cos(rad) * arcRx;
+      const iy = ey + Math.sin(rad) * arcRy;
 
       if (proj.icon === 'telescope') {
         this.drawTelescopeIcon(ix, iy, s);
@@ -366,14 +352,17 @@ export class SpaceScene extends Phaser.Scene {
         this.drawHubbleIcon(ix, iy, s);
       }
 
-      // Label below icon
+      // Label placed radially outside the arc
+      const lx = ex + Math.cos(rad) * (arcRx + 18 * this.scaleX);
+      const ly = ey + Math.sin(rad) * (arcRy + 18 * this.scaleY);
       const label = this.add
-        .text(ix, iy - 10 * s, proj.label, {
+        .text(lx, ly, proj.label, {
           fontSize: `${Math.round(6.5 * this.scaleX)}px`,
           color: '#60b0a8',
           fontFamily: 'monospace',
+          align: 'center',
         })
-        .setOrigin(0.5, 1);
+        .setOrigin(0.5, 0.5);
       this.labelGroup.add(label);
     }
   }
