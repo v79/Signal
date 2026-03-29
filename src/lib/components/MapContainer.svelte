@@ -5,6 +5,7 @@
   import TileTooltip from './TileTooltip.svelte';
   import BoardPanel from './BoardPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
+  import SpaceOverview from './SpaceOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS, PROJECT_DEFS } from '../../data/loader';
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
@@ -48,6 +49,7 @@
   let mapReady = $state(false);
   /** Whether the facility overview panel is open. */
   let showFacilityOverview = $state(false);
+  let showSpaceOverview = $state(false);
 
   /** HQ bonus including tech field bonuses — passed to TileTooltip for the HQ tile. */
   const hqBonus = $derived.by<HqBonus>(() => {
@@ -340,6 +342,19 @@
       </Tooltip>
     </div>
   {/if}
+  {#if activeTab === 'space' && gameStore.state}
+    <div class="map-toolbar">
+      <Tooltip text="Overview of Near Space assets and orbital projects" direction="below">
+        <button
+          class="tab overview-btn"
+          class:active={showSpaceOverview}
+          onclick={() => (showSpaceOverview = !showSpaceOverview)}
+        >
+          ≡ ASSETS
+        </button>
+      </Tooltip>
+    </div>
+  {/if}
 
   <!-- Board panel (shown instead of Phaser canvas when board tab is active) -->
   {#if activeTab === 'board' && gameStore.state}
@@ -392,6 +407,16 @@
         facilityDefs={FACILITY_DEFS}
         earthTiles={gameStore.state.map.earthTiles}
         onClose={() => (showFacilityOverview = false)}
+      />
+    {/if}
+    {#if showSpaceOverview && gameStore.state && activeTab === 'space'}
+      <SpaceOverview
+        spaceNodes={gameStore.state.map.spaceNodes}
+        facilities={gameStore.state.player.facilities}
+        facilityDefs={FACILITY_DEFS}
+        projectDefs={PROJECT_DEFS}
+        completedProjectIds={gameStore.state.player.completedProjectIds}
+        onClose={() => (showSpaceOverview = false)}
       />
     {/if}
     {#if selectedTile && activeTab === 'earth'}
