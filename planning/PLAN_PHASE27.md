@@ -63,7 +63,7 @@ LEO node renders a growing station graphic based on completed stages:
 
 ---
 
-### Phase 27D — Remove Lunar Orbit node + orbit arcs
+### ✅ Phase 27D — Remove Lunar Orbit node + orbit arcs
 
 **Data cleanup:**
 - Remove `'lunarOrbit'` from `SpaceNodeType` union in `src/engine/types.ts`
@@ -72,18 +72,13 @@ LEO node renders a growing station graphic based on completed stages:
 - Remove `lunarOrbit` from `NODE_POSITIONS` and `NODE_COLOURS` in `SpaceScene.ts`
 
 **Earth orbit arc:**
-- Draw a faint ellipse around Earth (below the L1/L2 transit line, above Earth body)
-- Up to 6 slot positions evenly spaced around the arc
-- Map of project IDs → arc slot icons (defined in scene):
-  - `orbitalTelescopeArray` → 4 diamond instruments with dashed connecting lines
-  - `hubbleSpaceTelescope` → single larger diamond with cross-hair detail
-- Each populated slot shows a small label below it
-- Replace standalone `drawTelescopeArray` with `drawEarthOrbitArc(completed)`
+- Full `strokeEllipse` around Earth; Earth body (drawn in `create()`) sits on top and masks lower half
+- Per-project angle assignment: `orbitalTelescopeArray` at 230°, `hubbleSpaceTelescope` at 310° — symmetric spread
+- Icons: telescope = 3 teal diamonds with dashes; Hubble = larger diamond with crosshair
+- Labels placed radially outside the arc
 
 **Moon orbit arc:**
-- Draw a smaller faint ellipse around Lunar Surface node
-- Always visible (empty ring is the affordance)
-- Up to 3 slot positions
+- Subtle `strokeEllipse` around Lunar Surface node, always visible
 - No projects mapped yet — arc draws empty
 
 **Files touched:**
@@ -93,10 +88,25 @@ LEO node renders a growing station graphic based on completed stages:
 
 ---
 
+### ✅ Phase 27E — Near Space assets overview panel
+
+`SpaceOverview.svelte` mirrors `FacilityOverview` with three sections:
+- **FACILITIES ON NODES** — any facility built at LEO/L1/L2/Lunar Surface
+- **EARTH ORBIT** — completed orbital arc projects (Telescope Array, Hubble)
+- **LUNAR ORBIT** — placeholder for future lunar orbit projects
+
+`≡ ASSETS` toolbar button added to Near Space tab in `MapContainer.svelte`.
+
+**Files touched:**
+- `src/lib/components/SpaceOverview.svelte` (new)
+- `src/lib/components/MapContainer.svelte`
+
+---
+
 ## Implementation order
 
 ```
-27A ✅ → 27B ✅ → 27C ✅ → 27D (Lunar Orbit removal + orbit arcs)
+27A ✅ → 27B ✅ → 27C ✅ → 27D ✅ → 27E ✅
 ```
 
 ---
