@@ -480,6 +480,12 @@ export interface EventDef {
    * appear in the pool. Omit (or 0) for no climate gate.
    */
   minClimate?: number;
+  /** NPC bloc ID associated with this event. If set, the event only fires while that bloc is active. */
+  npcBlocId?: string;
+  /** Minimum will the npcBlocId bloc must have for this event to appear in the pool. */
+  blocMinWill?: number;
+  /** Classification metadata for bloc events. */
+  blocEventType?: 'diplomatic' | 'pressure' | 'elimination';
   responseTier: EventResponseTier;
   /** Effect if the event is not countered / resolves unfavourably. */
   negativeEffect: EventEffect;
@@ -550,6 +556,8 @@ export interface BlocDef {
   willCeiling: number;
   /** Will floor — authoritarian collapse risk below this threshold. */
   willCollapsThreshold: number;
+  /** True for blocs whose economic model is structurally threatened by the game's push factors. */
+  isPetroState?: boolean;
 }
 
 export interface BlocState {

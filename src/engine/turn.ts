@@ -172,6 +172,7 @@ export function executeEventPhase(
     rng,
     state.turn,
     state.climatePressure,
+    state.blocs,
   );
 
   // Auto-counter newly arrived events.
@@ -534,7 +535,7 @@ export function executeWorldPhase(
     : [];
 
   // 14. Bloc simulation
-  const { updatedBlocs, newNewsItems: blocNews } = simulateBlocs(state.blocs, blocDefs, nextTurn);
+  const { updatedBlocs, newNewsItems: blocNews, pendingEventInstances } = simulateBlocs(state.blocs, blocDefs, nextTurn);
   const mergerNews = checkBlocMergers(updatedBlocs, blocDefs, nextTurn);
 
   // 15. Board age ticking (retirements generate news)
@@ -638,6 +639,7 @@ export function executeWorldPhase(
   // Assemble updated active events list (carry over non-resolved + any new ones)
   const eventsAfterWorld = [
     ...state.activeEvents,
+    ...pendingEventInstances,
     ...(newBoardProposalEvent ? [newBoardProposalEvent] : []),
     ...(resurfacedProposalEvent ? [resurfacedProposalEvent] : []),
     ...(engineeringChallengeEvent ? [engineeringChallengeEvent] : []),

@@ -8,6 +8,7 @@ import type {
   Era,
   PushFactor,
   FacilityInstance,
+  BlocState,
 } from './types';
 import type { Rng } from './rng';
 
@@ -33,6 +34,8 @@ export function getEligibleEvents(
   activeEventDefIds: Set<string>,
   hasCrisisActive: boolean,
   climatePressure: number,
+  blocs: BlocState[] = [],
+  recentlyFiredDefIds: Set<string> = new Set(),
 ): EventDef[] {
   return pool.filter((def) => {
     if (activeEventDefIds.has(def.id)) return false;
@@ -41,6 +44,13 @@ export function getEligibleEvents(
     if (def.blocIds !== null && !def.blocIds.includes(playerBlocId)) return false;
     if (hasCrisisActive && def.tags.includes('crisis')) return false;
     if (def.minClimate != null && climatePressure < def.minClimate) return false;
+    // NPC bloc gating: skip if associated bloc is eliminated or below will threshold
+    if (def.npcBlocId) {
+      const bloc = blocs.find((b) => b.defId === def.npcBlocId);
+      if (!bloc || bloc.eliminated) return false;
+      if (def.blocMinWill != null && bloc.will < def.blocMinWill) return false;
+      if (recentlyFiredDefIds.has(def.id)) return false;
+    }
     return true;
   });
 }
@@ -61,12 +71,19 @@ export function selectNewEvents(
   rng: Rng,
   arrivedTurn: number,
   climatePressure: number,
+  blocs: BlocState[] = [],
 ): EventInstance[] {
   const activeDefIds = new Set(activeEvents.map((e) => e.defId));
   const hasCrisisActive = activeEvents.some(
     (e) => !e.resolved && (pool.find((d) => d.id === e.defId)?.tags ?? []).includes('crisis'),
   );
-  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive, climatePressure);
+  // Diplomatic/bloc events that fired within the last 10 turns are put on cooldown.
+  const recentlyFiredDefIds = new Set(
+    activeEvents
+      .filter((e) => arrivedTurn - e.arrivedTurn < 10)
+      .map((e) => e.defId),
+  );
+  const eligible = getEligibleEvents(pool, era, pushFactor, playerBlocId, activeDefIds, hasCrisisActive, climatePressure, blocs, recentlyFiredDefIds);
   if (eligible.length === 0) return [];
 
   const rawCount = rng.nextInt(0, Math.min(MAX_NEW_EVENTS_PER_TURN, eligible.length));

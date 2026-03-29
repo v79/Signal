@@ -176,6 +176,34 @@ describe('getEligibleEvents', () => {
     const above = getEligibleEvents([climateGated], 'earth', 'climateChange', 'eu', new Set(), false, 25);
     expect(above.map((e) => e.id)).toContain('climateGated');
   });
+
+  it('excludes npcBlocId events when that bloc is eliminated', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
+    const eliminatedBloc = { defId: 'eastAsia', will: 50, eliminated: true } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [eliminatedBloc]);
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
+
+  it('excludes npcBlocId events when bloc will is below blocMinWill', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia', blocMinWill: 50 };
+    const lowWillBloc = { defId: 'eastAsia', will: 30, eliminated: false } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [lowWillBloc]);
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
+
+  it('includes npcBlocId events when bloc is active and above blocMinWill', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia', blocMinWill: 50 };
+    const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [activeBloc]);
+    expect(result.map((e) => e.id)).toContain('blocEvent');
+  });
+
+  it('excludes npcBlocId events when defId is in recentlyFiredDefIds', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
+    const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [activeBloc], new Set(['blocEvent']));
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
 });
 
 // ---------------------------------------------------------------------------

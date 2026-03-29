@@ -4,6 +4,7 @@
   import FacilityPicker from './FacilityPicker.svelte';
   import TileTooltip from './TileTooltip.svelte';
   import BoardPanel from './BoardPanel.svelte';
+  import BlocStatusPanel from './BlocStatusPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
   import SpaceOverview from './SpaceOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
@@ -16,7 +17,7 @@
   import Tooltip from './Tooltip.svelte';
 
   type MapTab = 'earth' | 'space' | 'belt';
-  type AllTab = MapTab | 'board';
+  type AllTab = MapTab | 'board' | 'blocs';
 
   type MapTabDef = { id: MapTab; label: string; requiredEra: Era | null; requiredProject?: string };
 
@@ -184,13 +185,13 @@
   function switchTab(tab: AllTab): void {
     if (activeTab === tab) return;
 
-    if (tab === 'board') {
-      // Just show the board panel — don't stop the running Phaser scene.
+    if (tab === 'board' || tab === 'blocs') {
+      // Just show the panel — don't stop the running Phaser scene.
       // The canvas becomes hidden via CSS; state is preserved on return.
-      activeTab = 'board';
+      activeTab = tab;
     } else {
       // Switching to a map tab. Stop the previously active map scene if it differs.
-      const fromMapTab: MapTab = activeTab !== 'board' ? (activeTab as MapTab) : lastMapTab;
+      const fromMapTab: MapTab = activeTab !== 'board' && activeTab !== 'blocs' ? (activeTab as MapTab) : lastMapTab;
       if (game && fromMapTab !== tab) {
         game.scene.stop(SCENE_KEYS[fromMapTab]);
         game.scene.start(SCENE_KEYS[tab]);
@@ -328,6 +329,13 @@
         COMMITTEE
       {/if}
     </button>
+    <button
+      class="tab"
+      class:active={activeTab === 'blocs'}
+      onclick={() => switchTab('blocs')}
+    >
+      BLOCS
+    </button>
   </div>
   {#if activeTab === 'earth' && gameStore.state}
     <div class="map-toolbar">
@@ -353,6 +361,13 @@
           ≡ ASSETS
         </button>
       </Tooltip>
+    </div>
+  {/if}
+
+  <!-- Bloc status panel (shown instead of Phaser canvas when blocs tab is active) -->
+  {#if activeTab === 'blocs' && gameStore.state}
+    <div class="board-panel-wrap">
+      <BlocStatusPanel blocs={gameStore.state.blocs} playerBlocId={gameStore.state.player.blocDefId} />
     </div>
   {/if}
 
@@ -388,7 +403,7 @@
     class="map-container"
     role="application"
     aria-label="Game map"
-    style="display: {activeTab === 'board' ? 'none' : 'flex'}"
+    style="display: {activeTab === 'board' || activeTab === 'blocs' ? 'none' : 'flex'}"
     bind:this={container}
     onmousemove={(e) => {
       mouseX = e.offsetX;
