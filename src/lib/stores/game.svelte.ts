@@ -559,6 +559,7 @@ export const gameStore = {
       };
     }
     _selectedCoordKey = null;
+    autoSave(_state);
   },
 
   demolishFacility(coordKey: string, slotIndex: number): void {

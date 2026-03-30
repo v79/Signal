@@ -450,6 +450,8 @@
             .filter((a) => a.type === 'construct')
             .map((a) => a.facilityDefId),
         ])}
+        actionsThisTurn={gameStore.state!.actionsThisTurn ?? 0}
+        maxActionsPerTurn={(gameStore.state!.maxActionsPerTurn ?? 3) + (gameStore.state!.bonusActionsThisTurn ?? 0)}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onDemolish={(slotIndex) => gameStore.demolishFacility(gameStore.selectedCoordKey!, slotIndex)}
         onClose={() => gameStore.selectTile(null)}

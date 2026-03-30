@@ -10,6 +10,8 @@
     techNames,
     builtDefIds,
     facilityInstances,
+    actionsThisTurn,
+    maxActionsPerTurn,
     onBuild,
     onDemolish,
     onClose,
@@ -21,6 +23,8 @@
     techNames: ReadonlyMap<string, string>;
     builtDefIds: ReadonlySet<string>;
     facilityInstances: FacilityInstance[];
+    actionsThisTurn: number;
+    maxActionsPerTurn: number;
     onBuild: (defId: string) => void;
     onDemolish: (slotIndex: number) => void;
     onClose: () => void;
@@ -28,6 +32,8 @@
 
   /** Which slot's BUILD list is expanded (null = none). */
   let activeSlot = $state<number | null>(null);
+
+  const atActionCap = $derived(actionsThisTurn >= maxActionsPerTurn);
 
   function isTechUnlocked(def: FacilityDef): boolean {
     return def.requiredTechId == null || discoveredTechIds.has(def.requiredTechId);
@@ -211,8 +217,8 @@
           </div>
 
           {#if activeSlot === null}
-            <button class="open-build-btn" onclick={() => activeSlot = 0}>
-              + SELECT FACILITY TO BUILD
+            <button class="open-build-btn" disabled={atActionCap} onclick={() => activeSlot = 0}>
+              {atActionCap ? 'NO ACTIONS REMAINING' : '+ SELECT FACILITY TO BUILD'}
             </button>
           {:else}
             <div class="facility-list">
@@ -458,7 +464,8 @@
     text-align: left;
     transition: background 0.15s;
   }
-  .open-build-btn:hover { background: #0a2018; }
+  .open-build-btn:hover:not(:disabled) { background: #0a2018; }
+  .open-build-btn:disabled { color: #3a4858; cursor: not-allowed; }
 
   .facility-list {
     display: flex;
