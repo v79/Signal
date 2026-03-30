@@ -158,6 +158,57 @@ describe('simulateBlocs — elimination', () => {
 // checkBlocMergers
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// simulateBlocs — petro-state decay
+// ---------------------------------------------------------------------------
+
+describe('simulateBlocs — petro-state', () => {
+  const petroDef: BlocDef = {
+    ...authoritarianDef,
+    id: 'middleEast',
+    name: 'Gulf Consortium',
+    isPetroState: true,
+    willCeiling: 70,
+    willCollapsThreshold: 20,
+  };
+  const petroDefs = new Map([...defs, ['middleEast', petroDef]]);
+
+  it('applies extra −2 will/turn for petro-state blocs', () => {
+    const normalBloc = makeBloc('eastAsia', 60);
+    const petroBloc = makeBloc('middleEast', 60);
+    const { updatedBlocs } = simulateBlocs([normalBloc, petroBloc], petroDefs, 1);
+    const normalWill = updatedBlocs.find((b) => b.defId === 'eastAsia')!.will;
+    const petroWill = updatedBlocs.find((b) => b.defId === 'middleEast')!.will;
+    // Petro-state should have at least 2 less will than a non-petro authoritarian bloc at the same starting will
+    expect(petroWill).toBeLessThanOrEqual(normalWill - 2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// simulateBlocs — elimination events
+// ---------------------------------------------------------------------------
+
+describe('simulateBlocs — elimination events', () => {
+  it('injects a pendingEventInstance when a bloc is eliminated', () => {
+    const bloc = makeBloc('eastAsia', 10); // below threshold for authoritarian
+    const { pendingEventInstances } = simulateBlocs([bloc], defs, 5);
+    expect(pendingEventInstances).toHaveLength(1);
+    expect(pendingEventInstances[0].defId).toBe('blocElimination');
+    expect(pendingEventInstances[0].countdownRemaining).toBe(3);
+    expect(pendingEventInstances[0].resolved).toBe(false);
+  });
+
+  it('does not inject a pendingEventInstance for non-eliminated blocs', () => {
+    const bloc = makeBloc('northAmerica', 60);
+    const { pendingEventInstances } = simulateBlocs([bloc], defs, 5);
+    expect(pendingEventInstances).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkBlocMergers
+// ---------------------------------------------------------------------------
+
 describe('checkBlocMergers', () => {
   it('returns a news item when two weak blocs exist', () => {
     const a = makeBloc('northAmerica', 20, 10);

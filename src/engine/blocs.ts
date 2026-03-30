@@ -1,4 +1,4 @@
-import type { BlocDef, BlocState, NewsItem } from './types';
+import type { BlocDef, BlocState, NewsItem, EventInstance } from './types';
 import { tickWill } from './resources';
 import { ZERO_FIELDS } from './state';
 
@@ -26,6 +26,8 @@ export interface BlocSimResult {
   updatedBlocs: BlocState[];
   newNewsItems: NewsItem[];
   eliminatedBlocIds: string[];
+  /** EventInstances to inject into the active event queue (e.g. elimination choice events). */
+  pendingEventInstances: EventInstance[];
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +75,7 @@ export function simulateBlocs(
   const updatedBlocs: BlocState[] = [];
   const newNewsItems: NewsItem[] = [];
   const eliminatedBlocIds: string[] = [];
+  const pendingEventInstances: EventInstance[] = [];
 
   for (const bloc of blocs) {
     if (bloc.eliminated) {
@@ -94,11 +97,14 @@ export function simulateBlocs(
     };
 
     // 2. Will drift — map BlocDef's willCollapsThreshold (typo in type) to WillConfig field
-    const newWill = tickWill(bloc.will, {
+    const driftedWill = tickWill(bloc.will, {
       willProfile: def.willProfile,
       willCeiling: def.willCeiling,
       willCollapseThreshold: def.willCollapsThreshold,
     });
+    // Petro-state blocs suffer structural decline: their economic model is threatened by
+    // the game's push factors, so they lose an extra 2 Will per turn.
+    const newWill = def.isPetroState ? Math.max(0, driftedWill - 2) : driftedWill;
 
     // 3. Passive field accumulation (integer, scaled by will)
     const willFactor = newWill / 100;
@@ -133,6 +139,14 @@ export function simulateBlocs(
         text: `${def.name} has dissolved following ${reason}. The geopolitical map is redrawn.`,
         category: 'bloc' as const,
       });
+      pendingEventInstances.push({
+        id: `elim-${bloc.defId}-t${turn}`,
+        defId: 'blocElimination',
+        arrivedTurn: turn,
+        countdownRemaining: 3,
+        resolved: false,
+        resolvedWith: null,
+      });
       continue;
     }
 
@@ -153,7 +167,7 @@ export function simulateBlocs(
     });
   }
 
-  return { updatedBlocs, newNewsItems, eliminatedBlocIds };
+  return { updatedBlocs, newNewsItems, eliminatedBlocIds, pendingEventInstances };
 }
 
 // ---------------------------------------------------------------------------

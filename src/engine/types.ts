@@ -416,6 +416,12 @@ export interface CardDef {
    * If set, this card is retired when the game reaches this era or beyond.
    */
   obsoletedByEra?: Era;
+  /**
+   * If set, the player must have an active board member in this role to play
+   * the card. The play button is disabled and the store silently blocks the
+   * action when the slot is vacant.
+   */
+  requiresBoard?: BoardRole;
 }
 
 export interface CardEffect {
@@ -480,6 +486,12 @@ export interface EventDef {
    * appear in the pool. Omit (or 0) for no climate gate.
    */
   minClimate?: number;
+  /** NPC bloc ID associated with this event. If set, the event only fires while that bloc is active. */
+  npcBlocId?: string;
+  /** Minimum will the npcBlocId bloc must have for this event to appear in the pool. */
+  blocMinWill?: number;
+  /** Classification metadata for bloc events. */
+  blocEventType?: 'diplomatic' | 'pressure' | 'elimination';
   responseTier: EventResponseTier;
   /** Effect if the event is not countered / resolves unfavourably. */
   negativeEffect: EventEffect;
@@ -550,6 +562,8 @@ export interface BlocDef {
   willCeiling: number;
   /** Will floor — authoritarian collapse risk below this threshold. */
   willCollapsThreshold: number;
+  /** True for blocs whose economic model is structurally threatened by the game's push factors. */
+  isPetroState?: boolean;
 }
 
 export interface BlocState {

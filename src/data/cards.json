@@ -266,6 +266,28 @@
     "counterEffect": null,
     "upgradesFrom": null
   },
+  "industrialEspionage": {
+    "id": "industrialEspionage",
+    "name": "Industrial Espionage",
+    "description": "Run a covert operation to extract materials and procurement intelligence from a rival programme.",
+    "flavourText": "The best supply chain is the one you didn't have to build.",
+    "era": "earth",
+    "effect": { "resources": { "materials": 20, "politicalWill": -15 } },
+    "counterEffect": null,
+    "upgradesFrom": null,
+    "requiresBoard": "securityDirector"
+  },
+  "clandestineResearch": {
+    "id": "clandestineResearch",
+    "name": "Clandestine Research Access",
+    "description": "Covertly obtain copies of rival bloc research findings, accelerating physics and computing work.",
+    "flavourText": "Science is universal. Access is not.",
+    "era": "earth",
+    "effect": { "fields": { "physics": 8, "computing": 6, "engineering": 4 }, "resources": { "politicalWill": -12 } },
+    "counterEffect": null,
+    "upgradesFrom": null,
+    "requiresBoard": "securityDirector"
+  },
   "contingencyRouting": {
     "id": "contingencyRouting",
     "name": "Contingency Routing",

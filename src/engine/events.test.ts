@@ -176,6 +176,42 @@ describe('getEligibleEvents', () => {
     const above = getEligibleEvents([climateGated], 'earth', 'climateChange', 'eu', new Set(), false, 25);
     expect(above.map((e) => e.id)).toContain('climateGated');
   });
+
+  it('excludes npcBlocId events when that bloc is eliminated', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
+    const eliminatedBloc = { defId: 'eastAsia', will: 50, eliminated: true } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [eliminatedBloc]);
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
+
+  it('excludes npcBlocId events when bloc will is below blocMinWill', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia', blocMinWill: 50 };
+    const lowWillBloc = { defId: 'eastAsia', will: 30, eliminated: false } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [lowWillBloc]);
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
+
+  it('includes npcBlocId events when bloc is active and above blocMinWill', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia', blocMinWill: 50 };
+    const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [activeBloc]);
+    expect(result.map((e) => e.id)).toContain('blocEvent');
+  });
+
+  it('excludes npcBlocId events when the npcBlocId matches the player bloc', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
+    const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;
+    // Player IS eastAsia — should not receive events from their own bloc
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eastAsia', new Set(), false, 0, [activeBloc]);
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
+
+  it('excludes npcBlocId events when defId is in recentlyFiredDefIds', () => {
+    const blocEvent: EventDef = { ...fundingCrisisDef, id: 'blocEvent', npcBlocId: 'eastAsia' };
+    const activeBloc = { defId: 'eastAsia', will: 60, eliminated: false } as import('./types').BlocState;
+    const result = getEligibleEvents([blocEvent], 'earth', 'climateChange', 'eu', new Set(), false, 0, [activeBloc], new Set(['blocEvent']));
+    expect(result.map((e) => e.id)).not.toContain('blocEvent');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -224,6 +260,87 @@ describe('selectNewEvents', () => {
       if (events.length === 2) { sawTwo = true; break; }
     }
     expect(sawTwo).toBe(true);
+  });
+
+  it('never selects both signal-tagged events in the same turn', () => {
+    const signalInterferenceDef: EventDef = {
+      id: 'signalInterference',
+      name: 'Signal Interference',
+      description: 'Atmospheric interference disrupts signal analysis.',
+      flavourText: 'Static fills the arrays.',
+      tags: ['signal'],
+      eras: ['earth'],
+      pushFactors: null,
+      blocIds: null,
+      countdownTurns: 2,
+      weight: 1.0,
+      responseTier: 'partialMitigation',
+      negativeEffect: { fields: { physics: -10, mathematics: -5 } },
+      positiveEffect: null,
+      mitigationCost: { funding: 10 },
+    };
+    const signalBreakthroughDef: EventDef = {
+      id: 'signalBreakthrough',
+      name: 'Signal Breakthrough',
+      description: 'A burst of clear signal data accelerates analysis.',
+      flavourText: 'The arrays sing.',
+      tags: ['signal'],
+      eras: ['earth', 'nearSpace'],
+      pushFactors: null,
+      blocIds: null,
+      countdownTurns: 2,
+      weight: 1.0,
+      responseTier: 'noCounter',
+      negativeEffect: { resources: {} },
+      positiveEffect: { fields: { physics: 20, mathematics: 15 } },
+    };
+    const signalPool = [signalInterferenceDef, signalBreakthroughDef];
+    for (let i = 0; i < 500; i++) {
+      const events = selectNewEvents(signalPool, 'earth', 'climateChange', 'eu', [], createRng(`signal-excl-${i}`), 9, 100);
+      const defIds = events.map((e) => e.defId);
+      expect(defIds).not.toEqual(expect.arrayContaining(['signalInterference', 'signalBreakthrough']));
+    }
+  });
+
+  it('never selects two espionage-tagged events in the same turn', () => {
+    const espionageA: EventDef = {
+      id: 'bloc_espionage_northAmerica',
+      name: 'N. American Intelligence Operation',
+      description: '',
+      flavourText: '',
+      tags: ['espionage', 'bloc'],
+      eras: ['earth'],
+      pushFactors: ['geopoliticalTension'],
+      blocIds: null,
+      countdownTurns: 2,
+      weight: 1.0,
+      responseTier: 'fullCounter',
+      negativeEffect: { resources: { funding: -25 } },
+      positiveEffect: null,
+    };
+    const espionageB: EventDef = {
+      id: 'bloc_espionage_eastAsia',
+      name: 'East Asian Materials Theft',
+      description: '',
+      flavourText: '',
+      tags: ['espionage', 'bloc'],
+      eras: ['earth'],
+      pushFactors: ['geopoliticalTension'],
+      blocIds: null,
+      countdownTurns: 2,
+      weight: 1.0,
+      responseTier: 'fullCounter',
+      negativeEffect: { resources: { materials: -20 } },
+      positiveEffect: null,
+    };
+    const espionagePool = [espionageA, espionageB];
+    for (let i = 0; i < 500; i++) {
+      const events = selectNewEvents(espionagePool, 'earth', 'geopoliticalTension', 'eu', [], createRng(`esp-excl-${i}`), 9, 100);
+      const defIds = events.map((e) => e.defId);
+      expect(defIds).not.toEqual(
+        expect.arrayContaining(['bloc_espionage_northAmerica', 'bloc_espionage_eastAsia']),
+      );
+    }
   });
 
   it('never selects a second crisis event when one is already active', () => {

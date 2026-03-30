@@ -138,7 +138,7 @@
     "cost": { "funding": 80, "materials": 40 },
     "upkeepCost": { "funding": 5 },
     "baseDuration": 4,
-    "reward": { "signalProgress": 15, "resources": { "funding": 30 } },
+    "reward": { "signalProgress": 15, "resources": { "funding": 30 }, "fields": { "computing": 20 } },
     "landmarkGate": null,
     "prerequisites": {
       "requiredTechs": ["particlePhysicsDetectors"]

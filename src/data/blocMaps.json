@@ -186,8 +186,8 @@
     { "q": 0, "r": 1, "type": "industrial" },
     { "q": 2, "r": -1, "type": "industrial" },
     { "q": 2, "r": 0, "type": "industrial" },
-    { "q": 0, "r": -1, "type": "forested" },
-    { "q": 1, "r": -1, "type": "forested" },
+    { "q": 0, "r": -1, "type": "agricultural" },
+    { "q": 1, "r": -1, "type": "agricultural" },
     { "q": 3, "r": -1, "type": "forested" },
     { "q": 3, "r": 0, "type": "forested" },
     { "q": 4, "r": 0, "type": "forested" },
@@ -208,7 +208,7 @@
     { "q": 4, "r": -1, "type": "coastal" },
     { "q": -1, "r": 2, "type": "coastal" }
   ],
-  "middlewEast": [
+  "middleEast": [
     { "q": 0, "r": 0, "type": "urban" },
     { "q": 1, "r": 0, "type": "urban" },
     { "q": 0, "r": -1, "type": "urban" },

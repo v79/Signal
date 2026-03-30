@@ -804,6 +804,9 @@ export const gameStore = {
     const def = CARD_DEFS.get(card.defId);
     if (!def) return;
 
+    // Board requirement check: card needs a specific role to be filled
+    if (def.requiresBoard && isBoardSlotVacant(_state.player.board, def.requiresBoard)) return;
+
     // Afford check: any negative resource delta must be coverable
     if (def.effect.resources) {
       const r = def.effect.resources;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CardInstance, CardDef, FieldPoints, Resources } from '../../engine/types';
+  import type { CardInstance, CardDef, FieldPoints, Resources, BoardRole } from '../../engine/types';
   import { BANK_LIMIT } from '../../engine/cards';
   import { FIELD_ABBR } from '../fieldColours';
 
@@ -11,6 +11,7 @@
     actionsThisTurn,
     maxActionsPerTurn,
     playerResources,
+    activeBoardRoles = new Set<BoardRole>(),
     onPlay,
     onBank,
     onUnbank,
@@ -22,6 +23,7 @@
     actionsThisTurn: number;
     maxActionsPerTurn: number;
     playerResources: Resources;
+    activeBoardRoles?: Set<BoardRole>;
     onPlay: (cardId: string) => void;
     onBank: (cardId: string) => void;
     onUnbank: (cardId: string) => void;
@@ -33,6 +35,11 @@
   const inAction = $derived(phase === 'action');
   const atActionCap = $derived(actionsThisTurn >= maxActionsPerTurn);
   const canPlay = $derived(inAction && !atActionCap);
+
+  function boardRequirementMet(def: CardDef): boolean {
+    if (!def.requiresBoard) return true;
+    return activeBoardRoles.has(def.requiresBoard);
+  }
 
   function canAfford(def: CardDef): boolean {
     const r = def.effect.resources;
@@ -161,10 +168,10 @@
             <div class="card-actions">
               <button
                 class="btn btn-play"
-                class:disabled={!canPlay || !canAfford(def)}
-                disabled={!canPlay || !canAfford(def)}
+                class:disabled={!canPlay || !canAfford(def) || !boardRequirementMet(def)}
+                disabled={!canPlay || !canAfford(def) || !boardRequirementMet(def)}
                 onclick={() => onPlay(card.id)}
-                title={atActionCap ? 'Action limit reached this turn' : !inAction ? 'Not the action phase' : !canAfford(def) ? 'Insufficient resources' : ''}
+                title={atActionCap ? 'Action limit reached this turn' : !inAction ? 'Not the action phase' : !boardRequirementMet(def) ? `Requires Director of Security on board` : !canAfford(def) ? 'Insufficient resources' : ''}
               >
                 PLAY
               </button>

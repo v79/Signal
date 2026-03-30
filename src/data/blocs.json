@@ -83,7 +83,7 @@
     "willCeiling": 68,
     "willCollapsThreshold": 28
   },
-  "middlewEast": {
+  "middleEast": {
     "id": "middleEast",
     "name": "Gulf Consortium",
     "willProfile": "authoritarian",
@@ -93,6 +93,7 @@
     "victoryCostModifiers": { "economicHegemony": 0.8 },
     "specificEventTags": ["trade", "diplomatic"],
     "willCeiling": 70,
-    "willCollapsThreshold": 20
+    "willCollapsThreshold": 20,
+    "isPetroState": true
   }
 }
