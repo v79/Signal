@@ -12,7 +12,7 @@
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
-  import type { Era, BoardRole, FacilityInstance, OngoingAction } from '../../engine/types';
+  import type { Era, FacilityInstance, OngoingAction } from '../../engine/types';
   import { getFacilitiesOnTile, computeHqBonus, type HqBonus } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
 

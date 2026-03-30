@@ -1,7 +1,6 @@
 import type {
   GameState,
   FacilityInstance,
-  BlocState,
   MapTile,
   TileType,
   BoardRole,
