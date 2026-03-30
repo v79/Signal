@@ -85,7 +85,7 @@ This is a list of future requirements for the game but they are not to be implem
 
 Era 1:
 
-- Petrochemical Refinery (+funding, +climate)
+- Petrochemical Refinery (+funding, +climate) or Oil wells
 
 Era 2:
 

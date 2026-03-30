@@ -65,7 +65,7 @@ const FACILITY_COLORS: Record<string, number> = {
   bioresearchCentre: 0x50c878,
   socialPolicyUnit: 0x70a8d0,
   agriculturalResearchStation: 0x80c850,
-  spaceLaunchCentre: 0xd06030,
+  spaceLaunchCentre: 0x1a1a2e,
   dataCentre: 0x20d0a0,
   deepSpaceArray: 0x4060d8,
 };
