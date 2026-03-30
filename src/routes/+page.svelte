@@ -17,7 +17,9 @@
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
 
   import { gameStore } from '$lib/stores/game.svelte';
-  import { CARD_DEFS, EVENT_DEFS, FACILITY_DEFS, BLOC_DEFS, TECH_DEFS, PROJECT_DEFS } from '../data/loader';
+  import { CARD_DEFS, EVENT_DEFS, FACILITY_DEFS, BLOC_DEFS, TECH_DEFS, PROJECT_DEFS, BOARD_DEFS } from '../data/loader';
+  import { getActiveMembers } from '../engine/board';
+  import type { BoardRole } from '../engine/types';
   import { getAvailableProjects } from '../engine/projects';
   import {
     computeAdjacencyEffects,
@@ -113,6 +115,17 @@
     gameStore.state
       ? (gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0) - (gameStore.state.actionsThisTurn ?? 0)
       : 0,
+  );
+
+  // Roles filled by currently active board members — used to gate board-required cards.
+  const activeBoardRoles = $derived(
+    gameStore.state
+      ? new Set<BoardRole>(
+          getActiveMembers(gameStore.state.player.board)
+            .map((m) => BOARD_DEFS.get(m.defId)?.role)
+            .filter((r): r is BoardRole => r !== undefined),
+        )
+      : new Set<BoardRole>(),
   );
 
   // Tags of active counterable events — used to highlight matching counter cards in hand.
@@ -246,6 +259,7 @@
         actionsThisTurn={gs.actionsThisTurn ?? 0}
         maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
         playerResources={gs.player.resources}
+        activeBoardRoles={activeBoardRoles}
         onPlay={(id) => gameStore.playCard(id)}
         onBank={(id) => gameStore.bankCard(id)}
         onUnbank={(id) => gameStore.unbankCard(id)}

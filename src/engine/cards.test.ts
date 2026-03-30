@@ -13,6 +13,7 @@ import {
 } from './cards';
 import { createRng } from './rng';
 import type { CardDef, CardInstance } from './types';
+import { CARD_DEFS } from '../data/loader';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -271,3 +272,26 @@ describe('upgradeCard', () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// requiresBoard — data integrity and gate behaviour
+// ---------------------------------------------------------------------------
+
+describe('requiresBoard data integrity', () => {
+  it('espionage cards have requiresBoard: securityDirector', () => {
+    const espionageIds = ['industrialEspionage', 'clandestineResearch'];
+    for (const id of espionageIds) {
+      const def = CARD_DEFS.get(id);
+      expect(def, `${id} should be in CARD_DEFS`).toBeDefined();
+      expect(def?.requiresBoard).toBe('securityDirector');
+    }
+  });
+
+  it('non-espionage cards do not have requiresBoard set', () => {
+    const unrestricted = ['lobbying', 'academicConference', 'emergencyProcurement', 'mediaBlitz'];
+    for (const id of unrestricted) {
+      const def = CARD_DEFS.get(id);
+      expect(def?.requiresBoard, `${id} should not have requiresBoard`).toBeUndefined();
+    }
+  });
+});

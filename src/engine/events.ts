@@ -19,6 +19,9 @@ import type { Rng } from './rng';
 /** Maximum number of new events that can land per turn. */
 export const MAX_NEW_EVENTS_PER_TURN = 2;
 
+/** Tags where at most one event may fire per turn (same-turn mutual exclusivity). */
+const EXCLUSIVE_TURN_TAGS = new Set(['signal', 'espionage']);
+
 /**
  * Filter the event pool to events eligible to fire given the current
  * game context: era, push factor, player's bloc, and events already active.
@@ -108,6 +111,14 @@ export function selectNewEvents(
     }
     selected.push(chosen);
     remaining.splice(remaining.indexOf(chosen), 1);
+    // Remove events that share an exclusive tag with the chosen event so that
+    // at most one event per exclusive tag can fire in the same turn.
+    for (const tag of chosen.tags) {
+      if (EXCLUSIVE_TURN_TAGS.has(tag)) {
+        const toRemove = remaining.filter((d) => d.tags.includes(tag));
+        for (const d of toRemove) remaining.splice(remaining.indexOf(d), 1);
+      }
+    }
   }
 
   return selected.map((def) => ({

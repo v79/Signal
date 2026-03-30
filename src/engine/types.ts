@@ -416,6 +416,12 @@ export interface CardDef {
    * If set, this card is retired when the game reaches this era or beyond.
    */
   obsoletedByEra?: Era;
+  /**
+   * If set, the player must have an active board member in this role to play
+   * the card. The play button is disabled and the store silently blocks the
+   * action when the slot is vacant.
+   */
+  requiresBoard?: BoardRole;
 }
 
 export interface CardEffect {

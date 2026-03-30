@@ -246,6 +246,7 @@
     "role": "securityDirector",
     "buffs": [
       { "description": "Auto-counters security threat events", "autoCountersEventTag": "security" },
+      { "description": "Auto-counters espionage events", "autoCountersEventTag": "espionage" },
       { "description": "+10% Computing field output", "fieldMultipliers": { "computing": 1.1 } }
     ],
     "debuffs": [],
@@ -259,6 +260,7 @@
     "role": "securityDirector",
     "buffs": [
       { "description": "Auto-counters security threat events", "autoCountersEventTag": "security" },
+      { "description": "Auto-counters espionage events", "autoCountersEventTag": "espionage" },
       { "description": "+15% Computing output (signals intelligence)", "fieldMultipliers": { "computing": 1.15 } }
     ],
     "debuffs": [
@@ -274,6 +276,7 @@
     "role": "securityDirector",
     "buffs": [
       { "description": "Auto-counters security threat events", "autoCountersEventTag": "security" },
+      { "description": "Auto-counters espionage events", "autoCountersEventTag": "espionage" },
       { "description": "+20% Computing output (cyber-security specialism)", "fieldMultipliers": { "computing": 1.2 } }
     ],
     "debuffs": [
