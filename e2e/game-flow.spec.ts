@@ -1,8 +1,16 @@
-import { test, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helper: start a fresh game from the new-game screen and wait for Phaser
 // ---------------------------------------------------------------------------
+
+async function clickMapTile(page: Page, offsetX: number, offsetY: number): Promise<void> {
+  const canvas = page.locator('.map-container canvas');
+  const box = await canvas.boundingBox();
+  const cx = (box?.width ?? 600) / 2;
+  const cy = (box?.height ?? 400) / 2;
+  await canvas.click({ position: { x: cx + offsetX, y: cy + offsetY } });
+}
 
 async function startNewGame(page: Page): Promise<void> {
   await page.goto('/newgame');
@@ -63,11 +71,7 @@ test('build facility — open picker, build, verify on map', async ({ page }) =>
   await startNewGame(page);
 
   // Click the urban tile at (-1,0): offset (-63, -36) from canvas centre
-  const canvas = page.locator('.map-container canvas');
-  const box = await canvas.boundingBox();
-  const cx = (box?.width ?? 600) / 2;
-  const cy = (box?.height ?? 400) / 2;
-  await canvas.click({ position: { x: cx - 63, y: cy - 36 } });
+  await clickMapTile(page, -63, -36);
 
   // Wait for the FacilityPicker dialog
   await page.waitForSelector('[aria-label="Facility Picker"]');
@@ -115,4 +119,52 @@ test('phase advance — action → turn 2', async ({ page }) => {
   // World phase processes synchronously; wait briefly for re-render
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'screenshots/07-turn2-action.png', fullPage: true });
+});
+
+// ---------------------------------------------------------------------------
+// Test 6 — Build button disabled when action cap is reached
+//
+// We start a fresh game, then patch the autosave in localStorage to set
+// actionsThisTurn = maxActionsPerTurn (exhausted). After reload the store
+// picks up the patched state. Opening the FacilityPicker on the urban tile
+// at (-1,0) should show a disabled "NO ACTIONS REMAINING" button.
+// ---------------------------------------------------------------------------
+
+test('build facility — button disabled at action cap', async ({ page }) => {
+  await startNewGame(page);
+
+  // Build one facility to trigger an autoSave (buildFacility calls autoSave;
+  // the game store does not save on game start, only on actions).
+  await clickMapTile(page, -63, -36);
+  await page.waitForSelector('[aria-label="Facility Picker"]');
+  await page.click('.open-build-btn');
+  await page.locator('.build-btn:not([disabled])').first().click();
+  await page.waitForTimeout(400);
+
+  // Patch the autosave: set actionsThisTurn = maxActionsPerTurn
+  await page.evaluate(() => {
+    const raw = localStorage.getItem('signal-autosave');
+    if (!raw) throw new Error('No autosave found');
+    const envelope = JSON.parse(raw) as { version: number; savedAt: string; state: Record<string, unknown> };
+    envelope.state.actionsThisTurn = envelope.state.maxActionsPerTurn ?? 3;
+    localStorage.setItem('signal-autosave', JSON.stringify(envelope));
+  });
+
+  // Reload so the store picks up the patched state
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+
+  // Click the industrial tile at (1,0) — different tile to avoid the already-built one
+  await clickMapTile(page, 63, 36);
+
+  await page.waitForSelector('[aria-label="Facility Picker"]');
+
+  // The build button should be disabled and show the no-actions label
+  const buildBtn = page.locator('.open-build-btn');
+  await expect(buildBtn).toBeVisible();
+  await expect(buildBtn).toBeDisabled();
+  await expect(buildBtn).toHaveText('NO ACTIONS REMAINING');
+
+  await page.screenshot({ path: 'screenshots/10-build-disabled-at-cap.png', fullPage: true });
 });

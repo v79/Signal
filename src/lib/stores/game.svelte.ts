@@ -1,7 +1,6 @@
 import type {
   GameState,
   FacilityInstance,
-  BlocState,
   MapTile,
   TileType,
   BoardRole,
@@ -282,6 +281,12 @@ export function generateBeltEdges(): BeltEdge[] {
 const _savedState = autoLoad();
 let _state = $state<GameState | null>(_savedState ?? null);
 
+/** Assign new game state and persist it to localStorage in one step. */
+function mutateState(newState: GameState): void {
+  _state = newState;
+  autoSave(newState);
+}
+
 /** UI-only: which hex coord key is currently selected for facility placement. */
 let _selectedCoordKey = $state<string | null>(null);
 let _selectedSpaceNodeId = $state<string | null>(null);
@@ -447,7 +452,7 @@ export const gameStore = {
     next = executeDrawPhase(next, drawRng);
 
     clearSave();
-    _state = next;
+    mutateState(next);
     resetSelections();
     goto('/');
   },
@@ -515,7 +520,7 @@ export const gameStore = {
       for (let i = start; i < start + slotCost; i++) {
         newSlots[i] = facilityId;
       }
-      _state = {
+      mutateState({
         ..._state,
         actionsThisTurn: newActionsThisTurn,
         player: {
@@ -529,7 +534,7 @@ export const gameStore = {
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilitySlots: newSlots } : t,
           ),
         },
-      };
+      });
     } else {
       // Multi-turn build: enqueue action, mark tile as pending.
       const actionId = `construct-${defId}-${coordKey}-t${_state.turn}`;
@@ -542,7 +547,7 @@ export const gameStore = {
         totalTurns: def.buildTime,
         slotIndex: start,
       };
-      _state = {
+      mutateState({
         ..._state,
         actionsThisTurn: newActionsThisTurn,
         player: {
@@ -556,7 +561,7 @@ export const gameStore = {
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
           ),
         },
-      };
+      });
     }
     _selectedCoordKey = null;
   },
@@ -577,7 +582,7 @@ export const gameStore = {
       const newSlots = tile.facilitySlots.map((s) =>
         s === instanceId ? null : s,
       ) as [string | null, string | null, string | null];
-      _state = {
+      mutateState({
         ..._state,
         player: {
           ..._state.player,
@@ -589,7 +594,7 @@ export const gameStore = {
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilitySlots: newSlots } : t,
           ),
         },
-      };
+      });
     } else {
       // Multi-turn demolition: enqueue, mark tile as pending.
       const actionId = `demolish-${facility.defId}-${coordKey}-t${_state.turn}`;
@@ -602,7 +607,7 @@ export const gameStore = {
         totalTurns: def.deleteTime,
         slotIndex,
       };
-      _state = {
+      mutateState({
         ..._state,
         player: {
           ..._state.player,
@@ -614,7 +619,7 @@ export const gameStore = {
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
           ),
         },
-      };
+      });
     }
     _selectedCoordKey = null;
   },
@@ -663,7 +668,7 @@ export const gameStore = {
     const residualSummary = residualEffect ? ` — residual: ${formatEffectForNews(residualEffect)}` : '';
     const newsText = `${def.name} mitigated (cost: ${costParts.join(', ')})${residualSummary}.`;
 
-    _state = {
+    mutateState({
       ..._state,
       map: { ..._state.map, earthTiles: updatedTiles },
       player: {
@@ -676,7 +681,7 @@ export const gameStore = {
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'mitigation' as const } : e,
       ),
-    };
+    });
   },
 
   acceptEvent(eventId: string): void {
@@ -701,7 +706,7 @@ export const gameStore = {
       ? 'The Corporation has officially initiated the Permanent Orbital Station programme.'
       : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
 
-    _state = {
+    mutateState({
       ..._state,
       map: { ..._state.map, earthTiles: updatedTiles },
       orbitalStationAuthorised: isBoardProposal ? true : _state.orbitalStationAuthorised,
@@ -721,8 +726,7 @@ export const gameStore = {
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
       ),
-    };
-    autoSave(_state);
+    });
   },
 
   /** Defer the board proposal event — dismisses it and re-surfaces after 3 turns. */
@@ -730,7 +734,7 @@ export const gameStore = {
     if (!_state) return;
     const event = _state.activeEvents.find((e) => e.id === eventId);
     if (!event) return;
-    _state = {
+    mutateState({
       ..._state,
       orbitalStationDeferCount: _state.orbitalStationDeferCount + 1,
       orbitalStationDeferResurfaceTurn: _state.turn + 3,
@@ -749,8 +753,7 @@ export const gameStore = {
           },
         ],
       },
-    };
-    autoSave(_state);
+    });
   },
 
   declineEvent(eventId: string): void {
@@ -772,7 +775,7 @@ export const gameStore = {
     }
 
     const summary = effect ? formatEffectForNews(effect) : 'no effect';
-    _state = {
+    mutateState({
       ..._state,
       map: { ..._state.map, earthTiles: updatedTiles },
       player: {
@@ -790,7 +793,7 @@ export const gameStore = {
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'expired' as const } : e,
       ),
-    };
+    });
   },
 
   playCard(cardId: string): void {
@@ -909,7 +912,7 @@ export const gameStore = {
       ];
     }
 
-    _state = {
+    mutateState({
       ..._state,
       actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
       bonusActionsNextTurn,
@@ -923,7 +926,7 @@ export const gameStore = {
           c.id === cardId ? { ...c, zone: 'discard' as const } : c,
         ),
       },
-    };
+    });
   },
 
   bankCard(cardId: string): void {
@@ -931,7 +934,7 @@ export const gameStore = {
     const bankedCount = _state.player.cards.filter((c) => c.zone === 'bank').length;
     if (bankedCount >= 2) return;
     const turn = _state.turn;
-    _state = {
+    mutateState({
       ..._state,
       player: {
         ..._state.player,
@@ -941,12 +944,12 @@ export const gameStore = {
             : c,
         ),
       },
-    };
+    });
   },
 
   unbankCard(cardId: string): void {
     if (!_state) return;
-    _state = {
+    mutateState({
       ..._state,
       player: {
         ..._state.player,
@@ -956,7 +959,7 @@ export const gameStore = {
             : c,
         ),
       },
-    };
+    });
   },
 
   /**
@@ -1022,15 +1025,13 @@ export const gameStore = {
 
       // If the game ended, skip the remaining automated phases and navigate.
       if (next.outcome) {
-        _state = next;
+        mutateState(next);
         goto('/summary');
         return;
       }
       next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], BOARD_DEFS, rng);
       next = executeDrawPhase(next, rng);
-      _state = next;
-      // Auto-save after each completed World Phase.
-      autoSave(_state);
+      mutateState(next);
     }
   },
 
@@ -1048,7 +1049,7 @@ export const gameStore = {
   /** Load a game state from a user-supplied JSON file. */
   async importSaveFile(file: File): Promise<void> {
     const loaded = await importSave(file);
-    _state = loaded;
+    mutateState(loaded);
     resetSelections();
   },
 
@@ -1079,7 +1080,7 @@ export const gameStore = {
       signalAnalyst: 'Signal Analyst',
       stationCommander: 'Station Commander',
     };
-    _state = {
+    mutateState({
       ..._state,
       actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
       player: {
@@ -1100,7 +1101,7 @@ export const gameStore = {
           },
         ],
       },
-    };
+    });
   },
 
   /** Remove a board member (dismissed). Costs 20 Political Will. */
@@ -1113,7 +1114,7 @@ export const gameStore = {
     const displayName = member ? (BOARD_DEFS.get(member.defId)?.name ?? member.defId) : 'Unknown';
 
     const newBoard = removeBoardMember(_state.player.board, role, 'resigned', _state.turn);
-    _state = {
+    mutateState({
       ..._state,
       player: {
         ..._state.player,
@@ -1132,7 +1133,7 @@ export const gameStore = {
           },
         ],
       },
-    };
+    });
   },
 
   /** Resolve a committee notification by selecting one of its choices. */
@@ -1158,20 +1159,20 @@ export const gameStore = {
           },
         ]
       : _state.player.newsFeed;
-    _state = {
+    mutateState({
       ..._state,
       committeeNotifications: result.notifications,
       player: { ..._state.player, resources, newsFeed },
-    };
+    });
   },
 
   /** Dismiss a committee notification without acting on it. */
   dismissCommitteeNotification(id: string): void {
     if (!_state) return;
-    _state = {
+    mutateState({
       ..._state,
       committeeNotifications: dismissCommitteeNotification(_state.committeeNotifications ?? [], id),
-    };
+    });
   },
 
   /**
@@ -1189,11 +1190,10 @@ export const gameStore = {
     if (!canInitiateProject(_state, def)) return;
 
     const next = initiateProject(_state, def);
-    _state = {
+    mutateState({
       ...next,
       actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
-    };
-    autoSave(_state);
+    });
   },
 
   /**
@@ -1209,8 +1209,7 @@ export const gameStore = {
   /** Dismiss the current narrative modal and advance the queue. */
   dismissNarrativeModal(): void {
     if (!_state) return;
-    _state = dismissNarrative(_state);
-    autoSave(_state);
+    mutateState(dismissNarrative(_state));
   },
 
   /** Commit the player's chosen wormhole response. */
@@ -1220,7 +1219,7 @@ export const gameStore = {
     const text = newSignal.wormholeActivated
       ? 'The resonance pathway is open. The wormhole is activated.'
       : 'The response was incorrect. The signal locks closed. The opportunity is lost.';
-    _state = {
+    mutateState({
       ..._state,
       signal: newSignal,
       player: {
@@ -1230,6 +1229,6 @@ export const gameStore = {
           { id: `wormhole-t${_state.turn}`, turn: _state.turn, text },
         ],
       },
-    };
+    });
   },
 };

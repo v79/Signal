@@ -12,7 +12,7 @@
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
-  import type { Era, BoardRole, FacilityInstance, OngoingAction } from '../../engine/types';
+  import type { Era, FacilityInstance, OngoingAction } from '../../engine/types';
   import { getFacilitiesOnTile, computeHqBonus, type HqBonus } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
 
@@ -38,7 +38,7 @@
     return false;
   }
 
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement | undefined>(undefined);
   let game: import('phaser').Game | null = null;
   let activeTab = $state<AllTab>('earth');
   /** Last active map (Phaser) tab — preserved when switching to Board so we can restore it. */
@@ -226,9 +226,9 @@
 
     game = new Phaser.Game({
       type: Phaser.AUTO,
-      parent: container,
-      width: container.clientWidth || 600,
-      height: container.clientHeight || 400,
+      parent: container!,
+      width: container!.clientWidth || 600,
+      height: container!.clientHeight || 400,
       backgroundColor: '#060a10',
       scene: [earthScene, spaceScene, asteroidScene],
       banner: false,
@@ -450,6 +450,8 @@
             .filter((a) => a.type === 'construct')
             .map((a) => a.facilityDefId),
         ])}
+        actionsThisTurn={gameStore.state!.actionsThisTurn ?? 0}
+        maxActionsPerTurn={(gameStore.state!.maxActionsPerTurn ?? 3) + (gameStore.state!.bonusActionsThisTurn ?? 0)}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onDemolish={(slotIndex) => gameStore.demolishFacility(gameStore.selectedCoordKey!, slotIndex)}
         onClose={() => gameStore.selectTile(null)}
