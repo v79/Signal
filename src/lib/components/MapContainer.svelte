@@ -38,7 +38,7 @@
     return false;
   }
 
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement | undefined>(undefined);
   let game: import('phaser').Game | null = null;
   let activeTab = $state<AllTab>('earth');
   /** Last active map (Phaser) tab — preserved when switching to Board so we can restore it. */
@@ -226,9 +226,9 @@
 
     game = new Phaser.Game({
       type: Phaser.AUTO,
-      parent: container,
-      width: container.clientWidth || 600,
-      height: container.clientHeight || 400,
+      parent: container!,
+      width: container!.clientWidth || 600,
+      height: container!.clientHeight || 400,
       backgroundColor: '#060a10',
       scene: [earthScene, spaceScene, asteroidScene],
       banner: false,
