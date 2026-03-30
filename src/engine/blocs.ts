@@ -13,7 +13,7 @@ const PASSIVE_INCOME = { funding: 5, materials: 3 };
  * Passive field accumulation per turn, scaled by will (0–1).
  * Blocs with higher will invest more effectively in research.
  */
-const PASSIVE_FIELDS = { physics: 1, mathematics: 1 };
+const PASSIVE_FIELDS = { physics: 1, mathematics: 1, engineering: 1, computing: 0.5 };
 
 /** Will below this → any bloc is at collapse risk regardless of profile. */
 const ABSOLUTE_COLLAPSE_THRESHOLD = 5;
@@ -110,8 +110,10 @@ export function simulateBlocs(
     const willFactor = newWill / 100;
     const newFields = {
       ...bloc.fields,
-      physics: bloc.fields.physics + Math.round(PASSIVE_FIELDS.physics * willFactor),
+      physics:     bloc.fields.physics     + Math.round(PASSIVE_FIELDS.physics     * willFactor),
       mathematics: bloc.fields.mathematics + Math.round(PASSIVE_FIELDS.mathematics * willFactor),
+      engineering: bloc.fields.engineering + Math.round(PASSIVE_FIELDS.engineering * willFactor),
+      computing:   bloc.fields.computing   + Math.round(PASSIVE_FIELDS.computing   * willFactor),
     };
 
     // 4. Elimination checks
