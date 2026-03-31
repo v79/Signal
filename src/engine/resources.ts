@@ -107,9 +107,13 @@ export function applyResourceDeltas(
     funding: current.funding + facilityDelta.funding - projectUpkeep.funding,
     materials: Math.max(0, current.materials + facilityDelta.materials - projectUpkeep.materials),
     // Bank decay costs 1 Will per banked card per turn; makes banking a Will trade-off.
-    politicalWill: Math.max(
-      0,
-      current.politicalWill + facilityDelta.politicalWill - bankDecay - projectUpkeep.politicalWill,
+    // Will is capped at 100 — facility and card effects cannot push it above the maximum.
+    politicalWill: Math.min(
+      100,
+      Math.max(
+        0,
+        current.politicalWill + facilityDelta.politicalWill - bankDecay - projectUpkeep.politicalWill,
+      ),
     ),
   };
 }
