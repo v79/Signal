@@ -25,7 +25,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Signal should not be decoded before era 3
 - **Political Will:**
   - What is the difference between Global Will and Political Will?
-  - Political Will should have a cap (100?)
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
   - Tooltip isn't showing the incomes and debits
