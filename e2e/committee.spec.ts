@@ -56,8 +56,8 @@ test.describe('Committee panel — slot cards', () => {
     await openBoardTab(page);
   });
 
-  test('renders exactly seven role slots', async ({ page }) => {
-    await expect(page.locator('.slot-card')).toHaveCount(7);
+  test('renders exactly eight role slots', async ({ page }) => {
+    await expect(page.locator('.slot-card')).toHaveCount(8);
   });
 
   test('Head of Finance slot is filled at game start', async ({ page }) => {
