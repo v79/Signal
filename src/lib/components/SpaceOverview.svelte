@@ -7,14 +7,27 @@
     facilityDefs,
     projectDefs,
     completedProjectIds,
+    launchCapacity,
+    launchAllocation,
+    remainingCapacity,
+    upgradableNodeIds,
     onClose,
+    onToggleSupply,
+    onUpgrade,
   }: {
     spaceNodes: SpaceNode[];
     facilities: FacilityInstance[];
     facilityDefs: Map<string, FacilityDef>;
     projectDefs: Map<string, ProjectDef>;
     completedProjectIds: string[];
+    launchCapacity: number;
+    launchAllocation: Record<string, boolean>;
+    remainingCapacity: number;
+    /** nodeId → next-tier facility name (only nodes where upgrade is available) */
+    upgradableNodeIds: Record<string, string>;
     onClose: () => void;
+    onToggleSupply: (nodeId: string) => void;
+    onUpgrade: (nodeId: string) => void;
   } = $props();
 
   // Project IDs that appear on the Earth orbit arc, in display order.
@@ -26,13 +39,11 @@
   const nodeFacilities = $derived(
     spaceNodes
       .filter((n) => n.facilityId !== null)
-      .map((n) => ({
-        node: n,
-        facility: facilities.find((f) => f.id === n.facilityId),
-        def: facilities.find((f) => f.id === n.facilityId)
-          ? facilityDefs.get(facilities.find((f) => f.id === n.facilityId)!.defId)
-          : undefined,
-      }))
+      .map((n) => {
+        const inst = facilities.find((f) => f.locationKey === n.id);
+        const def = inst ? facilityDefs.get(inst.defId) : undefined;
+        return { node: n, facility: inst, def };
+      })
       .filter((entry) => entry.facility && entry.def),
   );
 
@@ -49,6 +60,18 @@
       .map((id) => projectDefs.get(id))
       .filter((d): d is ProjectDef => d !== undefined),
   );
+
+  function isSupplied(nodeId: string): boolean {
+    return launchAllocation[nodeId] !== false;
+  }
+
+  function canToggleOn(nodeId: string, supplyCost: number): boolean {
+    return isSupplied(nodeId) || remainingCapacity >= supplyCost;
+  }
+
+  // Capacity bar
+  const usedCapacity = $derived(launchCapacity - remainingCapacity);
+  const barPct = $derived(launchCapacity > 0 ? usedCapacity / launchCapacity : 0);
 </script>
 
 <div
@@ -68,6 +91,19 @@
       <button class="close-btn" onclick={onClose} aria-label="Close">✕</button>
     </div>
 
+    <!-- Launch Capacity Bar -->
+    {#if launchCapacity > 0}
+      <div class="capacity-section">
+        <div class="capacity-label">
+          LAUNCH CAPACITY
+          <span class="capacity-value">{usedCapacity}/{launchCapacity}</span>
+        </div>
+        <div class="capacity-bar-track">
+          <div class="capacity-bar-fill" style="width: {Math.min(100, barPct * 100)}%"></div>
+        </div>
+      </div>
+    {/if}
+
     <div class="list">
       <!-- Section: Facilities on Nodes -->
       <div class="section-heading">FACILITIES ON NODES</div>
@@ -75,9 +111,32 @@
         <div class="empty">No facilities built in Near Space yet.</div>
       {:else}
         {#each nodeFacilities as entry (entry.node.id)}
-          <div class="row">
-            <span class="node-label">{entry.node.label}</span>
-            <span class="item-name">{entry.def!.name}</span>
+          {@const supplyCost = entry.def!.supplyCost ?? 0}
+          {@const supplied = isSupplied(entry.node.id)}
+          {@const upgradeName = upgradableNodeIds[entry.node.id]}
+          <div class="facility-row" class:unsupplied={!supplied}>
+            <div class="row-main">
+              <span class="node-label">{entry.node.label}</span>
+              <span class="item-name">{entry.def!.name}</span>
+              {#if supplyCost > 0}
+                <span class="supply-cost">{supplyCost}u</span>
+                <button
+                  class="toggle-btn"
+                  class:on={supplied}
+                  disabled={!supplied && !canToggleOn(entry.node.id, supplyCost)}
+                  onclick={() => onToggleSupply(entry.node.id)}
+                >
+                  {supplied ? 'ON' : 'OFF'}
+                </button>
+              {/if}
+            </div>
+            {#if upgradeName}
+              <div class="upgrade-row">
+                <button class="upgrade-btn" onclick={() => onUpgrade(entry.node.id)}>
+                  ↑ Upgrade → {upgradeName}
+                </button>
+              </div>
+            {/if}
           </div>
         {/each}
       {/if}
@@ -123,7 +182,7 @@
     background: #0a0e14;
     border: 1px solid #1e2d40;
     border-top: none;
-    width: 220px;
+    width: 260px;
     max-height: 100%;
     display: flex;
     flex-direction: column;
@@ -162,6 +221,39 @@
     color: #8aaabb;
   }
 
+  .capacity-section {
+    padding: 0.4rem 0.6rem 0.3rem;
+    border-bottom: 1px solid #111820;
+    flex-shrink: 0;
+  }
+
+  .capacity-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: #4a7a9a;
+    margin-bottom: 0.25rem;
+  }
+
+  .capacity-value {
+    color: #8aaabb;
+  }
+
+  .capacity-bar-track {
+    height: 4px;
+    background: #1a2530;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .capacity-bar-fill {
+    height: 100%;
+    background: #4a90c0;
+    border-radius: 2px;
+    transition: width 0.2s;
+  }
+
   .list {
     overflow-y: auto;
     flex: 1;
@@ -182,6 +274,21 @@
     margin-top: 0;
   }
 
+  .facility-row {
+    padding: 0.15rem 0.6rem 0.15rem 0.9rem;
+    transition: opacity 0.15s;
+  }
+
+  .facility-row.unsupplied {
+    opacity: 0.55;
+  }
+
+  .row-main {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
   .row {
     display: flex;
     align-items: baseline;
@@ -190,16 +297,70 @@
   }
 
   .node-label {
-    font-size: 0.58rem;
+    font-size: 0.55rem;
     color: #3a6888;
     letter-spacing: 0.06em;
-    min-width: 2.2rem;
+    min-width: 2rem;
     flex-shrink: 0;
   }
 
   .item-name {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: #8aaabb;
+    flex: 1;
+  }
+
+  .supply-cost {
+    font-size: 0.55rem;
+    color: #3a6070;
+    flex-shrink: 0;
+  }
+
+  .toggle-btn {
+    font-size: 0.52rem;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 2px;
+    border: 1px solid #1e3048;
+    background: #0d1820;
+    color: #3a5870;
+    cursor: pointer;
+    font-family: monospace;
+    transition: all 0.1s;
+    flex-shrink: 0;
+  }
+
+  .toggle-btn.on {
+    border-color: #2a6090;
+    color: #60b0e8;
+    background: #0a1828;
+  }
+
+  .toggle-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .upgrade-row {
+    margin-top: 0.2rem;
+  }
+
+  .upgrade-btn {
+    font-size: 0.52rem;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border: 1px solid #2a5870;
+    background: #0a1420;
+    color: #4a9090;
+    cursor: pointer;
+    font-family: monospace;
+    border-radius: 2px;
+    transition: all 0.1s;
+  }
+
+  .upgrade-btn:hover {
+    color: #70d0d0;
+    border-color: #4a8080;
   }
 
   .empty {

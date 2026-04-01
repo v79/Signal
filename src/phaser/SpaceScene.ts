@@ -20,6 +20,7 @@ export interface SpaceSceneCallbacks {
   getSelectedNode: () => string | null;
   onNodeClick: (id: string) => void;
   getCompletedProjects: () => string[];
+  getLaunchAllocation: () => Record<string, boolean>;
 }
 
 // Fixed canvas positions for each node id (normalised to 600 × 400 logical px)
@@ -156,6 +157,7 @@ export class SpaceScene extends Phaser.Scene {
     const nodes = this.callbacks!.getNodes();
     const selectedId = this.callbacks!.getSelectedNode();
     const completed = this.callbacks!.getCompletedProjects();
+    const launchAllocation = this.callbacks!.getLaunchAllocation();
 
     this.gfx.clear();
     this.hitZones.forEach((z) => z.destroy());
@@ -189,16 +191,17 @@ export class SpaceScene extends Phaser.Scene {
       const isSelected = node.id === selectedId;
       const colour = NODE_COLOURS[node.type] ?? 0x6080a0;
       const hasFacility = node.facilityId !== null;
+      const isInactive = hasFacility && launchAllocation[node.id] === false;
 
       if (node.id === 'leo') {
         const stageCount = STATION_STAGES.filter((s) => completed.includes(s)).length;
         if (stageCount > 0) {
-          this.drawOrbitalStation(cx, cy, r, stageCount, isSelected);
+          this.drawOrbitalStation(cx, cy, r, stageCount, isSelected, isInactive);
         } else {
-          this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected);
+          this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected, isInactive);
         }
       } else {
-        this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected);
+        this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected, isInactive);
       }
 
       // Launch cost label
@@ -215,7 +218,7 @@ export class SpaceScene extends Phaser.Scene {
       const nameLabel = this.add
         .text(cx, cy - r - 5, node.label, {
           fontSize: `${Math.round(9 * this.scaleX)}px`,
-          color: isSelected ? '#88c8ff' : '#8aacca',
+          color: isSelected ? '#88c8ff' : isInactive ? '#3a5060' : '#8aacca',
           fontFamily: 'monospace',
         })
         .setOrigin(0.5, 1);
@@ -239,18 +242,19 @@ export class SpaceScene extends Phaser.Scene {
 
   private drawPlainNode(
     cx: number, cy: number, r: number,
-    colour: number, hasFacility: boolean, isSelected: boolean
+    colour: number, hasFacility: boolean, isSelected: boolean, isInactive = false
   ): void {
     if (isSelected) {
       this.gfx.lineStyle(2, 0x88c8ff, 0.9);
       this.gfx.strokeCircle(cx, cy, r + 5);
     }
-    this.gfx.fillStyle(colour, hasFacility ? 1 : 0.55);
+    const alpha = isInactive ? 0.25 : (hasFacility ? 1 : 0.55);
+    this.gfx.fillStyle(colour, alpha);
     this.gfx.fillCircle(cx, cy, r);
-    this.gfx.lineStyle(1.5, isSelected ? 0x88c8ff : colour, 1);
+    this.gfx.lineStyle(1.5, isSelected ? 0x88c8ff : colour, isInactive ? 0.3 : 1);
     this.gfx.strokeCircle(cx, cy, r);
     if (hasFacility) {
-      this.gfx.fillStyle(0xffffff, 0.85);
+      this.gfx.fillStyle(0xffffff, isInactive ? 0.2 : 0.85);
       this.gfx.fillCircle(cx, cy, r * 0.35);
     }
   }
@@ -261,9 +265,10 @@ export class SpaceScene extends Phaser.Scene {
 
   private drawOrbitalStation(
     cx: number, cy: number, r: number,
-    stageCount: number, isSelected: boolean
+    stageCount: number, isSelected: boolean, isInactive = false
   ): void {
     const s = Math.min(this.scaleX, this.scaleY);
+    const stationAlpha = isInactive ? 0.25 : 1;
 
     if (isSelected) {
       this.gfx.lineStyle(2, 0x88c8ff, 0.9);
@@ -273,12 +278,12 @@ export class SpaceScene extends Phaser.Scene {
     // Stage 1+: core module
     const cw = r * 0.55;
     const ch = r * 0.38;
-    this.gfx.fillStyle(0x8ab8d8, 1);
+    this.gfx.fillStyle(0x8ab8d8, stationAlpha);
     this.gfx.fillRect(cx - cw, cy - ch, cw * 2, ch * 2);
-    this.gfx.lineStyle(1.5 * s, 0xaad4f0, 1);
+    this.gfx.lineStyle(1.5 * s, 0xaad4f0, stationAlpha);
     this.gfx.strokeRect(cx - cw, cy - ch, cw * 2, ch * 2);
     // Docking collar
-    this.gfx.lineStyle(2 * s, 0xaad4f0, 0.8);
+    this.gfx.lineStyle(2 * s, 0xaad4f0, 0.8 * stationAlpha);
     this.gfx.beginPath();
     this.gfx.moveTo(cx, cy - ch);
     this.gfx.lineTo(cx, cy - ch - r * 0.3);
@@ -286,7 +291,7 @@ export class SpaceScene extends Phaser.Scene {
 
     // Stage 2+: habitation ring
     if (stageCount >= 2) {
-      this.gfx.lineStyle(2 * s, 0x60a0c8, 0.9);
+      this.gfx.lineStyle(2 * s, 0x60a0c8, 0.9 * stationAlpha);
       this.gfx.strokeEllipse(cx, cy, r * 2.2, r * 1.4);
     }
 
@@ -298,11 +303,11 @@ export class SpaceScene extends Phaser.Scene {
 
       for (const side of [-1, 1]) {
         const px = side === -1 ? cx - cw - pw : cx + cw;
-        this.gfx.fillStyle(0x3a6888, 1);
+        this.gfx.fillStyle(0x3a6888, stationAlpha);
         this.gfx.fillRect(px, py - ph, pw, ph * 2);
-        this.gfx.lineStyle(1 * s, 0x60a8d0, 0.8);
+        this.gfx.lineStyle(1 * s, 0x60a8d0, 0.8 * stationAlpha);
         this.gfx.strokeRect(px, py - ph, pw, ph * 2);
-        this.gfx.lineStyle(0.5 * s, 0x60a8d0, 0.4);
+        this.gfx.lineStyle(0.5 * s, 0x60a8d0, 0.4 * stationAlpha);
         for (let i = 1; i < 3; i++) {
           const lx = px + (pw / 3) * i;
           this.gfx.beginPath();
@@ -312,7 +317,7 @@ export class SpaceScene extends Phaser.Scene {
         }
       }
 
-      this.gfx.lineStyle(6 * s, 0x88d4ff, 0.12);
+      this.gfx.lineStyle(6 * s, 0x88d4ff, 0.12 * stationAlpha);
       this.gfx.strokeCircle(cx, cy, r * 1.8);
     }
   }

@@ -53,7 +53,7 @@ import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText }
 import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
-import { ZERO_RESOURCES, ZERO_FIELDS } from './state';
+import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity } from './state';
 import { createRng } from './rng';
 import type { Rng } from './rng';
 
@@ -275,7 +275,17 @@ export function executeWorldPhase(
     updatedQueue,
     updatedFacilities: facilitiesAfterQueue,
     updatedTiles: tilesAfterQueue,
-  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs);
+    updatedSpaceNodes: spaceNodesAfterQueue,
+  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs, map.spaceNodes);
+
+  // 0b. Recompute launch capacity from built facilities + tech bonuses.
+  //     Done before output tick so unsupplied space facilities are correctly skipped.
+  const newLaunchCapacity = recomputeLaunchCapacity(
+    facilitiesAfterQueue,
+    player.techs,
+    techDefs,
+    facilityDefs,
+  );
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -285,11 +295,13 @@ export function executeWorldPhase(
   );
 
   // 2. Facility output (fields + resources, net of upkeep)
+  //    Space facilities where launchAllocation[nodeId] === false are skipped.
   const { totalFields, totalResources } = computeFacilityOutput(
     facilitiesAfterQueue,
     facilityDefs,
     adjacencyEffects,
     tilesAfterQueue,
+    state.launchAllocation,
   );
 
   // 2b. HQ bonus — applies if the player has an HQ facility on the map.
@@ -657,7 +669,9 @@ export function executeWorldPhase(
     blocs: updatedBlocs,
     signal: newSignal,
     activeEvents: eventsAfterWorld,
-    map: { ...map, earthTiles: degradedTiles },
+    launchCapacity: newLaunchCapacity,
+    launchAllocation: state.launchAllocation,
+    map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterQueue },
     boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
     orbitalStationAuthorised: state.orbitalStationAuthorised,
     orbitalStationDeferCount: state.orbitalStationDeferCount,

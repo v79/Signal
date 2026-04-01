@@ -39,7 +39,7 @@ import {
   getEffectForResolution,
   formatEffectForNews,
 } from '../../engine/events';
-import { getFacilitiesOnTile, findContiguousFreeStart } from '../../engine/facilities';
+import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility } from '../../engine/facilities';
 import { canInitiateProject, initiateProject } from '../../engine/projects';
 import {
   BLOC_MAPS,
@@ -1230,5 +1230,116 @@ export const gameStore = {
         ],
       },
     });
+  },
+
+  /**
+   * Toggle supply allocation for a space facility node.
+   * Toggling ON is blocked when remaining capacity < the facility's supplyCost.
+   */
+  toggleSpaceFacilitySupply(nodeId: string): void {
+    if (!_state) return;
+    const node = _state.map.spaceNodes.find((n) => n.id === nodeId);
+    if (!node || !node.facilityId) return;
+    const def = FACILITY_DEFS.get(node.facilityId);
+    if (!def || !def.supplyCost) return;
+
+    const currentlyOn = _state.launchAllocation[nodeId] !== false;
+    if (currentlyOn) {
+      // Turn off: always allowed
+      mutateState({
+        ..._state,
+        launchAllocation: { ..._state.launchAllocation, [nodeId]: false },
+      });
+    } else {
+      // Turn on: check remaining capacity
+      const used = Object.entries(_state.launchAllocation)
+        .filter(([nid, on]) => on !== false && nid !== nodeId)
+        .reduce((sum, [nid]) => {
+          const n = _state!.map.spaceNodes.find((sn) => sn.id === nid);
+          const d = n?.facilityId ? FACILITY_DEFS.get(n.facilityId) : null;
+          return sum + (d?.supplyCost ?? 0);
+        }, 0);
+      // Also count nodes not explicitly in the allocation as ON (default)
+      const defaultOnCost = _state.map.spaceNodes
+        .filter((n) => n.facilityId && _state!.launchAllocation[n.id] === undefined)
+        .reduce((sum, n) => {
+          const d = FACILITY_DEFS.get(n.facilityId!);
+          return sum + (d?.supplyCost ?? 0);
+        }, 0);
+      const totalUsed = used + defaultOnCost;
+      const remaining = _state.launchCapacity - totalUsed;
+      if (remaining < def.supplyCost) return; // not enough capacity
+      mutateState({
+        ..._state,
+        launchAllocation: { ..._state.launchAllocation, [nodeId]: true },
+      });
+    }
+  },
+
+  /**
+   * Upgrade the space facility on the given node to its next tier.
+   * Costs the next tier's buildCost and queues construction.
+   * The existing facility remains active during construction.
+   */
+  upgradeFacility(nodeId: string): void {
+    if (!_state) return;
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    const nextDef = canUpgradeFacility(
+      nodeId,
+      _state.map.spaceNodes,
+      _state.player.facilities,
+      FACILITY_DEFS,
+      _state.player.techs,
+    );
+    if (!nextDef) return;
+
+    // Afford check
+    const cost = nextDef.buildCost;
+    if ((cost.funding ?? 0) > _state.player.resources.funding) return;
+    if ((cost.materials ?? 0) > _state.player.resources.materials) return;
+
+    // Deduct cost
+    const newResources = {
+      funding: _state.player.resources.funding - (cost.funding ?? 0),
+      materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
+      politicalWill: _state.player.resources.politicalWill - (cost.politicalWill ?? 0),
+    };
+
+    // Queue space upgrade action
+    const actionId = `upgrade-${nextDef.id}-${nodeId}-t${_state.turn}`;
+    const action: OngoingAction = {
+      id: actionId,
+      type: 'construct',
+      facilityDefId: nextDef.id,
+      coordKey: '',
+      turnsRemaining: nextDef.buildTime,
+      totalTurns: nextDef.buildTime,
+      slotIndex: 0,
+      spaceNodeId: nodeId,
+    };
+
+    mutateState({
+      ..._state,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      player: {
+        ..._state.player,
+        resources: newResources,
+        constructionQueue: [..._state.player.constructionQueue, action],
+      },
+    });
+  },
+
+  /** Derived: remaining launch capacity after current allocation. */
+  get remainingLaunchCapacity(): number {
+    if (!_state) return 0;
+    const allocated = _state.map.spaceNodes
+      .filter((n) => n.facilityId && _state!.launchAllocation[n.id] !== false)
+      .reduce((sum, n) => {
+        const def = FACILITY_DEFS.get(n.facilityId!);
+        return sum + (def?.supplyCost ?? 0);
+      }, 0);
+    return _state.launchCapacity - allocated;
   },
 };

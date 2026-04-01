@@ -112,10 +112,13 @@ describe('getTechTier — Era 1 tech assignments', () => {
 // ---------------------------------------------------------------------------
 
 describe('getTechTier — Era 1 distribution', () => {
-  it('produces a 4/4/4/4 distribution across the four tiers', () => {
+  it('produces a 4/4/4/4 distribution across the four tiers for base Era 1 techs', () => {
     const counts = [0, 0, 0, 0];
     for (const def of TECH_DEFS.values()) {
-      counts[getTechTier(def) - 1]++;
+      // Only the original 16 Era 1 techs (no era field) use the tier 1–4 system
+      if (def.era !== undefined) continue;
+      const tier = getTechTier(def);
+      if (tier >= 1 && tier <= 4) counts[tier - 1]++;
     }
     expect(counts).toEqual([4, 4, 4, 4]);
   });

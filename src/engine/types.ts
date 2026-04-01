@@ -212,6 +212,17 @@ export interface FacilityDef {
    * Positive = pollution; negative = mitigation. Omit for climate-neutral.
    */
   climateImpact?: number;
+  /**
+   * Launch units consumed per turn to keep this space facility supplied.
+   * Undefined or 0 = Earth facility (unaffected by launch capacity).
+   */
+  supplyCost?: number;
+  /**
+   * ID of the facility def this upgrades from. Tier 2+ space facilities set this
+   * to the ID of their predecessor. When the player upgrades a node, the new
+   * facility replaces the old one on completion.
+   */
+  upgradesFrom?: string;
 }
 
 export interface AdjacencyRule {
@@ -330,6 +341,8 @@ export interface BreakthroughCondition {
 export interface TechDef {
   id: string;
   name: string;
+  /** Which era this tech belongs to — informational/filtering only. */
+  era?: Era;
   /** Flavour hint shown in research feed at Rumour stage. */
   rumourText: string;
   /** Base field requirements (before per-run randomisation). */
@@ -744,13 +757,19 @@ export interface OngoingAction {
   type: OngoingActionType;
   /** DefId of the facility being constructed or demolished. */
   facilityDefId: string;
-  /** Axial coord key of the target Earth tile. */
+  /** Axial coord key of the target Earth tile. Empty string for space upgrades. */
   coordKey: string;
   turnsRemaining: number;
   /** Original duration, used to compute progress bar fraction. */
   totalTurns: number;
   /** Lowest slot index this action occupies (for slot-aware construction/demolition). */
   slotIndex: number;
+  /**
+   * If set, this is a space facility upgrade queued on the given space node.
+   * On completion, the node's facilityId is replaced with the new def ID.
+   * coordKey is empty/unused for space upgrades.
+   */
+  spaceNodeId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -846,6 +865,17 @@ export interface GameState {
    * at the start of Draw Phase. Reset to 0 each Draw Phase.
    */
   bonusActionsThisTurn: number;
+  /**
+   * Total launch units available per turn. Recomputed at World Phase start
+   * from spaceLaunchCentre facilities + HQ tech bonuses.
+   */
+  launchCapacity: number;
+  /**
+   * Per-node supply allocation. True (or missing) = facility is supplied and
+   * produces output. False = facility is unsupplied and produces nothing that turn.
+   * Keyed by space node ID.
+   */
+  launchAllocation: Record<string, boolean>;
   /** IDs of narratives already seen this run. Prevents re-triggering after save/load. */
   seenNarrativeIds: string[];
   /** Narratives queued for display, processed one at a time in order. */
