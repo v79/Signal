@@ -9,6 +9,8 @@ import type {
   Resources,
   FieldPoints,
   WillProfile,
+  FacilityInstance,
+  TechState,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -115,6 +117,8 @@ export function createGameState(config: GameConfig): GameState {
     maxActionsPerTurn: 3,
     bonusActionsNextTurn: 0,
     bonusActionsThisTurn: 0,
+    launchCapacity: 0,
+    launchAllocation: {},
     seenNarrativeIds: [],
     narrativeQueue: [],
     availableBoardDefIds: [],
@@ -124,6 +128,11 @@ export function createGameState(config: GameConfig): GameState {
     orbitalStationAuthorised: false,
     orbitalStationDeferCount: 0,
     orbitalStationDeferResurfaceTurn: null,
+    moonColonyProposalFired: false,
+    moonColonyAuthorised: false,
+    moonColonyDeferCount: 0,
+    moonColonyDeferResurfaceTurn: null,
+    isruOperational: false,
   };
 }
 
@@ -139,4 +148,51 @@ export function serialiseGameState(state: GameState): string {
 /** Deserialise a JSON string back to a GameState. No migration yet. */
 export function deserialiseGameState(json: string): GameState {
   return JSON.parse(json) as GameState;
+}
+
+// ---------------------------------------------------------------------------
+// Launch capacity
+// ---------------------------------------------------------------------------
+
+/**
+ * Recompute total launch capacity from spaceLaunchCentre facilities + tech HQ bonuses.
+ *
+ * Sources:
+ *   - Each `spaceLaunchCentre` Earth facility:              +3 units
+ *   - `reusableLaunchSystems` tech discovered:             +2 units (via hqFieldBonus mechanism)
+ *   - `nuclearThermalPropulsion` tech discovered:          +1 unit
+ *   - `autonomousSpaceConstruction` tech discovered:       supply-cost reduction (handled in output)
+ *   - `cislunarTransportNetwork` tech discovered:          +3 units
+ *
+ * The per-tech bonuses are encoded as `launchCapacityBonus` values read from
+ * the tech's `resourceOutput` on a virtual "launchCapacity" resource key
+ * (or simply hard-coded here since there are only a few techs that grant capacity).
+ */
+export function recomputeLaunchCapacity(
+  facilities: FacilityInstance[],
+  techs: TechState[],
+): number {
+  let capacity = 0;
+
+  // Each built spaceLaunchCentre provides +3 units
+  for (const inst of facilities) {
+    if (inst.defId === 'spaceLaunchCentre') {
+      capacity += 3;
+    }
+  }
+
+  // Tech HQ bonuses that grant launch capacity
+  const TECH_LAUNCH_BONUSES: Record<string, number> = {
+    reusableLaunchSystems: 2,
+    nuclearThermalPropulsion: 1,
+    cislunarTransportNetwork: 3,
+  };
+
+  for (const ts of techs) {
+    if (ts.stage !== 'discovered') continue;
+    const bonus = TECH_LAUNCH_BONUSES[ts.defId];
+    if (bonus) capacity += bonus;
+  }
+
+  return capacity;
 }

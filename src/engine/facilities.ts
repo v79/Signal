@@ -7,6 +7,9 @@ import type {
   Resources,
   WillProfile,
   OngoingAction,
+  SpaceNode,
+  TechState,
+  TileActionDef,
 } from './types';
 import { ZERO_FIELDS, ZERO_RESOURCES } from './state';
 
@@ -210,6 +213,9 @@ export function computeFacilityOutput(
   facilityDefs: Map<string, FacilityDef>,
   adjacencyEffects: AdjacencyEffect[],
   earthTiles: MapTile[],
+  launchAllocation: Record<string, boolean> = {},
+  spaceNodes: SpaceNode[] = [],
+  isruOperational = false,
 ): FacilityOutput {
   const totalFields: FieldPoints = { ...ZERO_FIELDS };
   const totalResources: Resources = { ...ZERO_RESOURCES };
@@ -233,6 +239,21 @@ export function computeFacilityOutput(
   for (const facility of facilities) {
     const def = facilityDefs.get(facility.defId);
     if (!def) continue;
+
+    // Skip space facilities that are not supplied this turn.
+    // ISRU exception: lunar surface facilities are self-sustaining when ISRU is active.
+    if (def.supplyCost && def.supplyCost > 0 && launchAllocation[facility.locationKey] === false) {
+      const isLunarSurface =
+        isruOperational &&
+        spaceNodes.some((n) => n.id === facility.locationKey && n.type === 'lunarSurface');
+      if (!isLunarSurface) {
+        // Still pay upkeep for an unsupplied facility
+        for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
+          totalResources[k] -= def.upkeepCost[k] ?? 0;
+        }
+        continue;
+      }
+    }
 
     const tileProd = tileProductivity.get(facility.locationKey) ?? 1;
     const scale = facility.condition * tileProd;
@@ -558,14 +579,19 @@ export interface ConstructionTickResult {
   updatedQueue: OngoingAction[];
   updatedFacilities: FacilityInstance[];
   updatedTiles: MapTile[];
+  updatedSpaceNodes: SpaceNode[];
   completedActions: OngoingAction[];
+  /** Net climate pressure delta from tile actions completing this tick. */
+  climateDelta: number;
 }
 
 /**
  * Advance the construction queue by one turn.
  * For each action whose turnsRemaining reaches 0:
- *   - 'construct': creates a FacilityInstance and fills the tile's facilitySlots.
- *   - 'demolish':  removes the FacilityInstance and clears its slots.
+ *   - Earth 'construct': creates a FacilityInstance and fills the tile's facilitySlots.
+ *   - Earth 'demolish':  removes the FacilityInstance and clears its slots.
+ *   - Space upgrade (action.spaceNodeId set): replaces the node's facilityId and
+ *     removes the old FacilityInstance; inserts the new one.
  * In both cases tile.pendingActionId is cleared.
  * Returns new arrays — does not mutate inputs.
  */
@@ -575,11 +601,15 @@ export function tickConstructionQueue(
   tiles: MapTile[],
   completedTurn: number,
   facilityDefs: Map<string, FacilityDef> = new Map(),
+  spaceNodes: SpaceNode[] = [],
+  tileActionDefs: Map<string, TileActionDef> = new Map(),
 ): ConstructionTickResult {
   const updatedQueue: OngoingAction[] = [];
   let updatedFacilities = [...facilities];
   let updatedTiles = [...tiles];
+  let updatedSpaceNodes = spaceNodes;
   const completedActions: OngoingAction[] = [];
+  let climateDelta = 0;
 
   for (const action of queue) {
     const next = { ...action, turnsRemaining: action.turnsRemaining - 1 };
@@ -592,7 +622,26 @@ export function tickConstructionQueue(
     // Action complete
     completedActions.push(next);
 
-    if (action.type === 'construct') {
+    if (action.spaceNodeId) {
+      // Space facility upgrade: replace node's facilityId and swap FacilityInstance
+      const nodeId = action.spaceNodeId;
+      const facilityId = `${action.facilityDefId}-${nodeId}-t${completedTurn}`;
+      // Remove old facility instance on this node
+      updatedFacilities = updatedFacilities.filter((f) => f.locationKey !== nodeId);
+      // Add new facility instance
+      const newInstance: FacilityInstance = {
+        id: facilityId,
+        defId: action.facilityDefId,
+        locationKey: nodeId,
+        condition: 1.0,
+        builtTurn: completedTurn,
+      };
+      updatedFacilities = [...updatedFacilities, newInstance];
+      // Update space node facilityId
+      updatedSpaceNodes = updatedSpaceNodes.map((n) =>
+        n.id === nodeId ? { ...n, facilityId: action.facilityDefId } : n,
+      );
+    } else if (action.type === 'construct') {
       const facilityId = `${action.facilityDefId}-${action.coordKey}-t${completedTurn}`;
       const def = facilityDefs.get(action.facilityDefId);
       const slotCost = def?.slotCost ?? 1;
@@ -614,6 +663,20 @@ export function tickConstructionQueue(
         }
         return { ...t, facilitySlots: newSlots, pendingActionId: null };
       });
+    } else if (action.type === 'tileAction' && action.tileActionDefId) {
+      // Tile action: terrain modification (restore, sea wall, urbanise, etc.)
+      const taDef = tileActionDefs.get(action.tileActionDefId);
+      if (taDef) {
+        updatedTiles = updatedTiles.map((t) => {
+          if (coordKey(t.coord) !== action.coordKey) return t;
+          const updated: MapTile = { ...t, pendingActionId: null };
+          if (taDef.transformsTo) updated.type = taDef.transformsTo;
+          if (taDef.clearsDestroyedStatus) updated.destroyedStatus = null;
+          if (taDef.seaWallProtection) updated.seaWallProtected = true;
+          return updated;
+        });
+        climateDelta += taDef.climateEffect;
+      }
     } else {
       // demolish: find the instance at slotIndex, remove it and clear all its slots
       const targetTile = updatedTiles.find((t) => coordKey(t.coord) === action.coordKey);
@@ -631,7 +694,7 @@ export function tickConstructionQueue(
     }
   }
 
-  return { updatedQueue, updatedFacilities, updatedTiles, completedActions };
+  return { updatedQueue, updatedFacilities, updatedTiles, updatedSpaceNodes, completedActions, climateDelta };
 }
 
 // ---------------------------------------------------------------------------
@@ -652,6 +715,40 @@ export function isUniqueAlreadyBuilt(
     facilities.some((f) => f.defId === defId) ||
     queue.some((a) => a.type === 'construct' && a.facilityDefId === defId)
   );
+}
+
+// ---------------------------------------------------------------------------
+// Facility upgrade helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the next-tier FacilityDef for the facility on the given space node,
+ * if the player has discovered the required tech. Returns null otherwise.
+ *
+ * A facility is upgradeable when another def has `upgradesFrom === currentDefId`
+ * and its `requiredTechId` has been discovered.
+ */
+export function canUpgradeFacility(
+  nodeId: string,
+  spaceNodes: SpaceNode[],
+  facilities: FacilityInstance[],
+  facilityDefs: Map<string, FacilityDef>,
+  techs: TechState[],
+): FacilityDef | null {
+  const node = spaceNodes.find((n) => n.id === nodeId);
+  if (!node || !node.facilityId) return null;
+
+  const currentDefId = node.facilityId;
+  const discoveredTechIds = new Set(
+    techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
+  );
+
+  for (const def of facilityDefs.values()) {
+    if (def.upgradesFrom !== currentDefId) continue;
+    if (def.requiredTechId && !discoveredTechIds.has(def.requiredTechId)) continue;
+    return def;
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------

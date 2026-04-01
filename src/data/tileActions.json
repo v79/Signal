@@ -1,0 +1,58 @@
+{
+  "urbanize": {
+    "id": "urbanize",
+    "name": "Urbanise",
+    "description": "Zone and develop this area for urban use. Increases tile capacity but adds climate pressure.",
+    "requiredTechId": "autonomousSpaceConstruction",
+    "buildCost": { "funding": 50, "politicalWill": 20 },
+    "buildTime": 1,
+    "appliesTo": ["forested", "agricultural", "highland"],
+    "appliesToDestroyed": null,
+    "transformsTo": "urban",
+    "clearsDestroyedStatus": false,
+    "seaWallProtection": false,
+    "climateEffect": 0.05
+  },
+  "restoreHabitat": {
+    "id": "restoreHabitat",
+    "name": "Restore Habitat",
+    "description": "Ecological restoration of a degraded tile. Removes dustbowl or flood damage and regenerates natural cover.",
+    "requiredTechId": "advancedLifeSupport",
+    "buildCost": { "funding": 40, "materials": 20 },
+    "buildTime": 3,
+    "appliesTo": ["forested", "agricultural"],
+    "appliesToDestroyed": "dustbowl",
+    "transformsTo": "forested",
+    "clearsDestroyedStatus": true,
+    "seaWallProtection": false,
+    "climateEffect": -2.0
+  },
+  "cleanIndustrialSite": {
+    "id": "cleanIndustrialSite",
+    "name": "Clean Industrial Site",
+    "description": "Decontamination and remediation of an irradiated industrial site. Returns the tile to usable condition.",
+    "requiredTechId": "inSituResourceUtilization",
+    "buildCost": { "funding": 30, "materials": 15 },
+    "buildTime": 2,
+    "appliesTo": ["industrial"],
+    "appliesToDestroyed": "irradiated",
+    "transformsTo": "industrial",
+    "clearsDestroyedStatus": true,
+    "seaWallProtection": false,
+    "climateEffect": 0
+  },
+  "buildSeaWall": {
+    "id": "buildSeaWall",
+    "name": "Build Sea Wall",
+    "description": "Construct coastal flood defences. Protected tiles cannot be inundated by sea level rise.",
+    "requiredTechId": "lunarRegolithProcessing",
+    "buildCost": { "funding": 30, "materials": 50 },
+    "buildTime": 1,
+    "appliesTo": ["coastal"],
+    "appliesToDestroyed": null,
+    "transformsTo": null,
+    "clearsDestroyedStatus": false,
+    "seaWallProtection": true,
+    "climateEffect": 0
+  }
+}

@@ -17,6 +17,7 @@
     'securityDirector',
     'signalAnalyst',
     'stationCommander',
+    'directorOfLunarOperations',
   ];
 
   const ROLE_LABELS: Record<BoardRole, string> = {
@@ -28,6 +29,7 @@
     securityDirector: 'Security Director',
     signalAnalyst: 'Signal Analyst',
     stationCommander: 'Station Commander',
+    directorOfLunarOperations: 'Dir. Lunar Operations',
   };
 
   /** Initial letter used in the portrait placeholder for each role. */
@@ -40,6 +42,7 @@
     securityDirector: 'SD',
     signalAnalyst: 'SA',
     stationCommander: 'SC',
+    directorOfLunarOperations: 'DL',
   };
 
   const DISMISS_COST = 20;

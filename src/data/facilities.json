@@ -633,26 +633,150 @@
     "depletes": false,
     "requiredTechId": "satelliteCommunications"
   },
-  "orbitalPlatform": {
-    "id": "orbitalPlatform",
-    "name": "Orbital Research Platform",
-    "description": "Low-gravity environment enables unique materials science and physics research impossible on the surface.",
-    "era": "nearSpace",
-    "allowedTileTypes": [],
+  "magneticConfinementLab": {
+    "id": "magneticConfinementLab",
+    "name": "Magnetic Confinement Lab",
+    "description": "High-field superconducting magnet research complex. Physics, Engineering, and Mathematics output with minor climate mitigation.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "industrial",
+      "highland"
+    ],
     "buildCost": {
       "funding": 80,
-      "materials": 60
+      "materials": 40
     },
     "upkeepCost": {
-      "funding": 12,
-      "materials": 5
+      "funding": 10
     },
     "buildTime": 3,
     "deleteTime": 2,
     "canDelete": true,
+    "climateImpact": -0.05,
     "fieldOutput": {
-      "physics": 8,
-      "engineering": 5
+      "physics": 6,
+      "engineering": 4,
+      "mathematics": 3
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "highTempSuperconductors"
+  },
+  "aiResearchCentre": {
+    "id": "aiResearchCentre",
+    "name": "AI Research Centre",
+    "description": "Dedicated artificial intelligence research facility. Exceptional Computing and Mathematics output with Social Science from AI ethics and governance research.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "urban"
+    ],
+    "buildCost": {
+      "funding": 70,
+      "materials": 20
+    },
+    "upkeepCost": {
+      "funding": 12
+    },
+    "buildTime": 2,
+    "deleteTime": 1,
+    "canDelete": true,
+    "fieldOutput": {
+      "computing": 12,
+      "mathematics": 8,
+      "socialScience": 4
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "largeLaguageModels"
+  },
+  "fusionReactor": {
+    "id": "fusionReactor",
+    "name": "Fusion Reactor",
+    "description": "Commercial-scale nuclear fusion plant. Exceptional clean Funding income with zero climate impact. One can ever be built.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "industrial"
+    ],
+    "buildCost": {
+      "funding": 120,
+      "materials": 80
+    },
+    "upkeepCost": {
+      "funding": 15
+    },
+    "buildTime": 5,
+    "deleteTime": 3,
+    "canDelete": true,
+    "unique": true,
+    "slotCost": 3,
+    "climateImpact": 0,
+    "fieldOutput": {
+      "physics": 4,
+      "engineering": 3
+    },
+    "resourceOutput": {
+      "funding": 20
+    },
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "nuclearFusion"
+  },
+  "carbonCaptureStation": {
+    "id": "carbonCaptureStation",
+    "name": "Carbon Capture Station",
+    "description": "Direct air capture and mineralisation plant. Actively reduces climate pressure each turn. Biochemistry and Social Science research output.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "industrial",
+      "coastal"
+    ],
+    "buildCost": {
+      "funding": 60,
+      "materials": 30
+    },
+    "upkeepCost": {
+      "funding": 10
+    },
+    "buildTime": 3,
+    "deleteTime": 2,
+    "canDelete": true,
+    "climateImpact": -0.3,
+    "fieldOutput": {
+      "biochemistry": 3,
+      "socialScience": 2
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "carbonCaptureTechnology"
+  },
+  "orbitalModule": {
+    "id": "orbitalModule",
+    "name": "Orbital Module",
+    "description": "Low-gravity research environment in LEO. Physics and Engineering output from microgravity experimentation.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 60,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 5,
+      "materials": 3
+    },
+    "buildTime": 3,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 2,
+    "fieldOutput": {
+      "physics": 4,
+      "engineering": 3
     },
     "resourceOutput": {},
     "adjacencyBonuses": [],
@@ -660,32 +784,295 @@
     "depletes": false,
     "requiredTechId": "orbitalMechanics"
   },
-  "lunarMine": {
-    "id": "lunarMine",
-    "name": "Lunar Extraction Facility",
-    "description": "Harvests regolith and subsurface ice. High materials yield, but finite deposits.",
+  "orbitalLaboratory": {
+    "id": "orbitalLaboratory",
+    "name": "Orbital Laboratory",
+    "description": "Expanded orbital research station. Enhanced Physics, Engineering and Mathematics output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
     "buildCost": {
-      "materials": 50,
-      "funding": 30
+      "funding": 40,
+      "materials": 30
     },
     "upkeepCost": {
-      "funding": 5
+      "funding": 7,
+      "materials": 3
     },
     "buildTime": 3,
     "deleteTime": 2,
     "canDelete": true,
+    "supplyCost": 2,
+    "upgradesFrom": "orbitalModule",
+    "fieldOutput": {
+      "physics": 6,
+      "engineering": 5,
+      "mathematics": 2
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "reusableLaunchSystems"
+  },
+  "orbitalResearchStation": {
+    "id": "orbitalResearchStation",
+    "name": "Orbital Research Station",
+    "description": "Full-scale orbital research complex. Exceptional cross-field output from long-duration microgravity experiments.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 60,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 10,
+      "materials": 4
+    },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 2,
+    "upgradesFrom": "orbitalLaboratory",
+    "fieldOutput": {
+      "physics": 10,
+      "engineering": 8,
+      "mathematics": 4,
+      "computing": 3
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "autonomousSpaceConstruction"
+  },
+  "orbitalSolarArray": {
+    "id": "orbitalSolarArray",
+    "name": "Orbital Solar Array",
+    "description": "Photovoltaic arrays in LEO capture unfiltered sunlight. Strong Funding income and Physics research output.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 50,
+      "materials": 35
+    },
+    "upkeepCost": {
+      "funding": 2
+    },
+    "buildTime": 3,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 1,
+    "fieldOutput": {
+      "physics": 2
+    },
+    "resourceOutput": {
+      "funding": 10
+    },
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "reusableLaunchSystems"
+  },
+  "advancedSolarArray": {
+    "id": "advancedSolarArray",
+    "name": "Advanced Solar Array",
+    "description": "Multi-junction photovoltaic arrays in LEO. Exceptional Funding income per unit of supply.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 35,
+      "materials": 25
+    },
+    "upkeepCost": {
+      "funding": 3
+    },
+    "buildTime": 3,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 1,
+    "upgradesFrom": "orbitalSolarArray",
+    "fieldOutput": {
+      "physics": 3
+    },
+    "resourceOutput": {
+      "funding": 18
+    },
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "autonomousSpaceConstruction"
+  },
+  "lunarMine": {
+    "id": "lunarMine",
+    "name": "Lunar Mine",
+    "description": "Harvests regolith and subsurface ice. Materials yield, but finite deposits.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 30,
+      "materials": 50
+    },
+    "upkeepCost": {
+      "funding": 5,
+      "materials": 3
+    },
+    "buildTime": 3,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 2,
     "fieldOutput": {
       "engineering": 2
     },
     "resourceOutput": {
-      "materials": 18
+      "materials": 14
     },
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": true,
     "requiredTechId": "orbitalMechanics"
+  },
+  "lunarProcessingPlant": {
+    "id": "lunarProcessingPlant",
+    "name": "Lunar Processing Plant",
+    "description": "In-situ resource utilization plant extracting oxygen and metals from regolith. Non-depleting Materials output.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 40,
+      "materials": 30
+    },
+    "upkeepCost": {
+      "funding": 5,
+      "materials": 3
+    },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 1,
+    "upgradesFrom": "lunarMine",
+    "fieldOutput": {
+      "engineering": 4
+    },
+    "resourceOutput": {
+      "materials": 20
+    },
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "inSituResourceUtilization"
+  },
+  "lunarHabitat": {
+    "id": "lunarHabitat",
+    "name": "Lunar Habitat",
+    "description": "Pressurised surface habitat for long-duration lunar residency. Biochemistry and Social Science research from crew health and behavioural studies.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 80,
+      "materials": 60
+    },
+    "upkeepCost": {
+      "funding": 6,
+      "materials": 5
+    },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 2,
+    "fieldOutput": {
+      "biochemistry": 4,
+      "socialScience": 5
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "advancedLifeSupport"
+  },
+  "lunarResearchBase": {
+    "id": "lunarResearchBase",
+    "name": "Lunar Research Base",
+    "description": "Expanded lunar research complex. Enhanced cross-field output from long-duration surface research programmes.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 50,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 8,
+      "materials": 5
+    },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 2,
+    "upgradesFrom": "lunarHabitat",
+    "fieldOutput": {
+      "biochemistry": 7,
+      "socialScience": 7,
+      "physics": 3
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "autonomousSpaceConstruction"
+  },
+  "deepSpaceRelay": {
+    "id": "deepSpaceRelay",
+    "name": "Deep Space Relay",
+    "description": "Signal relay and observation platform at L2. Strong Signal decode progress and Physics/Computing output.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 70,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 6
+    },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 1,
+    "fieldOutput": {
+      "physics": 4,
+      "computing": 3
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "nuclearThermalPropulsion"
+  },
+  "lunarObservatory": {
+    "id": "lunarObservatory",
+    "name": "Lunar Observatory",
+    "description": "Quantum-sensing observatory at L2. Exceptional Signal decode progress and Physics/Computing research.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": {
+      "funding": 60,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 8
+    },
+    "buildTime": 4,
+    "deleteTime": 2,
+    "canDelete": true,
+    "supplyCost": 1,
+    "upgradesFrom": "deepSpaceRelay",
+    "fieldOutput": {
+      "physics": 8,
+      "computing": 5
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "quantumSensing"
   },
   "asteroidMiner": {
     "id": "asteroidMiner",
@@ -713,6 +1100,46 @@
     "adjacencyPenalties": [],
     "depletes": true,
     "requiredTechId": null
+  },
+  "lunarColonyHub": {
+    "id": "lunarColonyHub",
+    "name": "Lunar Colony Hub",
+    "description": "The beating heart of a self-sustaining lunar settlement. Central logistics, governance, and research coordination for the colony. ISRU makes it effectively self-supporting.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": { "funding": 70, "materials": 50 },
+    "upkeepCost": { "funding": 10, "materials": 5 },
+    "buildTime": 4,
+    "deleteTime": 0,
+    "canDelete": false,
+    "fieldOutput": { "biochemistry": 10, "socialScience": 10, "physics": 5, "engineering": 4 },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "cislunarTransportNetwork",
+    "supplyCost": 0,
+    "upgradesFrom": "lunarResearchBase"
+  },
+  "solarPowerSatellite": {
+    "id": "solarPowerSatellite",
+    "name": "Solar Power Satellite",
+    "description": "A massive photovoltaic array in high orbit, transmitting power to Earth via microwave. Effectively self-sustaining — no launch overhead required.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "buildCost": { "funding": 50, "materials": 35 },
+    "upkeepCost": { "funding": 4 },
+    "buildTime": 3,
+    "deleteTime": 0,
+    "canDelete": false,
+    "fieldOutput": { "physics": 5 },
+    "resourceOutput": { "funding": 30 },
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "cislunarTransportNetwork",
+    "supplyCost": 0,
+    "upgradesFrom": "advancedSolarArray"
   },
   "heliopauseRelay": {
     "id": "heliopauseRelay",

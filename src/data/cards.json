@@ -301,5 +301,100 @@
       "fullNeutralise": true
     },
     "upgradesFrom": null
+  },
+  "missionExtension": {
+    "id": "missionExtension",
+    "name": "Mission Extension",
+    "description": "Double the output of one supplied space facility this turn.",
+    "flavourText": "Pushing the mission parameters — carefully.",
+    "era": "nearSpace",
+    "effect": { "customEffectKey": "doubleSpaceFacilityOutput" },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
+  "constructionDrone": {
+    "id": "constructionDrone",
+    "name": "Construction Drone",
+    "description": "Reduce the build or upgrade time of the next space facility construction by 2 turns.",
+    "flavourText": "Autonomous assembly crews do not tire.",
+    "era": "nearSpace",
+    "effect": { "customEffectKey": "reduceNextSpaceBuildTime" },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
+  "signalBurst": {
+    "id": "signalBurst",
+    "name": "Signal Burst Analysis",
+    "description": "A strong coherent window in the signal. Significant Signal progress plus Physics and Computing research.",
+    "flavourText": "For a moment, the noise falls away entirely.",
+    "era": "nearSpace",
+    "effect": { "signalProgress": 15, "fields": { "physics": 8, "computing": 5 } },
+    "counterEffect": {
+      "countersEventTag": "signal",
+      "additionalCost": {},
+      "fullNeutralise": true
+    },
+    "upgradesFrom": null
+  },
+  "fuelDepotReserve": {
+    "id": "fuelDepotReserve",
+    "name": "Fuel Depot Reserve",
+    "description": "Emergency propellant reserves. +3 launch capacity this turn only.",
+    "flavourText": "The reserve tanks exist for exactly this scenario.",
+    "era": "nearSpace",
+    "effect": { "customEffectKey": "tempLaunchCapacity" },
+    "counterEffect": {
+      "countersEventTag": "logistics",
+      "additionalCost": {},
+      "fullNeutralise": true
+    },
+    "upgradesFrom": null
+  },
+  "resourceTransfer": {
+    "id": "resourceTransfer",
+    "name": "Resource Transfer",
+    "description": "Route cislunar logistics to deliver emergency materials.",
+    "flavourText": "The network exists. Use it.",
+    "era": "nearSpace",
+    "effect": { "resources": { "materials": 20 } },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
+  "emergencyEVA": {
+    "id": "emergencyEVA",
+    "name": "Emergency EVA",
+    "description": "Dispatch a crew for emergency extravehicular repairs. Negates one orbital crisis effect.",
+    "flavourText": "The view from outside is always worse.",
+    "era": "nearSpace",
+    "effect": { "customEffectKey": "negateOrbitalCrisis" },
+    "counterEffect": {
+      "countersEventTag": "orbital",
+      "additionalCost": { "funding": 10 },
+      "fullNeutralise": true
+    },
+    "upgradesFrom": null
+  },
+  "aiAssistance": {
+    "id": "aiAssistance",
+    "name": "AI Research Assistance",
+    "description": "AI-driven literature synthesis accelerates cross-field research.",
+    "flavourText": "The model does not sleep. It does not lose papers. It does not forget.",
+    "era": "earth",
+    "effect": { "fields": { "computing": 12, "mathematics": 8, "physics": 5 } },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
+  "autonomousResearch": {
+    "id": "autonomousResearch",
+    "name": "Autonomous Research Protocol",
+    "description": "AI agents conduct an accelerated research cycle. All research fields +4 this turn. Signal +5.",
+    "flavourText": "The protocol runs. The results accumulate. No one was in the lab.",
+    "era": "nearSpace",
+    "effect": {
+      "fields": { "physics": 4, "mathematics": 4, "engineering": 4, "biochemistry": 4, "computing": 4, "socialScience": 4 },
+      "signalProgress": 5
+    },
+    "counterEffect": null,
+    "upgradesFrom": null
   }
 }

@@ -200,7 +200,7 @@
     "requiresSimultaneous": false,
     "unlocksCards": ["orbitDeploy"],
     "unlocksProjects": ["orbitalTelescopeArray"],
-    "unlocksFacilities": ["spaceLaunchCentre", "orbitalPlatform", "lunarMine"],
+    "unlocksFacilities": ["spaceLaunchCentre", "orbitalModule", "lunarMine"],
     "signalDerived": false,
     "tier": 2,
     "requiredTechIds": ["liquidThrusters"],
@@ -434,6 +434,401 @@
         },
         {
           "text": "Signal analysis that previously required weeks of data aggregation now completes overnight. The global research network is, for the first time, functioning as a single instrument."
+        }
+      ]
+    }
+  },
+  "reusableLaunchSystems": {
+    "id": "reusableLaunchSystems",
+    "name": "Reusable Launch Systems",
+    "era": "nearSpace",
+    "rumourText": "Recovered rocket boosters have been successfully reflown in test conditions — the economics of orbital access may be fundamentally changing.",
+    "baseRecipe": { "engineering": 40, "physics": 20, "computing": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["orbitalLaboratory"],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["orbitalMechanics"],
+    "hqFieldBonus": {},
+    "narrative": {
+      "id": "narrative-tech-reusableLaunchSystems",
+      "title": "Discovery — Reusable Launch Systems",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "First-stage boosters have been recovered and reflown successfully. The marginal cost of an orbital launch has dropped by an order of magnitude."
+        },
+        {
+          "text": "Near Space infrastructure that was previously cost-prohibitive is now within operational budget. The programme's launch capacity has increased substantially."
+        }
+      ]
+    }
+  },
+  "advancedLifeSupport": {
+    "id": "advancedLifeSupport",
+    "name": "Advanced Life Support",
+    "era": "nearSpace",
+    "rumourText": "Closed-loop life support systems tested in orbital simulators have maintained crew viability beyond the 180-day threshold.",
+    "baseRecipe": { "biochemistry": 40, "engineering": 30, "computing": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["missionExtension"],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["lunarHabitat"],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["cryogenicPropulsion", "geneticEngineering"],
+    "narrative": {
+      "id": "narrative-tech-advancedLifeSupport",
+      "title": "Discovery — Advanced Life Support",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Closed-loop atmospheric recycling, waste processing, and nutritional systems have been validated for extended duration missions."
+        },
+        {
+          "text": "Permanent lunar habitation is now viable. The moon is no longer a destination — it is a location."
+        }
+      ]
+    }
+  },
+  "inSituResourceUtilization": {
+    "id": "inSituResourceUtilization",
+    "name": "In-Situ Resource Utilization",
+    "era": "nearSpace",
+    "rumourText": "Lunar regolith analysis confirms viable concentrations of oxygen, silicon, and water ice that could support local production without Earth resupply.",
+    "baseRecipe": { "engineering": 35, "biochemistry": 25, "physics": 15 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["lunarProcessingPlant"],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["orbitalMechanics"],
+    "narrative": {
+      "id": "narrative-tech-inSituResourceUtilization",
+      "title": "Discovery — In-Situ Resource Utilization",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Lunar surface material contains sufficient oxygen, metals, and water ice to support local manufacturing operations."
+        },
+        {
+          "text": "Facilities on the lunar surface no longer require continuous resupply from Earth for basic operations. The economics of lunar infrastructure have changed permanently."
+        }
+      ]
+    }
+  },
+  "quantumSensing": {
+    "id": "quantumSensing",
+    "name": "Quantum Sensing",
+    "era": "nearSpace",
+    "rumourText": "Entanglement-based sensors operating at the quantum limit have resolved signal features that conventional instruments could not distinguish from noise.",
+    "baseRecipe": { "physics": 60, "mathematics": 40 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["signalBurst"],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["lunarObservatory"],
+    "signalDerived": true,
+    "tier": 4,
+    "requiredTechIds": ["particlePhysicsDetectors"],
+    "narrative": {
+      "id": "narrative-tech-quantumSensing",
+      "title": "Discovery — Quantum Sensing",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Quantum-limited sensors have resolved signal features that were previously indistinguishable from noise. The transmission contains more structure than was previously detectable."
+        },
+        {
+          "text": "The outer signal layers now resolve with a clarity that makes prior analysis look approximate. What was noise has become data."
+        }
+      ]
+    }
+  },
+  "nuclearThermalPropulsion": {
+    "id": "nuclearThermalPropulsion",
+    "name": "Nuclear Thermal Propulsion",
+    "era": "nearSpace",
+    "rumourText": "Nuclear-heated propellant has demonstrated specific impulse values roughly twice that of the best chemical engines — transit times to deep space destinations have halved on paper.",
+    "baseRecipe": { "physics": 50, "engineering": 40 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["deepSpaceRelay"],
+    "signalDerived": false,
+    "tier": 4,
+    "requiredTechIds": ["cryogenicPropulsion"],
+    "narrative": {
+      "id": "narrative-tech-nuclearThermalPropulsion",
+      "title": "Discovery — Nuclear Thermal Propulsion",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "A nuclear reactor heats propellant directly, bypassing combustion entirely. Specific impulse has doubled compared to the best chemical engines."
+        },
+        {
+          "text": "Transit times to the outer solar system are now operationally viable. Facilities beyond the lunar surface are within engineering reach."
+        }
+      ]
+    }
+  },
+  "autonomousSpaceConstruction": {
+    "id": "autonomousSpaceConstruction",
+    "name": "Autonomous Space Construction",
+    "era": "nearSpace",
+    "rumourText": "Autonomous construction robots have assembled structural components in orbital vacuum without crew supervision — building without humans present is becoming routine.",
+    "baseRecipe": { "computing": 50, "engineering": 35, "mathematics": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["constructionDrone"],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["orbitalResearchStation", "advancedSolarArray", "lunarResearchBase"],
+    "signalDerived": false,
+    "tier": 4,
+    "requiredTechIds": ["reusableLaunchSystems", "internetProtocols"],
+    "narrative": {
+      "id": "narrative-tech-autonomousSpaceConstruction",
+      "title": "Discovery — Autonomous Space Construction",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Robotic assembly systems can now construct orbital and surface infrastructure without crew supervision. Construction timelines are no longer limited by human tolerance for extended operations."
+        },
+        {
+          "text": "All near space facility supply costs are reduced by one unit — autonomous logistics systems can sustain operations with less overhead."
+        }
+      ]
+    }
+  },
+  "lunarRegolithProcessing": {
+    "id": "lunarRegolithProcessing",
+    "name": "Lunar Regolith Processing",
+    "era": "nearSpace",
+    "rumourText": "Electrostatic separation and sintering techniques have processed lunar regolith into structural-grade materials in situ — Earth-manufactured building materials are no longer the only option.",
+    "baseRecipe": { "engineering": 45, "biochemistry": 20, "mathematics": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 4,
+    "requiredTechIds": ["inSituResourceUtilization"],
+    "narrative": {
+      "id": "narrative-tech-lunarRegolithProcessing",
+      "title": "Discovery — Lunar Regolith Processing",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Lunar regolith can now be processed into structural materials, oxygen, and feedstocks without Earth-supplied inputs."
+        },
+        {
+          "text": "Lunar mine depletion rates are extended — the processing improvements recover material previously lost as waste. The Moon Colony programme enters a new phase."
+        }
+      ]
+    }
+  },
+  "cislunarTransportNetwork": {
+    "id": "cislunarTransportNetwork",
+    "name": "Cislunar Transport Network",
+    "era": "nearSpace",
+    "rumourText": "Continuous-burn transit corridors between Earth orbit, L1, L2, and the lunar surface are within operational range — routine transport without mission-by-mission planning may be achievable.",
+    "baseRecipe": { "engineering": 55, "computing": 35, "mathematics": 30 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["resourceTransfer"],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 5,
+    "requiredTechIds": ["nuclearThermalPropulsion", "autonomousSpaceConstruction"],
+    "narrative": {
+      "id": "narrative-tech-cislunarTransportNetwork",
+      "title": "Discovery — Cislunar Transport Network",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Continuous-burn transit corridors now connect all cislunar nodes. The programme no longer plans missions — it schedules departures."
+        },
+        {
+          "text": "Launch capacity across the entire Near Space network has increased substantially. The cislunar economy is operational."
+        }
+      ]
+    }
+  },
+  "advancedCoastalEngineering": {
+    "id": "advancedCoastalEngineering",
+    "name": "Advanced Coastal Engineering",
+    "era": "earth",
+    "rumourText": "Composite sea barriers and tidal gate designs tested in the North Sea have held through conditions that would have overtopped conventional concrete seawalls.",
+    "baseRecipe": { "engineering": 40, "mathematics": 25, "socialScience": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["fibreglassComposites"],
+    "hqFieldBonus": { "engineering": 1 },
+    "narrative": {
+      "id": "narrative-tech-advancedCoastalEngineering",
+      "title": "Discovery — Advanced Coastal Engineering",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Composite sea barriers and adaptive tidal gate systems are now viable at scale. The programme's Engineering output has improved from the engineering complexity of these systems."
+        }
+      ]
+    }
+  },
+  "highTempSuperconductors": {
+    "id": "highTempSuperconductors",
+    "name": "High-Temperature Superconductors",
+    "era": "earth",
+    "rumourText": "Ceramic superconductors operating above liquid-nitrogen temperature have been demonstrated in sustained magnet configurations — room-temperature superconductivity may follow within a generation.",
+    "baseRecipe": { "physics": 60, "engineering": 40, "mathematics": 25 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["magneticConfinementLab"],
+    "signalDerived": false,
+    "tier": 4,
+    "requiredTechIds": ["particlePhysicsDetectors"],
+    "hqFieldBonus": { "physics": 2 },
+    "narrative": {
+      "id": "narrative-tech-highTempSuperconductors",
+      "title": "Discovery — High-Temperature Superconductors",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Ceramic superconductors operating above 77K have been validated in sustained magnet configurations."
+        },
+        {
+          "text": "Magnetic confinement laboratory construction is now viable. The physics research benefits are immediate."
+        }
+      ]
+    }
+  },
+  "carbonCaptureTechnology": {
+    "id": "carbonCaptureTechnology",
+    "name": "Carbon Capture Technology",
+    "era": "earth",
+    "rumourText": "Direct air capture pilot plants have demonstrated viable extraction rates — removing CO₂ from the atmosphere may be economically feasible within a decade.",
+    "baseRecipe": { "biochemistry": 50, "engineering": 35, "socialScience": 25 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["carbonCaptureStation"],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["geneticEngineering", "fibreglassComposites"],
+    "narrative": {
+      "id": "narrative-tech-carbonCaptureTechnology",
+      "title": "Discovery — Carbon Capture Technology",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Direct air capture and mineralisation processes have been validated at pilot scale. Atmospheric CO₂ removal is economically viable."
+        },
+        {
+          "text": "Carbon capture stations can now be built on industrial and coastal sites. Each installation actively reduces climate pressure."
+        }
+      ]
+    }
+  },
+  "largeLaguageModels": {
+    "id": "largeLaguageModels",
+    "name": "Large Language Models",
+    "era": "earth",
+    "rumourText": "Transformer architectures trained on the full corpus of human scientific literature are producing novel research hypotheses — the boundary between tool and collaborator is dissolving.",
+    "baseRecipe": { "computing": 70, "mathematics": 40, "socialScience": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["aiAssistance"],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["aiResearchCentre"],
+    "signalDerived": false,
+    "tier": 4,
+    "requiredTechIds": ["internetProtocols", "personalComputers"],
+    "hqFieldBonus": { "computing": 3, "socialScience": 1 },
+    "narrative": {
+      "id": "narrative-tech-largeLaguageModels",
+      "title": "Discovery — Large Language Models",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Transformer-based models trained on the full corpus of scientific literature can now generate and evaluate research hypotheses autonomously."
+        },
+        {
+          "text": "AI research assistance is now available across the programme. Computing and Social Science outputs have increased substantially."
+        }
+      ]
+    }
+  },
+  "nuclearFusion": {
+    "id": "nuclearFusion",
+    "name": "Nuclear Fusion Power",
+    "era": "nearSpace",
+    "rumourText": "Plasma confinement times in the tokamak array have exceeded the scientific breakeven threshold — net energy gain from fusion is now experimentally confirmed.",
+    "baseRecipe": { "physics": 80, "engineering": 55, "mathematics": 35 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["fusionReactor"],
+    "signalDerived": false,
+    "tier": 5,
+    "requiredTechIds": ["highTempSuperconductors", "cryogenicPropulsion"],
+    "hqFieldBonus": { "physics": 2 },
+    "narrative": {
+      "id": "narrative-tech-nuclearFusion",
+      "title": "Discovery — Nuclear Fusion Power",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Net energy gain from plasma fusion has been confirmed in sustained operation. The physics problem is solved."
+        },
+        {
+          "text": "Fusion reactor construction is now viable. Zero climate impact, exceptional Funding output, and a permanent solution to the programme's energy constraints."
+        }
+      ]
+    }
+  },
+  "agenticAI": {
+    "id": "agenticAI",
+    "name": "Agentic AI Systems",
+    "era": "nearSpace",
+    "rumourText": "AI systems are now autonomously designing and executing research programmes — the distinction between artificial and human scientific contribution is no longer operationally meaningful.",
+    "baseRecipe": { "computing": 80, "mathematics": 50, "socialScience": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["autonomousResearch"],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 5,
+    "requiredTechIds": ["largeLaguageModels"],
+    "hqFieldBonus": { "physics": 1, "mathematics": 1, "engineering": 1, "biochemistry": 1, "computing": 1, "socialScience": 1 },
+    "narrative": {
+      "id": "narrative-tech-agenticAI",
+      "title": "Discovery — Agentic AI Systems",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Autonomous AI agents are now conducting independent research cycles — forming hypotheses, designing experiments, and interpreting results without human direction."
+        },
+        {
+          "text": "HQ output across all research fields has increased. The programme's scientific capacity has fundamentally changed."
         }
       ]
     }

@@ -8,15 +8,15 @@ Phase 30 will add the Moon Colony landmark that gates Era 3.
 
 ## Deliverables
 
-- [ ] 29.1 — Type extensions: `launchCapacity`, `launchAllocation`, `supplyCost`, `upgradesFrom`, `era` on `TechDef`
-- [ ] 29.2 — Near Space data: 8 techs, ~14 facility defs (upgrade chains), 6 cards, 8 events
-- [ ] 29.3 — Earth tech track data: 6 techs, 4 Earth facilities, 2 Earth cards
-- [ ] 29.4 — Engine: launch capacity computation and inactive facility skipping
-- [ ] 29.5 — Engine: facility upgrade action
-- [ ] 29.6 — Store: `toggleSpaceFacilitySupply`, `upgradeFacility` actions
-- [ ] 29.7 — UI: Near Space panel — launch capacity bar + supply toggles + upgrade button
-- [ ] 29.8 — Phaser: dim inactive space nodes
-- [ ] 29.9 — Tests: launch capacity logic, upgrade chain, inactive facility output
+- [x] 29.1 — Type extensions: `launchCapacity`, `launchAllocation`, `supplyCost`, `upgradesFrom`, `era` on `TechDef`
+- [x] 29.2 — Near Space data: 8 techs, ~14 facility defs (upgrade chains), 6 cards, 8 events
+- [x] 29.3 — Earth tech track data: 6 techs, 4 Earth facilities, 2 Earth cards
+- [x] 29.4 — Engine: launch capacity computation and inactive facility skipping
+- [x] 29.5 — Engine: facility upgrade action
+- [x] 29.6 — Store: `toggleSpaceFacilitySupply`, `upgradeFacility` actions
+- [x] 29.7 — UI: Near Space panel — launch capacity bar + supply toggles + upgrade button
+- [x] 29.8 — Phaser: dim inactive space nodes
+- [x] 29.9 — Tests: launch capacity logic, upgrade chain, inactive facility output
 
 ---
 

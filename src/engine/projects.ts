@@ -80,6 +80,9 @@ export function canInitiateProject(state: GameState, def: ProjectDef): boolean {
   // Orbital Station authorisation gate
   if (prereqs.requiresOrbitalStationAuthorised && !state.orbitalStationAuthorised) return false;
 
+  // Moon Colony authorisation gate
+  if (prereqs.requiresMoonColonyAuthorised && !state.moonColonyAuthorised) return false;
+
   // Minimum resource prerequisites (separate from cost)
   if (prereqs.minResources) {
     const r = prereqs.minResources;

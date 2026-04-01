@@ -12,6 +12,7 @@ import type {
   NewsItem,
   Resources,
   FieldPoints,
+  TileActionDef,
 } from './types';
 import {
   computeAdjacencyEffects,
@@ -53,7 +54,7 @@ import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText }
 import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
-import { ZERO_RESOURCES, ZERO_FIELDS } from './state';
+import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity } from './state';
 import { createRng } from './rng';
 import type { Rng } from './rng';
 
@@ -266,6 +267,7 @@ export function executeWorldPhase(
   boardDefs: Map<string, BoardMemberDef> = new Map(),
   projectDefs: Map<string, ProjectDef> = new Map(),
   cardDefs: Map<string, CardDef> = new Map(),
+  tileActionDefs: Map<string, TileActionDef> = new Map(),
 ): GameState {
   const { player, map } = state;
 
@@ -275,7 +277,13 @@ export function executeWorldPhase(
     updatedQueue,
     updatedFacilities: facilitiesAfterQueue,
     updatedTiles: tilesAfterQueue,
-  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs);
+    updatedSpaceNodes: spaceNodesAfterQueue,
+    climateDelta: tileActionClimateDelta,
+  } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs, map.spaceNodes, tileActionDefs);
+
+  // 0b. Recompute launch capacity from built facilities + tech bonuses.
+  //     Done before output tick so unsupplied space facilities are correctly skipped.
+  const newLaunchCapacity = recomputeLaunchCapacity(facilitiesAfterQueue, player.techs);
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -285,11 +293,15 @@ export function executeWorldPhase(
   );
 
   // 2. Facility output (fields + resources, net of upkeep)
+  //    Space facilities where launchAllocation[nodeId] === false are skipped.
   const { totalFields, totalResources } = computeFacilityOutput(
     facilitiesAfterQueue,
     facilityDefs,
     adjacencyEffects,
     tilesAfterQueue,
+    state.launchAllocation,
+    spaceNodesAfterQueue,
+    state.isruOperational,
   );
 
   // 2b. HQ bonus — applies if the player has an HQ facility on the map.
@@ -399,6 +411,23 @@ export function executeWorldPhase(
       }
     : null;
 
+  // 7b. Moon Colony proposal: fires when lunarHabitat first completes, if not already fired.
+  const lunarHabitatJustBuilt =
+    !state.moonColonyProposalFired &&
+    facilitiesAfterQueue.some((f) => f.defId === 'lunarHabitat') &&
+    !player.facilities.some((f) => f.defId === 'lunarHabitat');
+
+  const newMoonColonyProposalEvent: EventInstance | null = lunarHabitatJustBuilt
+    ? {
+        id: `board-proposal-moon-colony-t${nextTurn}`,
+        defId: 'boardProposalMoonColony',
+        arrivedTurn: nextTurn,
+        countdownRemaining: 999,
+        resolved: false,
+        resolvedWith: null,
+      }
+    : null;
+
   // 7c. Project tick — advance active projects, apply completions + upkeep
   // Run against a temporary state with the post-card resources so upkeep is
   // deducted from the already-updated resource total.
@@ -432,23 +461,63 @@ export function executeWorldPhase(
         }
       : null;
 
-  // 7e. Era transition: if a landmark project with opensEra2 completed this tick,
-  //     advance era to nearSpace and apply a Will boost.
+  // 7e. Era transitions: check for opensEra2 (nearSpace) and opensEra3 (deepSpace).
   const opensEra2 = projectTickResult.completedDefIds.some(
     (id) => projectDefs.get(id)?.landmarkGate === 'opensEra2',
   );
-  const eraAfterProjects = opensEra2 && state.era === 'earth' ? ('nearSpace' as const) : state.era;
-  const willBoostFromEraTransition = opensEra2 ? 30 : 0;
-  const eraTransitionNews: NewsItem[] = opensEra2
-    ? [
-        {
-          id: `era-transition-nearspace-t${nextTurn}`,
-          turn: nextTurn,
-          text: 'The Permanent Orbital Station is declared fully operational. Humanity has established a permanent presence in space. The Near Space era begins.',
-          category: 'discovery' as const,
-        },
-      ]
-    : [];
+  const opensEra3 = projectTickResult.completedDefIds.some(
+    (id) => projectDefs.get(id)?.landmarkGate === 'opensEra3',
+  );
+  const eraAfterProjects =
+    opensEra3 && state.era === 'nearSpace'
+      ? ('deepSpace' as const)
+      : opensEra2 && state.era === 'earth'
+        ? ('nearSpace' as const)
+        : state.era;
+  const willBoostFromEraTransition = (opensEra2 || opensEra3) ? 30 : 0;
+  const eraTransitionNews: NewsItem[] = [
+    ...(opensEra2
+      ? [
+          {
+            id: `era-transition-nearspace-t${nextTurn}`,
+            turn: nextTurn,
+            text: 'The Permanent Orbital Station is declared fully operational. Humanity has established a permanent presence in space. The Near Space era begins.',
+            category: 'discovery' as const,
+          },
+        ]
+      : []),
+    ...(opensEra3
+      ? [
+          {
+            id: `era-transition-deepspace-t${nextTurn}`,
+            turn: nextTurn,
+            text: 'The Moon Colony is declared self-sustaining. For the first time in human history, humanity lives permanently beyond Earth. The Deep Space era begins.',
+            category: 'discovery' as const,
+          },
+        ]
+      : []),
+  ];
+
+  // Set ISRU operational when moonColony_stage2 completes
+  const isruJustActivated = projectTickResult.completedDefIds.includes('moonColony_stage2');
+  const newIsruOperational = state.isruOperational || isruJustActivated;
+
+  // Moon Colony proposal resurface
+  const moonColonyProposalResurfaces =
+    !state.moonColonyAuthorised &&
+    state.moonColonyProposalFired &&
+    state.moonColonyDeferResurfaceTurn === nextTurn;
+
+  const resurfacedMoonColonyEvent: EventInstance | null = moonColonyProposalResurfaces
+    ? {
+        id: `board-proposal-moon-colony-resurface-t${nextTurn}`,
+        defId: 'boardProposalMoonColony',
+        arrivedTurn: nextTurn,
+        countdownRemaining: 999,
+        resolved: false,
+        resolvedWith: null,
+      }
+    : null;
 
   // 7f. Retire cards made obsolete by newly discovered techs or the era transition.
   //     Applied to playerAfterProjects.cards so project-unlocked cards are included.
@@ -516,7 +585,7 @@ export function executeWorldPhase(
   }, 0);
   const newClimatePressure = Math.min(
     100,
-    Math.max(0, state.climatePressure + CLIMATE_PRESSURE_PER_TURN + facilityClimateImpact),
+    Math.max(0, state.climatePressure + CLIMATE_PRESSURE_PER_TURN + facilityClimateImpact + tileActionClimateDelta),
   );
 
   // 12. Climate-driven tile degradation
@@ -614,6 +683,42 @@ export function executeWorldPhase(
       },
     );
   }
+  if (projectTickResult.completedDefIds.includes('moonColony_stage1')) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `moon-colony-stage1-complete-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: Habitat expansion is complete. The lunar outpost now supports a permanent crew. ISRU systems can begin construction.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (projectTickResult.completedDefIds.includes('moonColony_stage2')) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `moon-colony-stage2-complete-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName}: In-situ resource utilisation is now online. The colony produces its own oxygen, water, and materials. Lunar surface facility supply costs are eliminated.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
+  if (moonColonyProposalResurfaces) {
+    committeeNotificationsAfterBoard = addCommitteeNotification(
+      committeeNotificationsAfterBoard,
+      {
+        id: `moon-colony-proposal-reminder-t${nextTurn}`,
+        memberDefId: chiefScientistMember?.defId ?? 'unknown',
+        text: `${chiefName} is again urging the board to authorise the Moon Colony programme. The proposal has been returned to the agenda.`,
+        turnCreated: nextTurn,
+        dismissed: false,
+      },
+    );
+  }
 
   // 16. Signal progress tick — starts from post-project signal so project
   //     rewards (one-time signal boosts) are included before further ticking.
@@ -643,6 +748,8 @@ export function executeWorldPhase(
     ...(newBoardProposalEvent ? [newBoardProposalEvent] : []),
     ...(resurfacedProposalEvent ? [resurfacedProposalEvent] : []),
     ...(engineeringChallengeEvent ? [engineeringChallengeEvent] : []),
+    ...(newMoonColonyProposalEvent ? [newMoonColonyProposalEvent] : []),
+    ...(resurfacedMoonColonyEvent ? [resurfacedMoonColonyEvent] : []),
   ];
 
   // Assemble the next state (outcome checked below)
@@ -657,11 +764,18 @@ export function executeWorldPhase(
     blocs: updatedBlocs,
     signal: newSignal,
     activeEvents: eventsAfterWorld,
-    map: { ...map, earthTiles: degradedTiles },
+    launchCapacity: newLaunchCapacity,
+    launchAllocation: state.launchAllocation,
+    map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterQueue },
     boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
     orbitalStationAuthorised: state.orbitalStationAuthorised,
     orbitalStationDeferCount: state.orbitalStationDeferCount,
     orbitalStationDeferResurfaceTurn: proposalResurfaces ? null : state.orbitalStationDeferResurfaceTurn,
+    moonColonyProposalFired: state.moonColonyProposalFired || lunarHabitatJustBuilt,
+    moonColonyAuthorised: state.moonColonyAuthorised,
+    moonColonyDeferCount: state.moonColonyDeferCount,
+    moonColonyDeferResurfaceTurn: moonColonyProposalResurfaces ? null : state.moonColonyDeferResurfaceTurn,
+    isruOperational: newIsruOperational,
     committeeNotifications: committeeNotificationsAfterBoard,
     player: {
       ...player,
