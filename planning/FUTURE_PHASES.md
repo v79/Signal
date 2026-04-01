@@ -75,7 +75,7 @@ This is a list of future requirements for the game but they are not to be implem
 
 ## BUGS:
 
-
+- The Director of Lunar Operations committee post should not be available until Era 2 starts and a lunar facility is built.
 
 
 

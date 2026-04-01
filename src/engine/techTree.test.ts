@@ -108,7 +108,7 @@ describe('getTechTier — Era 1 tech assignments', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Distribution: Era 1 has 4/4/3/1 techs across tiers 1–4
+// Distribution checks
 // ---------------------------------------------------------------------------
 
 describe('getTechTier — Era 1 distribution', () => {
@@ -121,5 +121,31 @@ describe('getTechTier — Era 1 distribution', () => {
       if (tier >= 1 && tier <= 4) counts[tier - 1]++;
     }
     expect(counts).toEqual([4, 4, 4, 4]);
+  });
+});
+
+describe('getTechTier — Era 2 (nearSpace) distribution', () => {
+  it('has techs in at least tiers 1–4', () => {
+    const tiersPresent = new Set<number>();
+    for (const def of TECH_DEFS.values()) {
+      if (def.era === 'nearSpace') tiersPresent.add(getTechTier(def));
+    }
+    expect(tiersPresent.has(1)).toBe(true);
+    expect(tiersPresent.has(2)).toBe(true);
+    expect(tiersPresent.has(3)).toBe(true);
+    expect(tiersPresent.has(4)).toBe(true);
+  });
+
+  it('has at least 2 techs at each of tiers 1–3', () => {
+    const counts: Record<number, number> = {};
+    for (const def of TECH_DEFS.values()) {
+      if (def.era === 'nearSpace') {
+        const t = getTechTier(def);
+        counts[t] = (counts[t] ?? 0) + 1;
+      }
+    }
+    expect(counts[1]).toBeGreaterThanOrEqual(2);
+    expect(counts[2]).toBeGreaterThanOrEqual(2);
+    expect(counts[3]).toBeGreaterThanOrEqual(2);
   });
 });

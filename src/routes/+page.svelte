@@ -157,6 +157,7 @@
     signal={gameStore.state.signal}
     cardDefs={CARD_DEFS}
     facilityDefs={FACILITY_DEFS}
+    era={gameStore.state.era}
     onClose={() => {
       showTechTree = false;
       hasNewResearch = false;

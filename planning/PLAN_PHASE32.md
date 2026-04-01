@@ -1,6 +1,6 @@
 # Phase 32 — Tech Tree: Era Awareness, Scalable Layout, and Node Tooltips
 
-## Status: PLANNING
+## Status: COMPLETE ✅
 
 ## Background
 

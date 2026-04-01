@@ -450,7 +450,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["orbitalLaboratory"],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 1,
     "requiredTechIds": ["orbitalMechanics"],
     "hqFieldBonus": {},
     "narrative": {
@@ -479,7 +479,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["lunarHabitat"],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 2,
     "requiredTechIds": ["cryogenicPropulsion", "geneticEngineering"],
     "narrative": {
       "id": "narrative-tech-advancedLifeSupport",
@@ -507,7 +507,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["lunarProcessingPlant"],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 1,
     "requiredTechIds": ["orbitalMechanics"],
     "narrative": {
       "id": "narrative-tech-inSituResourceUtilization",
@@ -535,8 +535,8 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["lunarObservatory"],
     "signalDerived": true,
-    "tier": 4,
-    "requiredTechIds": ["particlePhysicsDetectors"],
+    "tier": 3,
+    "requiredTechIds": ["particlePhysicsDetectors", "highTempSuperconductors"],
     "narrative": {
       "id": "narrative-tech-quantumSensing",
       "title": "Discovery — Quantum Sensing",
@@ -563,7 +563,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["deepSpaceRelay"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 2,
     "requiredTechIds": ["cryogenicPropulsion"],
     "narrative": {
       "id": "narrative-tech-nuclearThermalPropulsion",
@@ -591,7 +591,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["orbitalResearchStation", "advancedSolarArray", "lunarResearchBase"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 3,
     "requiredTechIds": ["reusableLaunchSystems", "internetProtocols"],
     "narrative": {
       "id": "narrative-tech-autonomousSpaceConstruction",
@@ -619,7 +619,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 2,
     "requiredTechIds": ["inSituResourceUtilization"],
     "narrative": {
       "id": "narrative-tech-lunarRegolithProcessing",
@@ -647,7 +647,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 5,
+    "tier": 4,
     "requiredTechIds": ["nuclearThermalPropulsion", "autonomousSpaceConstruction"],
     "narrative": {
       "id": "narrative-tech-cislunarTransportNetwork",
@@ -692,7 +692,7 @@
   "highTempSuperconductors": {
     "id": "highTempSuperconductors",
     "name": "High-Temperature Superconductors",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Ceramic superconductors operating above liquid-nitrogen temperature have been demonstrated in sustained magnet configurations — room-temperature superconductivity may follow within a generation.",
     "baseRecipe": { "physics": 60, "engineering": 40, "mathematics": 25 },
     "recipeVariance": 0.25,
@@ -701,7 +701,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["magneticConfinementLab"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 1,
     "requiredTechIds": ["particlePhysicsDetectors"],
     "hqFieldBonus": { "physics": 2 },
     "narrative": {
@@ -721,7 +721,7 @@
   "carbonCaptureTechnology": {
     "id": "carbonCaptureTechnology",
     "name": "Carbon Capture Technology",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Direct air capture pilot plants have demonstrated viable extraction rates — removing CO₂ from the atmosphere may be economically feasible within a decade.",
     "baseRecipe": { "biochemistry": 50, "engineering": 35, "socialScience": 25 },
     "recipeVariance": 0.25,
@@ -731,7 +731,7 @@
     "unlocksFacilities": ["carbonCaptureStation"],
     "signalDerived": false,
     "tier": 3,
-    "requiredTechIds": ["geneticEngineering", "fibreglassComposites"],
+    "requiredTechIds": ["geneticEngineering", "advancedLifeSupport"],
     "narrative": {
       "id": "narrative-tech-carbonCaptureTechnology",
       "title": "Discovery — Carbon Capture Technology",
@@ -758,7 +758,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["aiResearchCentre"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 5,
     "requiredTechIds": ["internetProtocols", "personalComputers"],
     "hqFieldBonus": { "computing": 3, "socialScience": 1 },
     "narrative": {
@@ -787,8 +787,8 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["fusionReactor"],
     "signalDerived": false,
-    "tier": 5,
-    "requiredTechIds": ["highTempSuperconductors", "cryogenicPropulsion"],
+    "tier": 4,
+    "requiredTechIds": ["highTempSuperconductors", "nuclearThermalPropulsion"],
     "hqFieldBonus": { "physics": 2 },
     "narrative": {
       "id": "narrative-tech-nuclearFusion",
@@ -817,7 +817,7 @@
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 5,
-    "requiredTechIds": ["largeLaguageModels"],
+    "requiredTechIds": ["largeLaguageModels", "quantumSensing"],
     "hqFieldBonus": { "physics": 1, "mathematics": 1, "engineering": 1, "biochemistry": 1, "computing": 1, "socialScience": 1 },
     "narrative": {
       "id": "narrative-tech-agenticAI",
