@@ -247,17 +247,16 @@ export class TechTreeScene extends Phaser.Scene {
     this.clearAllTexts();
 
     // Group techs by tier (preserving TECH_DEFS insertion order within tier)
-    const tierGroups = new Map<number, TechState[]>([
-      [1, []],
-      [2, []],
-      [3, []],
-      [4, []],
-    ]);
+    const tierGroups = new Map<number, TechState[]>();
     for (const tech of d.techs) {
       const def = d.techDefs.get(tech.defId);
       if (!def) continue;
-      tierGroups.get(getTechTier(def))!.push(tech);
+      const tier = getTechTier(def);
+      if (!tierGroups.has(tier)) tierGroups.set(tier, []);
+      tierGroups.get(tier)!.push(tech);
     }
+    const maxTier = tierGroups.size > 0 ? Math.max(...tierGroups.keys()) : 4;
+    const numTiers = Math.max(maxTier, 4);
 
     // Compute world height from the tier with the most nodes
     const maxNodes = Math.max(...[...tierGroups.values()].map((g) => g.length), 1);
@@ -267,15 +266,15 @@ export class TechTreeScene extends Phaser.Scene {
     // Update camera world bounds (preserves current scroll/zoom)
     this.cameras.main.setBounds(0, 0, W, this.worldH);
 
-    // Column centres (4 equal columns across W)
+    // Column centres (one column per tier)
     const colCX: number[] = [];
-    for (let i = 0; i < 4; i++) colCX.push((W / 4) * i + W / 8);
+    for (let i = 0; i < numTiers; i++) colCX.push((W / numTiers) * i + W / numTiers / 2);
 
     this.drawBackground(W, this.worldH);
 
     // Tier column header labels (world layer — they scroll with content)
-    const TIER_LABELS = ['TIER  I', 'TIER  II', 'TIER  III', 'TIER  IV'];
-    for (let i = 0; i < 4; i++) {
+    const TIER_LABEL_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+    for (let i = 0; i < numTiers; i++) {
       this.worldGfx.lineStyle(1, C_HEADER_LINE, 0.6);
       this.worldGfx.lineBetween(
         colCX[i] - NODE_W / 2 + 6,
@@ -284,7 +283,7 @@ export class TechTreeScene extends Phaser.Scene {
         TOP_MARGIN - 6,
       );
 
-      this.addWorldText(colCX[i], 14, TIER_LABELS[i], {
+      this.addWorldText(colCX[i], 14, `TIER  ${TIER_LABEL_NAMES[i] ?? i + 1}`, {
         fontFamily: 'monospace',
         fontSize: FS_TIER_HEADER,
         color: '#4a8092',
@@ -295,8 +294,8 @@ export class TechTreeScene extends Phaser.Scene {
 
     // Compute node top-left positions for all techs (needed for arrows)
     const nodePositions = new Map<string, { x: number; y: number }>();
-    for (let tier = 1; tier <= 4; tier++) {
-      const techs = tierGroups.get(tier)!;
+    for (let tier = 1; tier <= numTiers; tier++) {
+      const techs = tierGroups.get(tier) ?? [];
       if (techs.length === 0) continue;
       const totalH = techs.length * NODE_H + Math.max(0, techs.length - 1) * NODE_GAP;
       const startY = TOP_MARGIN + (contentH - totalH) / 2;
@@ -310,8 +309,8 @@ export class TechTreeScene extends Phaser.Scene {
     this.drawDependencyArrows(d, nodePositions);
 
     // Draw nodes — vertically centred within content height
-    for (let tier = 1; tier <= 4; tier++) {
-      for (const tech of tierGroups.get(tier)!) {
+    for (let tier = 1; tier <= numTiers; tier++) {
+      for (const tech of (tierGroups.get(tier) ?? [])) {
         const pos = nodePositions.get(tech.defId)!;
         this.drawNode(tech, d, pos.x, pos.y);
       }
