@@ -229,6 +229,8 @@ export function applyEventEffect(
     const candidates = updatedTiles.filter((t) => {
       if (t.type !== effect.tileTypeTarget) return false;
       if (t.destroyedStatus !== null) return false;
+      // Sea walls protect coastal tiles from flooding
+      if (status === 'flooded' && t.seaWallProtected) return false;
       // Exclude tiles that have the HQ in any slot
       if (t.facilitySlots.some((id) => id && updatedPlayer.facilities.find((f) => f.id === id)?.defId === 'hq')) return false;
       return true;

@@ -101,6 +101,11 @@ export interface MapTile {
    * or demolition). Null when the tile is idle.
    */
   pendingActionId: string | null;
+  /**
+   * If true, this coastal tile has been protected by a sea wall and cannot
+   * be flooded by sea-level-rise events.
+   */
+  seaWallProtected?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -310,6 +315,8 @@ export interface ProjectPrerequisites {
   minResources?: Partial<Resources>;
   /** If true, the Orbital Station programme must have been authorised. */
   requiresOrbitalStationAuthorised?: boolean;
+  /** If true, the Moon Colony programme must have been authorised. */
+  requiresMoonColonyAuthorised?: boolean;
 }
 
 export interface ProjectInstance {
@@ -606,7 +613,8 @@ export type BoardRole =
   | 'directorOfOperations'
   | 'securityDirector'
   | 'signalAnalyst'
-  | 'stationCommander';
+  | 'stationCommander'
+  | 'directorOfLunarOperations';
 
 /** A character's buff or debuff expressed as modifiers to game outputs. */
 export interface CharacterModifier {
@@ -750,12 +758,12 @@ export interface GameOutcome {
 // Construction queue
 // ---------------------------------------------------------------------------
 
-export type OngoingActionType = 'construct' | 'demolish';
+export type OngoingActionType = 'construct' | 'demolish' | 'tileAction';
 
 export interface OngoingAction {
   id: string;
   type: OngoingActionType;
-  /** DefId of the facility being constructed or demolished. */
+  /** DefId of the facility being constructed or demolished. Empty string for tileAction. */
   facilityDefId: string;
   /** Axial coord key of the target Earth tile. Empty string for space upgrades. */
   coordKey: string;
@@ -770,6 +778,33 @@ export interface OngoingAction {
    * coordKey is empty/unused for space upgrades.
    */
   spaceNodeId?: string;
+  /** If set, this is a tile action (terrain modification). */
+  tileActionDefId?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Tile Actions (Era 1 — terrain modification)
+// ---------------------------------------------------------------------------
+
+export interface TileActionDef {
+  id: string;
+  name: string;
+  description: string;
+  requiredTechId: string | null;
+  buildCost: Partial<Resources>;
+  buildTime: number;
+  /** Tile types this action applies to (non-destroyed tiles). */
+  appliesTo: TileType[];
+  /** If non-null, also applies to tiles of any type with this destroyed status. */
+  appliesToDestroyed: TileDestroyedStatus | null;
+  /** Tile type to transform this tile into on completion. Null = no type change. */
+  transformsTo: TileType | null;
+  /** If true, clears the tile's destroyedStatus on completion. */
+  clearsDestroyedStatus: boolean;
+  /** If true, marks the tile as seaWallProtected on completion. */
+  seaWallProtection: boolean;
+  /** Net climate pressure delta applied on completion (positive = more pressure). */
+  climateEffect: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -907,4 +942,23 @@ export interface GameState {
    * Null when not deferred.
    */
   orbitalStationDeferResurfaceTurn: number | null;
+  /**
+   * Set to true the first time the Moon Colony board proposal fires.
+   * Prevents re-firing after the player has already seen it.
+   */
+  moonColonyProposalFired: boolean;
+  /** Set to true when the player authorises the Moon Colony programme. */
+  moonColonyAuthorised: boolean;
+  /** How many times the player has deferred the Moon Colony proposal. */
+  moonColonyDeferCount: number;
+  /**
+   * Turn on which the Moon Colony proposal should resurface after a deferral.
+   * Null when not deferred.
+   */
+  moonColonyDeferResurfaceTurn: number | null;
+  /**
+   * Set to true when moonColony_stage2 completes. Lunar surface facilities
+   * are then treated as self-sustaining (no launch capacity consumed).
+   */
+  isruOperational: boolean;
 }

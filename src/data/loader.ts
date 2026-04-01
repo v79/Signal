@@ -14,6 +14,7 @@ import type {
   TechDef,
   NarrativeDef,
   TileType,
+  TileActionDef,
 } from '../engine/types';
 
 import blocsJson from './blocs.json' with { type: 'json' };
@@ -25,6 +26,7 @@ import facilitiesJson from './facilities.json' with { type: 'json' };
 import projectsJson from './projects.json' with { type: 'json' };
 import narrativeJson from './narrative.json' with { type: 'json' };
 import techsJson from './technologies.json' with { type: 'json' };
+import tileActionsJson from './tileActions.json' with { type: 'json' };
 
 // ---------------------------------------------------------------------------
 // TileLayout — defined here since blocMaps.ts (which originally defined it)
@@ -72,6 +74,10 @@ export const PROJECT_DEFS: Map<string, ProjectDef> = new Map(
 
 export const TECH_DEFS: Map<string, TechDef> = new Map(
   Object.entries(techsJson) as [string, TechDef][],
+);
+
+export const TILE_ACTION_DEFS: Map<string, TileActionDef> = new Map(
+  Object.entries(tileActionsJson) as [string, TileActionDef][],
 );
 
 // ---------------------------------------------------------------------------

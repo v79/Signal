@@ -8,7 +8,7 @@
   import FacilityOverview from './FacilityOverview.svelte';
   import SpaceOverview from './SpaceOverview.svelte';
   import { gameStore } from '../stores/game.svelte';
-  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS, PROJECT_DEFS } from '../../data/loader';
+  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS, PROJECT_DEFS, TILE_ACTION_DEFS } from '../../data/loader';
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
@@ -463,6 +463,7 @@
       <FacilityPicker
         tile={selectedTile}
         facilityDefs={FACILITY_DEFS}
+        tileActionDefs={TILE_ACTION_DEFS}
         playerResources={gameStore.state!.player.resources}
         facilityInstances={getFacilitiesOnTile(selectedTile, gameStore.state!.player.facilities)}
         discoveredTechIds={new Set(
@@ -479,6 +480,7 @@
         maxActionsPerTurn={(gameStore.state!.maxActionsPerTurn ?? 3) + (gameStore.state!.bonusActionsThisTurn ?? 0)}
         onBuild={(defId) => gameStore.buildFacility(gameStore.selectedCoordKey!, defId)}
         onDemolish={(slotIndex) => gameStore.demolishFacility(gameStore.selectedCoordKey!, slotIndex)}
+        onTileAction={(taId) => gameStore.enqueueTileAction(gameStore.selectedCoordKey!, taId)}
         onClose={() => gameStore.selectTile(null)}
       />
     {/if}

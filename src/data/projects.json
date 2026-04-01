@@ -143,5 +143,62 @@
     "prerequisites": {
       "requiredTechs": ["particlePhysicsDetectors"]
     }
+  },
+  "moonColony_stage1": {
+    "id": "moonColony_stage1",
+    "name": "Habitat Expansion",
+    "description": "Extending the initial lunar outpost with pressurised habitat modules and closed-loop life support. The first step toward a permanent human settlement beyond Earth orbit.",
+    "type": "landmark",
+    "era": "nearSpace",
+    "cost": { "funding": 80, "materials": 60 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "resources": { "politicalWill": 20 }, "signalProgress": 5 },
+    "landmarkGate": null,
+    "groupId": "moonColony",
+    "groupName": "Moon Colony Programme",
+    "prerequisites": {
+      "requiresMoonColonyAuthorised": true,
+      "requiredTechs": ["advancedLifeSupport"],
+      "requiredFacilityDefs": ["lunarHabitat"]
+    }
+  },
+  "moonColony_stage2": {
+    "id": "moonColony_stage2",
+    "name": "Surface Infrastructure",
+    "description": "In-situ resource utilisation comes online: the colony now produces its own oxygen, water, and structural materials from lunar regolith. Supply costs for Lunar Surface facilities drop to zero.",
+    "type": "landmark",
+    "era": "nearSpace",
+    "cost": { "funding": 60, "materials": 50 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "signalProgress": 5 },
+    "landmarkGate": null,
+    "groupId": "moonColony",
+    "groupName": "Moon Colony Programme",
+    "prerequisites": {
+      "requiresMoonColonyAuthorised": true,
+      "requiredProjects": ["moonColony_stage1"],
+      "requiredTechs": ["lunarRegolithProcessing"]
+    }
+  },
+  "moonColony_stage3": {
+    "id": "moonColony_stage3",
+    "name": "Self-Sustaining Colony",
+    "description": "The lunar colony is self-sustaining. For the first time in human history, a permanent settlement exists beyond Earth. The signal — sharper from the surface, stripped of ionospheric noise — is showing structure. Your analysts have begun to suspect it isn't transmitting to Earth at all.",
+    "type": "landmark",
+    "era": "nearSpace",
+    "cost": { "funding": 50, "materials": 40 },
+    "upkeepCost": {},
+    "baseDuration": 4,
+    "reward": { "resources": { "politicalWill": 40 }, "signalProgress": 15 },
+    "landmarkGate": "opensEra3",
+    "groupId": "moonColony",
+    "groupName": "Moon Colony Programme",
+    "prerequisites": {
+      "requiresMoonColonyAuthorised": true,
+      "requiredProjects": ["moonColony_stage2"],
+      "requiredTechs": ["cislunarTransportNetwork"]
+    }
   }
 }

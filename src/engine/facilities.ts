@@ -9,6 +9,7 @@ import type {
   OngoingAction,
   SpaceNode,
   TechState,
+  TileActionDef,
 } from './types';
 import { ZERO_FIELDS, ZERO_RESOURCES } from './state';
 
@@ -213,6 +214,8 @@ export function computeFacilityOutput(
   adjacencyEffects: AdjacencyEffect[],
   earthTiles: MapTile[],
   launchAllocation: Record<string, boolean> = {},
+  spaceNodes: SpaceNode[] = [],
+  isruOperational = false,
 ): FacilityOutput {
   const totalFields: FieldPoints = { ...ZERO_FIELDS };
   const totalResources: Resources = { ...ZERO_RESOURCES };
@@ -237,13 +240,19 @@ export function computeFacilityOutput(
     const def = facilityDefs.get(facility.defId);
     if (!def) continue;
 
-    // Skip space facilities that are not supplied this turn
+    // Skip space facilities that are not supplied this turn.
+    // ISRU exception: lunar surface facilities are self-sustaining when ISRU is active.
     if (def.supplyCost && def.supplyCost > 0 && launchAllocation[facility.locationKey] === false) {
-      // Still pay upkeep for an unsupplied facility
-      for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
-        totalResources[k] -= def.upkeepCost[k] ?? 0;
+      const isLunarSurface =
+        isruOperational &&
+        spaceNodes.some((n) => n.id === facility.locationKey && n.type === 'lunarSurface');
+      if (!isLunarSurface) {
+        // Still pay upkeep for an unsupplied facility
+        for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
+          totalResources[k] -= def.upkeepCost[k] ?? 0;
+        }
+        continue;
       }
-      continue;
     }
 
     const tileProd = tileProductivity.get(facility.locationKey) ?? 1;
@@ -572,6 +581,8 @@ export interface ConstructionTickResult {
   updatedTiles: MapTile[];
   updatedSpaceNodes: SpaceNode[];
   completedActions: OngoingAction[];
+  /** Net climate pressure delta from tile actions completing this tick. */
+  climateDelta: number;
 }
 
 /**
@@ -591,12 +602,14 @@ export function tickConstructionQueue(
   completedTurn: number,
   facilityDefs: Map<string, FacilityDef> = new Map(),
   spaceNodes: SpaceNode[] = [],
+  tileActionDefs: Map<string, TileActionDef> = new Map(),
 ): ConstructionTickResult {
   const updatedQueue: OngoingAction[] = [];
   let updatedFacilities = [...facilities];
   let updatedTiles = [...tiles];
   let updatedSpaceNodes = spaceNodes;
   const completedActions: OngoingAction[] = [];
+  let climateDelta = 0;
 
   for (const action of queue) {
     const next = { ...action, turnsRemaining: action.turnsRemaining - 1 };
@@ -650,6 +663,20 @@ export function tickConstructionQueue(
         }
         return { ...t, facilitySlots: newSlots, pendingActionId: null };
       });
+    } else if (action.type === 'tileAction' && action.tileActionDefId) {
+      // Tile action: terrain modification (restore, sea wall, urbanise, etc.)
+      const taDef = tileActionDefs.get(action.tileActionDefId);
+      if (taDef) {
+        updatedTiles = updatedTiles.map((t) => {
+          if (coordKey(t.coord) !== action.coordKey) return t;
+          const updated: MapTile = { ...t, pendingActionId: null };
+          if (taDef.transformsTo) updated.type = taDef.transformsTo;
+          if (taDef.clearsDestroyedStatus) updated.destroyedStatus = null;
+          if (taDef.seaWallProtection) updated.seaWallProtected = true;
+          return updated;
+        });
+        climateDelta += taDef.climateEffect;
+      }
     } else {
       // demolish: find the instance at slotIndex, remove it and clear all its slots
       const targetTile = updatedTiles.find((t) => coordKey(t.coord) === action.coordKey);
@@ -667,7 +694,7 @@ export function tickConstructionQueue(
     }
   }
 
-  return { updatedQueue, updatedFacilities, updatedTiles, updatedSpaceNodes, completedActions };
+  return { updatedQueue, updatedFacilities, updatedTiles, updatedSpaceNodes, completedActions, climateDelta };
 }
 
 // ---------------------------------------------------------------------------

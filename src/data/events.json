@@ -578,5 +578,60 @@
     "responseTier": "noCounter",
     "negativeEffect": { "resources": { "politicalWill": -15, "funding": -15 } },
     "positiveEffect": null
+  },
+  "boardProposalMoonColony": {
+    "id": "boardProposalMoonColony",
+    "name": "Moon Colony Proposal",
+    "description": "The board is urging the corporation to commit to a permanent lunar settlement. Authorisation costs 60 Funding and 40 Political Will.",
+    "flavourText": "The habitat is operational. A permanent settlement is within reach — but it requires a formal commitment of resources and political capital.",
+    "tags": ["board", "proposal"],
+    "eras": ["nearSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 999,
+    "weight": 0,
+    "responseTier": "fullCounter",
+    "negativeEffect": {},
+    "positiveEffect": {
+      "resources": { "funding": -60, "politicalWill": -40 }
+    }
+  },
+  "megadrought": {
+    "id": "megadrought",
+    "name": "Megadrought",
+    "description": "A multi-year megadrought scorches vast agricultural zones. Two tiles are permanently lost to dustbowl. Materials production drops sharply as supply chains collapse.",
+    "flavourText": "The rains did not come this year. Or the year before. The soil is cracked now — it will not recover.",
+    "tags": ["climate", "crisis"],
+    "eras": ["earth", "nearSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 2,
+    "weight": 0.8,
+    "minClimate": 40,
+    "responseTier": "noCounter",
+    "negativeEffect": {
+      "resources": { "materials": -25 },
+      "tileTypeTarget": "agricultural",
+      "destroyTileStatus": "dustbowl"
+    },
+    "positiveEffect": null
+  },
+  "globalEconomicPressure": {
+    "id": "globalEconomicPressure",
+    "name": "Climate Economic Pressure",
+    "description": "Public demand to redirect space programme funding to climate relief reaches crisis levels. Funding and political capital are severely drained.",
+    "flavourText": "The protests are larger this time. The placards read: 'Fix Earth First.' The finance committee is already fielding calls from the government.",
+    "tags": ["climate", "crisis"],
+    "eras": ["earth", "nearSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 2,
+    "weight": 0.7,
+    "minClimate": 60,
+    "responseTier": "noCounter",
+    "negativeEffect": {
+      "resources": { "funding": -25, "politicalWill": -30 }
+    },
+    "positiveEffect": null
   }
 }

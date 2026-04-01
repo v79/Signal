@@ -14,14 +14,14 @@ Complete the Era 2 content layer introduced in Phase 29. Three parallel threads:
 
 ## Deliverables
 
-- [ ] 30.1 — Moon Colony landmark project (3 stages, era gate)
-- [ ] 30.2 — Earth tile action system: `TileActionDef`, engine, UI
-- [ ] 30.3 — Tile action definitions: `urbanize`, `restoreHabitat`, `cleanIndustrialSite`, `buildSeaWall`
-- [ ] 30.4 — Earth climate escalation events
-- [ ] 30.5 — Director of Lunar Operations board role
-- [ ] 30.6 — Era 2 → Era 3 narrative transition sequence
-- [ ] 30.7 — ISRU supply-cost reduction (Lunar Surface → 0 on Colony Stage 2)
-- [ ] 30.8 — Tier 3 facility upgrades (final research-slot upgrades)
+- [x] 30.1 — Moon Colony landmark project (3 stages, era gate)
+- [x] 30.2 — Earth tile action system: `TileActionDef`, engine, UI
+- [x] 30.3 — Tile action definitions: `urbanize`, `restoreHabitat`, `cleanIndustrialSite`, `buildSeaWall`
+- [x] 30.4 — Earth climate escalation events
+- [x] 30.5 — Director of Lunar Operations board role
+- [x] 30.6 — Era 2 → Era 3 narrative transition sequence
+- [x] 30.7 — ISRU supply-cost reduction (Lunar Surface → 0 on Colony Stage 2)
+- [x] 30.8 — Tier 3 facility upgrades (final research-slot upgrades)
 - [ ] 30.9 — Tests and balance pass
 
 ---

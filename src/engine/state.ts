@@ -128,6 +128,11 @@ export function createGameState(config: GameConfig): GameState {
     orbitalStationAuthorised: false,
     orbitalStationDeferCount: 0,
     orbitalStationDeferResurfaceTurn: null,
+    moonColonyProposalFired: false,
+    moonColonyAuthorised: false,
+    moonColonyDeferCount: 0,
+    moonColonyDeferResurfaceTurn: null,
+    isruOperational: false,
   };
 }
 

@@ -11,6 +11,7 @@ import type {
   PushFactor,
   OngoingAction,
   NewsItem,
+  TileActionDef,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
 import { createGameState } from '../../engine/state';
@@ -50,6 +51,7 @@ import {
   FACILITY_DEFS,
   PROJECT_DEFS,
   TECH_DEFS,
+  TILE_ACTION_DEFS,
   NARRATIVE_SIGNAL_STRUCTURED,
   NARRATIVE_SIGNAL_URGENT,
   NARRATIVE_ERA_NEARSPACE,
@@ -302,7 +304,13 @@ function resetSelections(): void {
 
 function computeRemainingCapacity(state: GameState): number {
   const allocated = state.map.spaceNodes
-    .filter((n) => n.facilityId && state.launchAllocation[n.id] !== false)
+    .filter((n) => {
+      if (!n.facilityId) return false;
+      if (state.launchAllocation[n.id] === false) return false;
+      // ISRU: lunar surface nodes don't consume launch capacity
+      if (state.isruOperational && n.type === 'lunarSurface') return false;
+      return true;
+    })
     .reduce((sum, n) => {
       const def = FACILITY_DEFS.get(n.facilityId!);
       return sum + (def?.supplyCost ?? 0);
@@ -634,6 +642,66 @@ export const gameStore = {
     _selectedCoordKey = null;
   },
 
+  /**
+   * Enqueue a tile action (terrain modification) on the given tile.
+   * Costs an action slot and deducts resources up-front.
+   */
+  enqueueTileAction(coordKey: string, tileActionDefId: string): void {
+    if (!_state) return;
+    const taDef = TILE_ACTION_DEFS.get(tileActionDefId);
+    if (!taDef) return;
+
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    const tile = _state.map.earthTiles.find((t) => `${t.coord.q},${t.coord.r}` === coordKey);
+    if (!tile || tile.pendingActionId != null) return;
+
+    // Tech gate
+    if (taDef.requiredTechId != null) {
+      const techDiscovered = _state.player.techs.some(
+        (t) => t.defId === taDef.requiredTechId && t.stage === 'discovered',
+      );
+      if (!techDiscovered) return;
+    }
+
+    // Deduct cost up-front
+    const newResources = {
+      funding: _state.player.resources.funding - (taDef.buildCost.funding ?? 0),
+      materials: Math.max(0, _state.player.resources.materials - (taDef.buildCost.materials ?? 0)),
+      politicalWill: Math.max(0, _state.player.resources.politicalWill - (taDef.buildCost.politicalWill ?? 0)),
+    };
+
+    const actionId = `tileAction-${tileActionDefId}-${coordKey}-t${_state.turn}`;
+    const action: OngoingAction = {
+      id: actionId,
+      type: 'tileAction',
+      facilityDefId: '',
+      coordKey,
+      turnsRemaining: taDef.buildTime,
+      totalTurns: taDef.buildTime,
+      slotIndex: 0,
+      tileActionDefId,
+    };
+
+    mutateState({
+      ..._state,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      player: {
+        ..._state.player,
+        resources: newResources,
+        constructionQueue: [..._state.player.constructionQueue, action],
+      },
+      map: {
+        ..._state.map,
+        earthTiles: _state.map.earthTiles.map((t) =>
+          `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
+        ),
+      },
+    });
+    _selectedCoordKey = null;
+  },
+
   mitigateEvent(eventId: string): void {
     if (!_state) return;
     const event = _state.activeEvents.find((e) => e.id === eventId);
@@ -712,15 +780,20 @@ export const gameStore = {
     }
 
     const isBoardProposal = def.id === 'boardProposalOrbitalStation';
+    const isMoonColonyProposal = def.id === 'boardProposalMoonColony';
     const newsText = isBoardProposal
       ? 'The Corporation has officially initiated the Permanent Orbital Station programme.'
-      : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
+      : isMoonColonyProposal
+        ? 'The Corporation has committed to establishing a permanent Moon Colony.'
+        : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
 
     mutateState({
       ..._state,
       map: { ..._state.map, earthTiles: updatedTiles },
       orbitalStationAuthorised: isBoardProposal ? true : _state.orbitalStationAuthorised,
       orbitalStationDeferResurfaceTurn: isBoardProposal ? null : _state.orbitalStationDeferResurfaceTurn,
+      moonColonyAuthorised: isMoonColonyProposal ? true : _state.moonColonyAuthorised,
+      moonColonyDeferResurfaceTurn: isMoonColonyProposal ? null : _state.moonColonyDeferResurfaceTurn,
       player: {
         ...updatedPlayer,
         newsFeed: [
@@ -739,15 +812,22 @@ export const gameStore = {
     });
   },
 
-  /** Defer the board proposal event — dismisses it and re-surfaces after 3 turns. */
+  /** Defer a board proposal event — dismisses it and re-surfaces after 3 turns. */
   deferBoardProposal(eventId: string): void {
     if (!_state) return;
     const event = _state.activeEvents.find((e) => e.id === eventId);
     if (!event) return;
+    const def = EVENT_DEFS.get(event.defId);
+    const isMoonColony = def?.id === 'boardProposalMoonColony';
+    const newsText = isMoonColony
+      ? 'The board proposal for the Moon Colony has been deferred. The matter will return to the agenda.'
+      : 'The board proposal for the Orbital Station has been deferred. The matter will return to the agenda.';
     mutateState({
       ..._state,
-      orbitalStationDeferCount: _state.orbitalStationDeferCount + 1,
-      orbitalStationDeferResurfaceTurn: _state.turn + 3,
+      orbitalStationDeferCount: isMoonColony ? _state.orbitalStationDeferCount : _state.orbitalStationDeferCount + 1,
+      orbitalStationDeferResurfaceTurn: isMoonColony ? _state.orbitalStationDeferResurfaceTurn : _state.turn + 3,
+      moonColonyDeferCount: isMoonColony ? _state.moonColonyDeferCount + 1 : _state.moonColonyDeferCount,
+      moonColonyDeferResurfaceTurn: isMoonColony ? _state.turn + 3 : _state.moonColonyDeferResurfaceTurn,
       activeEvents: _state.activeEvents.map((e) =>
         e.id === eventId ? { ...e, resolved: true, resolvedWith: 'accepted' as const } : e,
       ),
@@ -758,7 +838,7 @@ export const gameStore = {
           {
             id: `board-proposal-deferred-t${_state.turn}`,
             turn: _state.turn,
-            text: 'The board proposal for the Orbital Station has been deferred. The matter will return to the agenda.',
+            text: newsText,
             category: 'board' as const,
           },
         ],
@@ -992,7 +1072,7 @@ export const gameStore = {
       const prevEra = _state.era;
       const prevFacilities = _state.player.facilities;
 
-      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS, CARD_DEFS);
+      next = executeWorldPhase(next, FACILITY_DEFS, TECH_DEFS, BLOC_DEFS, BOARD_DEFS, PROJECT_DEFS, CARD_DEFS, TILE_ACTION_DEFS);
 
       // ---------------------------------------------------------------------------
       // Enqueue narratives in prescribed order:
@@ -1089,6 +1169,7 @@ export const gameStore = {
       securityDirector: 'Security Director',
       signalAnalyst: 'Signal Analyst',
       stationCommander: 'Station Commander',
+      directorOfLunarOperations: 'Dir. Lunar Operations',
     };
     mutateState({
       ..._state,

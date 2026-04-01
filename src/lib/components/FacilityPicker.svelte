@@ -1,10 +1,11 @@
 <script lang="ts">
-  import type { FacilityDef, FacilityInstance, MapTile, Resources } from '../../engine/types';
+  import type { FacilityDef, FacilityInstance, MapTile, Resources, TileActionDef } from '../../engine/types';
   import { findContiguousFreeStart } from '../../engine/facilities';
 
   let {
     tile,
     facilityDefs,
+    tileActionDefs,
     playerResources,
     discoveredTechIds,
     techNames,
@@ -14,10 +15,12 @@
     maxActionsPerTurn,
     onBuild,
     onDemolish,
+    onTileAction,
     onClose,
   }: {
     tile: MapTile;
     facilityDefs: Map<string, FacilityDef>;
+    tileActionDefs: Map<string, TileActionDef>;
     playerResources: Resources;
     discoveredTechIds: ReadonlySet<string>;
     techNames: ReadonlyMap<string, string>;
@@ -27,6 +30,7 @@
     maxActionsPerTurn: number;
     onBuild: (defId: string) => void;
     onDemolish: (slotIndex: number) => void;
+    onTileAction: (tileActionDefId: string) => void;
     onClose: () => void;
   } = $props();
 
@@ -139,6 +143,40 @@
   );
 
   const freeSlotCount = $derived(tile.facilitySlots.filter((s) => s === null).length);
+
+  /** Tile actions applicable to this tile. */
+  const applicableTileActions = $derived(
+    [...tileActionDefs.values()].filter((ta) => {
+      // Match by tile type OR by destroyed status
+      const matchesType = ta.appliesTo.includes(tile.type);
+      const matchesDestroyed =
+        ta.appliesToDestroyed !== null && tile.destroyedStatus === ta.appliesToDestroyed;
+      if (!matchesType && !matchesDestroyed) return false;
+      // Skip sea wall if already protected
+      if (ta.seaWallProtection && tile.seaWallProtected) return false;
+      return true;
+    }),
+  );
+
+  const availableTileActions = $derived(
+    applicableTileActions.filter(
+      (ta) => ta.requiredTechId == null || discoveredTechIds.has(ta.requiredTechId),
+    ),
+  );
+
+  const lockedTileActions = $derived(
+    applicableTileActions.filter(
+      (ta) => ta.requiredTechId != null && !discoveredTechIds.has(ta.requiredTechId),
+    ),
+  );
+
+  function formatTileActionCost(cost: Partial<Resources>): string {
+    const p: string[] = [];
+    if (cost.funding != null) p.push(`${cost.funding}F`);
+    if (cost.materials != null) p.push(`${cost.materials}M`);
+    if (cost.politicalWill != null) p.push(`${cost.politicalWill}W`);
+    return p.join(' · ');
+  }
 </script>
 
 <div
@@ -264,6 +302,57 @@
               {/if}
             </div>
           {/if}
+        </div>
+      {/if}
+
+      <!-- Tile actions section: terrain modification -->
+      {#if applicableTileActions.length > 0}
+        <div class="tile-action-section">
+          <div class="build-section-header">
+            <span class="tile-action-title">TERRAIN ACTIONS</span>
+          </div>
+          <div class="facility-list">
+            {#each availableTileActions as ta}
+              {@const affordable = canAfford(ta.buildCost)}
+              <div class="facility-row" class:unaffordable={!affordable}>
+                <div class="facility-info">
+                  <span class="facility-name">{ta.name}</span>
+                  <span class="facility-desc">{ta.description}</span>
+                  {#if ta.climateEffect !== 0}
+                    <div class="facility-outputs">
+                      <span class="output-line" class:climate-line={true} class:pollution-line={ta.climateEffect > 0}>
+                        {ta.climateEffect > 0 ? '+' : ''}{ta.climateEffect} climate
+                      </span>
+                    </div>
+                  {/if}
+                  <div class="build-time">
+                    {ta.buildTime === 1 ? '1 turn' : `${ta.buildTime} turns`}
+                  </div>
+                </div>
+                <div class="facility-action">
+                  <div class="build-cost" class:cant-afford={!affordable}>{formatTileActionCost(ta.buildCost) || 'Free'}</div>
+                  <button
+                    class="build-btn"
+                    disabled={!affordable || atActionCap}
+                    onclick={() => onTileAction(ta.id)}
+                  >
+                    {affordable ? 'ENACT' : 'AFFORD?'}
+                  </button>
+                </div>
+              </div>
+            {/each}
+            {#each lockedTileActions as ta}
+              <div class="facility-row locked-row">
+                <div class="facility-info">
+                  <span class="facility-name locked-name">{ta.name}</span>
+                  <span class="facility-desc">{ta.description}</span>
+                </div>
+                <div class="facility-action">
+                  <div class="locked-label">REQUIRES<br />{techNames.get(ta.requiredTechId!) ?? ta.requiredTechId}</div>
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
       {/if}
     {/if}
@@ -553,6 +642,18 @@
   }
 
   .no-facilities { padding: 0.8rem; color: #3a4858; font-style: italic; }
+
+  .tile-action-section {
+    padding: 0;
+    border-top: 1px solid #1a2538;
+  }
+
+  .tile-action-title {
+    color: #7a7acd;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    flex: 1;
+  }
 
   .destroyed-panel {
     padding: 0.9rem 0.8rem;

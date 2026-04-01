@@ -329,6 +329,52 @@
     "recruitCost": { "funding": 25, "politicalWill": 20 },
     "startAge": 51
   },
+  "cmdrVashchenko": {
+    "id": "cmdrVashchenko",
+    "name": "Cmdr. Olena Vashchenko",
+    "role": "directorOfLunarOperations",
+    "buffs": [
+      { "description": "+20% output from lunar surface facilities", "customModifierKey": "lunarFacilityBonus" },
+      { "description": "Moon Colony project stage costs −10F", "customModifierKey": "moonColonyCostReduction" }
+    ],
+    "debuffs": [
+      { "description": "−2 Social Science per turn (focus shift to space)", "fieldMultipliers": { "socialScience": 0.85 } }
+    ],
+    "isAI": false,
+    "recruitCost": { "funding": 30, "politicalWill": 20 },
+    "startAge": 44
+  },
+  "drOkafor": {
+    "id": "drOkafor",
+    "name": "Dr. Emeka Okafor",
+    "role": "directorOfLunarOperations",
+    "buffs": [
+      { "description": "+20% output from lunar surface facilities", "customModifierKey": "lunarFacilityBonus" },
+      { "description": "+5% Engineering output (systems integration experience)", "fieldMultipliers": { "engineering": 1.05 } }
+    ],
+    "debuffs": [
+      { "description": "−2 Social Science per turn", "fieldMultipliers": { "socialScience": 0.85 } }
+    ],
+    "isAI": false,
+    "recruitCost": { "funding": 30, "politicalWill": 20 },
+    "startAge": 52
+  },
+  "engTakahashi": {
+    "id": "engTakahashi",
+    "name": "Eng. Hiroshi Takahashi",
+    "role": "directorOfLunarOperations",
+    "buffs": [
+      { "description": "+20% output from lunar surface facilities", "customModifierKey": "lunarFacilityBonus" },
+      { "description": "Moon Colony project stage costs −10F", "customModifierKey": "moonColonyCostReduction" }
+    ],
+    "debuffs": [
+      { "description": "−3 Social Science per turn (bureaucratic blind spot)", "fieldMultipliers": { "socialScience": 0.82 } },
+      { "description": "−5% Physics output", "fieldMultipliers": { "physics": 0.95 } }
+    ],
+    "isAI": false,
+    "recruitCost": { "funding": 25, "politicalWill": 15 },
+    "startAge": 58
+  },
   "aiSynthesis": {
     "id": "aiSynthesis",
     "name": "SYNTHESIS-7",
