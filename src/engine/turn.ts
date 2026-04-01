@@ -280,12 +280,7 @@ export function executeWorldPhase(
 
   // 0b. Recompute launch capacity from built facilities + tech bonuses.
   //     Done before output tick so unsupplied space facilities are correctly skipped.
-  const newLaunchCapacity = recomputeLaunchCapacity(
-    facilitiesAfterQueue,
-    player.techs,
-    techDefs,
-    facilityDefs,
-  );
+  const newLaunchCapacity = recomputeLaunchCapacity(facilitiesAfterQueue, player.techs);
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(

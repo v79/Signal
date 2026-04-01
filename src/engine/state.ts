@@ -9,8 +9,6 @@ import type {
   Resources,
   FieldPoints,
   WillProfile,
-  FacilityDef,
-  TechDef,
   FacilityInstance,
   TechState,
 } from './types';
@@ -168,8 +166,6 @@ export function deserialiseGameState(json: string): GameState {
 export function recomputeLaunchCapacity(
   facilities: FacilityInstance[],
   techs: TechState[],
-  techDefs: Map<string, TechDef>,
-  facilityDefs: Map<string, FacilityDef>,
 ): number {
   let capacity = 0;
 

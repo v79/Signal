@@ -54,13 +54,13 @@ function makeSpaceNode(id: string, facilityId: string | null = null): SpaceNode 
 
 describe('recomputeLaunchCapacity', () => {
   it('returns 0 with no facilities or techs', () => {
-    const result = recomputeLaunchCapacity([], [], new Map(), new Map());
+    const result = recomputeLaunchCapacity([], []);
     expect(result).toBe(0);
   });
 
   it('returns 3 per spaceLaunchCentre facility', () => {
     const facilities = [makeFacility('spaceLaunchCentre', '0,0')];
-    const result = recomputeLaunchCapacity(facilities, [], new Map(), new Map());
+    const result = recomputeLaunchCapacity(facilities, []);
     expect(result).toBe(3);
   });
 
@@ -69,25 +69,25 @@ describe('recomputeLaunchCapacity', () => {
       makeFacility('spaceLaunchCentre', '0,0'),
       makeFacility('spaceLaunchCentre', '1,0'),
     ];
-    const result = recomputeLaunchCapacity(facilities, [], new Map(), new Map());
+    const result = recomputeLaunchCapacity(facilities, []);
     expect(result).toBe(6);
   });
 
   it('adds +2 for reusableLaunchSystems tech', () => {
     const techs = [makeTech('reusableLaunchSystems')];
-    const result = recomputeLaunchCapacity([], techs, new Map(), new Map());
+    const result = recomputeLaunchCapacity([], techs);
     expect(result).toBe(2);
   });
 
   it('adds +1 for nuclearThermalPropulsion tech', () => {
     const techs = [makeTech('nuclearThermalPropulsion')];
-    const result = recomputeLaunchCapacity([], techs, new Map(), new Map());
+    const result = recomputeLaunchCapacity([], techs);
     expect(result).toBe(1);
   });
 
   it('adds +3 for cislunarTransportNetwork tech', () => {
     const techs = [makeTech('cislunarTransportNetwork')];
-    const result = recomputeLaunchCapacity([], techs, new Map(), new Map());
+    const result = recomputeLaunchCapacity([], techs);
     expect(result).toBe(3);
   });
 
@@ -96,7 +96,7 @@ describe('recomputeLaunchCapacity', () => {
       makeTech('reusableLaunchSystems', 'progress'),
       makeTech('cislunarTransportNetwork', 'rumour'),
     ];
-    const result = recomputeLaunchCapacity([], techs, new Map(), new Map());
+    const result = recomputeLaunchCapacity([], techs);
     expect(result).toBe(0);
   });
 
@@ -107,13 +107,13 @@ describe('recomputeLaunchCapacity', () => {
       makeTech('cislunarTransportNetwork'),
     ];
     // 3 + 2 + 3 = 8
-    const result = recomputeLaunchCapacity(facilities, techs, new Map(), new Map());
+    const result = recomputeLaunchCapacity(facilities, techs);
     expect(result).toBe(8);
   });
 
   it('does not count non-spaceLaunchCentre facilities', () => {
     const facilities = [makeFacility('orbitalModule', 'leo')];
-    const result = recomputeLaunchCapacity(facilities, [], new Map(), new Map());
+    const result = recomputeLaunchCapacity(facilities, []);
     expect(result).toBe(0);
   });
 });

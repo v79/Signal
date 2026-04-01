@@ -300,6 +300,16 @@ function resetSelections(): void {
   _selectedBeltNodeId = null;
 }
 
+function computeRemainingCapacity(state: GameState): number {
+  const allocated = state.map.spaceNodes
+    .filter((n) => n.facilityId && state.launchAllocation[n.id] !== false)
+    .reduce((sum, n) => {
+      const def = FACILITY_DEFS.get(n.facilityId!);
+      return sum + (def?.supplyCost ?? 0);
+    }, 0);
+  return state.launchCapacity - allocated;
+}
+
 export const gameStore = {
   get state(): GameState | null {
     return _state;
@@ -1251,24 +1261,9 @@ export const gameStore = {
         launchAllocation: { ..._state.launchAllocation, [nodeId]: false },
       });
     } else {
-      // Turn on: check remaining capacity
-      const used = Object.entries(_state.launchAllocation)
-        .filter(([nid, on]) => on !== false && nid !== nodeId)
-        .reduce((sum, [nid]) => {
-          const n = _state!.map.spaceNodes.find((sn) => sn.id === nid);
-          const d = n?.facilityId ? FACILITY_DEFS.get(n.facilityId) : null;
-          return sum + (d?.supplyCost ?? 0);
-        }, 0);
-      // Also count nodes not explicitly in the allocation as ON (default)
-      const defaultOnCost = _state.map.spaceNodes
-        .filter((n) => n.facilityId && _state!.launchAllocation[n.id] === undefined)
-        .reduce((sum, n) => {
-          const d = FACILITY_DEFS.get(n.facilityId!);
-          return sum + (d?.supplyCost ?? 0);
-        }, 0);
-      const totalUsed = used + defaultOnCost;
-      const remaining = _state.launchCapacity - totalUsed;
-      if (remaining < def.supplyCost) return; // not enough capacity
+      // The node is currently OFF, so it's already excluded from the allocated
+      // total — check if remaining capacity covers adding it back
+      if (computeRemainingCapacity(_state) < def.supplyCost) return;
       mutateState({
         ..._state,
         launchAllocation: { ..._state.launchAllocation, [nodeId]: true },
@@ -1334,12 +1329,6 @@ export const gameStore = {
   /** Derived: remaining launch capacity after current allocation. */
   get remainingLaunchCapacity(): number {
     if (!_state) return 0;
-    const allocated = _state.map.spaceNodes
-      .filter((n) => n.facilityId && _state!.launchAllocation[n.id] !== false)
-      .reduce((sum, n) => {
-        const def = FACILITY_DEFS.get(n.facilityId!);
-        return sum + (def?.supplyCost ?? 0);
-      }, 0);
-    return _state.launchCapacity - allocated;
+    return computeRemainingCapacity(_state);
   },
 };

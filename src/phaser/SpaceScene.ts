@@ -317,7 +317,7 @@ export class SpaceScene extends Phaser.Scene {
         }
       }
 
-      this.gfx.lineStyle(6 * s, 0x88d4ff, 0.12 * stationAlpha);
+      this.gfx.lineStyle(6 * s, 0x88d4ff, 0.12);
       this.gfx.strokeCircle(cx, cy, r * 1.8);
     }
   }

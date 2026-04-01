@@ -595,7 +595,7 @@ export function tickConstructionQueue(
   const updatedQueue: OngoingAction[] = [];
   let updatedFacilities = [...facilities];
   let updatedTiles = [...tiles];
-  let updatedSpaceNodes = [...spaceNodes];
+  let updatedSpaceNodes = spaceNodes;
   const completedActions: OngoingAction[] = [];
 
   for (const action of queue) {
