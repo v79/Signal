@@ -795,8 +795,8 @@ export interface TileActionDef {
   buildTime: number;
   /** Tile types this action applies to (non-destroyed tiles). */
   appliesTo: TileType[];
-  /** If non-null, also applies to tiles of any type with this destroyed status. */
-  appliesToDestroyed: TileDestroyedStatus | null;
+  /** Destroyed statuses this action applies to. Empty array = does not apply to any destroyed tile. */
+  appliesToDestroyed: TileDestroyedStatus[];
   /** Tile type to transform this tile into on completion. Null = no type change. */
   transformsTo: TileType | null;
   /** If true, clears the tile's destroyedStatus on completion. */

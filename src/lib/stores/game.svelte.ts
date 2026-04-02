@@ -393,6 +393,7 @@ export const gameStore = {
       { id: 'peerReview-1', defId: 'peerReview', zone: 'deck', bankedSinceTurn: null },
       { id: 'industrialContracts-1', defId: 'industrialContracts', zone: 'deck', bankedSinceTurn: null },
       { id: 'backChannelNegotiation-1', defId: 'backChannelNegotiation', zone: 'deck', bankedSinceTurn: null },
+      { id: 'contingencyRouting-1', defId: 'contingencyRouting', zone: 'deck', bankedSinceTurn: null },
       { id: 'executiveOverride-1', defId: 'executiveOverride', zone: 'deck', bankedSinceTurn: null },
     ];
 

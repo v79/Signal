@@ -666,7 +666,7 @@
   "advancedCoastalEngineering": {
     "id": "advancedCoastalEngineering",
     "name": "Advanced Coastal Engineering",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Composite sea barriers and tidal gate designs tested in the North Sea have held through conditions that would have overtopped conventional concrete seawalls.",
     "baseRecipe": { "engineering": 40, "mathematics": 25, "socialScience": 20 },
     "recipeVariance": 0.25,
@@ -675,7 +675,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 2,
     "requiredTechIds": ["fibreglassComposites"],
     "hqFieldBonus": { "engineering": 1 },
     "narrative": {

@@ -60,6 +60,7 @@
     gracePeriodEnds,
     turn,
     era,
+    hasLunarFacility = false,
     discoveredTechIds = [],
     committeeNotifications = [],
     onRecruit,
@@ -77,6 +78,8 @@
     gracePeriodEnds: number;
     turn: number;
     era: Era;
+    /** Whether any lunar surface facility has been built — unlocks the Dir. Lunar Operations slot. */
+    hasLunarFacility?: boolean;
     /** Tech def IDs that have been discovered this run (for tech-gate filtering). */
     discoveredTechIds?: string[];
     /** Active committee notifications to display on member cards. */
@@ -190,7 +193,11 @@
   };
 
   const visibleRoles = $derived(
-    era !== 'earth' ? ALL_ROLES : ALL_ROLES.filter((r) => r !== 'stationCommander'),
+    ALL_ROLES.filter((r) => {
+      if (r === 'stationCommander' && era === 'earth') return false;
+      if (r === 'directorOfLunarOperations' && !hasLunarFacility) return false;
+      return true;
+    }),
   );
 </script>
 
