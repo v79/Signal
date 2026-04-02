@@ -36,6 +36,8 @@ export interface TechTreeSceneData {
   facilityDefs: Map<string, FacilityDef>;
   /** Called when the player clicks an interactive node (progress/discovered only). */
   onNodeClick?: (defId: string) => void;
+  /** When true, rumoured nodes are also clickable. */
+  devMode?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -280,13 +282,20 @@ export class TechTreeScene extends Phaser.Scene {
         worldY >= rect.y &&
         worldY <= rect.y + rect.h
       ) {
-        // Only fire for progress/discovered stages
+        // Only fire for progress/discovered stages (and rumour in dev mode)
         const tech = this.sceneData.techs.find((t) => t.defId === defId);
         const def = this.sceneData.techDefs.get(defId);
         if (!tech || !def) continue;
-        const signalHidden = def.signalDerived && this.sceneData.signal.eraStrength === 'faint';
+        const signalHidden =
+          !this.sceneData.devMode &&
+          def.signalDerived &&
+          this.sceneData.signal.eraStrength === 'faint';
         const effectiveStage = signalHidden ? 'signal-hidden' : tech.stage;
-        if (effectiveStage === 'progress' || effectiveStage === 'discovered') {
+        if (
+          effectiveStage === 'progress' ||
+          effectiveStage === 'discovered' ||
+          (this.sceneData.devMode && effectiveStage === 'rumour')
+        ) {
           return defId;
         }
       }

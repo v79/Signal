@@ -38,6 +38,11 @@
     onClose: () => void;
   } = $props();
 
+  // ---------------------------------------------------------------------------
+  // Dev mode — set VITE_DEV_TREE=true to unlock all eras and reveal all techs
+  // ---------------------------------------------------------------------------
+  const DEV_TREE = import.meta.env.VITE_DEV_TREE === 'true';
+
   let containerEl: HTMLDivElement;
   let game: import('phaser').Game | null = null;
   let scene: TechTreeSceneType | null = null;
@@ -70,6 +75,7 @@
 
   /** Whether a given era tab should be clickable (player has reached it). */
   function eraEnabled(tabEra: Era): boolean {
+    if (DEV_TREE) return true;
     const playerIdx = ERA_ORDER.indexOf(era);
     const tabIdx = ERA_ORDER.indexOf(tabEra);
     return tabIdx <= playerIdx;
@@ -80,10 +86,16 @@
   // ---------------------------------------------------------------------------
 
   const eraFilteredTechs = $derived(
-    techs.filter((t) => {
-      const def = techDefs.get(t.defId);
-      return (def?.era ?? 'earth') === activeEra;
-    }),
+    techs
+      .filter((t) => {
+        const def = techDefs.get(t.defId);
+        return (def?.era ?? 'earth') === activeEra;
+      })
+      .map((t) => {
+        if (!DEV_TREE) return t;
+        if (t.stage === 'unknown') return { ...t, stage: 'progress' as const };
+        return t;
+      }),
   );
 
   const discoveredCount = $derived(
@@ -184,6 +196,7 @@
       cardDefs,
       facilityDefs,
       onNodeClick: handleNodeClick,
+      devMode: DEV_TREE,
     };
   }
 
@@ -315,6 +328,9 @@
         </div>
       </div>
       <div class="header-right">
+        {#if DEV_TREE}
+          <span class="dev-badge">DEV MODE</span>
+        {/if}
         <span class="header-status">
           {ERA_LABELS[activeEra]}
           <span class="header-count">{discoveredCount}/{totalCount} CONFIRMED</span>
@@ -328,7 +344,7 @@
 
       {#if selectedTech && selectedDef}
         {@const effectiveStage =
-          selectedDef.signalDerived && signal.eraStrength === 'faint'
+          !DEV_TREE && selectedDef.signalDerived && signal.eraStrength === 'faint'
             ? 'signal-hidden'
             : selectedTech.stage}
         <div class="detail-panel">
@@ -644,6 +660,18 @@
     padding: 0.1rem 0.35rem;
     border: 1px solid #1a3020;
     border-radius: 1px;
+  }
+
+  .dev-badge {
+    font-family: monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    color: #e8a820;
+    background: rgba(232, 168, 32, 0.08);
+    border: 1px solid #6a4808;
+    padding: 0.1rem 0.5rem;
+    border-radius: 1px;
+    white-space: nowrap;
   }
 
   .close-btn {
