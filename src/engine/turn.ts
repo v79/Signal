@@ -365,7 +365,7 @@ export function executeWorldPhase(
   // 6b. Distribute research points across rumour/progress techs
   const researchRng = createRng(`${state.seed}-research-t${nextTurn}`);
   const techsAfterDistribution = distributeResearchPoints(
-    techsAfterBreakthroughs, techDefs, newFields, researchRng,
+    techsAfterBreakthroughs, techDefs, newFields, researchRng, state.era,
   );
 
   // 6c. Stage transitions (prerequisites + fieldProgress thresholds)

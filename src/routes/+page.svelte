@@ -158,6 +158,8 @@
     cardDefs={CARD_DEFS}
     facilityDefs={FACILITY_DEFS}
     era={gameStore.state.era}
+    turn={gameStore.state.turn}
+    year={gameStore.state.year}
     onClose={() => {
       showTechTree = false;
       hasNewResearch = false;

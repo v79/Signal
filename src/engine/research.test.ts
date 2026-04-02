@@ -433,7 +433,7 @@ describe('distributeResearchPoints', () => {
     ];
     const fieldOutput = makeFields({ physics: 5 });
     const rng = createRng('test');
-    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng, 'earth');
     // Both techA and techB are applicable for physics
     const a = result.find((t) => t.defId === 'techA')!;
     const b = result.find((t) => t.defId === 'techB')!;
@@ -449,7 +449,7 @@ describe('distributeResearchPoints', () => {
     ];
     const fieldOutput = makeFields({ physics: 20 });
     const rng = createRng('remainder-test');
-    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng, 'earth');
     const totalPhysics = result.reduce((sum, t) => sum + (t.fieldProgress['physics'] ?? 0), 0);
     // All 20 points should be distributed (2 guaranteed + 18 remainder)
     expect(totalPhysics).toBe(20);
@@ -463,7 +463,7 @@ describe('distributeResearchPoints', () => {
     ];
     const fieldOutput = makeFields({ physics: 5 });
     const rng = createRng('discard-test');
-    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng, 'earth');
     // physics already met — no new points
     expect(result.find((t) => t.defId === 'techA')!.fieldProgress['physics']).toBe(10);
     expect(result.find((t) => t.defId === 'techB')!.fieldProgress['physics']).toBe(10);
@@ -476,7 +476,7 @@ describe('distributeResearchPoints', () => {
     ];
     const fieldOutput = makeFields({ physics: 5 });
     const rng = createRng('unknown-test');
-    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng);
+    const result = distributeResearchPoints(techs, techDefsMap, fieldOutput, rng, 'earth');
     const a = result.find((t) => t.defId === 'techA')!;
     // techA is unknown — should not receive points
     expect(a.fieldProgress['physics'] ?? 0).toBe(0);
@@ -488,10 +488,27 @@ describe('distributeResearchPoints', () => {
     ];
     const fieldOutput = makeFields({ physics: 5 });
     const rng = createRng('met-fields-test');
-    const result = distributeResearchPoints(techs, new Map([['techA', techA]]), fieldOutput, rng);
+    const result = distributeResearchPoints(techs, new Map([['techA', techA]]), fieldOutput, rng, 'earth');
     const a = result.find((t) => t.defId === 'techA')!;
     // physics already met — no more physics points
     expect(a.fieldProgress['physics']).toBe(10);
+  });
+
+  it('future-era techs receive no points', () => {
+    const era2Tech: TechDef = { ...tier1TechDef, id: 'era2Tech', era: 'nearSpace' };
+    const era1Tech: TechDef = { ...tier1TechDef, id: 'era1Tech' };
+    const defs = new Map([['era2Tech', era2Tech], ['era1Tech', era1Tech]]);
+    const techs = [
+      makeTechState('era2Tech', { physics: 100 }, 'rumour'),
+      makeTechState('era1Tech', { physics: 100 }, 'rumour'),
+    ];
+    const fieldOutput = makeFields({ physics: 20 });
+    const rng = createRng('era-gate-test');
+    const result = distributeResearchPoints(techs, defs, fieldOutput, rng, 'earth');
+    // Era 2 tech should receive no points while current era is earth
+    expect(result.find((t) => t.defId === 'era2Tech')!.fieldProgress['physics'] ?? 0).toBe(0);
+    // All points go to the Era 1 tech
+    expect(result.find((t) => t.defId === 'era1Tech')!.fieldProgress['physics'] ?? 0).toBe(20);
   });
 });
 

@@ -23,6 +23,8 @@
     cardDefs,
     facilityDefs,
     era,
+    turn,
+    year,
     onClose,
   }: {
     techs: TechState[];
@@ -31,6 +33,8 @@
     cardDefs: Map<string, CardDef>;
     facilityDefs: Map<string, FacilityDef>;
     era: Era;
+    turn: number;
+    year: number;
     onClose: () => void;
   } = $props();
 
@@ -287,6 +291,8 @@
         <span class="classify-badge">RESTRICTED</span>
         <span class="header-sep">·</span>
         <span class="modal-title">RESEARCH DATABASE</span>
+        <span class="header-sep">·</span>
+        <span class="header-datestamp">TURN {turn} · {year}</span>
         <span class="header-sep">·</span>
         <div class="era-tabs" role="tablist" aria-label="Era selector">
           {#each ERA_ORDER as e}
@@ -552,6 +558,14 @@
   .header-sep {
     color: #1e3040;
     font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .header-datestamp {
+    font-family: monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    color: #3a5a6a;
     flex-shrink: 0;
   }
 
