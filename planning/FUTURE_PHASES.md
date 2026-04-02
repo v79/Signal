@@ -10,7 +10,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
-  - The only card I ever bank counters scandal. Need other options worth banking. (Partial: Contingency Routing logistics counter added.)
   - Ensure duplicate cards are not drawn at the same time
   - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
 - **Events:**
@@ -39,13 +38,11 @@ This is a list of future requirements for the game but they are not to be implem
   - First implementation in `planning/PLAN_PHASE28.md`
 - **Earth map**
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
-  - It's too easy to fill up the map and have nothing to do. I have only destroyed facilities in a funding emergency.
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
 - **Earth era content pass**
   - More playtesting required; Computing and physics remain a problem
 - **Near Earth/LEO Map**
 - **LEO era content pass**
-  - Map improvement actions such as sea walls for Earth
 - **Asteroid era content pass**
   - Map improvement actions such as reforestation, radiation cleanup, floating cities
 - **Game art:**
@@ -54,7 +51,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Generic profile pictures for board members
   - Flavour text for board members
 - **Tech tree dependencies:**
-  - Clicking on a discovered or in progress technology in the tech tree should show more information (visual display works; no detail modal yet)
 - **News feed & ticker rework**
   - The ticker is cute but not very useful
 - **Debug view and logs:**
@@ -70,13 +66,11 @@ This is a list of future requirements for the game but they are not to be implem
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
 - **Next Turn / Phase Control**
-  - Proper, aligned layout.
 
 
 ## BUGS:
 
-- The Director of Lunar Operations committee post should not be available until Era 2 starts and a lunar facility is built.
-
+- Need a full review of the terrain manipulation actions. An entire phase required to fix this. Also a review of the tech tree.
 
 
 ## FACILITY IDEAS:
@@ -84,6 +78,7 @@ This is a list of future requirements for the game but they are not to be implem
 Era 1:
 
 - Petrochemical Refinery (+funding, +climate) or Oil wells
+- Observatory (+physics, +computing, -funding) on Highland tiles only
 
 Era 2:
 
