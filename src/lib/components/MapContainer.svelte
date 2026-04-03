@@ -47,6 +47,10 @@
     return false;
   }
 
+  const hasLunarFacility = $derived(
+    gameStore.state?.player.facilities.some((f) => LUNAR_FACILITY_IDS.has(f.defId)) ?? false,
+  );
+
   let container = $state<HTMLDivElement | undefined>(undefined);
   let game: import('phaser').Game | null = null;
   let activeTab = $state<AllTab>('earth');
@@ -351,8 +355,7 @@
     >
       {#if gameStore.state}
         {@const filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
-        {@const hasLunar = gameStore.state.player.facilities.some((f) => LUNAR_FACILITY_IDS.has(f.defId))}
-        {@const total = (gameStore.state.era === 'earth' ? 7 : 8) + (hasLunar ? 1 : 0)}
+        {@const total = (gameStore.state.era === 'earth' ? 7 : 8) + (hasLunarFacility ? 1 : 0)}
         COMMITTEE ({filled}/{total})
       {:else}
         COMMITTEE
@@ -414,7 +417,7 @@
         gracePeriodEnds={gameStore.state.boardGracePeriodEnds ?? 4}
         turn={gameStore.state.turn}
         era={gameStore.state.era}
-        hasLunarFacility={gameStore.state.player.facilities.some((f) => LUNAR_FACILITY_IDS.has(f.defId))}
+        hasLunarFacility={hasLunarFacility}
         discoveredTechIds={gameStore.state.player.techs
           .filter((t) => t.stage === 'discovered')
           .map((t) => t.defId)}

@@ -153,15 +153,11 @@
   );
 
   /** Recipe with progress for the detail panel. */
-  const selectedRecipe = $derived((): Array<{
-    field: string;
-    abbr: string;
-    color: string;
-    current: number;
-    threshold: number;
-    pct: number;
-  }> => {
-    if (!selectedDef || !selectedTech) return [];
+  const selectedRecipe = $derived.by(() => {
+    if (!selectedDef || !selectedTech) return [] as Array<{
+      field: string; abbr: string; color: string;
+      current: number; threshold: number; pct: number;
+    }>;
     const recipe = selectedTech.recipe ?? selectedDef.baseRecipe;
     const fieldProgress = selectedTech.fieldProgress as Partial<Record<string, number>>;
     return Object.entries(recipe)
@@ -244,11 +240,12 @@
   $effect(() => {
     const _sel = selectedTechId; // create reactivity dependency
     // Run after DOM update so containerEl reflects the new width
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       if (game && containerEl) {
         game.scale.resize(containerEl.clientWidth, containerEl.clientHeight);
       }
     });
+    return () => cancelAnimationFrame(rafId);
   });
 
   function handleKeydown(e: KeyboardEvent): void {
@@ -376,10 +373,10 @@
           {/if}
 
           <!-- Recipe -->
-          {#if selectedRecipe().length > 0}
+          {#if selectedRecipe.length > 0}
             <div class="detail-section-label">RECIPE</div>
             <div class="detail-recipe">
-              {#each selectedRecipe() as row}
+              {#each selectedRecipe as row}
                 <div class="recipe-row">
                   <span class="recipe-abbr" style="color: {row.color}">{row.abbr}</span>
                   <div class="recipe-bar-track">
