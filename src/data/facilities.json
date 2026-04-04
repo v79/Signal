@@ -633,6 +633,42 @@
     "depletes": false,
     "requiredTechId": "satelliteCommunications"
   },
+  "observatory": {
+    "id": "observatory",
+    "name": "Observatory",
+    "description": "A ground-based optical and radio telescope complex. Strong Physics output from astronomical observation and data analysis, with a small Computing contribution from signal processing. Highland terrain only — requires clear skies and distance from light pollution.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "highland"
+    ],
+    "buildCost": {
+      "funding": 35,
+      "materials": 15
+    },
+    "upkeepCost": {
+      "funding": 3
+    },
+    "buildTime": 2,
+    "deleteTime": 1,
+    "canDelete": true,
+    "fieldOutput": {
+      "physics": 4,
+      "computing": 1
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [
+      {
+        "neighborDefId": "researchLab",
+        "fieldBonus": {
+          "physics": 2,
+          "mathematics": 1
+        }
+      }
+    ],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": null
+  },
   "magneticConfinementLab": {
     "id": "magneticConfinementLab",
     "name": "Magnetic Confinement Lab",

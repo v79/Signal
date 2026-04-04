@@ -78,7 +78,8 @@ This is a list of future requirements for the game but they are not to be implem
 Era 1:
 
 - Petrochemical Refinery (+funding, +climate) or Oil wells
-- Observatory (+physics, +computing, -funding) on Highland tiles only
+- ~~Observatory (+physics, +computing, -funding) on Highland tiles only~~ ✅ implemented
+- **Observatory signal bonus:** Once `spaceImaging` is discovered, the Observatory should also contribute Signal research each turn. Requires engine support for tech-conditional facility output (no such mechanism exists in `FacilityDef` yet — `fieldOutput` is static).
 
 Era 2:
 
