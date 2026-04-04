@@ -188,6 +188,26 @@
     "counterEffect": null,
     "upgradesFrom": null
   },
+  "environmentalBaseline": {
+    "id": "environmentalBaseline",
+    "name": "Environmental Baseline Survey",
+    "description": "Commission a systematic survey of atmospheric and chemical baselines across programme territories.",
+    "flavourText": "Before you can measure change, you need to know what normal looks like.",
+    "era": "earth",
+    "effect": { "fields": { "biochemistry": 8, "physics": 4 } },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
+  "astrobiologicalSurvey": {
+    "id": "astrobiologicalSurvey",
+    "name": "Astrobiological Survey Run",
+    "description": "Direct programme resources toward systematic analysis of candidate biosignatures in existing observation data.",
+    "flavourText": "The signal does not care whether we think it is alive. It simply is.",
+    "era": "earth",
+    "effect": { "signalProgress": 12, "fields": { "biochemistry": 6, "physics": 4 } },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
   "biomedicalAdvance": {
     "id": "biomedicalAdvance",
     "name": "Biomedical Advance",

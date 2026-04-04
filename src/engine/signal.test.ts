@@ -85,19 +85,19 @@ function makeArray(n = 1): FacilityInstance[] {
 
 describe('computeSignalProgressDelta', () => {
   it('returns base progress with no fields or arrays', () => {
-    expect(computeSignalProgressDelta(ZERO_FIELDS, [], new Map())).toBeCloseTo(0.25);
+    expect(computeSignalProgressDelta(ZERO_FIELDS, [], new Map())).toBeCloseTo(0.05);
   });
 
   it('adds field contribution: (physics + mathematics) / 50', () => {
     const delta = computeSignalProgressDelta(HIGH_FIELDS, [], new Map());
-    // 0.25 + (100 + 100) / 50 = 0.25 + 4 = 4.25
-    expect(delta).toBeCloseTo(4.25);
+    // 0.05 + (100 + 100) / 50 = 0.05 + 4 = 4.05
+    expect(delta).toBeCloseTo(4.05);
   });
 
   it('adds ARRAY_BONUS (3) per Deep Space Array', () => {
     const delta = computeSignalProgressDelta(ZERO_FIELDS, makeArray(2), DEFS);
-    // 0.25 + 0 + 2 * 3 = 6.25
-    expect(delta).toBeCloseTo(6.25);
+    // 0.05 + 0 + 2 * 3 = 6.05
+    expect(delta).toBeCloseTo(6.05);
   });
 
   it('ignores non-array facilities', () => {
@@ -105,13 +105,13 @@ describe('computeSignalProgressDelta', () => {
       { id: 'r1', defId: 'researchLab', locationKey: '0,0', condition: 1, builtTurn: 1 },
     ];
     const delta = computeSignalProgressDelta(ZERO_FIELDS, other, DEFS);
-    expect(delta).toBeCloseTo(0.25);
+    expect(delta).toBeCloseTo(0.05);
   });
 
   it('combines fields and arrays', () => {
     const delta = computeSignalProgressDelta(HIGH_FIELDS, makeArray(1), DEFS);
-    // 0.25 + 4 + 3 = 7.25
-    expect(delta).toBeCloseTo(7.25);
+    // 0.05 + 4 + 3 = 7.05
+    expect(delta).toBeCloseTo(7.05);
   });
 });
 
@@ -143,7 +143,7 @@ describe('computeEraStrength', () => {
 describe('tickSignalProgress', () => {
   it('advances progress', () => {
     const next = tickSignalProgress(BASE_SIGNAL, ZERO_FIELDS, [], new Map());
-    expect(next.decodeProgress).toBeCloseTo(0.25);
+    expect(next.decodeProgress).toBeCloseTo(0.05);
   });
 
   it('upgrades eraStrength when crossing threshold', () => {

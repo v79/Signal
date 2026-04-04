@@ -16,8 +16,9 @@ This is a list of future requirements for the game but they are not to be implem
   - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
 - **Research:**
   - What to do once all the tech for an era has been researched?
+  - Each Era should have a tier 5 technology that represents the end of the era.
+  - The game is based around the idea that the player cannot choose the next technology to research, but perhaps they could initiate a project to focus on a tech that is near completion, with a percentage chance of success.
 - **Climate:**
-  - The climate scaling is too harsh and tile damage happens far too early
   - Irradiated damage shouldn't exist without nuclear facilities
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
@@ -26,7 +27,6 @@ This is a list of future requirements for the game but they are not to be implem
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
-  - Tooltip isn't showing the incomes and debits
 - **Era Gates**
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
@@ -66,7 +66,8 @@ This is a list of future requirements for the game but they are not to be implem
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
 - **Next Turn / Phase Control**
-
+- **Architecture Review**
+  - Review project structure, architecture, security, code duplication, etc
 
 ## BUGS:
 

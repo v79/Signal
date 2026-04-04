@@ -308,6 +308,7 @@ export function computeResourceBreakdown(
   facilityDefs: Map<string, FacilityDef>,
   adjacencyEffects: AdjacencyEffect[],
   earthTiles: MapTile[],
+  willExtras?: { bankDecay: number; drift: number },
 ): ResourceBreakdown {
   const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
 
@@ -368,6 +369,18 @@ export function computeResourceBreakdown(
 
   for (const key of resourceKeys) {
     result[key].sort((a, b) => b.amount - a.amount);
+  }
+
+  if (willExtras) {
+    if (willExtras.bankDecay > 0) {
+      result.politicalWill.push({ label: 'Card banking', amount: -willExtras.bankDecay });
+    }
+    if (willExtras.drift !== 0) {
+      result.politicalWill.push({
+        label: willExtras.drift > 0 ? 'Natural recovery' : 'Natural drift',
+        amount: Math.round(willExtras.drift),
+      });
+    }
   }
 
   return result;

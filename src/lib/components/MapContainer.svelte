@@ -356,7 +356,7 @@
       {#if gameStore.state}
         {@const filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
         {@const total = (gameStore.state.era === 'earth' ? 7 : 8) + (hasLunarFacility ? 1 : 0)}
-        COMMITTEE ({filled}/{total})
+        COMMITTEE (<span class:empty-committee={filled === 0}>{filled}</span>/{total})
       {:else}
         COMMITTEE
       {/if}
@@ -560,6 +560,10 @@
   .tab.locked {
     cursor: not-allowed;
     opacity: 0.4;
+  }
+
+  .empty-committee {
+    color: #e05555;
   }
 
   .lock {
