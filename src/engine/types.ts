@@ -161,12 +161,19 @@ export interface NarrativeSlide {
   imageColour?: string;
 }
 
+export interface NarrativeUnlockItem {
+  type: 'card' | 'facility' | 'project';
+  name: string;
+}
+
 export interface NarrativeDef {
   id: string;
   title: string;
   slides: NarrativeSlide[];
   /** If true, a Skip button is shown so the player can dismiss immediately. */
   skippable?: boolean;
+  /** Items unlocked by this discovery — shown persistently across all slides. */
+  unlockItems?: NarrativeUnlockItem[];
 }
 
 // ---------------------------------------------------------------------------

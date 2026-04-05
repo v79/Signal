@@ -153,10 +153,12 @@
 </script>
 
 {#if gameStore.state && gameStore.state.narrativeQueue.length > 0}
-  <NarrativeModal
-    narrative={gameStore.state.narrativeQueue[0]}
-    onDismiss={() => gameStore.dismissNarrativeModal()}
-  />
+  {#key gameStore.state.narrativeQueue[0].id}
+    <NarrativeModal
+      narrative={gameStore.state.narrativeQueue[0]}
+      onDismiss={() => gameStore.dismissNarrativeModal()}
+    />
+  {/key}
 {/if}
 
 {#if showTechTree && gameStore.state}

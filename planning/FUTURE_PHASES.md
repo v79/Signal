@@ -31,6 +31,9 @@ This is a list of future requirements for the game but they are not to be implem
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
   - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
+- **The Signal**
+  - Needs to be slowed down even further. Progress needs to be gated to certain technologies (i.e. cannot get more than 33% researched in Era 1)
+  - Signal mini-games and especially at the end with the Wormhole
 - **Projects**
   - Projects need to be visible on the Maps
   - The Facilities that support projects (space launch centre) need to be visually distinct
