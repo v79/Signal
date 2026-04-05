@@ -259,7 +259,7 @@ export function exportSave(state: GameState): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `signal-save-${state.seed}-t${state.turn}.json`;
+  a.download = `signal-save-${state.player.blocDefId}-${state.seed}-t${state.turn}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }

@@ -29,6 +29,7 @@
     type ClimateBreakdown,
   } from '../engine/facilities';
   import { CLIMATE_PRESSURE_PER_TURN } from '../engine/turn';
+  import { computeBankDecay, tickWill, DEFAULT_WILL_CONFIG } from '../engine/resources';
   import { isSignalClimax } from '../engine/signal';
   // Redirect to /newgame if there is no active game state (cold start).
   // Also register back-button / unload guards during the action phase.
@@ -74,6 +75,14 @@
             gameStore.state.map.earthTiles,
           ),
           gameStore.state.map.earthTiles,
+          {
+            bankDecay: computeBankDecay(gameStore.state.player.cards),
+            drift:
+              tickWill(
+                gameStore.state.player.will,
+                DEFAULT_WILL_CONFIG[gameStore.state.player.willProfile],
+              ) - gameStore.state.player.will,
+          },
         )
       : { funding: [], materials: [], politicalWill: [] },
   );
@@ -144,10 +153,12 @@
 </script>
 
 {#if gameStore.state && gameStore.state.narrativeQueue.length > 0}
-  <NarrativeModal
-    narrative={gameStore.state.narrativeQueue[0]}
-    onDismiss={() => gameStore.dismissNarrativeModal()}
-  />
+  {#key gameStore.state.narrativeQueue[0].id}
+    <NarrativeModal
+      narrative={gameStore.state.narrativeQueue[0]}
+      onDismiss={() => gameStore.dismissNarrativeModal()}
+    />
+  {/key}
 {/if}
 
 {#if showTechTree && gameStore.state}
@@ -157,6 +168,9 @@
     signal={gameStore.state.signal}
     cardDefs={CARD_DEFS}
     facilityDefs={FACILITY_DEFS}
+    era={gameStore.state.era}
+    turn={gameStore.state.turn}
+    year={gameStore.state.year}
     onClose={() => {
       showTechTree = false;
       hasNewResearch = false;

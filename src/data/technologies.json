@@ -1,28 +1,28 @@
 {
-  "integratedCircuits": {
-    "id": "integratedCircuits",
-    "name": "Integrated Circuit Arrays",
-    "rumourText": "Miniaturised components are being tested that may replace entire banks of discrete transistors.",
-    "baseRecipe": { "engineering": 30, "physics": 20, "mathematics": 15 },
-    "recipeVariance": 0.2,
+  "microprocessors": {
+    "id": "microprocessors",
+    "name": "Microprocessors",
+    "rumourText": "A single chip carrying a complete instruction set has been demonstrated in prototype form.",
+    "baseRecipe": { "engineering": 20, "physics": 40, "mathematics": 20 },
+    "recipeVariance": 0.15,
     "requiresSimultaneous": false,
     "unlocksCards": ["softwareGrant"],
-    "unlocksProjects": [],
+    "unlocksProjects": ["computingResearchProgramme"],
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 1,
     "requiredTechIds": [],
-    "hqFieldBonus": { "engineering": 1 },
+    "hqFieldBonus": { "computing": 1 },
     "narrative": {
-      "id": "narrative-tech-integratedCircuits",
-      "title": "Discovery — Integrated Circuit Arrays",
+      "id": "narrative-tech-microprocessors",
+      "title": "Discovery — Microprocessors",
       "skippable": true,
       "slides": [
         {
-          "text": "The entire logic stack has been miniaturised onto a single substrate. Processing power that filled a room now fits in a package smaller than a fingernail."
+          "text": "A complete instruction set on a single chip, manufactured at scale. The cost of computation has dropped by two orders of magnitude."
         },
         {
-          "text": "Signal analysis algorithms that previously required dedicated hardware can now run on compact, field-deployable units. The programme's analytical capacity has increased substantially."
+          "text": "Pattern-matching algorithms that previously required purpose-built hardware can now run on clusters of standard components. High-performance computing facilities are now a realistic capital investment."
         }
       ]
     }
@@ -81,62 +81,35 @@
       ]
     }
   },
-  "recombinantDNA": {
-    "id": "recombinantDNA",
-    "name": "Recombinant DNA Technology",
-    "rumourText": "Genetic material from separate organisms has been successfully combined in a laboratory environment.",
-    "baseRecipe": { "biochemistry": 40, "mathematics": 30, "socialScience": 10 },
+  "atmosphericChemistry": {
+    "id": "atmosphericChemistry",
+    "name": "Atmospheric Chemistry",
+    "rumourText": "Spectroscopic analysis of the upper atmosphere has identified chemical signatures that cannot be explained by known industrial emissions.",
+    "baseRecipe": { "biochemistry": 35, "physics": 20 },
     "recipeVariance": 0.2,
     "requiresSimultaneous": false,
-    "unlocksCards": [],
+    "unlocksCards": ["environmentalBaseline"],
     "unlocksProjects": [],
-    "unlocksFacilities": [],
+    "unlocksFacilities": ["atmosphericMonitoringStation"],
     "signalDerived": false,
     "tier": 1,
     "requiredTechIds": [],
     "hqFieldBonus": { "biochemistry": 1 },
     "narrative": {
-      "id": "narrative-tech-recombinantDNA",
-      "title": "Discovery — Recombinant DNA Technology",
+      "id": "narrative-tech-atmosphericChemistry",
+      "title": "Discovery — Atmospheric Chemistry",
       "skippable": true,
       "slides": [
         {
-          "text": "Genetic material from two organisms has been spliced and successfully expressed in a host cell. The boundary between species has become a design parameter rather than an absolute constraint."
+          "text": "The chemical composition of Earth's atmosphere has been mapped in detail. Trace gases, isotopic ratios, and seasonal cycles are now understood as a coherent system rather than a collection of isolated measurements."
         },
         {
-          "text": "The team notes that what has been demonstrated is, at its core, the editing of a structured information system encoded in a physical substrate. Pattern recognition is pattern recognition, whatever the medium."
+          "text": "The same spectroscopic techniques used to read the atmosphere can, in principle, be pointed outward. What chemical signatures might an inhabited world emit into space?"
         }
       ]
     }
   },
-  "microprocessors": {
-    "id": "microprocessors",
-    "name": "Microprocessors",
-    "rumourText": "A single chip carrying a complete instruction set has been demonstrated in prototype form.",
-    "baseRecipe": { "engineering": 20, "physics": 40, "computing": 20 },
-    "recipeVariance": 0.15,
-    "requiresSimultaneous": false,
-    "unlocksCards": ["computerModellingRun"],
-    "unlocksProjects": ["computingResearchProgramme"],
-    "unlocksFacilities": [],
-    "signalDerived": false,
-    "tier": 2,
-    "requiredTechIds": ["integratedCircuits"],
-    "hqFieldBonus": { "computing": 1 },
-    "narrative": {
-      "id": "narrative-tech-microprocessors",
-      "title": "Discovery — Microprocessors",
-      "skippable": true,
-      "slides": [
-        {
-          "text": "A complete instruction set on a single chip, manufactured at scale. The cost of computation has dropped by two orders of magnitude."
-        },
-        {
-          "text": "Pattern-matching algorithms that previously required purpose-built hardware can now run on clusters of standard components. High-performance computing facilities are now a realistic capital investment."
-        }
-      ]
-    }
-  },
+
   "cryogenicPropulsion": {
     "id": "cryogenicPropulsion",
     "name": "Cryogenic Propulsion Systems",
@@ -164,6 +137,34 @@
       ]
     }
   },
+  "closedLoopLifeSupport": {
+    "id": "closedLoopLifeSupport",
+    "name": "Closed-Loop Life Support",
+    "rumourText": "Sealed habitats sustaining human life indefinitely through internal recycling have moved from theoretical proposal to engineering prototype.",
+    "baseRecipe": { "biochemistry": 50, "engineering": 30 },
+    "recipeVariance": 0.2,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 2,
+    "requiredTechIds": ["atmosphericChemistry", "cryogenicPropulsion"],
+    "hqFieldBonus": { "biochemistry": 1, "engineering": 1 },
+    "narrative": {
+      "id": "narrative-tech-closedLoopLifeSupport",
+      "title": "Discovery — Closed-Loop Life Support",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Atmospheric recycling, water reclamation, and biological waste processing have been integrated into a self-sustaining system. A human crew can be maintained indefinitely without resupply — in principle."
+        },
+        {
+          "text": "The technical constraints on mission duration have been eliminated. Any location reachable by propulsion is now, in theory, inhabitable."
+        }
+      ]
+    }
+  },
   "photovoltaicSolarCells": {
     "id": "photovoltaicSolarCells",
     "name": "Photovoltaic Solar Cells",
@@ -176,7 +177,7 @@
     "unlocksFacilities": ["solarFarm"],
     "signalDerived": false,
     "tier": 2,
-    "requiredTechIds": ["integratedCircuits"],
+    "requiredTechIds": ["microprocessors"],
     "narrative": {
       "id": "narrative-tech-photovoltaicSolarCells",
       "title": "Discovery — Photovoltaic Solar Cells",
@@ -213,7 +214,7 @@
           "text": "The mathematical framework for sustained human presence in low Earth orbit is complete. Trajectory planning, station-keeping, re-entry corridors — the theory is settled. The remaining work is engineering."
         },
         {
-          "text": "Space launch infrastructure, orbital platform construction, and lunar operations are now viable. The programme is no longer Earth-bound. Near Space access opens."
+          "text": "Space launch infrastructure, orbital platform construction, and lunar operations are now viable. The programme is no longer Earth-bound. Near Space access beckons."
         }
       ]
     }
@@ -230,7 +231,7 @@
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 3,
-    "requiredTechIds": ["integratedCircuits", "fibreglassComposites"],
+    "requiredTechIds": ["microprocessors", "fibreglassComposites"],
     "hqFieldBonus": { "mathematics": 1 },
     "narrative": {
       "id": "narrative-tech-fibreOptics",
@@ -257,8 +258,8 @@
     "unlocksProjects": ["hubbleSpaceTelescope"],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 3,
-    "requiredTechIds": ["photovoltaicSolarCells"],
+    "tier": 4,
+    "requiredTechIds": ["photovoltaicSolarCells","satelliteCommunications"],
     "narrative": {
       "id": "narrative-tech-spaceImaging",
       "title": "Discovery — Space Imaging",
@@ -280,11 +281,11 @@
     "baseRecipe": { "engineering": 20, "mathematics": 10, "computing": 40, "socialScience": 20 },
     "recipeVariance": 0.2,
     "requiresSimultaneous": false,
-    "unlocksCards": ["digitalCoordination"],
+    "unlocksCards": ["digitalCoordination","computerModellingRun"],
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 2,
     "requiredTechIds": ["microprocessors"],
     "hqFieldBonus": { "computing": 2 },
     "narrative": {
@@ -305,7 +306,7 @@
     "id": "geneticEngineering",
     "name": "Genetic Engineering",
     "rumourText": "The capability to selectively alter an organism's genetic code has been demonstrated under reproducible laboratory conditions.",
-    "baseRecipe": { "physics": 10, "biochemistry": 80, "computing": 30, "socialScience": 20 },
+    "baseRecipe": { "physics": 10, "biochemistry": 80, "computing": 30, "socialScience": 30 },
     "recipeVariance": 0.3,
     "requiresSimultaneous": false,
     "unlocksCards": ["biomedicalAdvance"],
@@ -313,7 +314,7 @@
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 3,
-    "requiredTechIds": ["recombinantDNA"],
+    "requiredTechIds": ["atmosphericChemistry"],
     "hqFieldBonus": { "biochemistry": 2 },
     "narrative": {
       "id": "narrative-tech-geneticEngineering",
@@ -329,6 +330,34 @@
       ]
     }
   },
+  "astrobiology": {
+    "id": "astrobiology",
+    "name": "Astrobiology",
+    "rumourText": "The question of whether life can exist beyond Earth has shifted from philosophical speculation to a testable scientific programme.",
+    "baseRecipe": { "biochemistry": 50, "physics": 20, "socialScience": 20 },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": ["astrobiologicalSurvey"],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": false,
+    "tier": 3,
+    "requiredTechIds": ["closedLoopLifeSupport"],
+    "hqFieldBonus": { "biochemistry": 2, "physics": 1 },
+    "narrative": {
+      "id": "narrative-tech-astrobiology",
+      "title": "Discovery — Astrobiology",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "The conditions necessary for biochemistry as we understand it have been found to be neither rare nor exceptional. Water, carbon compounds, and energy gradients appear wherever the physics permits."
+        },
+        {
+          "text": "The signal is not a message. It has no sender in any meaningful sense. But it was built by something that understood physics, mathematics, and the structure of space-time. The question of what constitutes life has become more urgent."
+        }
+      ]
+    }
+  },
   "satelliteCommunications": {
     "id": "satelliteCommunications",
     "name": "Satellite Communications",
@@ -340,8 +369,8 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["deepSpaceArray"],
     "signalDerived": false,
-    "tier": 4,
-    "requiredTechIds": ["fibreOptics"],
+    "tier": 3,
+    "requiredTechIds": ["orbitalMechanics","fibreOptics"],
     "narrative": {
       "id": "narrative-tech-satelliteCommunications",
       "title": "Discovery — Satellite Communications",
@@ -414,7 +443,13 @@
     "id": "internetProtocols",
     "name": "Internet Protocols",
     "rumourText": "A common packet-routing standard may allow every research facility on Earth to share data in real time.",
-    "baseRecipe": { "engineering": 10, "physics": 20, "mathematics": 50, "computing": 40, "socialScience": 20 },
+    "baseRecipe": {
+      "engineering": 10,
+      "physics": 20,
+      "mathematics": 50,
+      "computing": 40,
+      "socialScience": 20
+    },
     "recipeVariance": 0.25,
     "requiresSimultaneous": false,
     "unlocksCards": ["openSourceResearch"],
@@ -450,7 +485,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["orbitalLaboratory"],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 1,
     "requiredTechIds": ["orbitalMechanics"],
     "hqFieldBonus": {},
     "narrative": {
@@ -479,8 +514,8 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["lunarHabitat"],
     "signalDerived": false,
-    "tier": 3,
-    "requiredTechIds": ["cryogenicPropulsion", "geneticEngineering"],
+    "tier": 2,
+    "requiredTechIds": ["cryogenicPropulsion", "closedLoopLifeSupport"],
     "narrative": {
       "id": "narrative-tech-advancedLifeSupport",
       "title": "Discovery — Advanced Life Support",
@@ -507,7 +542,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["lunarProcessingPlant"],
     "signalDerived": false,
-    "tier": 3,
+    "tier": 1,
     "requiredTechIds": ["orbitalMechanics"],
     "narrative": {
       "id": "narrative-tech-inSituResourceUtilization",
@@ -535,8 +570,8 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["lunarObservatory"],
     "signalDerived": true,
-    "tier": 4,
-    "requiredTechIds": ["particlePhysicsDetectors"],
+    "tier": 3,
+    "requiredTechIds": ["particlePhysicsDetectors", "highTempSuperconductors"],
     "narrative": {
       "id": "narrative-tech-quantumSensing",
       "title": "Discovery — Quantum Sensing",
@@ -563,7 +598,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["deepSpaceRelay"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 2,
     "requiredTechIds": ["cryogenicPropulsion"],
     "narrative": {
       "id": "narrative-tech-nuclearThermalPropulsion",
@@ -591,7 +626,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["orbitalResearchStation", "advancedSolarArray", "lunarResearchBase"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 3,
     "requiredTechIds": ["reusableLaunchSystems", "internetProtocols"],
     "narrative": {
       "id": "narrative-tech-autonomousSpaceConstruction",
@@ -619,7 +654,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 2,
     "requiredTechIds": ["inSituResourceUtilization"],
     "narrative": {
       "id": "narrative-tech-lunarRegolithProcessing",
@@ -647,7 +682,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": [],
     "signalDerived": false,
-    "tier": 5,
+    "tier": 4,
     "requiredTechIds": ["nuclearThermalPropulsion", "autonomousSpaceConstruction"],
     "narrative": {
       "id": "narrative-tech-cislunarTransportNetwork",
@@ -666,7 +701,7 @@
   "advancedCoastalEngineering": {
     "id": "advancedCoastalEngineering",
     "name": "Advanced Coastal Engineering",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Composite sea barriers and tidal gate designs tested in the North Sea have held through conditions that would have overtopped conventional concrete seawalls.",
     "baseRecipe": { "engineering": 40, "mathematics": 25, "socialScience": 20 },
     "recipeVariance": 0.25,
@@ -676,7 +711,7 @@
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 3,
-    "requiredTechIds": ["fibreglassComposites"],
+    "requiredTechIds": ["fibreglassComposites", "lunarRegolithProcessing"],
     "hqFieldBonus": { "engineering": 1 },
     "narrative": {
       "id": "narrative-tech-advancedCoastalEngineering",
@@ -692,7 +727,7 @@
   "highTempSuperconductors": {
     "id": "highTempSuperconductors",
     "name": "High-Temperature Superconductors",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Ceramic superconductors operating above liquid-nitrogen temperature have been demonstrated in sustained magnet configurations — room-temperature superconductivity may follow within a generation.",
     "baseRecipe": { "physics": 60, "engineering": 40, "mathematics": 25 },
     "recipeVariance": 0.25,
@@ -701,7 +736,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["magneticConfinementLab"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 3,
     "requiredTechIds": ["particlePhysicsDetectors"],
     "hqFieldBonus": { "physics": 2 },
     "narrative": {
@@ -721,7 +756,7 @@
   "carbonCaptureTechnology": {
     "id": "carbonCaptureTechnology",
     "name": "Carbon Capture Technology",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Direct air capture pilot plants have demonstrated viable extraction rates — removing CO₂ from the atmosphere may be economically feasible within a decade.",
     "baseRecipe": { "biochemistry": 50, "engineering": 35, "socialScience": 25 },
     "recipeVariance": 0.25,
@@ -731,7 +766,7 @@
     "unlocksFacilities": ["carbonCaptureStation"],
     "signalDerived": false,
     "tier": 3,
-    "requiredTechIds": ["geneticEngineering", "fibreglassComposites"],
+    "requiredTechIds": ["geneticEngineering", "advancedLifeSupport"],
     "narrative": {
       "id": "narrative-tech-carbonCaptureTechnology",
       "title": "Discovery — Carbon Capture Technology",
@@ -749,7 +784,7 @@
   "largeLaguageModels": {
     "id": "largeLaguageModels",
     "name": "Large Language Models",
-    "era": "earth",
+    "era": "nearSpace",
     "rumourText": "Transformer architectures trained on the full corpus of human scientific literature are producing novel research hypotheses — the boundary between tool and collaborator is dissolving.",
     "baseRecipe": { "computing": 70, "mathematics": 40, "socialScience": 20 },
     "recipeVariance": 0.25,
@@ -758,7 +793,7 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["aiResearchCentre"],
     "signalDerived": false,
-    "tier": 4,
+    "tier": 1,
     "requiredTechIds": ["internetProtocols", "personalComputers"],
     "hqFieldBonus": { "computing": 3, "socialScience": 1 },
     "narrative": {
@@ -787,8 +822,8 @@
     "unlocksProjects": [],
     "unlocksFacilities": ["fusionReactor"],
     "signalDerived": false,
-    "tier": 5,
-    "requiredTechIds": ["highTempSuperconductors", "cryogenicPropulsion"],
+    "tier": 4,
+    "requiredTechIds": ["highTempSuperconductors", "nuclearThermalPropulsion"],
     "hqFieldBonus": { "physics": 2 },
     "narrative": {
       "id": "narrative-tech-nuclearFusion",
@@ -817,8 +852,15 @@
     "unlocksFacilities": [],
     "signalDerived": false,
     "tier": 5,
-    "requiredTechIds": ["largeLaguageModels"],
-    "hqFieldBonus": { "physics": 1, "mathematics": 1, "engineering": 1, "biochemistry": 1, "computing": 1, "socialScience": 1 },
+    "requiredTechIds": ["largeLaguageModels", "quantumSensing"],
+    "hqFieldBonus": {
+      "physics": 1,
+      "mathematics": 1,
+      "engineering": 1,
+      "biochemistry": 1,
+      "computing": 1,
+      "socialScience": 1
+    },
     "narrative": {
       "id": "narrative-tech-agenticAI",
       "title": "Discovery — Agentic AI Systems",

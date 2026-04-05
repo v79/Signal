@@ -86,9 +86,8 @@ test.describe('HUD resource tooltips', () => {
   test('WILL resource tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.tooltip-host:has(.res-label:text("WILL"))');
     const text = await assertTooltipInViewport(page, host);
-    expect(text).toBe(
-      'Political will. Volatile in democracies; stable but fragile in authoritarian blocs.',
-    );
+    expect(text).toContain('Political Will');
+    expect(text).toMatch(/Natural (drift|recovery)/);
   });
 });
 

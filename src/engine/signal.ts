@@ -44,7 +44,7 @@ export const DEEP_SPACE_ARRAY_DEF_IDS: ReadonlySet<string> = new Set([
  * Each active Deep Space Array facility adds ARRAY_BONUS progress/turn.
  * BASE_PROGRESS ensures the signal always advances, even without investment.
  */
-const BASE_PROGRESS = 0.25;
+const BASE_PROGRESS = 0.05;
 const FIELD_DIVISOR = 50;
 const ARRAY_BONUS = 3;
 

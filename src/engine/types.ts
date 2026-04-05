@@ -161,12 +161,19 @@ export interface NarrativeSlide {
   imageColour?: string;
 }
 
+export interface NarrativeUnlockItem {
+  type: 'card' | 'facility' | 'project';
+  name: string;
+}
+
 export interface NarrativeDef {
   id: string;
   title: string;
   slides: NarrativeSlide[];
   /** If true, a Skip button is shown so the player can dismiss immediately. */
   skippable?: boolean;
+  /** Items unlocked by this discovery — shown persistently across all slides. */
+  unlockItems?: NarrativeUnlockItem[];
 }
 
 // ---------------------------------------------------------------------------
@@ -795,8 +802,8 @@ export interface TileActionDef {
   buildTime: number;
   /** Tile types this action applies to (non-destroyed tiles). */
   appliesTo: TileType[];
-  /** If non-null, also applies to tiles of any type with this destroyed status. */
-  appliesToDestroyed: TileDestroyedStatus | null;
+  /** Destroyed statuses this action applies to. Empty array = does not apply to any destroyed tile. */
+  appliesToDestroyed: TileDestroyedStatus[];
   /** Tile type to transform this tile into on completion. Null = no type change. */
   transformsTo: TileType | null;
   /** If true, clears the tile's destroyedStatus on completion. */

@@ -148,9 +148,11 @@
   const applicableTileActions = $derived(
     [...tileActionDefs.values()].filter((ta) => {
       // Match by tile type OR by destroyed status
-      const matchesType = ta.appliesTo.includes(tile.type);
+      const matchesType = ta.appliesTo.includes(tile.type) && tile.destroyedStatus == null;
       const matchesDestroyed =
-        ta.appliesToDestroyed !== null && tile.destroyedStatus === ta.appliesToDestroyed;
+        ta.appliesToDestroyed.length > 0 &&
+        tile.destroyedStatus != null &&
+        ta.appliesToDestroyed.includes(tile.destroyedStatus);
       if (!matchesType && !matchesDestroyed) return false;
       // Skip sea wall if already protected
       if (ta.seaWallProtection && tile.seaWallProtected) return false;

@@ -403,7 +403,9 @@
       "mathematics": 2,
       "socialScience": 5
     },
-    "resourceOutput": {},
+    "resourceOutput": {
+      "politicalWill": 2
+    },
     "adjacencyBonuses": [
       {
         "neighborDefId": "publicUniversity",
@@ -632,6 +634,78 @@
     "adjacencyPenalties": [],
     "depletes": false,
     "requiredTechId": "satelliteCommunications"
+  },
+  "atmosphericMonitoringStation": {
+    "id": "atmosphericMonitoringStation",
+    "name": "Atmospheric Monitoring Station",
+    "description": "Ground-based sensor array measuring trace gas concentrations, isotopic ratios, and atmospheric dynamics. Highland or coastal siting maximises coverage and minimises interference. Provides steady Biochemistry output from ongoing environmental analysis.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "highland",
+      "coastal"
+    ],
+    "buildCost": {
+      "funding": 20,
+      "materials": 8
+    },
+    "upkeepCost": {
+      "funding": 2
+    },
+    "buildTime": 1,
+    "deleteTime": 1,
+    "canDelete": true,
+    "fieldOutput": {
+      "biochemistry": 2,
+      "physics": 1
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [
+      {
+        "neighborDefId": "researchLab",
+        "fieldBonus": {
+          "biochemistry": 1
+        }
+      }
+    ],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "atmosphericChemistry"
+  },
+  "observatory": {
+    "id": "observatory",
+    "name": "Observatory",
+    "description": "A ground-based optical and radio telescope complex. Strong Physics output from astronomical observation and data analysis, with a small Computing contribution from signal processing. Highland terrain only — requires clear skies and distance from light pollution.",
+    "era": "earth",
+    "allowedTileTypes": [
+      "highland"
+    ],
+    "buildCost": {
+      "funding": 35,
+      "materials": 15
+    },
+    "upkeepCost": {
+      "funding": 3
+    },
+    "buildTime": 2,
+    "deleteTime": 1,
+    "canDelete": true,
+    "fieldOutput": {
+      "physics": 4,
+      "computing": 1
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [
+      {
+        "neighborDefId": "researchLab",
+        "fieldBonus": {
+          "physics": 2,
+          "mathematics": 1
+        }
+      }
+    ],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": null
   },
   "magneticConfinementLab": {
     "id": "magneticConfinementLab",

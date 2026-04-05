@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NarrativeDef } from '../../engine/types';
+  import type { NarrativeDef, NarrativeUnlockItem } from '../../engine/types';
 
   let {
     narrative,
@@ -58,9 +58,25 @@
       </div>
     {/if}
 
-    <!-- Slide text -->
-    <div class="slide-body">
-      <p class="slide-text">{currentSlide.text}</p>
+    <!-- Content row: slide text + unlocks panel -->
+    <div class="content-row">
+      <div class="slide-body">
+        <p class="slide-text">{currentSlide.text}</p>
+      </div>
+
+      {#if narrative.unlockItems && narrative.unlockItems.length > 0}
+        <div class="unlocks-panel">
+          <div class="unlocks-label">UNLOCKS</div>
+          <ul class="unlocks-list">
+            {#each narrative.unlockItems as item}
+              <li class="unlock-item">
+                <span class="unlock-type unlock-type--{item.type}">{item.type}</span>
+                <span class="unlock-name">{item.name}</span>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
     </div>
 
     <!-- Footer: pagination + navigation -->
@@ -183,6 +199,14 @@
     color: rgba(255, 255, 255, 0.2);
   }
 
+  /* Content row */
+  .content-row {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    min-height: 0;
+  }
+
   /* Slide text */
   .slide-body {
     flex: 1;
@@ -199,6 +223,74 @@
     color: #a8c4d8;
     margin: 0;
     max-width: 68ch;
+  }
+
+  /* Unlocks panel */
+  .unlocks-panel {
+    width: 14rem;
+    flex-shrink: 0;
+    border-left: 1px solid #1e2530;
+    background: #080c12;
+    padding: 1.2rem 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .unlocks-label {
+    font-family: monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.25em;
+    color: #2a6090;
+    margin-bottom: 0.2rem;
+  }
+
+  .unlocks-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .unlock-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .unlock-type {
+    font-family: monospace;
+    font-size: 0.45rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.3rem;
+    border: 1px solid;
+    align-self: flex-start;
+  }
+
+  .unlock-type--card {
+    color: #4a9060;
+    border-color: #2a5040;
+  }
+
+  .unlock-type--facility {
+    color: #8a6040;
+    border-color: #5a4030;
+  }
+
+  .unlock-type--project {
+    color: #6070a8;
+    border-color: #404870;
+  }
+
+  .unlock-name {
+    font-family: monospace;
+    font-size: 0.6rem;
+    color: #8aacca;
+    line-height: 1.4;
   }
 
   /* Footer */

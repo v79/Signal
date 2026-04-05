@@ -393,6 +393,7 @@ export const gameStore = {
       { id: 'peerReview-1', defId: 'peerReview', zone: 'deck', bankedSinceTurn: null },
       { id: 'industrialContracts-1', defId: 'industrialContracts', zone: 'deck', bankedSinceTurn: null },
       { id: 'backChannelNegotiation-1', defId: 'backChannelNegotiation', zone: 'deck', bankedSinceTurn: null },
+      { id: 'contingencyRouting-1', defId: 'contingencyRouting', zone: 'deck', bankedSinceTurn: null },
       { id: 'executiveOverride-1', defId: 'executiveOverride', zone: 'deck', bankedSinceTurn: null },
     ];
 
@@ -1087,7 +1088,26 @@ export const gameStore = {
       );
       for (const tech of newlyDiscovered) {
         const def = TECH_DEFS.get(tech.defId);
-        if (def?.narrative) next = enqueueNarrative(next, def.narrative);
+        if (def?.narrative) {
+          const unlockItems: import('../../engine/types').NarrativeUnlockItem[] = [
+            ...def.unlocksCards.map((id) => ({
+              type: 'card' as const,
+              name: CARD_DEFS.get(id)?.name ?? id,
+            })),
+            ...def.unlocksFacilities.map((id) => ({
+              type: 'facility' as const,
+              name: FACILITY_DEFS.get(id)?.name ?? id,
+            })),
+            ...def.unlocksProjects.map((id) => ({
+              type: 'project' as const,
+              name: PROJECT_DEFS.get(id)?.name ?? id,
+            })),
+          ];
+          const enriched = unlockItems.length > 0
+            ? { ...def.narrative, unlockItems }
+            : def.narrative;
+          next = enqueueNarrative(next, enriched);
+        }
       }
 
       // 2. Signal decode stage narratives

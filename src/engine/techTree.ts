@@ -10,6 +10,6 @@ import type { TechDef } from './types';
  * Return the display tier for a technology.
  * Tier is now authoritative on TechDef itself (set in technologies.ts).
  */
-export function getTechTier(def: TechDef): 1 | 2 | 3 | 4 {
-  return def.tier as 1 | 2 | 3 | 4;
+export function getTechTier(def: TechDef): number {
+  return def.tier;
 }

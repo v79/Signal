@@ -5,12 +5,15 @@ import type {
   TechDiscoveryStage,
   FieldPoints,
   SignalEraStrength,
+  Era,
 } from './types';
 import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
 // Named constants
 // ---------------------------------------------------------------------------
+
+const ERA_ORDER: Record<Era, number> = { earth: 0, nearSpace: 1, deepSpace: 2 };
 
 // Minimum field points guaranteed to each applicable tech per field per turn
 export const MIN_POINTS_PER_TECH_PER_FIELD = 1;
@@ -145,9 +148,10 @@ export function distributeResearchPoints(
   techDefs: Map<string, TechDef>,
   fieldOutput: FieldPoints,
   rng: Rng,
+  currentEra: Era = 'earth',
 ): TechState[] {
-  // Applicable: rumour or progress, still needs at least one field.
-  // Progress techs are separated from rumour techs so they can be prioritised.
+  // Applicable: rumour or progress, still needs at least one field,
+  // and must belong to the current era or earlier (never a future era).
   function needsField(tech: TechState, field: keyof FieldPoints, pm: Map<string, TechRecipe>): boolean {
     const threshold = tech.recipe![field];
     if (!threshold) return false;
@@ -157,6 +161,8 @@ export function distributeResearchPoints(
   function isApplicable(tech: TechState): boolean {
     if (tech.stage !== 'rumour' && tech.stage !== 'progress') return false;
     if (!tech.recipe) return false;
+    const def = techDefs.get(tech.defId);
+    if (def?.era !== undefined && ERA_ORDER[def.era] > ERA_ORDER[currentEra]) return false;
     const entries = Object.entries(tech.recipe) as [keyof FieldPoints, number][];
     return entries.some(([f, t]) => (tech.fieldProgress[f] ?? 0) < t);
   }

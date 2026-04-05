@@ -29,6 +29,15 @@
 
   const ERA_ORDER: Era[] = ['earth', 'nearSpace', 'deepSpace'];
 
+  const LUNAR_FACILITY_IDS = new Set([
+    'lunarMine',
+    'lunarProcessingPlant',
+    'lunarHabitat',
+    'lunarResearchBase',
+    'lunarObservatory',
+    'lunarColonyHub',
+  ]);
+
   function tabUnlocked(tab: MapTabDef): boolean {
     if (!tab.requiredEra) return true;
     const state = gameStore.state;
@@ -37,6 +46,10 @@
     if (tab.requiredProject && state.player.completedProjectIds.includes(tab.requiredProject)) return true;
     return false;
   }
+
+  const hasLunarFacility = $derived(
+    gameStore.state?.player.facilities.some((f) => LUNAR_FACILITY_IDS.has(f.defId)) ?? false,
+  );
 
   let container = $state<HTMLDivElement | undefined>(undefined);
   let game: import('phaser').Game | null = null;
@@ -342,8 +355,8 @@
     >
       {#if gameStore.state}
         {@const filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
-        {@const total = 8}
-        COMMITTEE ({filled}/{total})
+        {@const total = (gameStore.state.era === 'earth' ? 7 : 8) + (hasLunarFacility ? 1 : 0)}
+        COMMITTEE (<span class:empty-committee={filled === 0}>{filled}</span>/{total})
       {:else}
         COMMITTEE
       {/if}
@@ -404,6 +417,7 @@
         gracePeriodEnds={gameStore.state.boardGracePeriodEnds ?? 4}
         turn={gameStore.state.turn}
         era={gameStore.state.era}
+        hasLunarFacility={hasLunarFacility}
         discoveredTechIds={gameStore.state.player.techs
           .filter((t) => t.stage === 'discovered')
           .map((t) => t.defId)}
@@ -546,6 +560,10 @@
   .tab.locked {
     cursor: not-allowed;
     opacity: 0.4;
+  }
+
+  .empty-committee {
+    color: #e05555;
   }
 
   .lock {

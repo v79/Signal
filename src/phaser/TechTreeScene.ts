@@ -34,6 +34,10 @@ export interface TechTreeSceneData {
   signal: SignalState;
   cardDefs: Map<string, CardDef>;
   facilityDefs: Map<string, FacilityDef>;
+  /** Called when the player clicks an interactive node (progress/discovered only). */
+  onNodeClick?: (defId: string) => void;
+  /** When true, rumoured nodes are also clickable. */
+  devMode?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +128,23 @@ const FS_SECONDARY = '11px';
 // Scene
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Roman numeral helper — used for tier column labels
+// ---------------------------------------------------------------------------
+
+function toRoman(n: number): string {
+  const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+  const syms = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
+  let result = '';
+  for (let i = 0; i < vals.length; i++) {
+    while (n >= vals[i]) {
+      result += syms[i];
+      n -= vals[i];
+    }
+  }
+  return result;
+}
+
 export class TechTreeScene extends Phaser.Scene {
   private sceneData: TechTreeSceneData | null = null;
 
@@ -138,8 +159,14 @@ export class TechTreeScene extends Phaser.Scene {
   private isDragging = false;
   private dragX = 0;
   private dragY = 0;
+  private pointerDownX = 0;
+  private pointerDownY = 0;
+  private readonly CLICK_THRESHOLD = 5;
   private currentZoom = 1;
   private worldH = 600; // updated each redraw
+
+  /** Hit rects for all nodes — keyed by defId, world coordinates. */
+  private hitRects = new Map<string, { x: number; y: number; w: number; h: number }>();
 
   constructor() {
     super({ key: 'TechTreeScene' });
@@ -193,20 +220,36 @@ export class TechTreeScene extends Phaser.Scene {
       this.isDragging = true;
       this.dragX = p.x;
       this.dragY = p.y;
+      this.pointerDownX = p.x;
+      this.pointerDownY = p.y;
       this.input.setDefaultCursor('grabbing');
     });
 
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-      if (!this.isDragging) return;
-      // Divide by zoom so a screen-pixel drag moves the correct world distance
-      cam.scrollX -= (p.x - this.dragX) / this.currentZoom;
-      cam.scrollY -= (p.y - this.dragY) / this.currentZoom;
-      this.dragX = p.x;
-      this.dragY = p.y;
+      if (this.isDragging) {
+        // Divide by zoom so a screen-pixel drag moves the correct world distance
+        cam.scrollX -= (p.x - this.dragX) / this.currentZoom;
+        cam.scrollY -= (p.y - this.dragY) / this.currentZoom;
+        this.dragX = p.x;
+        this.dragY = p.y;
+      } else {
+        // Hover cursor: pointer when over an interactive node, grab otherwise
+        const hit = this.hitTestNode(p.worldX, p.worldY);
+        this.input.setDefaultCursor(hit ? 'pointer' : 'grab');
+      }
     });
 
-    this.input.on('pointerup', () => {
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      const wasDrag =
+        Math.abs(p.x - this.pointerDownX) > this.CLICK_THRESHOLD ||
+        Math.abs(p.y - this.pointerDownY) > this.CLICK_THRESHOLD;
       this.isDragging = false;
+
+      if (!wasDrag) {
+        const hit = this.hitTestNode(p.worldX, p.worldY);
+        if (hit) this.sceneData?.onNodeClick?.(hit);
+      }
+
       this.input.setDefaultCursor('grab');
     });
 
@@ -224,6 +267,40 @@ export class TechTreeScene extends Phaser.Scene {
     );
 
     this.input.setDefaultCursor('grab');
+  }
+
+  /**
+   * Returns the defId of an interactive node (progress/discovered) at the given
+   * world-space coordinates, or null if none.
+   */
+  private hitTestNode(worldX: number, worldY: number): string | null {
+    if (!this.sceneData) return null;
+    for (const [defId, rect] of this.hitRects) {
+      if (
+        worldX >= rect.x &&
+        worldX <= rect.x + rect.w &&
+        worldY >= rect.y &&
+        worldY <= rect.y + rect.h
+      ) {
+        // Only fire for progress/discovered stages (and rumour in dev mode)
+        const tech = this.sceneData.techs.find((t) => t.defId === defId);
+        const def = this.sceneData.techDefs.get(defId);
+        if (!tech || !def) continue;
+        const signalHidden =
+          !this.sceneData.devMode &&
+          def.signalDerived &&
+          this.sceneData.signal.eraStrength === 'faint';
+        const effectiveStage = signalHidden ? 'signal-hidden' : tech.stage;
+        if (
+          effectiveStage === 'progress' ||
+          effectiveStage === 'discovered' ||
+          (this.sceneData.devMode && effectiveStage === 'rumour')
+        ) {
+          return defId;
+        }
+      }
+    }
+    return null;
   }
 
   private adjustZoom(dir: 1 | -1): void {
@@ -245,6 +322,7 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.clear();
     this.uiGfx.clear();
     this.clearAllTexts();
+    this.hitRects.clear();
 
     // Group techs by tier (preserving TECH_DEFS insertion order within tier)
     const tierGroups = new Map<number, TechState[]>();
@@ -255,8 +333,8 @@ export class TechTreeScene extends Phaser.Scene {
       if (!tierGroups.has(tier)) tierGroups.set(tier, []);
       tierGroups.get(tier)!.push(tech);
     }
-    const maxTier = tierGroups.size > 0 ? Math.max(...tierGroups.keys()) : 4;
-    const numTiers = Math.max(maxTier, 4);
+    const maxTier = tierGroups.size > 0 ? Math.max(...tierGroups.keys()) : 1;
+    const numTiers = maxTier;
 
     // Compute world height from the tier with the most nodes
     const maxNodes = Math.max(...[...tierGroups.values()].map((g) => g.length), 1);
@@ -270,10 +348,9 @@ export class TechTreeScene extends Phaser.Scene {
     const colCX: number[] = [];
     for (let i = 0; i < numTiers; i++) colCX.push((W / numTiers) * i + W / numTiers / 2);
 
-    this.drawBackground(W, this.worldH);
+    this.drawBackground(W, this.worldH, numTiers);
 
     // Tier column header labels (world layer — they scroll with content)
-    const TIER_LABEL_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     for (let i = 0; i < numTiers; i++) {
       this.worldGfx.lineStyle(1, C_HEADER_LINE, 0.6);
       this.worldGfx.lineBetween(
@@ -283,7 +360,7 @@ export class TechTreeScene extends Phaser.Scene {
         TOP_MARGIN - 6,
       );
 
-      this.addWorldText(colCX[i], 14, `TIER  ${TIER_LABEL_NAMES[i] ?? i + 1}`, {
+      this.addWorldText(colCX[i], 14, `TIER  ${toRoman(i + 1)}`, {
         fontFamily: 'monospace',
         fontSize: FS_TIER_HEADER,
         color: '#4a8092',
@@ -407,7 +484,7 @@ export class TechTreeScene extends Phaser.Scene {
   // Background: dot grid + column dividers (world layer)
   // -------------------------------------------------------------------------
 
-  private drawBackground(W: number, worldH: number): void {
+  private drawBackground(W: number, worldH: number, numTiers: number): void {
     // Base fill covers the full world
     this.worldGfx.fillStyle(C_BG_FILL, 1);
     this.worldGfx.fillRect(0, 0, W, worldH);
@@ -421,9 +498,9 @@ export class TechTreeScene extends Phaser.Scene {
     }
 
     // Vertical column dividers between tier columns
-    const colW = W / 4;
+    const colW = W / numTiers;
     this.worldGfx.lineStyle(1, C_COL_DIVIDER, 1);
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < numTiers; i++) {
       this.worldGfx.lineBetween(colW * i, TOP_MARGIN - 10, colW * i, worldH);
     }
   }
@@ -435,6 +512,9 @@ export class TechTreeScene extends Phaser.Scene {
   private drawNode(tech: TechState, d: TechTreeSceneData, x: number, y: number): void {
     const def = d.techDefs.get(tech.defId);
     if (!def) return;
+
+    // Register hit rect for all nodes (click handler filters by stage)
+    this.hitRects.set(tech.defId, { x, y, w: NODE_W, h: NODE_H });
 
     const signalHidden = def.signalDerived && d.signal.eraStrength === 'faint';
     const effectiveStage: TechDiscoveryStage | 'signal-hidden' = signalHidden

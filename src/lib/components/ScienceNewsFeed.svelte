@@ -10,7 +10,7 @@
     [...items]
       .filter((i) => SCIENCE_CATEGORIES.has(i.category ?? ''))
       .reverse()
-      .slice(0, 5),
+      .slice(0, 3),
   );
 </script>
 
