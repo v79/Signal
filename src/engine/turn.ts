@@ -572,11 +572,23 @@ export function executeWorldPhase(
   const newWill = tickWill(player.will, willConfig);
 
   // 10. Mine depletion (applied to post-queue facilities)
-  const { facilities: newFacilities, tiles: tilesAfterDepletion } = tickMineDepletion(
+  const {
+    facilities: newFacilities,
+    tiles: tilesAfterDepletion,
+    updatedSpaceNodes: spaceNodesAfterDepletion,
+    exhaustionMessages,
+  } = tickMineDepletion(
     facilitiesAfterQueue,
     facilityDefs,
     tilesAfterQueue,
+    spaceNodesAfterQueue,
+    state.launchAllocation,
   );
+  const exhaustionNews: NewsItem[] = exhaustionMessages.map((text, i) => ({
+    id: `mine-exhausted-${nextTurn}-${i}`,
+    turn: nextTurn,
+    text,
+  }));
 
   // 11. Climate pressure — baseline + net facility impact
   const facilityClimateImpact = newFacilities.reduce((sum, inst) => {
@@ -766,7 +778,7 @@ export function executeWorldPhase(
     activeEvents: eventsAfterWorld,
     launchCapacity: newLaunchCapacity,
     launchAllocation: state.launchAllocation,
-    map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterQueue },
+    map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterDepletion },
     boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
     orbitalStationAuthorised: state.orbitalStationAuthorised,
     orbitalStationDeferCount: state.orbitalStationDeferCount,
@@ -796,6 +808,7 @@ export function executeWorldPhase(
         ...retirementNews,
         ...projectNews,
         ...eraTransitionNews,
+        ...exhaustionNews,
         ...degradationNews,
         ...blocNews,
         ...mergerNews,

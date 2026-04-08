@@ -23,6 +23,7 @@ This is a list of future requirements for the game but they are not to be implem
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Signal should not be decoded before era 3
+  - Move the wormhole response panel into a dedicated tab, then later replace the panel with the signal minigames.
 - **Political Will:**
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)

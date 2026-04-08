@@ -441,33 +441,80 @@ export function computeClimateBreakdown(
  */
 export const MINE_DEPLETION_RATE = 0.02;
 
+export interface MineDepletionResult {
+  facilities: FacilityInstance[];
+  tiles: MapTile[];
+  updatedSpaceNodes: SpaceNode[];
+  /** News texts for exhausted space facilities (to be turned into NewsItems by the caller). */
+  exhaustionMessages: string[];
+}
+
 /**
  * Advance depletion for all depleting facilities.
- * Also decrements `mineDepletion` on the tile so the seam level persists
- * independently of whether a mine is currently built there.
- * Returns updated facilities and tiles — does not mutate inputs.
+ * - Earth mines: decrements `facility.condition` and `tile.mineDepletion`.
+ * - Space mines: decrements `facility.condition` only (no tile seam tracking).
+ *   Unsupplied space facilities do not deplete. When a space mine reaches
+ *   condition 0 it is removed and the node is cleared.
+ * Returns updated arrays — does not mutate inputs.
  */
 export function tickMineDepletion(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
   tiles: MapTile[],
-): { facilities: FacilityInstance[]; tiles: MapTile[] } {
-  const depletingKeys = new Set<string>();
+  spaceNodes: SpaceNode[] = [],
+  launchAllocation: Record<string, boolean> = {},
+): MineDepletionResult {
+  const earthDepletingKeys = new Set<string>();
+  const exhaustedSpaceNodeIds = new Set<string>();
+  const exhaustionMessages: string[] = [];
 
-  const updatedFacilities = facilities.map((facility) => {
-    const def = facilityDefs.get(facility.defId);
-    if (!def?.depletes) return facility;
-    depletingKeys.add(facility.locationKey);
-    return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
-  });
+  const updatedFacilities = facilities
+    .map((facility) => {
+      const def = facilityDefs.get(facility.defId);
+      if (!def?.depletes) return facility;
+
+      // Is this a space facility?
+      const isSpaceFacility = spaceNodes.some((n) => n.id === facility.locationKey);
+      if (isSpaceFacility) {
+        // Don't deplete unsupplied space facilities
+        if (launchAllocation[facility.locationKey] === false) return facility;
+        const newCondition = Math.max(0, facility.condition - MINE_DEPLETION_RATE);
+        return { ...facility, condition: newCondition };
+      }
+
+      // Earth facility
+      earthDepletingKeys.add(facility.locationKey);
+      return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
+    })
+    .filter((facility) => {
+      const def = facilityDefs.get(facility.defId);
+      if (!def?.depletes) return true;
+      const isSpaceFacility = spaceNodes.some((n) => n.id === facility.locationKey);
+      if (isSpaceFacility && facility.condition <= 0) {
+        exhaustedSpaceNodeIds.add(facility.locationKey);
+        const node = spaceNodes.find((n) => n.id === facility.locationKey);
+        exhaustionMessages.push(
+          `${def.name} at ${node?.label ?? facility.locationKey} has been exhausted and removed.`,
+        );
+        return false;
+      }
+      return true;
+    });
 
   const updatedTiles = tiles.map((tile) => {
     const key = `${tile.coord.q},${tile.coord.r}`;
-    if (!depletingKeys.has(key)) return tile;
+    if (!earthDepletingKeys.has(key)) return tile;
     return { ...tile, mineDepletion: Math.max(0, tile.mineDepletion - MINE_DEPLETION_RATE) };
   });
 
-  return { facilities: updatedFacilities, tiles: updatedTiles };
+  const updatedSpaceNodes =
+    exhaustedSpaceNodeIds.size > 0
+      ? spaceNodes.map((n) =>
+          exhaustedSpaceNodeIds.has(n.id) ? { ...n, facilityId: null } : n,
+        )
+      : spaceNodes;
+
+  return { facilities: updatedFacilities, tiles: updatedTiles, updatedSpaceNodes, exhaustionMessages };
 }
 
 // ---------------------------------------------------------------------------

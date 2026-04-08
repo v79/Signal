@@ -68,7 +68,6 @@ export class SpaceScene extends Phaser.Scene {
   private callbacks: SpaceSceneCallbacks | null = null;
   private gfx!: Phaser.GameObjects.Graphics;
   private labelGroup!: Phaser.GameObjects.Group;
-  private hitZones: Phaser.GameObjects.Arc[] = [];
   private scaleX = 1;
   private scaleY = 1;
 
@@ -91,6 +90,13 @@ export class SpaceScene extends Phaser.Scene {
 
     this.drawStars(w, h);
     this.drawEarth(w, h);
+
+    // Scene-level click handler — resolved via hit-test, not per-object listeners.
+    this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      if (!ptr.leftButtonDown()) return;
+      const nodeId = this.hitTestNode(ptr.x, ptr.y);
+      if (nodeId) this.callbacks?.onNodeClick(nodeId);
+    });
 
     this.game.events.emit('spaceSceneReady');
   }
@@ -153,6 +159,21 @@ export class SpaceScene extends Phaser.Scene {
   // Main render loop
   // ---------------------------------------------------------------------------
 
+  /**
+   * Returns the ID of the node whose hit area contains (px, py), or null.
+   * Hit radius is NODE_RADIUS + 8px (scaled), matching the old hit zone size.
+   */
+  private hitTestNode(px: number, py: number): string | null {
+    const s = Math.min(this.scaleX, this.scaleY);
+    const hitR = (NODE_RADIUS + 8) * s;
+    for (const [id, pos] of Object.entries(NODE_POSITIONS)) {
+      const cx = pos.x * this.scaleX;
+      const cy = pos.y * this.scaleY;
+      if (Math.hypot(px - cx, py - cy) <= hitR) return id;
+    }
+    return null;
+  }
+
   private renderScene(): void {
     const nodes = this.callbacks!.getNodes();
     const selectedId = this.callbacks!.getSelectedNode();
@@ -160,8 +181,6 @@ export class SpaceScene extends Phaser.Scene {
     const launchAllocation = this.callbacks!.getLaunchAllocation();
 
     this.gfx.clear();
-    this.hitZones.forEach((z) => z.destroy());
-    this.hitZones = [];
     this.labelGroup.clear(true, true);
 
     // Connection lines
@@ -223,16 +242,6 @@ export class SpaceScene extends Phaser.Scene {
         })
         .setOrigin(0.5, 1);
       this.labelGroup.add(nameLabel);
-
-      // Hit zone
-      const hit = this.add.circle(cx, cy, r + 8, 0xffffff, 0);
-      hit.setInteractive({ cursor: 'pointer' });
-      hit.on('pointerup', () => this.callbacks?.onNodeClick(node.id));
-      hit.on('pointerover', () => {
-        this.gfx.lineStyle(1.5, 0x6aaad8, 0.8);
-        this.gfx.strokeCircle(cx, cy, r + 3);
-      });
-      this.hitZones.push(hit);
     }
   }
 

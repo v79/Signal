@@ -1427,6 +1427,82 @@ export const gameStore = {
     });
   },
 
+  /**
+   * Build the first facility on an empty space node.
+   * Validates: node exists and is vacant, no construction in progress, tech unlocked,
+   * resources sufficient, supply cost fits within remaining launch capacity, action cap not exceeded.
+   */
+  buildSpaceFacility(nodeId: string, defId: string): void {
+    if (!_state) return;
+    const def = FACILITY_DEFS.get(defId);
+    if (!def) return;
+
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    const node = _state.map.spaceNodes.find((n) => n.id === nodeId);
+    if (!node) return;
+
+    // Node must be vacant
+    if (node.facilityId !== null) return;
+
+    // No construction already queued for this node
+    if (_state.player.constructionQueue.some((a) => a.spaceNodeId === nodeId)) return;
+
+    // Tech gate
+    if (def.requiredTechId != null) {
+      const discovered = _state.player.techs.some(
+        (t) => t.defId === def.requiredTechId && t.stage === 'discovered',
+      );
+      if (!discovered) return;
+    }
+
+    // Affordability
+    const cost = def.buildCost;
+    if ((cost.funding ?? 0) > _state.player.resources.funding) return;
+    if ((cost.materials ?? 0) > _state.player.resources.materials) return;
+    if ((cost.politicalWill ?? 0) > _state.player.resources.politicalWill) return;
+
+    // Supply capacity
+    const supplyCost = def.supplyCost ?? 0;
+    if (supplyCost > computeRemainingCapacity(_state)) return;
+
+    const newResources = {
+      funding: _state.player.resources.funding - (cost.funding ?? 0),
+      materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
+      politicalWill: Math.max(0, _state.player.resources.politicalWill - (cost.politicalWill ?? 0)),
+    };
+
+    const actionId = `space-build-${defId}-${nodeId}-t${_state.turn}`;
+    const action: OngoingAction = {
+      id: actionId,
+      type: 'construct',
+      facilityDefId: defId,
+      coordKey: '',
+      turnsRemaining: def.buildTime,
+      totalTurns: def.buildTime,
+      slotIndex: 0,
+      spaceNodeId: nodeId,
+    };
+
+    const newsItem: import('../../engine/types').NewsItem = {
+      id: `space-build-news-${nodeId}-${_state.turn}`,
+      turn: _state.turn,
+      text: `Construction begun: ${def.name} at ${node.label}.`,
+    };
+
+    mutateState({
+      ..._state,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      player: {
+        ..._state.player,
+        resources: newResources,
+        constructionQueue: [..._state.player.constructionQueue, action],
+        newsFeed: [..._state.player.newsFeed, newsItem],
+      },
+    });
+  },
+
   /** Derived: remaining launch capacity after current allocation. */
   get remainingLaunchCapacity(): number {
     if (!_state) return 0;

@@ -836,6 +836,7 @@
     "description": "Low-gravity research environment in LEO. Physics and Engineering output from microgravity experimentation.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lowEarthOrbit"],
     "buildCost": {
       "funding": 60,
       "materials": 40
@@ -864,6 +865,7 @@
     "description": "Expanded orbital research station. Enhanced Physics, Engineering and Mathematics output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lowEarthOrbit"],
     "buildCost": {
       "funding": 40,
       "materials": 30
@@ -894,6 +896,7 @@
     "description": "Full-scale orbital research complex. Exceptional cross-field output from long-duration microgravity experiments.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lowEarthOrbit"],
     "buildCost": {
       "funding": 60,
       "materials": 40
@@ -925,6 +928,7 @@
     "description": "Photovoltaic arrays in LEO capture unfiltered sunlight. Strong Funding income and Physics research output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lowEarthOrbit", "lagrangePoint"],
     "buildCost": {
       "funding": 50,
       "materials": 35
@@ -953,6 +957,7 @@
     "description": "Multi-junction photovoltaic arrays in LEO. Exceptional Funding income per unit of supply.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lowEarthOrbit", "lagrangePoint"],
     "buildCost": {
       "funding": 35,
       "materials": 25
@@ -982,6 +987,7 @@
     "description": "Harvests regolith and subsurface ice. Materials yield, but finite deposits.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lunarSurface"],
     "buildCost": {
       "funding": 30,
       "materials": 50
@@ -1011,6 +1017,7 @@
     "description": "In-situ resource utilization plant extracting oxygen and metals from regolith. Non-depleting Materials output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lunarSurface"],
     "buildCost": {
       "funding": 40,
       "materials": 30
@@ -1041,6 +1048,7 @@
     "description": "Pressurised surface habitat for long-duration lunar residency. Biochemistry and Social Science research from crew health and behavioural studies.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lunarSurface"],
     "buildCost": {
       "funding": 80,
       "materials": 60
@@ -1069,6 +1077,7 @@
     "description": "Expanded lunar research complex. Enhanced cross-field output from long-duration surface research programmes.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lunarSurface"],
     "buildCost": {
       "funding": 50,
       "materials": 40
@@ -1099,6 +1108,7 @@
     "description": "Signal relay and observation platform at L2. Strong Signal decode progress and Physics/Computing output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lagrangePoint"],
     "buildCost": {
       "funding": 70,
       "materials": 40
@@ -1126,6 +1136,7 @@
     "description": "Quantum-sensing observatory at L2. Exceptional Signal decode progress and Physics/Computing research.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lagrangePoint"],
     "buildCost": {
       "funding": 60,
       "materials": 40
@@ -1181,6 +1192,7 @@
     "description": "The beating heart of a self-sustaining lunar settlement. Central logistics, governance, and research coordination for the colony. ISRU makes it effectively self-supporting.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lunarSurface"],
     "buildCost": { "funding": 70, "materials": 50 },
     "upkeepCost": { "funding": 10, "materials": 5 },
     "buildTime": 4,
@@ -1201,6 +1213,7 @@
     "description": "A massive photovoltaic array in high orbit, transmitting power to Earth via microwave. Effectively self-sustaining — no launch overhead required.",
     "era": "nearSpace",
     "allowedTileTypes": [],
+    "allowedNodeTypes": ["lowEarthOrbit", "lagrangePoint"],
     "buildCost": { "funding": 50, "materials": 35 },
     "upkeepCost": { "funding": 4 },
     "buildTime": 3,
