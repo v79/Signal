@@ -129,7 +129,7 @@ describe('checkTerraformingVictory', () => {
     expect(checkTerraformingVictory(s)).toBe(false);
   });
 
-  it('true in nearSpace era with lunarSurface facility', () => {
+  it('true in nearSpace era with lunarColonyHub on lunarSurface', () => {
     const s = makeState({
       era: 'nearSpace',
       map: {
@@ -140,7 +140,7 @@ describe('checkTerraformingVictory', () => {
             type: 'lunarSurface',
             label: 'Lunar Surface',
             launchCost: 45,
-            facilityId: 'outpost-1',
+            facilityId: 'lunarColonyHub',
           },
         ],
       },
@@ -148,7 +148,7 @@ describe('checkTerraformingVictory', () => {
     expect(checkTerraformingVictory(s)).toBe(true);
   });
 
-  it('true in deepSpace era with lunarSurface facility', () => {
+  it('true in deepSpace era with lunarColonyHub on lunarSurface', () => {
     const s = makeState({
       era: 'deepSpace',
       map: {
@@ -159,12 +159,31 @@ describe('checkTerraformingVictory', () => {
             type: 'lunarSurface',
             label: 'Lunar Surface',
             launchCost: 45,
-            facilityId: 'outpost-1',
+            facilityId: 'lunarColonyHub',
           },
         ],
       },
     });
     expect(checkTerraformingVictory(s)).toBe(true);
+  });
+
+  it('false with a lesser lunar facility (not lunarColonyHub)', () => {
+    const s = makeState({
+      era: 'nearSpace',
+      map: {
+        ...makeState().map,
+        spaceNodes: [
+          {
+            id: 'lunarSurface',
+            type: 'lunarSurface',
+            label: 'Lunar Surface',
+            launchCost: 45,
+            facilityId: 'lunarHabitat',
+          },
+        ],
+      },
+    });
+    expect(checkTerraformingVictory(s)).toBe(false);
   });
 });
 

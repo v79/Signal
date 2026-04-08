@@ -72,6 +72,9 @@ This is a list of future requirements for the game but they are not to be implem
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc
+- **Game management**
+  - Continue game after winning
+  - DEV mode: start in a different Era (era unlocked, technologies for previous eras unlocked, but no facilities built)
 
 ## BUGS:
 

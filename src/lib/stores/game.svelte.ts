@@ -303,11 +303,11 @@ function resetSelections(): void {
 }
 
 function computeRemainingCapacity(state: GameState): number {
-  const allocated = state.map.spaceNodes
+  // Built and supplied facilities
+  const builtAllocated = state.map.spaceNodes
     .filter((n) => {
       if (!n.facilityId) return false;
       if (state.launchAllocation[n.id] === false) return false;
-      // ISRU: lunar surface nodes don't consume launch capacity
       if (state.isruOperational && n.type === 'lunarSurface') return false;
       return true;
     })
@@ -315,7 +315,18 @@ function computeRemainingCapacity(state: GameState): number {
       const def = FACILITY_DEFS.get(n.facilityId!);
       return sum + (def?.supplyCost ?? 0);
     }, 0);
-  return state.launchCapacity - allocated;
+
+  // Facilities queued for construction on space nodes (facilityId not set yet)
+  const queuedAllocated = state.player.constructionQueue
+    .filter((a) => a.spaceNodeId != null)
+    .reduce((sum, a) => {
+      const node = state.map.spaceNodes.find((n) => n.id === a.spaceNodeId);
+      if (node && state.isruOperational && node.type === 'lunarSurface') return sum;
+      const def = FACILITY_DEFS.get(a.facilityDefId);
+      return sum + (def?.supplyCost ?? 0);
+    }, 0);
+
+  return state.launchCapacity - builtAllocated - queuedAllocated;
 }
 
 export const gameStore = {
