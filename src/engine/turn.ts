@@ -278,12 +278,37 @@ export function executeWorldPhase(
     updatedFacilities: facilitiesAfterQueue,
     updatedTiles: tilesAfterQueue,
     updatedSpaceNodes: spaceNodesAfterQueue,
+    completedActions,
     climateDelta: tileActionClimateDelta,
   } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs, map.spaceNodes, tileActionDefs);
 
   // 0b. Recompute launch capacity from built facilities + tech bonuses.
   //     Done before output tick so unsupplied space facilities are correctly skipped.
   const newLaunchCapacity = recomputeLaunchCapacity(facilitiesAfterQueue, player.techs);
+
+  // 0c. Auto-unsupply any space facilities that completed this tick but would exceed capacity.
+  //     Supply defaults to ON (launchAllocation[id] !== false), so we must explicitly set
+  //     to false when there isn't enough headroom.
+  const launchAllocationAfterQueue = { ...state.launchAllocation };
+  {
+    let allocated = spaceNodesAfterQueue
+      .filter((n) => n.facilityId && launchAllocationAfterQueue[n.id] !== false)
+      .reduce((sum, n) => sum + (facilityDefs.get(n.facilityId!)?.supplyCost ?? 0), 0);
+
+    for (const action of completedActions) {
+      if (!action.spaceNodeId) continue;
+      const def = facilityDefs.get(action.facilityDefId);
+      const supplyCost = def?.supplyCost ?? 0;
+      if (supplyCost === 0) continue;
+      // This node was just set to facilityId in spaceNodesAfterQueue.
+      // It defaults to supplied — check if that exceeds capacity.
+      if (allocated > newLaunchCapacity) {
+        launchAllocationAfterQueue[action.spaceNodeId] = false;
+      } else {
+        allocated += supplyCost;
+      }
+    }
+  }
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -777,7 +802,7 @@ export function executeWorldPhase(
     signal: newSignal,
     activeEvents: eventsAfterWorld,
     launchCapacity: newLaunchCapacity,
-    launchAllocation: state.launchAllocation,
+    launchAllocation: launchAllocationAfterQueue,
     map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterDepletion },
     boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
     orbitalStationAuthorised: state.orbitalStationAuthorised,

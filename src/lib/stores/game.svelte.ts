@@ -303,8 +303,7 @@ function resetSelections(): void {
 }
 
 function computeRemainingCapacity(state: GameState): number {
-  // Built and supplied facilities
-  const builtAllocated = state.map.spaceNodes
+  const allocated = state.map.spaceNodes
     .filter((n) => {
       if (!n.facilityId) return false;
       if (state.launchAllocation[n.id] === false) return false;
@@ -315,18 +314,7 @@ function computeRemainingCapacity(state: GameState): number {
       const def = FACILITY_DEFS.get(n.facilityId!);
       return sum + (def?.supplyCost ?? 0);
     }, 0);
-
-  // Facilities queued for construction on space nodes (facilityId not set yet)
-  const queuedAllocated = state.player.constructionQueue
-    .filter((a) => a.spaceNodeId != null)
-    .reduce((sum, a) => {
-      const node = state.map.spaceNodes.find((n) => n.id === a.spaceNodeId);
-      if (node && state.isruOperational && node.type === 'lunarSurface') return sum;
-      const def = FACILITY_DEFS.get(a.facilityDefId);
-      return sum + (def?.supplyCost ?? 0);
-    }, 0);
-
-  return state.launchCapacity - builtAllocated - queuedAllocated;
+  return state.launchCapacity - allocated;
 }
 
 export const gameStore = {
@@ -1473,10 +1461,6 @@ export const gameStore = {
     if ((cost.funding ?? 0) > _state.player.resources.funding) return;
     if ((cost.materials ?? 0) > _state.player.resources.materials) return;
     if ((cost.politicalWill ?? 0) > _state.player.resources.politicalWill) return;
-
-    // Supply capacity
-    const supplyCost = def.supplyCost ?? 0;
-    if (supplyCost > computeRemainingCapacity(_state)) return;
 
     const newResources = {
       funding: _state.player.resources.funding - (cost.funding ?? 0),
