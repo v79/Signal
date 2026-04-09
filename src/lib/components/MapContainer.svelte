@@ -286,6 +286,7 @@
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
         getCompletedProjects: () => gameStore.state?.player.completedProjectIds ?? [],
         getLaunchAllocation: () => gameStore.state?.launchAllocation ?? {},
+        getConstructionQueue: () => gameStore.state?.player.constructionQueue ?? [],
         onNodeClick: (id: string) => {
           gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
         },

@@ -60,17 +60,25 @@ export function generateTechRecipes(techDefs: TechDef[], rng: Rng): Map<string, 
  * Initialise TechState for all tech defs at game start.
  * Generates recipes immediately (stored internally; UI visibility is
  * controlled by stage) and sets all techs to 'unknown'.
+ *
+ * @param preDiscoverEra - If provided, all techs belonging to this era are
+ *   immediately set to 'discovered' (discoveredTurn: 0). Used for dev starts
+ *   that skip earlier eras.
  */
-export function initialiseTechs(techDefs: TechDef[], rng: Rng): TechState[] {
+export function initialiseTechs(techDefs: TechDef[], rng: Rng, preDiscoverEra?: Era): TechState[] {
   const recipes = generateTechRecipes(techDefs, rng);
-  return techDefs.map((def) => ({
-    defId: def.id,
-    stage: 'unknown' as TechDiscoveryStage,
-    recipe: recipes.get(def.id) ?? null,
-    fieldProgress: {},
-    unlockedByBreakthrough: false,
-    discoveredTurn: null,
-  }));
+  return techDefs.map((def) => {
+    const techEra: Era = def.era ?? 'earth';
+    const preDiscover = preDiscoverEra !== undefined && techEra === preDiscoverEra;
+    return {
+      defId: def.id,
+      stage: (preDiscover ? 'discovered' : 'unknown') as TechDiscoveryStage,
+      recipe: recipes.get(def.id) ?? null,
+      fieldProgress: {},
+      unlockedByBreakthrough: false,
+      discoveredTurn: preDiscover ? 0 : null,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------

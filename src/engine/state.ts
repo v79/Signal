@@ -31,6 +31,10 @@ export interface GameConfig {
   startingResources: Resources;
   /** Starting field point biases — fields not listed start at 0. */
   startingFields?: Partial<FieldPoints>;
+  /** Dev: override starting era (defaults to 'earth'). */
+  startEra?: Era;
+  /** Dev: override starting turn number (defaults to 1). */
+  startTurn?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,9 +104,9 @@ function createSignalState(): SignalState {
 export function createGameState(config: GameConfig): GameState {
   return {
     seed: config.seed,
-    turn: 1,
+    turn: config.startTurn ?? 1,
     year: config.startYear,
-    era: 'earth' as Era,
+    era: (config.startEra ?? 'earth') as Era,
     phase: 'event' as TurnPhase,
     pushFactor: config.pushFactor,
     player: createPlayerState(config),

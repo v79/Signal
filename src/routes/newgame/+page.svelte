@@ -1,7 +1,7 @@
 <script lang="ts">
   import { gameStore } from '$lib/stores/game.svelte';
   import { BLOC_DEFS } from '../../data/loader';
-  import type { PushFactor } from '../../engine/types';
+  import type { PushFactor, Era } from '../../engine/types';
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
   import { NARRATIVE_OPENING } from '../../data/loader';
 
@@ -61,11 +61,23 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Dev: starting era
+  // ---------------------------------------------------------------------------
+
+  let startEra = $state<Era>('earth');
+
+  const ERA_LABELS: Record<Era, string> = {
+    earth: 'ERA 1 — EARTH (1970)',
+    nearSpace: 'ERA 2 — NEAR SPACE (2030)',
+    deepSpace: 'ERA 3 — DEEP SPACE (2060)',
+  };
+
+  // ---------------------------------------------------------------------------
   // Begin mission
   // ---------------------------------------------------------------------------
 
   function beginMission(): void {
-    gameStore.startNewGame(seed.trim() || generateSeed(), selectedBlocKey, pushFactor);
+    gameStore.startNewGame(seed.trim() || generateSeed(), selectedBlocKey, pushFactor, startEra);
   }
 </script>
 
@@ -174,6 +186,23 @@
       </div>
     </section>
 
+    <!-- Dev: era selector -->
+    <section class="section dev-section">
+      <div class="section-label dev-label">ERA (DEV)</div>
+      <div class="era-row">
+        {#each (['earth', 'nearSpace', 'deepSpace'] as Era[]) as era}
+          <button
+            class="era-btn"
+            class:active={startEra === era}
+            onclick={() => { startEra = era; }}
+          >
+            {ERA_LABELS[era]}
+          </button>
+        {/each}
+      </div>
+      <p class="dev-hint">Dev only — skips to the selected era with prior techs pre-discovered.</p>
+    </section>
+
     <!-- Begin -->
     <div class="begin-row">
       <button class="btn-begin" onclick={beginMission}> BEGIN MISSION &rsaquo; </button>
@@ -192,10 +221,11 @@
   .newgame-layout {
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     padding: 2rem;
     box-sizing: border-box;
+    overflow-y: auto;
     background:
       radial-gradient(ellipse at 15% 60%, rgba(20, 40, 80, 0.3) 0%, transparent 50%),
       radial-gradient(ellipse at 85% 20%, rgba(10, 30, 60, 0.2) 0%, transparent 50%), #060a10;
@@ -453,6 +483,58 @@
     font-size: 0.65rem;
     color: #4a6a8a;
     line-height: 1.5;
+  }
+
+  /* Dev era selector */
+  .dev-section {
+    border: 1px dashed #2a3a20;
+    border-radius: 3px;
+    padding: 0.75rem;
+    background: rgba(20, 30, 10, 0.3);
+  }
+
+  .dev-label {
+    color: #4a6a30 !important;
+    border-bottom-color: #2a3a20 !important;
+  }
+
+  .era-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .era-btn {
+    background: #0d1520;
+    border: 1px solid #1a2535;
+    border-radius: 3px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: #4a6a4a;
+    text-align: left;
+    letter-spacing: 0.06em;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+
+  .era-btn:hover {
+    border-color: #3a5a30;
+    color: #6a9a60;
+    background: #0d1510;
+  }
+
+  .era-btn.active {
+    border-color: #5a8a40;
+    color: #8ab870;
+    background: #0d1a0d;
+  }
+
+  .dev-hint {
+    margin: 0.4rem 0 0;
+    font-size: 0.62rem;
+    color: #3a5030;
+    font-style: italic;
   }
 
   /* Begin */

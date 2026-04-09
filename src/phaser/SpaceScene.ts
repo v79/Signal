@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { SpaceNode, FacilityInstance } from '../engine/types';
+import type { SpaceNode, FacilityInstance, OngoingAction } from '../engine/types';
 
 // ---------------------------------------------------------------------------
 // SpaceScene — Near Space map (Era 2)
@@ -21,6 +21,7 @@ export interface SpaceSceneCallbacks {
   onNodeClick: (id: string) => void;
   getCompletedProjects: () => string[];
   getLaunchAllocation: () => Record<string, boolean>;
+  getConstructionQueue: () => OngoingAction[];
 }
 
 // Fixed canvas positions for each node id (normalised to 600 × 400 logical px)
@@ -47,6 +48,22 @@ const NODE_COLOURS: Record<string, number> = {
 
 const NODE_RADIUS = 18;
 const EARTH_RADIUS = 40;
+
+// Per-facility colours for the construction overlay arc (matches EarthScene convention)
+const SPACE_FACILITY_COLORS: Record<string, number> = {
+  satelliteArray:        0x4a90d8,
+  communicationsHub:     0x50c890,
+  spaceObservatory:      0xa070d8,
+  basicSolarArray:       0xd8b840,
+  advancedSolarArray:    0xf0d060,
+  deepSpaceRelay:        0x40c8d8,
+  launchRelay:           0xd87840,
+  lunarHabitat:          0x9090a0,
+  lunarResearchBase:     0x6aaad8,
+  lunarColonyHub:        0xc8d8e8,
+  lunarMine:             0xb08050,
+  lunarObservatory:      0x9060c0,
+};
 
 // Orbital station stage project IDs in order
 const STATION_STAGES = [
@@ -179,6 +196,13 @@ export class SpaceScene extends Phaser.Scene {
     const selectedId = this.callbacks!.getSelectedNode();
     const completed = this.callbacks!.getCompletedProjects();
     const launchAllocation = this.callbacks!.getLaunchAllocation();
+    const queue = this.callbacks!.getConstructionQueue();
+
+    // Build a quick lookup: spaceNodeId → action
+    const constructionByNode = new Map<string, OngoingAction>();
+    for (const action of queue) {
+      if (action.spaceNodeId) constructionByNode.set(action.spaceNodeId, action);
+    }
 
     this.gfx.clear();
     this.labelGroup.clear(true, true);
@@ -211,6 +235,7 @@ export class SpaceScene extends Phaser.Scene {
       const colour = NODE_COLOURS[node.type] ?? 0x6080a0;
       const hasFacility = node.facilityId !== null;
       const isInactive = hasFacility && launchAllocation[node.id] === false;
+      const action = constructionByNode.get(node.id) ?? null;
 
       if (node.id === 'leo') {
         const stageCount = STATION_STAGES.filter((s) => completed.includes(s)).length;
@@ -221,6 +246,11 @@ export class SpaceScene extends Phaser.Scene {
         }
       } else {
         this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected, isInactive);
+      }
+
+      // Construction / upgrade overlay
+      if (action) {
+        this.drawConstructionOverlay(cx, cy, r, action);
       }
 
       // Launch cost label
@@ -243,6 +273,27 @@ export class SpaceScene extends Phaser.Scene {
         .setOrigin(0.5, 1);
       this.labelGroup.add(nameLabel);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Construction overlay — progress arc (mirrors EarthScene style)
+  // ---------------------------------------------------------------------------
+
+  private drawConstructionOverlay(cx: number, cy: number, r: number, action: OngoingAction): void {
+    const progress = (action.totalTurns - action.turnsRemaining) / action.totalTurns;
+    const fColor = SPACE_FACILITY_COLORS[action.facilityDefId] ?? 0xaaaaaa;
+    const arcEnd = Phaser.Math.DegToRad(-90 + 360 * progress);
+    const pulse = 0.45 + 0.3 * Math.sin(this.time.now * 0.004);
+
+    // Pulsing inner ring (scaffold indicator)
+    this.gfx.lineStyle(1.5, fColor, pulse);
+    this.gfx.strokeCircle(cx, cy, r * 0.55);
+
+    // Progress arc filling clockwise from top, drawn just outside the node
+    this.gfx.lineStyle(2.5, fColor, 0.85);
+    this.gfx.beginPath();
+    this.gfx.arc(cx, cy, r * 1.25, Phaser.Math.DegToRad(-90), arcEnd, false);
+    this.gfx.strokePath();
   }
 
   // ---------------------------------------------------------------------------

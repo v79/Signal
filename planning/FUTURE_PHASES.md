@@ -5,6 +5,12 @@ This is a list of future requirements for the game but they are not to be implem
 - **UI visual flare:**
   - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
   - The game is just too dark, the colour scheme is too muted
+- **Era 2: nearSpace:**
+  - Research progresses far too quickly, even with little effort.
+  - Starting a game in Era 2 breaks the LEO station; not a big concern
+  - There isn't enough to do, there are no choices to make
+  - The launch capacity limit has no effect; it's always possible to sustain all nearSpace facilities within the capacity limits, especially as tech progresses too quickly
+  - It's probably possible to progress in Era 2 by doing nothing - we need some way of blocking tech progress if there's no Era 2 facilities built?
 - **Card rework:**
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
@@ -40,6 +46,7 @@ This is a list of future requirements for the game but they are not to be implem
   - The Facilities that support projects (space launch centre) need to be visually distinct
 - **Competitor blocs**
   - First implementation in `planning/PLAN_PHASE28.md`
+  - The middle east bloc always collapses in every game; a bit racist.
 - **Earth map**
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
