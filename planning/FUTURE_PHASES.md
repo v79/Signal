@@ -20,6 +20,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
 - **Events:**
   - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
+  - Bloc partnership events need to be clearer on the costs and benefits
 - **Research:**
   - What to do once all the tech for an era has been researched?
   - Each Era should have a tier 5 technology that represents the end of the era.
