@@ -112,7 +112,7 @@ export interface MapTile {
 // Near Space map (Era 2)
 // ---------------------------------------------------------------------------
 
-export type SpaceNodeType = 'lowEarthOrbit' | 'lagrangePoint' | 'lunarSurface';
+export type SpaceNodeType = 'lowEarthOrbit' | 'cislunarPoint' | 'trojanPoint' | 'lunarSurface';
 
 export interface SpaceNode {
   id: string;

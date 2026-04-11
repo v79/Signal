@@ -153,13 +153,37 @@ export function serialiseGameState(state: GameState): string {
 export function deserialiseGameState(json: string): GameState {
   const state = JSON.parse(json) as GameState;
 
-  // Migration: ensure L4 and L5 lagrange-point nodes are present (added Phase 33).
+  // Migration: ensure all current space nodes are present and typed correctly.
   const knownIds = new Set(state.map.spaceNodes.map((n) => n.id));
+
+  // Add L4/L5 if missing (added Phase 33).
   if (!knownIds.has('l4')) {
-    state.map.spaceNodes.push({ id: 'l4', type: 'lagrangePoint', label: 'L4', launchCost: 30, facilityId: null });
+    state.map.spaceNodes.push({ id: 'l4', type: 'trojanPoint', label: 'L4', launchCost: 30, facilityId: null });
   }
   if (!knownIds.has('l5')) {
-    state.map.spaceNodes.push({ id: 'l5', type: 'lagrangePoint', label: 'L5', launchCost: 30, facilityId: null });
+    state.map.spaceNodes.push({ id: 'l5', type: 'trojanPoint', label: 'L5', launchCost: 30, facilityId: null });
+  }
+
+  // Upgrade lagrangePoint → cislunarPoint/trojanPoint (added Phase 34).
+  for (const node of state.map.spaceNodes) {
+    if ((node.type as string) === 'lagrangePoint') {
+      node.type = node.id === 'l4' || node.id === 'l5' ? 'trojanPoint' : 'cislunarPoint';
+    }
+  }
+
+  // Add two new lunar surface nodes (added Phase 34).
+  if (!knownIds.has('lunarSouth')) {
+    state.map.spaceNodes.push({ id: 'lunarSouth', type: 'lunarSurface', label: 'Shackleton Crater', launchCost: 45, facilityId: null });
+  }
+  if (!knownIds.has('lunarFar')) {
+    state.map.spaceNodes.push({ id: 'lunarFar', type: 'lunarSurface', label: 'Mare Imbrium', launchCost: 50, facilityId: null });
+  }
+
+  // Relabel original lunar node (added Phase 34).
+  const origLunar = state.map.spaceNodes.find((n) => n.id === 'lunarSurface');
+  if (origLunar && origLunar.label === 'Lunar Surface') {
+    origLunar.label = 'Mare Tranquillitatis';
+    origLunar.launchCost = 40;
   }
 
   return state;
@@ -170,21 +194,30 @@ export function deserialiseGameState(json: string): GameState {
 // ---------------------------------------------------------------------------
 
 /**
- * Recompute total launch capacity from spaceLaunchCentre facilities.
- * Each built spaceLaunchCentre provides +3 units.
+ * Recompute total launch capacity from capacity-granting facilities.
  *
- * Tech progression no longer adds raw capacity; instead it reduces the
- * effective supply cost per facility via `computeSpaceSupplyCostReduction`.
+ * Capacity sources:
+ *   - spaceLaunchCentre (Earth):      +3 each
+ *   - fuelDepot (cislunar/trojan):    +2 each
+ *   - lunarLaunchFacility (lunar):    +2 each
+ *   - lunarSpaceport (lunar upgrade): +4 each
+ *
+ * Tech progression reduces effective supply cost per facility via
+ * `computeSpaceSupplyCostReduction` rather than adding raw capacity.
  */
 export function recomputeLaunchCapacity(
   facilities: FacilityInstance[],
   _techs: TechState[],
 ): number {
+  const CAPACITY_BY_DEF: Record<string, number> = {
+    spaceLaunchCentre: 3,
+    fuelDepot: 2,
+    lunarLaunchFacility: 2,
+    lunarSpaceport: 4,
+  };
   let capacity = 0;
   for (const inst of facilities) {
-    if (inst.defId === 'spaceLaunchCentre') {
-      capacity += 3;
-    }
+    capacity += CAPACITY_BY_DEF[inst.defId] ?? 0;
   }
   return capacity;
 }

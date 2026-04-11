@@ -150,17 +150,13 @@ export function generateEarthTiles(radius = 3): MapTile[] {
 export function generateSpaceNodes(): SpaceNode[] {
   return [
     { id: 'leo', type: 'lowEarthOrbit', label: 'LEO', launchCost: 10, facilityId: null },
-    { id: 'l1', type: 'lagrangePoint', label: 'L1', launchCost: 20, facilityId: null },
-    { id: 'l2', type: 'lagrangePoint', label: 'L2', launchCost: 20, facilityId: null },
-    { id: 'l4', type: 'lagrangePoint', label: 'L4', launchCost: 30, facilityId: null },
-    { id: 'l5', type: 'lagrangePoint', label: 'L5', launchCost: 30, facilityId: null },
-    {
-      id: 'lunarSurface',
-      type: 'lunarSurface',
-      label: 'Lunar Surface',
-      launchCost: 45,
-      facilityId: null,
-    },
+    { id: 'l1', type: 'cislunarPoint', label: 'L1', launchCost: 20, facilityId: null },
+    { id: 'l2', type: 'cislunarPoint', label: 'L2', launchCost: 20, facilityId: null },
+    { id: 'l4', type: 'trojanPoint', label: 'L4', launchCost: 30, facilityId: null },
+    { id: 'l5', type: 'trojanPoint', label: 'L5', launchCost: 30, facilityId: null },
+    { id: 'lunarSurface', type: 'lunarSurface', label: 'Mare Tranquillitatis', launchCost: 40, facilityId: null },
+    { id: 'lunarSouth', type: 'lunarSurface', label: 'Shackleton Crater', launchCost: 45, facilityId: null },
+    { id: 'lunarFar', type: 'lunarSurface', label: 'Mare Imbrium', launchCost: 50, facilityId: null },
   ];
 }
 

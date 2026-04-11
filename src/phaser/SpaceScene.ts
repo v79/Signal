@@ -26,7 +26,9 @@ export interface SpaceSceneCallbacks {
 
 // Fixed canvas positions for each node id (normalised to 600 × 400 logical px)
 const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  lunarSurface: { x: 300, y: 55 },
+  lunarSurface: { x: 300, y: 40 },
+  lunarSouth:   { x: 155, y: 78 },
+  lunarFar:     { x: 445, y: 78 },
   l1: { x: 90, y: 195 },
   leo: { x: 300, y: 195 },
   l2: { x: 510, y: 195 },
@@ -39,6 +41,8 @@ const CONNECTIONS: [string, string][] = [
   ['leo', 'l1'],
   ['leo', 'l2'],
   ['leo', 'lunarSurface'],
+  ['lunarSurface', 'lunarSouth'],
+  ['lunarSurface', 'lunarFar'],
   ['l1', 'l4'],
   ['l2', 'l5'],
 ];
@@ -46,8 +50,9 @@ const CONNECTIONS: [string, string][] = [
 // Node type colours
 const NODE_COLOURS: Record<string, number> = {
   lowEarthOrbit: 0x4a90c0,
-  lagrangePoint: 0x7a60c0,
-  lunarSurface: 0xb0b8c0,
+  cislunarPoint: 0x7a60c0,
+  trojanPoint:   0xc07840,
+  lunarSurface:  0xb0b8c0,
 };
 
 const NODE_RADIUS = 18;
@@ -544,7 +549,7 @@ export class SpaceScene extends Phaser.Scene {
   // ---------------------------------------------------------------------------
 
   private drawMoonOrbitArc(nodes: SpaceNode[]): void {
-    const lunarNode = nodes.find((n) => n.id === 'lunarSurface');
+    const lunarNode = nodes.find((n) => n.type === 'lunarSurface');
     if (!lunarNode) return;
 
     const pos = NODE_POSITIONS['lunarSurface'];

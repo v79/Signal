@@ -38,7 +38,8 @@
 
   const NODE_TYPE_LABELS: Record<string, string> = {
     lowEarthOrbit: 'Low Earth Orbit',
-    lagrangePoint: 'Lagrange Point',
+    cislunarPoint: 'Cislunar Point',
+    trojanPoint: 'Trojan Point',
     lunarSurface: 'Lunar Surface',
   };
 

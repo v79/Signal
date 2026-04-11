@@ -59,8 +59,7 @@ export function checkEconomicHegemonyVictory(state: GameState): boolean {
  */
 export function checkTerraformingVictory(state: GameState): boolean {
   if (state.era === 'earth') return false;
-  const lunarNode = state.map.spaceNodes.find((n) => n.id === 'lunarSurface');
-  return lunarNode?.facilityId === 'lunarColonyHub';
+  return state.map.spaceNodes.some((n) => n.type === 'lunarSurface' && n.facilityId === 'lunarColonyHub');
 }
 
 // ---------------------------------------------------------------------------
