@@ -15,7 +15,7 @@ import type {
   Era,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
-import { createGameState, recomputeLaunchCapacity } from '../../engine/state';
+import { createGameState, recomputeLaunchCapacity, computeSpaceSupplyCostReduction } from '../../engine/state';
 import { createRng } from '../../engine/rng';
 import { goto } from '$app/navigation';
 import {
@@ -152,6 +152,8 @@ export function generateSpaceNodes(): SpaceNode[] {
     { id: 'leo', type: 'lowEarthOrbit', label: 'LEO', launchCost: 10, facilityId: null },
     { id: 'l1', type: 'lagrangePoint', label: 'L1', launchCost: 20, facilityId: null },
     { id: 'l2', type: 'lagrangePoint', label: 'L2', launchCost: 20, facilityId: null },
+    { id: 'l4', type: 'lagrangePoint', label: 'L4', launchCost: 30, facilityId: null },
+    { id: 'l5', type: 'lagrangePoint', label: 'L5', launchCost: 30, facilityId: null },
     {
       id: 'lunarSurface',
       type: 'lunarSurface',
@@ -304,6 +306,7 @@ function resetSelections(): void {
 }
 
 function computeRemainingCapacity(state: GameState): number {
+  const reduction = computeSpaceSupplyCostReduction(state.player.techs);
   const allocated = state.map.spaceNodes
     .filter((n) => {
       if (!n.facilityId) return false;
@@ -313,7 +316,8 @@ function computeRemainingCapacity(state: GameState): number {
     })
     .reduce((sum, n) => {
       const def = FACILITY_DEFS.get(n.facilityId!);
-      return sum + (def?.supplyCost ?? 0);
+      const base = def?.supplyCost ?? 0;
+      return sum + Math.max(0, base - reduction);
     }, 0);
   return state.launchCapacity - allocated;
 }
@@ -1419,7 +1423,9 @@ export const gameStore = {
     } else {
       // The node is currently OFF, so it's already excluded from the allocated
       // total — check if remaining capacity covers adding it back
-      if (computeRemainingCapacity(_state) < def.supplyCost) return;
+      const reduction = computeSpaceSupplyCostReduction(_state.player.techs);
+      const effectiveCost = Math.max(0, def.supplyCost - reduction);
+      if (computeRemainingCapacity(_state) < effectiveCost) return;
       mutateState({
         ..._state,
         launchAllocation: { ..._state.launchAllocation, [nodeId]: true },

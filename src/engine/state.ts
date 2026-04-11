@@ -149,9 +149,20 @@ export function serialiseGameState(state: GameState): string {
   return JSON.stringify(state);
 }
 
-/** Deserialise a JSON string back to a GameState. No migration yet. */
+/** Deserialise a JSON string back to a GameState, applying any forward migrations. */
 export function deserialiseGameState(json: string): GameState {
-  return JSON.parse(json) as GameState;
+  const state = JSON.parse(json) as GameState;
+
+  // Migration: ensure L4 and L5 lagrange-point nodes are present (added Phase 33).
+  const knownIds = new Set(state.map.spaceNodes.map((n) => n.id));
+  if (!knownIds.has('l4')) {
+    state.map.spaceNodes.push({ id: 'l4', type: 'lagrangePoint', label: 'L4', launchCost: 30, facilityId: null });
+  }
+  if (!knownIds.has('l5')) {
+    state.map.spaceNodes.push({ id: 'l5', type: 'lagrangePoint', label: 'L5', launchCost: 30, facilityId: null });
+  }
+
+  return state;
 }
 
 // ---------------------------------------------------------------------------
@@ -159,44 +170,40 @@ export function deserialiseGameState(json: string): GameState {
 // ---------------------------------------------------------------------------
 
 /**
- * Recompute total launch capacity from spaceLaunchCentre facilities + tech HQ bonuses.
+ * Recompute total launch capacity from spaceLaunchCentre facilities.
+ * Each built spaceLaunchCentre provides +3 units.
  *
- * Sources:
- *   - Each `spaceLaunchCentre` Earth facility:              +3 units
- *   - `reusableLaunchSystems` tech discovered:             +2 units (via hqFieldBonus mechanism)
- *   - `nuclearThermalPropulsion` tech discovered:          +1 unit
- *   - `autonomousSpaceConstruction` tech discovered:       supply-cost reduction (handled in output)
- *   - `cislunarTransportNetwork` tech discovered:          +3 units
- *
- * The per-tech bonuses are encoded as `launchCapacityBonus` values read from
- * the tech's `resourceOutput` on a virtual "launchCapacity" resource key
- * (or simply hard-coded here since there are only a few techs that grant capacity).
+ * Tech progression no longer adds raw capacity; instead it reduces the
+ * effective supply cost per facility via `computeSpaceSupplyCostReduction`.
  */
 export function recomputeLaunchCapacity(
   facilities: FacilityInstance[],
-  techs: TechState[],
+  _techs: TechState[],
 ): number {
   let capacity = 0;
-
-  // Each built spaceLaunchCentre provides +3 units
   for (const inst of facilities) {
     if (inst.defId === 'spaceLaunchCentre') {
       capacity += 3;
     }
   }
-
-  // Tech HQ bonuses that grant launch capacity
-  const TECH_LAUNCH_BONUSES: Record<string, number> = {
-    reusableLaunchSystems: 2,
-    nuclearThermalPropulsion: 1,
-    cislunarTransportNetwork: 3,
-  };
-
-  for (const ts of techs) {
-    if (ts.stage !== 'discovered') continue;
-    const bonus = TECH_LAUNCH_BONUSES[ts.defId];
-    if (bonus) capacity += bonus;
-  }
-
   return capacity;
+}
+
+/**
+ * Compute how many supply-cost units to subtract from each space facility's
+ * base `supplyCost`. Applied as `Math.max(0, supplyCost - reduction)`.
+ *
+ * Sources:
+ *   - `reusableLaunchSystems` discovered:   -1 (cheaper launch logistics)
+ *   - `cislunarTransportNetwork` discovered: -1 (efficient transit corridors)
+ */
+export function computeSpaceSupplyCostReduction(techs: TechState[]): number {
+  const REDUCING_TECHS = new Set(['reusableLaunchSystems', 'cislunarTransportNetwork']);
+  let reduction = 0;
+  for (const ts of techs) {
+    if (ts.stage === 'discovered' && REDUCING_TECHS.has(ts.defId)) {
+      reduction += 1;
+    }
+  }
+  return reduction;
 }

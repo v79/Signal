@@ -54,7 +54,7 @@ import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText }
 import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
-import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity } from './state';
+import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity, computeSpaceSupplyCostReduction } from './state';
 import { createRng } from './rng';
 import type { Rng } from './rng';
 
@@ -290,15 +290,20 @@ export function executeWorldPhase(
   //     Supply defaults to ON (launchAllocation[id] !== false), so we must explicitly set
   //     to false when there isn't enough headroom.
   const launchAllocationAfterQueue = { ...state.launchAllocation };
+  const supplyCostReduction = computeSpaceSupplyCostReduction(player.techs);
   {
+    const effectiveCost = (defId: string) => {
+      const base = facilityDefs.get(defId)?.supplyCost ?? 0;
+      return Math.max(0, base - supplyCostReduction);
+    };
+
     let allocated = spaceNodesAfterQueue
       .filter((n) => n.facilityId && launchAllocationAfterQueue[n.id] !== false)
-      .reduce((sum, n) => sum + (facilityDefs.get(n.facilityId!)?.supplyCost ?? 0), 0);
+      .reduce((sum, n) => sum + effectiveCost(n.facilityId!), 0);
 
     for (const action of completedActions) {
       if (!action.spaceNodeId) continue;
-      const def = facilityDefs.get(action.facilityDefId);
-      const supplyCost = def?.supplyCost ?? 0;
+      const supplyCost = effectiveCost(action.facilityDefId);
       if (supplyCost === 0) continue;
       // This node was just set to facilityId in spaceNodesAfterQueue.
       // It defaults to supplied — check if that exceeds capacity.
