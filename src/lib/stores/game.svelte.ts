@@ -41,7 +41,7 @@ import {
   getEffectForResolution,
   formatEffectForNews,
 } from '../../engine/events';
-import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility } from '../../engine/facilities';
+import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
 import { canInitiateProject, initiateProject } from '../../engine/projects';
 import {
   BLOC_MAPS,
@@ -1512,6 +1512,11 @@ export const gameStore = {
         (t) => t.defId === def.requiredTechId && t.stage === 'discovered',
       );
       if (!discovered) return;
+    }
+
+    // Lunar uniqueness: only one chain of each type across all lunar surface nodes
+    if (node.type === 'lunarSurface') {
+      if (isLunarChainTaken(defId, nodeId, _state.map.spaceNodes, FACILITY_DEFS, _state.player.constructionQueue)) return;
     }
 
     // Affordability

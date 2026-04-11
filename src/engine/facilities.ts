@@ -812,6 +812,57 @@ export function canUpgradeFacility(
 }
 
 // ---------------------------------------------------------------------------
+// Lunar chain uniqueness
+// ---------------------------------------------------------------------------
+
+/**
+ * Walk the upgradesFrom chain to find the root facility def ID.
+ * e.g. lunarSpaceport → lunarLaunchFacility (root)
+ */
+export function getChainRoot(defId: string, facilityDefs: Map<string, FacilityDef>): string {
+  let id = defId;
+  while (true) {
+    const parent = facilityDefs.get(id)?.upgradesFrom;
+    if (!parent) return id;
+    id = parent;
+  }
+}
+
+/**
+ * Returns true if any lunarSurface node other than `excludeNodeId` already has
+ * a facility (built or queued) from the same chain as `defId`.
+ *
+ * Used to enforce one-chain-per-type uniqueness across lunar sites.
+ */
+export function isLunarChainTaken(
+  defId: string,
+  excludeNodeId: string,
+  spaceNodes: SpaceNode[],
+  facilityDefs: Map<string, FacilityDef>,
+  constructionQueue: OngoingAction[] = [],
+): boolean {
+  const targetRoot = getChainRoot(defId, facilityDefs);
+
+  // Check built facilities on other lunar nodes
+  for (const node of spaceNodes) {
+    if (node.type !== 'lunarSurface' || node.id === excludeNodeId || !node.facilityId) continue;
+    if (getChainRoot(node.facilityId, facilityDefs) === targetRoot) return true;
+  }
+
+  // Check construction queue entries targeting other lunar nodes
+  const lunarNodeIds = new Set(
+    spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id),
+  );
+  for (const action of constructionQueue) {
+    if (!action.spaceNodeId || action.spaceNodeId === excludeNodeId) continue;
+    if (!lunarNodeIds.has(action.spaceNodeId)) continue;
+    if (getChainRoot(action.facilityDefId, facilityDefs) === targetRoot) return true;
+  }
+
+  return false;
+}
+
+// ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 

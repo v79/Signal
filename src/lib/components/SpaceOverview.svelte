@@ -11,6 +11,7 @@
     launchAllocation,
     remainingCapacity,
     upgradableNodeIds,
+    playerResources,
     onClose,
     onToggleSupply,
     onUpgrade,
@@ -23,8 +24,9 @@
     launchCapacity: number;
     launchAllocation: Record<string, boolean>;
     remainingCapacity: number;
-    /** nodeId → next-tier facility name (only nodes where upgrade is available) */
-    upgradableNodeIds: Record<string, string>;
+    /** nodeId → next-tier FacilityDef (only nodes where upgrade is available) */
+    upgradableNodeIds: Record<string, FacilityDef>;
+    playerResources: { funding: number; materials: number; politicalWill: number };
     onClose: () => void;
     onToggleSupply: (nodeId: string) => void;
     onUpgrade: (nodeId: string) => void;
@@ -113,7 +115,7 @@
         {#each nodeFacilities as entry (entry.node.id)}
           {@const supplyCost = entry.def!.supplyCost ?? 0}
           {@const supplied = isSupplied(entry.node.id)}
-          {@const upgradeName = upgradableNodeIds[entry.node.id]}
+          {@const upgradeDef = upgradableNodeIds[entry.node.id]}
           <div class="facility-row" class:unsupplied={!supplied}>
             <div class="row-main">
               <span class="node-label">{entry.node.label}</span>
@@ -130,10 +132,18 @@
                 </button>
               {/if}
             </div>
-            {#if upgradeName}
+            {#if upgradeDef}
+              {@const upgradeAffordable =
+                (upgradeDef.buildCost.funding ?? 0) <= playerResources.funding &&
+                (upgradeDef.buildCost.materials ?? 0) <= playerResources.materials &&
+                (upgradeDef.buildCost.politicalWill ?? 0) <= playerResources.politicalWill}
               <div class="upgrade-row">
-                <button class="upgrade-btn" onclick={() => onUpgrade(entry.node.id)}>
-                  ↑ Upgrade → {upgradeName}
+                <button
+                  class="upgrade-btn"
+                  disabled={!upgradeAffordable}
+                  onclick={() => onUpgrade(entry.node.id)}
+                >
+                  ↑ Upgrade → {upgradeDef.name}
                 </button>
               </div>
             {/if}

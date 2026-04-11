@@ -1,17 +1,19 @@
 <script lang="ts">
   import type { SpaceNode, FacilityDef, FacilityInstance, OngoingAction, Resources } from '../../engine/types';
+  import { getChainRoot, isLunarChainTaken } from '../../engine/facilities';
 
   let {
     node,
     facilityDefs,
     facilityInstances,
+    spaceNodes,
     playerResources,
     discoveredTechIds,
     techNames,
     constructionQueue,
     launchCapacity,
     remainingCapacity,
-    upgradeName,
+    upgradeDef,
     actionsThisTurn,
     maxActionsPerTurn,
     onBuild,
@@ -21,14 +23,15 @@
     node: SpaceNode;
     facilityDefs: Map<string, FacilityDef>;
     facilityInstances: FacilityInstance[];
+    spaceNodes: SpaceNode[];
     playerResources: Resources;
     discoveredTechIds: ReadonlySet<string>;
     techNames: ReadonlyMap<string, string>;
     constructionQueue: OngoingAction[];
     launchCapacity: number;
     remainingCapacity: number;
-    /** Name of the next-tier upgrade, if available. */
-    upgradeName: string | undefined;
+    /** Next-tier facility def, if upgrade is available and tech is discovered. */
+    upgradeDef: FacilityDef | undefined;
     actionsThisTurn: number;
     maxActionsPerTurn: number;
     onBuild: (defId: string) => void;
@@ -63,7 +66,7 @@
     pendingAction ? (facilityDefs.get(pendingAction.facilityDefId) ?? null) : null,
   );
 
-  /** Facility defs buildable on this node type — split into available and locked. */
+  /** Facility defs buildable on this node type — split into available, taken-elsewhere, and locked. */
   const buildableDefs = $derived(
     [...facilityDefs.values()].filter((def) => {
       if (!def.allowedNodeTypes?.includes(node.type)) return false;
@@ -75,15 +78,51 @@
 
   const availableDefs = $derived(
     buildableDefs.filter(
-      (def) => def.requiredTechId == null || discoveredTechIds.has(def.requiredTechId),
+      (def) =>
+        (def.requiredTechId == null || discoveredTechIds.has(def.requiredTechId)) &&
+        !isLunarChainTaken(def.id, node.id, spaceNodes, facilityDefs, constructionQueue),
     ),
+  );
+
+  /** Chains already committed to another lunar site (built or under construction). */
+  const takenDefs = $derived(
+    node.type === 'lunarSurface'
+      ? buildableDefs.filter(
+          (def) =>
+            (def.requiredTechId == null || discoveredTechIds.has(def.requiredTechId)) &&
+            isLunarChainTaken(def.id, node.id, spaceNodes, facilityDefs, constructionQueue),
+        )
+      : [],
   );
 
   const lockedDefs = $derived(
     buildableDefs.filter(
-      (def) => def.requiredTechId != null && !discoveredTechIds.has(def.requiredTechId),
+      (def) =>
+        def.requiredTechId != null &&
+        !discoveredTechIds.has(def.requiredTechId) &&
+        !isLunarChainTaken(def.id, node.id, spaceNodes, facilityDefs, constructionQueue),
     ),
   );
+
+  /** For a taken chain, find the label of the site that has it. */
+  function takenAtLabel(def: FacilityDef): string {
+    const root = getChainRoot(def.id, facilityDefs);
+    // Check built
+    for (const n of spaceNodes) {
+      if (n.type !== 'lunarSurface' || n.id === node.id || !n.facilityId) continue;
+      if (getChainRoot(n.facilityId, facilityDefs) === root) return n.label;
+    }
+    // Check queue
+    const lunarIds = new Set(spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id));
+    for (const action of constructionQueue) {
+      if (!action.spaceNodeId || action.spaceNodeId === node.id) continue;
+      if (!lunarIds.has(action.spaceNodeId)) continue;
+      if (getChainRoot(action.facilityDefId, facilityDefs) === root) {
+        return spaceNodes.find((n) => n.id === action.spaceNodeId)?.label ?? action.spaceNodeId;
+      }
+    }
+    return 'another site';
+  }
 
   function canAfford(cost: Partial<Resources>): boolean {
     return (
@@ -190,14 +229,20 @@
           <div class="supply-line">Supply: {currentDef.supplyCost} launch unit{currentDef.supplyCost !== 1 ? 's' : ''}</div>
         {/if}
 
-        {#if upgradeName}
+        {#if upgradeDef}
+          {@const upgradeAffordable = canAfford(upgradeDef.buildCost)}
           <div class="upgrade-row">
             <button
               class="upgrade-btn"
-              disabled={atActionCap}
+              disabled={atActionCap || !upgradeAffordable}
               onclick={onUpgrade}
             >
-              ↑ Upgrade → {upgradeName}
+              ↑ Upgrade → {upgradeDef.name}
+              {#if !upgradeAffordable}
+                <span class="upgrade-cost cant-afford">({formatCost(upgradeDef.buildCost)})</span>
+              {:else}
+                <span class="upgrade-cost">({formatCost(upgradeDef.buildCost)})</span>
+              {/if}
             </button>
           </div>
         {/if}
@@ -268,6 +313,20 @@
               </div>
             {/each}
 
+            {#each takenDefs as def}
+              <div class="facility-row locked-row">
+                <div class="facility-info">
+                  <span class="facility-name locked-name">{def.name}</span>
+                  <span class="facility-desc">{def.description}</span>
+                </div>
+                <div class="facility-action">
+                  <div class="locked-label taken-label">
+                    BUILT AT<br />{takenAtLabel(def)}
+                  </div>
+                </div>
+              </div>
+            {/each}
+
             {#each lockedDefs as def}
               <div class="facility-row locked-row">
                 <div class="facility-info">
@@ -282,7 +341,7 @@
               </div>
             {/each}
 
-            {#if availableDefs.length === 0 && lockedDefs.length === 0}
+            {#if availableDefs.length === 0 && takenDefs.length === 0 && lockedDefs.length === 0}
               <div class="no-facilities">No facilities available for this node type.</div>
             {/if}
           </div>
@@ -479,6 +538,16 @@
     cursor: not-allowed;
   }
 
+  .upgrade-cost {
+    font-size: 0.56rem;
+    color: #c8d050;
+    opacity: 0.75;
+  }
+  .upgrade-cost.cant-afford {
+    color: #9b4a4a;
+    opacity: 1;
+  }
+
   /* Build section */
   .build-section {
     padding: 0;
@@ -610,6 +679,10 @@
     text-align: right;
     line-height: 1.5;
     letter-spacing: 0.04em;
+  }
+
+  .taken-label {
+    color: #4a5a6a;
   }
 
   .no-facilities { padding: 0.8rem; color: #3a4858; font-style: italic; }

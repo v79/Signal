@@ -235,11 +235,11 @@
       : null,
   );
 
-  /** Map of nodeId → next-tier facility name for nodes that can be upgraded. */
-  const upgradableNodeIds = $derived.by<Record<string, string>>(() => {
+  /** Map of nodeId → next-tier FacilityDef for nodes that can be upgraded. */
+  const upgradableNodeIds = $derived.by<Record<string, import('../../engine/types').FacilityDef>>(() => {
     const state = gameStore.state;
     if (!state) return {};
-    const result: Record<string, string> = {};
+    const result: Record<string, import('../../engine/types').FacilityDef> = {};
     for (const node of state.map.spaceNodes) {
       const nextDef = canUpgradeFacility(
         node.id,
@@ -248,7 +248,7 @@
         FACILITY_DEFS,
         state.player.techs,
       );
-      if (nextDef) result[node.id] = nextDef.name;
+      if (nextDef) result[node.id] = nextDef;
     }
     return result;
   });
@@ -481,6 +481,7 @@
         launchAllocation={gameStore.state.launchAllocation}
         remainingCapacity={gameStore.remainingLaunchCapacity}
         {upgradableNodeIds}
+        playerResources={gameStore.state.player.resources}
         onClose={() => (showSpaceOverview = false)}
         onToggleSupply={(nodeId) => gameStore.toggleSpaceFacilitySupply(nodeId)}
         onUpgrade={(nodeId) => gameStore.upgradeFacility(nodeId)}
@@ -493,6 +494,7 @@
         facilityInstances={gameStore.state.player.facilities.filter(
           (f) => f.locationKey === selectedSpaceNode.id,
         )}
+        spaceNodes={gameStore.state.map.spaceNodes}
         playerResources={gameStore.state.player.resources}
         discoveredTechIds={new Set(
           gameStore.state.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
@@ -501,7 +503,7 @@
         constructionQueue={gameStore.state.player.constructionQueue}
         launchCapacity={gameStore.state.launchCapacity}
         remainingCapacity={gameStore.remainingLaunchCapacity}
-        upgradeName={upgradableNodeIds[selectedSpaceNode.id]}
+        upgradeDef={upgradableNodeIds[selectedSpaceNode.id]}
         actionsThisTurn={gameStore.state.actionsThisTurn ?? 0}
         maxActionsPerTurn={(gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0)}
         onBuild={(defId) => gameStore.buildSpaceFacility(gameStore.selectedSpaceNodeId!, defId)}
