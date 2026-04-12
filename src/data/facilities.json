@@ -674,7 +674,7 @@
   "observatory": {
     "id": "observatory",
     "name": "Observatory",
-    "description": "A ground-based optical and radio telescope complex. Strong Physics output from astronomical observation and data analysis, with a small Computing contribution from signal processing. Highland terrain only — requires clear skies and distance from light pollution.",
+    "description": "A ground-based optical and radio telescope complex. Strong Physics output from astronomical observation and data analysis, with a small Computing contribution from signal processing. Highland terrain only \u2014 requires clear skies and distance from light pollution.",
     "era": "earth",
     "allowedTileTypes": [
       "highland"
@@ -836,7 +836,9 @@
     "description": "Low-gravity research environment in LEO. Physics and Engineering output from microgravity experimentation.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lowEarthOrbit"],
+    "allowedNodeTypes": [
+      "lowEarthOrbit"
+    ],
     "buildCost": {
       "funding": 60,
       "materials": 40
@@ -848,7 +850,7 @@
     "buildTime": 3,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 2,
+    "supplyCost": 1,
     "fieldOutput": {
       "physics": 4,
       "engineering": 3
@@ -865,7 +867,9 @@
     "description": "Expanded orbital research station. Enhanced Physics, Engineering and Mathematics output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lowEarthOrbit"],
+    "allowedNodeTypes": [
+      "lowEarthOrbit"
+    ],
     "buildCost": {
       "funding": 40,
       "materials": 30
@@ -896,7 +900,9 @@
     "description": "Full-scale orbital research complex. Exceptional cross-field output from long-duration microgravity experiments.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lowEarthOrbit"],
+    "allowedNodeTypes": [
+      "lowEarthOrbit"
+    ],
     "buildCost": {
       "funding": 60,
       "materials": 40
@@ -908,7 +914,7 @@
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 2,
+    "supplyCost": 3,
     "upgradesFrom": "orbitalLaboratory",
     "fieldOutput": {
       "physics": 10,
@@ -928,7 +934,11 @@
     "description": "Photovoltaic arrays in LEO capture unfiltered sunlight. Strong Funding income and Physics research output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lowEarthOrbit", "cislunarPoint", "trojanPoint"],
+    "allowedNodeTypes": [
+      "lowEarthOrbit",
+      "cislunarPoint",
+      "trojanPoint"
+    ],
     "buildCost": {
       "funding": 50,
       "materials": 35
@@ -957,7 +967,11 @@
     "description": "Multi-junction photovoltaic arrays in LEO. Exceptional Funding income per unit of supply.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lowEarthOrbit", "cislunarPoint", "trojanPoint"],
+    "allowedNodeTypes": [
+      "lowEarthOrbit",
+      "cislunarPoint",
+      "trojanPoint"
+    ],
     "buildCost": {
       "funding": 35,
       "materials": 25
@@ -968,7 +982,7 @@
     "buildTime": 3,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 1,
+    "supplyCost": 2,
     "upgradesFrom": "orbitalSolarArray",
     "fieldOutput": {
       "physics": 3
@@ -987,7 +1001,9 @@
     "description": "Harvests regolith and subsurface ice. Materials yield, but finite deposits.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
     "buildCost": {
       "funding": 30,
       "materials": 50
@@ -999,7 +1015,7 @@
     "buildTime": 3,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 2,
+    "supplyCost": 1,
     "fieldOutput": {
       "engineering": 2
     },
@@ -1017,7 +1033,9 @@
     "description": "In-situ resource utilization plant extracting oxygen and metals from regolith. Non-depleting Materials output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
     "buildCost": {
       "funding": 40,
       "materials": 30
@@ -1029,7 +1047,7 @@
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 1,
+    "supplyCost": 2,
     "upgradesFrom": "lunarMine",
     "fieldOutput": {
       "engineering": 4
@@ -1048,7 +1066,9 @@
     "description": "Pressurised surface habitat for long-duration lunar residency. Biochemistry and Social Science research from crew health and behavioural studies.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
     "buildCost": {
       "funding": 80,
       "materials": 60
@@ -1077,7 +1097,9 @@
     "description": "Expanded lunar research complex. Enhanced cross-field output from long-duration surface research programmes.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
     "buildCost": {
       "funding": 50,
       "materials": 40
@@ -1089,7 +1111,7 @@
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 2,
+    "supplyCost": 3,
     "upgradesFrom": "lunarHabitat",
     "fieldOutput": {
       "biochemistry": 7,
@@ -1108,7 +1130,9 @@
     "description": "Signal relay and observation platform at L2. Strong Signal decode progress and Physics/Computing output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["cislunarPoint"],
+    "allowedNodeTypes": [
+      "cislunarPoint"
+    ],
     "buildCost": {
       "funding": 70,
       "materials": 40
@@ -1136,7 +1160,9 @@
     "description": "Quantum-sensing observatory at L2. Exceptional Signal decode progress and Physics/Computing research.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["cislunarPoint"],
+    "allowedNodeTypes": [
+      "cislunarPoint"
+    ],
     "buildCost": {
       "funding": 60,
       "materials": 40
@@ -1147,7 +1173,7 @@
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 1,
+    "supplyCost": 2,
     "upgradesFrom": "deepSpaceRelay",
     "fieldOutput": {
       "physics": 8,
@@ -1192,40 +1218,66 @@
     "description": "The beating heart of a self-sustaining lunar settlement. Central logistics, governance, and research coordination for the colony. ISRU makes it effectively self-supporting.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
-    "buildCost": { "funding": 70, "materials": 50 },
-    "upkeepCost": { "funding": 10, "materials": 5 },
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
+    "buildCost": {
+      "funding": 70,
+      "materials": 50
+    },
+    "upkeepCost": {
+      "funding": 10,
+      "materials": 5
+    },
     "buildTime": 4,
     "deleteTime": 0,
     "canDelete": false,
-    "fieldOutput": { "biochemistry": 10, "socialScience": 10, "physics": 5, "engineering": 4 },
+    "fieldOutput": {
+      "biochemistry": 10,
+      "socialScience": 10,
+      "physics": 5,
+      "engineering": 4
+    },
     "resourceOutput": {},
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": false,
     "requiredTechId": "cislunarTransportNetwork",
-    "supplyCost": 0,
+    "supplyCost": 4,
     "upgradesFrom": "lunarResearchBase"
   },
   "solarPowerSatellite": {
     "id": "solarPowerSatellite",
     "name": "Solar Power Satellite",
-    "description": "A massive photovoltaic array in high orbit, transmitting power to Earth via microwave. Effectively self-sustaining — no launch overhead required.",
+    "description": "A massive photovoltaic array in high orbit, transmitting power to Earth via microwave. Effectively self-sustaining \u2014 no launch overhead required.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lowEarthOrbit", "cislunarPoint", "trojanPoint"],
-    "buildCost": { "funding": 50, "materials": 35 },
-    "upkeepCost": { "funding": 4 },
+    "allowedNodeTypes": [
+      "lowEarthOrbit",
+      "cislunarPoint",
+      "trojanPoint"
+    ],
+    "buildCost": {
+      "funding": 50,
+      "materials": 35
+    },
+    "upkeepCost": {
+      "funding": 4
+    },
     "buildTime": 3,
     "deleteTime": 0,
     "canDelete": false,
-    "fieldOutput": { "physics": 5 },
-    "resourceOutput": { "funding": 30 },
+    "fieldOutput": {
+      "physics": 5
+    },
+    "resourceOutput": {
+      "funding": 30
+    },
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": false,
     "requiredTechId": "cislunarTransportNetwork",
-    "supplyCost": 0,
+    "supplyCost": 3,
     "upgradesFrom": "advancedSolarArray"
   },
   "fuelDepot": {
@@ -1234,14 +1286,25 @@
     "description": "Orbital propellant storage and transfer station. Increases launch capacity for deep-space missions. Engineering and Physics research output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["cislunarPoint", "trojanPoint"],
-    "buildCost": { "funding": 50, "materials": 30 },
-    "upkeepCost": { "funding": 5 },
+    "allowedNodeTypes": [
+      "cislunarPoint",
+      "trojanPoint"
+    ],
+    "buildCost": {
+      "funding": 50,
+      "materials": 30
+    },
+    "upkeepCost": {
+      "funding": 5
+    },
     "buildTime": 3,
     "deleteTime": 2,
     "canDelete": true,
     "supplyCost": 1,
-    "fieldOutput": { "engineering": 3, "physics": 2 },
+    "fieldOutput": {
+      "engineering": 3,
+      "physics": 2
+    },
     "resourceOutput": {},
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
@@ -1254,14 +1317,25 @@
     "description": "Long-duration crew habitat at a trojan point. Biochemistry and Social Science research from extended spaceflight studies.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["trojanPoint"],
-    "buildCost": { "funding": 80, "materials": 50 },
-    "upkeepCost": { "funding": 7, "materials": 4 },
+    "allowedNodeTypes": [
+      "trojanPoint"
+    ],
+    "buildCost": {
+      "funding": 80,
+      "materials": 50
+    },
+    "upkeepCost": {
+      "funding": 7,
+      "materials": 4
+    },
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
     "supplyCost": 2,
-    "fieldOutput": { "biochemistry": 4, "socialScience": 5 },
+    "fieldOutput": {
+      "biochemistry": 4,
+      "socialScience": 5
+    },
     "resourceOutput": {},
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
@@ -1274,15 +1348,27 @@
     "description": "Self-sustaining habitat module with autonomous systems. Enhanced cross-field output including early computing research.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["trojanPoint"],
-    "buildCost": { "funding": 60, "materials": 40 },
-    "upkeepCost": { "funding": 9, "materials": 4 },
+    "allowedNodeTypes": [
+      "trojanPoint"
+    ],
+    "buildCost": {
+      "funding": 60,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 9,
+      "materials": 4
+    },
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
-    "supplyCost": 2,
+    "supplyCost": 3,
     "upgradesFrom": "spaceHabitat",
-    "fieldOutput": { "biochemistry": 7, "socialScience": 8, "computing": 2 },
+    "fieldOutput": {
+      "biochemistry": 7,
+      "socialScience": 8,
+      "computing": 2
+    },
     "resourceOutput": {},
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
@@ -1295,14 +1381,25 @@
     "description": "Launch infrastructure fuelled by in-situ propellants. Increases launch capacity for deep-space missions. Engineering and Mathematics research output.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
-    "buildCost": { "funding": 60, "materials": 50 },
-    "upkeepCost": { "funding": 6, "materials": 4 },
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
+    "buildCost": {
+      "funding": 60,
+      "materials": 50
+    },
+    "upkeepCost": {
+      "funding": 6,
+      "materials": 4
+    },
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
     "supplyCost": 1,
-    "fieldOutput": { "engineering": 4, "mathematics": 2 },
+    "fieldOutput": {
+      "engineering": 4,
+      "mathematics": 2
+    },
     "resourceOutput": {},
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
@@ -1315,15 +1412,26 @@
     "description": "Full-scale deep-space launch facility. Dramatically expands launch capacity and enables rapid transit to the outer solar system. Engineering and Mathematics research.",
     "era": "nearSpace",
     "allowedTileTypes": [],
-    "allowedNodeTypes": ["lunarSurface"],
-    "buildCost": { "funding": 50, "materials": 40 },
-    "upkeepCost": { "funding": 8, "materials": 5 },
+    "allowedNodeTypes": [
+      "lunarSurface"
+    ],
+    "buildCost": {
+      "funding": 50,
+      "materials": 40
+    },
+    "upkeepCost": {
+      "funding": 8,
+      "materials": 5
+    },
     "buildTime": 4,
     "deleteTime": 2,
     "canDelete": true,
     "supplyCost": 1,
     "upgradesFrom": "lunarLaunchFacility",
-    "fieldOutput": { "engineering": 6, "mathematics": 4 },
+    "fieldOutput": {
+      "engineering": 6,
+      "mathematics": 4
+    },
     "resourceOutput": {},
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],

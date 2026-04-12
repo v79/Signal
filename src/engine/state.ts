@@ -194,20 +194,19 @@ export function deserialiseGameState(json: string): GameState {
 // ---------------------------------------------------------------------------
 
 /**
- * Recompute total launch capacity from capacity-granting facilities.
+ * Recompute total launch capacity from capacity-granting facilities and techs.
  *
  * Capacity sources:
- *   - spaceLaunchCentre (Earth):      +3 each
- *   - fuelDepot (cislunar/trojan):    +2 each
- *   - lunarLaunchFacility (lunar):    +2 each
- *   - lunarSpaceport (lunar upgrade): +4 each
- *
- * Tech progression reduces effective supply cost per facility via
- * `computeSpaceSupplyCostReduction` rather than adding raw capacity.
+ *   - spaceLaunchCentre (Earth):         +3 each
+ *   - fuelDepot (cislunar/trojan):       +2 each
+ *   - lunarLaunchFacility (lunar):       +2 each
+ *   - lunarSpaceport (lunar upgrade):    +4 each
+ *   - reusableLaunchSystems (tech):      +2
+ *   - cislunarTransportNetwork (tech):   +2
  */
 export function recomputeLaunchCapacity(
   facilities: FacilityInstance[],
-  _techs: TechState[],
+  techs: TechState[],
 ): number {
   const CAPACITY_BY_DEF: Record<string, number> = {
     spaceLaunchCentre: 3,
@@ -219,24 +218,11 @@ export function recomputeLaunchCapacity(
   for (const inst of facilities) {
     capacity += CAPACITY_BY_DEF[inst.defId] ?? 0;
   }
-  return capacity;
-}
-
-/**
- * Compute how many supply-cost units to subtract from each space facility's
- * base `supplyCost`. Applied as `Math.max(0, supplyCost - reduction)`.
- *
- * Sources:
- *   - `reusableLaunchSystems` discovered:   -1 (cheaper launch logistics)
- *   - `cislunarTransportNetwork` discovered: -1 (efficient transit corridors)
- */
-export function computeSpaceSupplyCostReduction(techs: TechState[]): number {
-  const REDUCING_TECHS = new Set(['reusableLaunchSystems', 'cislunarTransportNetwork']);
-  let reduction = 0;
+  const CAPACITY_TECHS = new Set(['reusableLaunchSystems', 'cislunarTransportNetwork']);
   for (const ts of techs) {
-    if (ts.stage === 'discovered' && REDUCING_TECHS.has(ts.defId)) {
-      reduction += 1;
+    if (ts.stage === 'discovered' && CAPACITY_TECHS.has(ts.defId)) {
+      capacity += 2;
     }
   }
-  return reduction;
+  return capacity;
 }

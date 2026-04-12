@@ -70,11 +70,11 @@ const NODE_COLOURS: Record<string, number> = {
 };
 
 const NODE_RADIUS = 18;
-const EARTH_RADIUS = 40;
+const EARTH_RADIUS = 53;
 
 // Earth visual position in logical 600×400 space — below LEO, above the bottom edge.
 // The orbit arc (arcRy=55) bridges the gap upward toward the LEO node at y=195.
-const EARTH_POS = { x: 300, y: 315 };
+const EARTH_POS = { x: 300, y: 328 };
 
 // Per-facility colours for the construction overlay arc (matches EarthScene convention)
 const SPACE_FACILITY_COLORS: Record<string, number> = {

@@ -46,7 +46,7 @@ export const DEEP_SPACE_ARRAY_DEF_IDS: ReadonlySet<string> = new Set([
  */
 const BASE_PROGRESS = 0.05;
 const FIELD_DIVISOR = 50;
-const ARRAY_BONUS = 3;
+const ARRAY_BONUS = 1.5;
 
 /** Thresholds (decodeProgress) at which era strength upgrades. */
 const STRENGTH_THRESHOLD: Record<SignalEraStrength, number> = {

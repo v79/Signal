@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { recomputeLaunchCapacity, computeSpaceSupplyCostReduction } from './state';
+import { recomputeLaunchCapacity } from './state';
 import { canUpgradeFacility } from './facilities';
 import type { FacilityInstance, TechState, FacilityDef, SpaceNode } from './types';
 
@@ -70,40 +70,25 @@ describe('recomputeLaunchCapacity', () => {
     expect(recomputeLaunchCapacity(facilities, [])).toBe(6);
   });
 
-  it('does not add capacity for reusableLaunchSystems tech', () => {
+  it('adds +2 capacity for reusableLaunchSystems discovered', () => {
     const techs = [makeTech('reusableLaunchSystems')];
-    expect(recomputeLaunchCapacity([], techs)).toBe(0);
+    expect(recomputeLaunchCapacity([], techs)).toBe(2);
   });
 
-  it('does not add capacity for cislunarTransportNetwork tech', () => {
+  it('adds +2 capacity for cislunarTransportNetwork discovered', () => {
     const techs = [makeTech('cislunarTransportNetwork')];
-    expect(recomputeLaunchCapacity([], techs)).toBe(0);
+    expect(recomputeLaunchCapacity([], techs)).toBe(2);
   });
 
-  it('does not count non-spaceLaunchCentre facilities', () => {
-    const facilities = [makeFacility('orbitalModule', 'leo')];
-    expect(recomputeLaunchCapacity(facilities, [])).toBe(0);
-  });
-});
-
-describe('computeSpaceSupplyCostReduction', () => {
-  it('returns 0 with no techs', () => {
-    expect(computeSpaceSupplyCostReduction([])).toBe(0);
-  });
-
-  it('returns 1 for reusableLaunchSystems discovered', () => {
-    const techs = [makeTech('reusableLaunchSystems')];
-    expect(computeSpaceSupplyCostReduction(techs)).toBe(1);
-  });
-
-  it('returns 1 for cislunarTransportNetwork discovered', () => {
-    const techs = [makeTech('cislunarTransportNetwork')];
-    expect(computeSpaceSupplyCostReduction(techs)).toBe(1);
-  });
-
-  it('returns 2 for both reducing techs discovered', () => {
+  it('adds +4 capacity for both techs discovered', () => {
     const techs = [makeTech('reusableLaunchSystems'), makeTech('cislunarTransportNetwork')];
-    expect(computeSpaceSupplyCostReduction(techs)).toBe(2);
+    expect(recomputeLaunchCapacity([], techs)).toBe(4);
+  });
+
+  it('stacks facility capacity and tech bonuses', () => {
+    const facilities = [makeFacility('spaceLaunchCentre', '0,0')];
+    const techs = [makeTech('reusableLaunchSystems'), makeTech('cislunarTransportNetwork')];
+    expect(recomputeLaunchCapacity(facilities, techs)).toBe(7); // 3 + 2 + 2
   });
 
   it('ignores non-discovered techs', () => {
@@ -111,12 +96,12 @@ describe('computeSpaceSupplyCostReduction', () => {
       makeTech('reusableLaunchSystems', 'progress'),
       makeTech('cislunarTransportNetwork', 'rumour'),
     ];
-    expect(computeSpaceSupplyCostReduction(techs)).toBe(0);
+    expect(recomputeLaunchCapacity([], techs)).toBe(0);
   });
 
-  it('returns 0 for nuclearThermalPropulsion (no longer reduces cost)', () => {
-    const techs = [makeTech('nuclearThermalPropulsion')];
-    expect(computeSpaceSupplyCostReduction(techs)).toBe(0);
+  it('does not count non-capacity facilities', () => {
+    const facilities = [makeFacility('orbitalModule', 'leo')];
+    expect(recomputeLaunchCapacity(facilities, [])).toBe(0);
   });
 });
 

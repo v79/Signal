@@ -302,6 +302,10 @@ export interface ResourceBreakdown {
  * Returns a per-facility-name breakdown of net resource contributions for the
  * current turn. Facilities of the same type are grouped and their amounts
  * summed. Adjacency bonuses are included.
+ *
+ * Pass `launchAllocation`, `spaceNodes`, and `isruOperational` to correctly
+ * exclude output (but not upkeep) from unsupplied space facilities — mirroring
+ * the logic in `computeFacilityOutput`.
  */
 export function computeResourceBreakdown(
   facilities: FacilityInstance[],
@@ -309,8 +313,15 @@ export function computeResourceBreakdown(
   adjacencyEffects: AdjacencyEffect[],
   earthTiles: MapTile[],
   willExtras?: { bankDecay: number; drift: number },
+  launchAllocation: Record<string, boolean> = {},
+  spaceNodes: SpaceNode[] = [],
+  isruOperational = false,
 ): ResourceBreakdown {
   const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
+  const spaceNodeIds = new Set(spaceNodes.map((n) => n.id));
+  const lunarSurfaceIds = new Set(
+    spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id),
+  );
 
   const tileProductivity = new Map<string, number>();
   for (const tile of earthTiles) {
@@ -331,17 +342,28 @@ export function computeResourceBreakdown(
     const def = facilityDefs.get(facility.defId);
     if (!def) continue;
 
+    // Mirror computeFacilityOutput: unsupplied space facilities pay upkeep only.
+    const isSpaceNode = spaceNodeIds.has(facility.locationKey);
+    const isUnsupplied =
+      isSpaceNode &&
+      def.supplyCost != null && def.supplyCost > 0 &&
+      launchAllocation[facility.locationKey] === false;
+    const isruExempt = isUnsupplied && isruOperational && lunarSurfaceIds.has(facility.locationKey);
+    const skipOutput = isUnsupplied && !isruExempt;
+
     const scale = facility.condition * (tileProductivity.get(facility.locationKey) ?? 1);
     const net: Partial<Resources> = {};
 
-    for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
-      if (v) net[k] = (net[k] ?? 0) + v * scale;
+    if (!skipOutput) {
+      for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
+        if (v) net[k] = (net[k] ?? 0) + v * scale;
+      }
     }
     for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
       if (v) net[k] = (net[k] ?? 0) - v;
     }
     const adj = adjById.get(facility.id);
-    if (adj) {
+    if (!skipOutput && adj) {
       for (const [k, v] of Object.entries(adj.resourceBonus) as [keyof Resources, number][]) {
         if (v) net[k] = (net[k] ?? 0) + v;
       }

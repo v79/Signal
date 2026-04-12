@@ -13,6 +13,7 @@
     constructionQueue,
     launchCapacity,
     remainingCapacity,
+    launchAllocation,
     upgradeDef,
     actionsThisTurn,
     maxActionsPerTurn,
@@ -30,6 +31,7 @@
     constructionQueue: OngoingAction[];
     launchCapacity: number;
     remainingCapacity: number;
+    launchAllocation: Record<string, boolean>;
     /** Next-tier facility def, if upgrade is available and tech is discovered. */
     upgradeDef: FacilityDef | undefined;
     actionsThisTurn: number;
@@ -47,6 +49,7 @@
   };
 
   const atActionCap = $derived(actionsThisTurn >= maxActionsPerTurn);
+  const isSupplied = $derived(launchAllocation[node.id] !== false);
 
   /** The facility currently on this node, if any. */
   const currentInstance = $derived(
@@ -208,7 +211,7 @@
       <!-- Occupied -->
       <div class="state-panel occupied-panel">
         <div class="occupied-header">
-          <span class="state-badge occupied-badge">ACTIVE</span>
+          <span class="state-badge" class:occupied-badge={isSupplied} class:unsupplied-badge={!isSupplied}>{isSupplied ? 'ACTIVE' : 'UNSUPPLIED'}</span>
           <span class="state-name">{currentDef.name}</span>
           {#if currentInstance.condition < 1}
             <span
@@ -457,6 +460,11 @@
   .occupied-badge {
     color: #4a90c0;
     border-color: #1e4060;
+  }
+
+  .unsupplied-badge {
+    color: #c07040;
+    border-color: #603820;
   }
 
   .vacant-badge {

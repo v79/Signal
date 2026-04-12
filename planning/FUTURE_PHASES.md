@@ -85,6 +85,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
+  - Terrain restoration actions should probably be gated by current climate damange %
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc

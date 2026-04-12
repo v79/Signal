@@ -54,7 +54,7 @@ import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText }
 import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
-import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity, computeSpaceSupplyCostReduction } from './state';
+import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity } from './state';
 import { createRng } from './rng';
 import type { Rng } from './rng';
 
@@ -290,27 +290,32 @@ export function executeWorldPhase(
   //     Supply defaults to ON (launchAllocation[id] !== false), so we must explicitly set
   //     to false when there isn't enough headroom.
   const launchAllocationAfterQueue = { ...state.launchAllocation };
-  const supplyCostReduction = computeSpaceSupplyCostReduction(player.techs);
+  const unsuppliedOnCompletionNews: NewsItem[] = [];
   {
-    const effectiveCost = (defId: string) => {
-      const base = facilityDefs.get(defId)?.supplyCost ?? 0;
-      return Math.max(0, base - supplyCostReduction);
-    };
+    const supplyCost = (defId: string) => facilityDefs.get(defId)?.supplyCost ?? 0;
 
     let allocated = spaceNodesAfterQueue
       .filter((n) => n.facilityId && launchAllocationAfterQueue[n.id] !== false)
-      .reduce((sum, n) => sum + effectiveCost(n.facilityId!), 0);
+      .reduce((sum, n) => sum + supplyCost(n.facilityId!), 0);
 
     for (const action of completedActions) {
       if (!action.spaceNodeId) continue;
-      const supplyCost = effectiveCost(action.facilityDefId);
-      if (supplyCost === 0) continue;
+      const cost = supplyCost(action.facilityDefId);
+      if (cost === 0) continue;
       // This node was just set to facilityId in spaceNodesAfterQueue.
-      // It defaults to supplied — check if that exceeds capacity.
-      if (allocated > newLaunchCapacity) {
+      // It defaults to supplied — check if adding it would exceed capacity.
+      if (allocated + cost > newLaunchCapacity) {
         launchAllocationAfterQueue[action.spaceNodeId] = false;
+        const facName = facilityDefs.get(action.facilityDefId)?.name ?? action.facilityDefId;
+        const nodeName = spaceNodesAfterQueue.find((n) => n.id === action.spaceNodeId)?.label ?? action.spaceNodeId;
+        unsuppliedOnCompletionNews.push({
+          id: `unsupplied-${action.spaceNodeId}-t${nextTurn}`,
+          turn: nextTurn,
+          text: `${facName} construction complete at ${nodeName} — insufficient launch capacity, starting unsupplied.`,
+          category: 'event-loss',
+        });
       } else {
-        allocated += supplyCost;
+        allocated += cost;
       }
     }
   }
@@ -838,6 +843,7 @@ export function executeWorldPhase(
         ...retirementNews,
         ...projectNews,
         ...eraTransitionNews,
+        ...unsuppliedOnCompletionNews,
         ...exhaustionNews,
         ...degradationNews,
         ...blocNews,

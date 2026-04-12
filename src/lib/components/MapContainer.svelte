@@ -503,6 +503,7 @@
         constructionQueue={gameStore.state.player.constructionQueue}
         launchCapacity={gameStore.state.launchCapacity}
         remainingCapacity={gameStore.remainingLaunchCapacity}
+        launchAllocation={gameStore.state.launchAllocation}
         upgradeDef={upgradableNodeIds[selectedSpaceNode.id]}
         actionsThisTurn={gameStore.state.actionsThisTurn ?? 0}
         maxActionsPerTurn={(gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0)}

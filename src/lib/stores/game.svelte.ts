@@ -15,7 +15,7 @@ import type {
   Era,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
-import { createGameState, recomputeLaunchCapacity, computeSpaceSupplyCostReduction } from '../../engine/state';
+import { createGameState, recomputeLaunchCapacity } from '../../engine/state';
 import { createRng } from '../../engine/rng';
 import { goto } from '$app/navigation';
 import {
@@ -302,7 +302,6 @@ function resetSelections(): void {
 }
 
 function computeRemainingCapacity(state: GameState): number {
-  const reduction = computeSpaceSupplyCostReduction(state.player.techs);
   const allocated = state.map.spaceNodes
     .filter((n) => {
       if (!n.facilityId) return false;
@@ -312,8 +311,7 @@ function computeRemainingCapacity(state: GameState): number {
     })
     .reduce((sum, n) => {
       const def = FACILITY_DEFS.get(n.facilityId!);
-      const base = def?.supplyCost ?? 0;
-      return sum + Math.max(0, base - reduction);
+      return sum + (def?.supplyCost ?? 0);
     }, 0);
   return state.launchCapacity - allocated;
 }
@@ -401,6 +399,7 @@ export const gameStore = {
       { id: 'backChannelNegotiation-1', defId: 'backChannelNegotiation', zone: 'deck', bankedSinceTurn: null },
       { id: 'contingencyRouting-1', defId: 'contingencyRouting', zone: 'deck', bankedSinceTurn: null },
       { id: 'executiveOverride-1', defId: 'executiveOverride', zone: 'deck', bankedSinceTurn: null },
+      { id: 'prototypeDevelopment-1', defId: 'prototypeDevelopment', zone: 'deck', bankedSinceTurn: null },
     ];
 
     // Tech recipes are generated with a dedicated RNG slice so they are
@@ -1419,9 +1418,7 @@ export const gameStore = {
     } else {
       // The node is currently OFF, so it's already excluded from the allocated
       // total — check if remaining capacity covers adding it back
-      const reduction = computeSpaceSupplyCostReduction(_state.player.techs);
-      const effectiveCost = Math.max(0, def.supplyCost - reduction);
-      if (computeRemainingCapacity(_state) < effectiveCost) return;
+      if (computeRemainingCapacity(_state) < (def.supplyCost ?? 0)) return;
       mutateState({
         ..._state,
         launchAllocation: { ..._state.launchAllocation, [nodeId]: true },

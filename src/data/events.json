@@ -271,7 +271,7 @@
     "pushFactors": null,
     "blocIds": null,
     "countdownTurns": 3,
-    "weight": 0.8,
+    "weight": 0.4,
     "npcBlocId": "eastAsia",
     "blocMinWill": 45,
     "blocEventType": "diplomatic",
@@ -484,7 +484,7 @@
     "responseTier": "partialMitigation",
     "negativeEffect": { "fields": { "physics": -10, "computing": -8 }, "signalProgress": -10, "customEffectKey": "halvSpaceOutput" },
     "positiveEffect": null,
-    "mitigationCost": { "politicalWill": 15 }
+    "mitigationCost": { "funding": 30 }
   },
   "fuelShortage": {
     "id": "fuelShortage",
