@@ -112,7 +112,7 @@ export interface MapTile {
 // Near Space map (Era 2)
 // ---------------------------------------------------------------------------
 
-export type SpaceNodeType = 'lowEarthOrbit' | 'lagrangePoint' | 'lunarSurface';
+export type SpaceNodeType = 'lowEarthOrbit' | 'cislunarPoint' | 'trojanPoint' | 'lunarSurface';
 
 export interface SpaceNode {
   id: string;
@@ -191,6 +191,8 @@ export interface FacilityDef {
   era: Era;
   /** Tile types this facility may be placed on. Empty = no restriction. */
   allowedTileTypes: TileType[];
+  /** Space node types this facility may be placed on. Present only on nearSpace/deepSpace facilities. */
+  allowedNodeTypes?: SpaceNodeType[];
   buildCost: Partial<Resources>;
   upkeepCost: Partial<Resources>;
   /** Turns to construct. 0 = instant (placed immediately). */

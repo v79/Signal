@@ -12,9 +12,10 @@ import type {
   OngoingAction,
   NewsItem,
   TileActionDef,
+  Era,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
-import { createGameState } from '../../engine/state';
+import { createGameState, recomputeLaunchCapacity } from '../../engine/state';
 import { createRng } from '../../engine/rng';
 import { goto } from '$app/navigation';
 import {
@@ -40,7 +41,7 @@ import {
   getEffectForResolution,
   formatEffectForNews,
 } from '../../engine/events';
-import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility } from '../../engine/facilities';
+import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
 import { canInitiateProject, initiateProject } from '../../engine/projects';
 import {
   BLOC_MAPS,
@@ -149,15 +150,13 @@ export function generateEarthTiles(radius = 3): MapTile[] {
 export function generateSpaceNodes(): SpaceNode[] {
   return [
     { id: 'leo', type: 'lowEarthOrbit', label: 'LEO', launchCost: 10, facilityId: null },
-    { id: 'l1', type: 'lagrangePoint', label: 'L1', launchCost: 20, facilityId: null },
-    { id: 'l2', type: 'lagrangePoint', label: 'L2', launchCost: 20, facilityId: null },
-    {
-      id: 'lunarSurface',
-      type: 'lunarSurface',
-      label: 'Lunar Surface',
-      launchCost: 45,
-      facilityId: null,
-    },
+    { id: 'l1', type: 'cislunarPoint', label: 'L1', launchCost: 20, facilityId: null },
+    { id: 'l2', type: 'cislunarPoint', label: 'L2', launchCost: 20, facilityId: null },
+    { id: 'l4', type: 'trojanPoint', label: 'Trojan L4', launchCost: 30, facilityId: null },
+    { id: 'l5', type: 'trojanPoint', label: 'Trojan L5', launchCost: 30, facilityId: null },
+    { id: 'lunarSurface', type: 'lunarSurface', label: 'Mare Tranquillitatis', launchCost: 40, facilityId: null },
+    { id: 'lunarSouth', type: 'lunarSurface', label: 'Shackleton Crater', launchCost: 45, facilityId: null },
+    { id: 'lunarFar', type: 'lunarSurface', label: 'Mare Imbrium', launchCost: 50, facilityId: null },
   ];
 }
 
@@ -307,7 +306,6 @@ function computeRemainingCapacity(state: GameState): number {
     .filter((n) => {
       if (!n.facilityId) return false;
       if (state.launchAllocation[n.id] === false) return false;
-      // ISRU: lunar surface nodes don't consume launch capacity
       if (state.isruOperational && n.type === 'lunarSurface') return false;
       return true;
     })
@@ -355,15 +353,21 @@ export const gameStore = {
    * Replaces any existing save, builds the full initial state from the chosen
    * bloc + push factor, deals the opening hand, then navigates to `/`.
    */
-  startNewGame(seed: string, playerBlocDefId: string, pushFactor: PushFactor): void {
+  startNewGame(seed: string, playerBlocDefId: string, pushFactor: PushFactor, startEra: Era = 'earth'): void {
     const bloc = BLOC_DEFS.get(playerBlocDefId);
     if (!bloc) return;
+
+    // Dev: starting in a later era jumps the calendar forward.
+    const startYear = startEra === 'earth' ? 1970 : startEra === 'nearSpace' ? 2030 : 2060;
+    const startTurn = startYear - 1970 + 1;
 
     const base = createGameState({
       seed,
       playerBlocDefId,
       pushFactor,
-      startYear: 1970,
+      startYear,
+      startTurn,
+      startEra,
       willProfile: bloc.willProfile,
       startingWill: Math.round(bloc.willCeiling * 0.7),
       startingResources: { ...bloc.startingResources },
@@ -395,6 +399,7 @@ export const gameStore = {
       { id: 'backChannelNegotiation-1', defId: 'backChannelNegotiation', zone: 'deck', bankedSinceTurn: null },
       { id: 'contingencyRouting-1', defId: 'contingencyRouting', zone: 'deck', bankedSinceTurn: null },
       { id: 'executiveOverride-1', defId: 'executiveOverride', zone: 'deck', bankedSinceTurn: null },
+      { id: 'prototypeDevelopment-1', defId: 'prototypeDevelopment', zone: 'deck', bankedSinceTurn: null },
     ];
 
     // Tech recipes are generated with a dedicated RNG slice so they are
@@ -402,7 +407,9 @@ export const gameStore = {
     //   1. createRng(`${seed}-techs`)  → tech recipe generation (game start only)
     //   2. createRng(`${seed}-t1`)     → opening draw phase
     const techRng = createRng(`${seed}-techs`);
-    const techs = initialiseTechs([...TECH_DEFS.values()], techRng);
+    // Dev: if starting in a later era, pre-discover all techs from prior eras.
+    const preDiscoverEra = startEra !== 'earth' ? 'earth' : undefined;
+    const techs = initialiseTechs([...TECH_DEFS.values()], techRng, preDiscoverEra);
 
     // Narrative news items seeded at game start:
     //   Turn 1 (1970): programme initiated.
@@ -430,11 +437,57 @@ export const gameStore = {
       condition: 1.0,
       builtTurn: 0,
     };
-    const tilesWithHq = earthTiles.map((t) =>
+    let tilesWithHq = earthTiles.map((t) =>
       t.coord.q === 0 && t.coord.r === 0
         ? { ...t, facilitySlots: [hqFacilityId, hqFacilityId, hqFacilityId] as [string, string, string] }
         : t,
     );
+
+    // Dev: if starting in a later era, pre-place a Space Launch Centre on a
+    // suitable Earth tile so the player has launch capacity from the start.
+    const initialFacilities: FacilityInstance[] = [hqFacility];
+    if (startEra !== 'earth') {
+      const slcDef = FACILITY_DEFS.get('spaceLaunchCentre');
+      const slotCost = slcDef?.slotCost ?? 3;
+      const allowedTypes = slcDef?.allowedTileTypes ?? ['arid', 'agricultural'];
+
+      // Find first suitable tile: correct type, not HQ, has enough free slots.
+      // Fall back to any non-HQ tile with slots if no typed tile found.
+      const slcTile =
+        tilesWithHq.find(
+          (t) =>
+            !(t.coord.q === 0 && t.coord.r === 0) &&
+            allowedTypes.includes(t.type) &&
+            findContiguousFreeStart(t.facilitySlots, slotCost) !== null,
+        ) ??
+        tilesWithHq.find(
+          (t) =>
+            !(t.coord.q === 0 && t.coord.r === 0) &&
+            findContiguousFreeStart(t.facilitySlots, slotCost) !== null,
+        );
+
+      if (slcTile) {
+        const startSlot = findContiguousFreeStart(slcTile.facilitySlots, slotCost)!;
+        const slcId = `slc-dev-${slcTile.coord.q},${slcTile.coord.r}`;
+        const newSlots = [...slcTile.facilitySlots] as typeof slcTile.facilitySlots;
+        for (let i = startSlot; i < startSlot + slotCost; i++) {
+          newSlots[i] = slcId;
+        }
+        tilesWithHq = tilesWithHq.map((t) =>
+          t.coord.q === slcTile.coord.q && t.coord.r === slcTile.coord.r
+            ? { ...t, facilitySlots: newSlots }
+            : t,
+        );
+        initialFacilities.push({
+          id: slcId,
+          defId: 'spaceLaunchCentre',
+          locationKey: `${slcTile.coord.q},${slcTile.coord.r}`,
+          condition: 1.0,
+          builtTurn: 0,
+        });
+      }
+    }
+    const devLaunchCapacity = recomputeLaunchCapacity(initialFacilities, techs);
 
     // Pre-fill Head of Finance and Director of Operations at game start.
     const financeDefId = availableBoardDefIds.find((id) => BOARD_DEFS.get(id)?.role === 'headOfFinance') ?? 'drKowalski';
@@ -448,12 +501,13 @@ export const gameStore = {
       ...base,
       availableBoardDefIds,
       boardGracePeriodEnds: 4,
+      launchCapacity: devLaunchCapacity,
       player: {
         ...base.player,
         cards: starterCards,
         techs,
         newsFeed: openingNews,
-        facilities: [hqFacility],
+        facilities: initialFacilities,
         board: starterBoard,
       },
       blocs: initialiseBlocStates([...BLOC_DEFS.values()]),
@@ -1364,7 +1418,7 @@ export const gameStore = {
     } else {
       // The node is currently OFF, so it's already excluded from the allocated
       // total — check if remaining capacity covers adding it back
-      if (computeRemainingCapacity(_state) < def.supplyCost) return;
+      if (computeRemainingCapacity(_state) < (def.supplyCost ?? 0)) return;
       mutateState({
         ..._state,
         launchAllocation: { ..._state.launchAllocation, [nodeId]: true },
@@ -1423,6 +1477,83 @@ export const gameStore = {
         ..._state.player,
         resources: newResources,
         constructionQueue: [..._state.player.constructionQueue, action],
+      },
+    });
+  },
+
+  /**
+   * Build the first facility on an empty space node.
+   * Validates: node exists and is vacant, no construction in progress, tech unlocked,
+   * resources sufficient, supply cost fits within remaining launch capacity, action cap not exceeded.
+   */
+  buildSpaceFacility(nodeId: string, defId: string): void {
+    if (!_state) return;
+    const def = FACILITY_DEFS.get(defId);
+    if (!def) return;
+
+    const cap = (_state.maxActionsPerTurn ?? 3) + (_state.bonusActionsThisTurn ?? 0);
+    if ((_state.actionsThisTurn ?? 0) >= cap) return;
+
+    const node = _state.map.spaceNodes.find((n) => n.id === nodeId);
+    if (!node) return;
+
+    // Node must be vacant
+    if (node.facilityId !== null) return;
+
+    // No construction already queued for this node
+    if (_state.player.constructionQueue.some((a) => a.spaceNodeId === nodeId)) return;
+
+    // Tech gate
+    if (def.requiredTechId != null) {
+      const discovered = _state.player.techs.some(
+        (t) => t.defId === def.requiredTechId && t.stage === 'discovered',
+      );
+      if (!discovered) return;
+    }
+
+    // Lunar uniqueness: only one chain of each type across all lunar surface nodes
+    if (node.type === 'lunarSurface') {
+      if (isLunarChainTaken(defId, nodeId, _state.map.spaceNodes, FACILITY_DEFS, _state.player.constructionQueue)) return;
+    }
+
+    // Affordability
+    const cost = def.buildCost;
+    if ((cost.funding ?? 0) > _state.player.resources.funding) return;
+    if ((cost.materials ?? 0) > _state.player.resources.materials) return;
+    if ((cost.politicalWill ?? 0) > _state.player.resources.politicalWill) return;
+
+    const newResources = {
+      funding: _state.player.resources.funding - (cost.funding ?? 0),
+      materials: Math.max(0, _state.player.resources.materials - (cost.materials ?? 0)),
+      politicalWill: Math.max(0, _state.player.resources.politicalWill - (cost.politicalWill ?? 0)),
+    };
+
+    const actionId = `space-build-${defId}-${nodeId}-t${_state.turn}`;
+    const action: OngoingAction = {
+      id: actionId,
+      type: 'construct',
+      facilityDefId: defId,
+      coordKey: '',
+      turnsRemaining: def.buildTime,
+      totalTurns: def.buildTime,
+      slotIndex: 0,
+      spaceNodeId: nodeId,
+    };
+
+    const newsItem: import('../../engine/types').NewsItem = {
+      id: `space-build-news-${nodeId}-${_state.turn}`,
+      turn: _state.turn,
+      text: `Construction begun: ${def.name} at ${node.label}.`,
+    };
+
+    mutateState({
+      ..._state,
+      actionsThisTurn: (_state.actionsThisTurn ?? 0) + 1,
+      player: {
+        ..._state.player,
+        resources: newResources,
+        constructionQueue: [..._state.player.constructionQueue, action],
+        newsFeed: [..._state.player.newsFeed, newsItem],
       },
     });
   },

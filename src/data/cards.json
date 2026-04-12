@@ -404,6 +404,16 @@
     "counterEffect": null,
     "upgradesFrom": null
   },
+  "prototypeDevelopment": {
+    "id": "prototypeDevelopment",
+    "name": "Prototype Development Programme",
+    "description": "Commission an accelerated prototype build cycle across key engineering subsystems.",
+    "flavourText": "Paper designs don't fail. Prototypes do — and that's precisely the point.",
+    "era": "earth",
+    "effect": { "fields": { "engineering": 12, "physics": 4 }, "resources": { "funding": -6 } },
+    "counterEffect": null,
+    "upgradesFrom": null
+  },
   "autonomousResearch": {
     "id": "autonomousResearch",
     "name": "Autonomous Research Protocol",

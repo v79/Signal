@@ -52,15 +52,14 @@ export function checkEconomicHegemonyVictory(state: GameState): boolean {
 }
 
 /**
- * Terraforming: a permanent installation exists on the Lunar Surface,
- * establishing humanity's first multi-world presence.
- * Requires at least Era 2.
+ * Terraforming: a self-sustaining lunar colony has been established.
+ * Requires the Lunar Colony Hub (top of the habitation chain) to be
+ * operational on the lunar surface. A mine or basic habitat is not enough.
+ * TODO: gate on Moon Colony Stage 3 landmark completion once Phase 30 is implemented.
  */
 export function checkTerraformingVictory(state: GameState): boolean {
-  return (
-    (state.era === 'nearSpace' || state.era === 'deepSpace') &&
-    state.map.spaceNodes.some((n) => n.id === 'lunarSurface' && n.facilityId !== null)
-  );
+  if (state.era === 'earth') return false;
+  return state.map.spaceNodes.some((n) => n.type === 'lunarSurface' && n.facilityId === 'lunarColonyHub');
 }
 
 // ---------------------------------------------------------------------------

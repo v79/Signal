@@ -48,6 +48,17 @@
   let scene: TechTreeSceneType | null = null;
   let loading = $state(true);
 
+  // Per-era completion state — used for tab badges.
+  function eraStats(e: Era): { discovered: number; total: number } {
+    const eraT = techs.filter((t) => (techDefs.get(t.defId)?.era ?? 'earth') === e);
+    return { discovered: eraT.filter((t) => t.stage === 'discovered').length, total: eraT.length };
+  }
+
+  function eraComplete(e: Era): boolean {
+    const s = eraStats(e);
+    return s.total > 0 && s.discovered === s.total;
+  }
+
   // Era currently displayed in the canvas.
   // Captured from the prop at open time — the modal remounts on each open so this is correct.
   // eslint-disable-next-line svelte/reactivity
@@ -310,6 +321,7 @@
               class="era-tab"
               class:active={activeEra === e}
               class:disabled={!eraEnabled(e)}
+              class:complete={eraEnabled(e) && eraComplete(e)}
               disabled={!eraEnabled(e)}
               onclick={() => {
                 if (eraEnabled(e)) {
@@ -320,7 +332,7 @@
               role="tab"
               aria-selected={activeEra === e}
               aria-label={ERA_TAB_LABELS[e]}
-            >{ERA_TAB_LABELS[e]}</button>
+            >{eraEnabled(e) && eraComplete(e) ? '✓ ' : ''}{ERA_TAB_LABELS[e]}</button>
           {/each}
         </div>
       </div>
@@ -624,6 +636,17 @@
     color: #90c8d8;
     border-color: #2a5870;
     background: rgba(42, 88, 112, 0.18);
+  }
+
+  .era-tab.complete:not(.active) {
+    color: #5a9a60;
+    border-color: #2a5030;
+  }
+
+  .era-tab.complete.active {
+    color: #7ab880;
+    border-color: #3a7040;
+    background: rgba(42, 88, 52, 0.18);
   }
 
   .era-tab.disabled {

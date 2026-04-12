@@ -302,6 +302,10 @@ export interface ResourceBreakdown {
  * Returns a per-facility-name breakdown of net resource contributions for the
  * current turn. Facilities of the same type are grouped and their amounts
  * summed. Adjacency bonuses are included.
+ *
+ * Pass `launchAllocation`, `spaceNodes`, and `isruOperational` to correctly
+ * exclude output (but not upkeep) from unsupplied space facilities — mirroring
+ * the logic in `computeFacilityOutput`.
  */
 export function computeResourceBreakdown(
   facilities: FacilityInstance[],
@@ -309,8 +313,15 @@ export function computeResourceBreakdown(
   adjacencyEffects: AdjacencyEffect[],
   earthTiles: MapTile[],
   willExtras?: { bankDecay: number; drift: number },
+  launchAllocation: Record<string, boolean> = {},
+  spaceNodes: SpaceNode[] = [],
+  isruOperational = false,
 ): ResourceBreakdown {
   const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
+  const spaceNodeIds = new Set(spaceNodes.map((n) => n.id));
+  const lunarSurfaceIds = new Set(
+    spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id),
+  );
 
   const tileProductivity = new Map<string, number>();
   for (const tile of earthTiles) {
@@ -331,17 +342,28 @@ export function computeResourceBreakdown(
     const def = facilityDefs.get(facility.defId);
     if (!def) continue;
 
+    // Mirror computeFacilityOutput: unsupplied space facilities pay upkeep only.
+    const isSpaceNode = spaceNodeIds.has(facility.locationKey);
+    const isUnsupplied =
+      isSpaceNode &&
+      def.supplyCost != null && def.supplyCost > 0 &&
+      launchAllocation[facility.locationKey] === false;
+    const isruExempt = isUnsupplied && isruOperational && lunarSurfaceIds.has(facility.locationKey);
+    const skipOutput = isUnsupplied && !isruExempt;
+
     const scale = facility.condition * (tileProductivity.get(facility.locationKey) ?? 1);
     const net: Partial<Resources> = {};
 
-    for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
-      if (v) net[k] = (net[k] ?? 0) + v * scale;
+    if (!skipOutput) {
+      for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
+        if (v) net[k] = (net[k] ?? 0) + v * scale;
+      }
     }
     for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
       if (v) net[k] = (net[k] ?? 0) - v;
     }
     const adj = adjById.get(facility.id);
-    if (adj) {
+    if (!skipOutput && adj) {
       for (const [k, v] of Object.entries(adj.resourceBonus) as [keyof Resources, number][]) {
         if (v) net[k] = (net[k] ?? 0) + v;
       }
@@ -441,33 +463,80 @@ export function computeClimateBreakdown(
  */
 export const MINE_DEPLETION_RATE = 0.02;
 
+export interface MineDepletionResult {
+  facilities: FacilityInstance[];
+  tiles: MapTile[];
+  updatedSpaceNodes: SpaceNode[];
+  /** News texts for exhausted space facilities (to be turned into NewsItems by the caller). */
+  exhaustionMessages: string[];
+}
+
 /**
  * Advance depletion for all depleting facilities.
- * Also decrements `mineDepletion` on the tile so the seam level persists
- * independently of whether a mine is currently built there.
- * Returns updated facilities and tiles — does not mutate inputs.
+ * - Earth mines: decrements `facility.condition` and `tile.mineDepletion`.
+ * - Space mines: decrements `facility.condition` only (no tile seam tracking).
+ *   Unsupplied space facilities do not deplete. When a space mine reaches
+ *   condition 0 it is removed and the node is cleared.
+ * Returns updated arrays — does not mutate inputs.
  */
 export function tickMineDepletion(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
   tiles: MapTile[],
-): { facilities: FacilityInstance[]; tiles: MapTile[] } {
-  const depletingKeys = new Set<string>();
+  spaceNodes: SpaceNode[] = [],
+  launchAllocation: Record<string, boolean> = {},
+): MineDepletionResult {
+  const earthDepletingKeys = new Set<string>();
+  const exhaustedSpaceNodeIds = new Set<string>();
+  const exhaustionMessages: string[] = [];
 
-  const updatedFacilities = facilities.map((facility) => {
-    const def = facilityDefs.get(facility.defId);
-    if (!def?.depletes) return facility;
-    depletingKeys.add(facility.locationKey);
-    return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
-  });
+  const updatedFacilities = facilities
+    .map((facility) => {
+      const def = facilityDefs.get(facility.defId);
+      if (!def?.depletes) return facility;
+
+      // Is this a space facility?
+      const isSpaceFacility = spaceNodes.some((n) => n.id === facility.locationKey);
+      if (isSpaceFacility) {
+        // Don't deplete unsupplied space facilities
+        if (launchAllocation[facility.locationKey] === false) return facility;
+        const newCondition = Math.max(0, facility.condition - MINE_DEPLETION_RATE);
+        return { ...facility, condition: newCondition };
+      }
+
+      // Earth facility
+      earthDepletingKeys.add(facility.locationKey);
+      return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
+    })
+    .filter((facility) => {
+      const def = facilityDefs.get(facility.defId);
+      if (!def?.depletes) return true;
+      const isSpaceFacility = spaceNodes.some((n) => n.id === facility.locationKey);
+      if (isSpaceFacility && facility.condition <= 0) {
+        exhaustedSpaceNodeIds.add(facility.locationKey);
+        const node = spaceNodes.find((n) => n.id === facility.locationKey);
+        exhaustionMessages.push(
+          `${def.name} at ${node?.label ?? facility.locationKey} has been exhausted and removed.`,
+        );
+        return false;
+      }
+      return true;
+    });
 
   const updatedTiles = tiles.map((tile) => {
     const key = `${tile.coord.q},${tile.coord.r}`;
-    if (!depletingKeys.has(key)) return tile;
+    if (!earthDepletingKeys.has(key)) return tile;
     return { ...tile, mineDepletion: Math.max(0, tile.mineDepletion - MINE_DEPLETION_RATE) };
   });
 
-  return { facilities: updatedFacilities, tiles: updatedTiles };
+  const updatedSpaceNodes =
+    exhaustedSpaceNodeIds.size > 0
+      ? spaceNodes.map((n) =>
+          exhaustedSpaceNodeIds.has(n.id) ? { ...n, facilityId: null } : n,
+        )
+      : spaceNodes;
+
+  return { facilities: updatedFacilities, tiles: updatedTiles, updatedSpaceNodes, exhaustionMessages };
 }
 
 // ---------------------------------------------------------------------------
@@ -762,6 +831,57 @@ export function canUpgradeFacility(
     return def;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Lunar chain uniqueness
+// ---------------------------------------------------------------------------
+
+/**
+ * Walk the upgradesFrom chain to find the root facility def ID.
+ * e.g. lunarSpaceport → lunarLaunchFacility (root)
+ */
+export function getChainRoot(defId: string, facilityDefs: Map<string, FacilityDef>): string {
+  let id = defId;
+  while (true) {
+    const parent = facilityDefs.get(id)?.upgradesFrom;
+    if (!parent) return id;
+    id = parent;
+  }
+}
+
+/**
+ * Returns true if any lunarSurface node other than `excludeNodeId` already has
+ * a facility (built or queued) from the same chain as `defId`.
+ *
+ * Used to enforce one-chain-per-type uniqueness across lunar sites.
+ */
+export function isLunarChainTaken(
+  defId: string,
+  excludeNodeId: string,
+  spaceNodes: SpaceNode[],
+  facilityDefs: Map<string, FacilityDef>,
+  constructionQueue: OngoingAction[] = [],
+): boolean {
+  const targetRoot = getChainRoot(defId, facilityDefs);
+
+  // Check built facilities on other lunar nodes
+  for (const node of spaceNodes) {
+    if (node.type !== 'lunarSurface' || node.id === excludeNodeId || !node.facilityId) continue;
+    if (getChainRoot(node.facilityId, facilityDefs) === targetRoot) return true;
+  }
+
+  // Check construction queue entries targeting other lunar nodes
+  const lunarNodeIds = new Set(
+    spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id),
+  );
+  for (const action of constructionQueue) {
+    if (!action.spaceNodeId || action.spaceNodeId === excludeNodeId) continue;
+    if (!lunarNodeIds.has(action.spaceNodeId)) continue;
+    if (getChainRoot(action.facilityDefId, facilityDefs) === targetRoot) return true;
+  }
+
+  return false;
 }
 
 // ---------------------------------------------------------------------------

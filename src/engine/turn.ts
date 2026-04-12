@@ -278,12 +278,47 @@ export function executeWorldPhase(
     updatedFacilities: facilitiesAfterQueue,
     updatedTiles: tilesAfterQueue,
     updatedSpaceNodes: spaceNodesAfterQueue,
+    completedActions,
     climateDelta: tileActionClimateDelta,
   } = tickConstructionQueue(player.constructionQueue, player.facilities, map.earthTiles, nextTurn, facilityDefs, map.spaceNodes, tileActionDefs);
 
   // 0b. Recompute launch capacity from built facilities + tech bonuses.
   //     Done before output tick so unsupplied space facilities are correctly skipped.
   const newLaunchCapacity = recomputeLaunchCapacity(facilitiesAfterQueue, player.techs);
+
+  // 0c. Auto-unsupply any space facilities that completed this tick but would exceed capacity.
+  //     Supply defaults to ON (launchAllocation[id] !== false), so we must explicitly set
+  //     to false when there isn't enough headroom.
+  const launchAllocationAfterQueue = { ...state.launchAllocation };
+  const unsuppliedOnCompletionNews: NewsItem[] = [];
+  {
+    const supplyCost = (defId: string) => facilityDefs.get(defId)?.supplyCost ?? 0;
+
+    let allocated = spaceNodesAfterQueue
+      .filter((n) => n.facilityId && launchAllocationAfterQueue[n.id] !== false)
+      .reduce((sum, n) => sum + supplyCost(n.facilityId!), 0);
+
+    for (const action of completedActions) {
+      if (!action.spaceNodeId) continue;
+      const cost = supplyCost(action.facilityDefId);
+      if (cost === 0) continue;
+      // This node was just set to facilityId in spaceNodesAfterQueue.
+      // It defaults to supplied — check if adding it would exceed capacity.
+      if (allocated + cost > newLaunchCapacity) {
+        launchAllocationAfterQueue[action.spaceNodeId] = false;
+        const facName = facilityDefs.get(action.facilityDefId)?.name ?? action.facilityDefId;
+        const nodeName = spaceNodesAfterQueue.find((n) => n.id === action.spaceNodeId)?.label ?? action.spaceNodeId;
+        unsuppliedOnCompletionNews.push({
+          id: `unsupplied-${action.spaceNodeId}-t${nextTurn}`,
+          turn: nextTurn,
+          text: `${facName} construction complete at ${nodeName} — insufficient launch capacity, starting unsupplied.`,
+          category: 'event-loss',
+        });
+      } else {
+        allocated += cost;
+      }
+    }
+  }
 
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
@@ -572,11 +607,23 @@ export function executeWorldPhase(
   const newWill = tickWill(player.will, willConfig);
 
   // 10. Mine depletion (applied to post-queue facilities)
-  const { facilities: newFacilities, tiles: tilesAfterDepletion } = tickMineDepletion(
+  const {
+    facilities: newFacilities,
+    tiles: tilesAfterDepletion,
+    updatedSpaceNodes: spaceNodesAfterDepletion,
+    exhaustionMessages,
+  } = tickMineDepletion(
     facilitiesAfterQueue,
     facilityDefs,
     tilesAfterQueue,
+    spaceNodesAfterQueue,
+    state.launchAllocation,
   );
+  const exhaustionNews: NewsItem[] = exhaustionMessages.map((text, i) => ({
+    id: `mine-exhausted-${nextTurn}-${i}`,
+    turn: nextTurn,
+    text,
+  }));
 
   // 11. Climate pressure — baseline + net facility impact
   const facilityClimateImpact = newFacilities.reduce((sum, inst) => {
@@ -765,8 +812,8 @@ export function executeWorldPhase(
     signal: newSignal,
     activeEvents: eventsAfterWorld,
     launchCapacity: newLaunchCapacity,
-    launchAllocation: state.launchAllocation,
-    map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterQueue },
+    launchAllocation: launchAllocationAfterQueue,
+    map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterDepletion },
     boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
     orbitalStationAuthorised: state.orbitalStationAuthorised,
     orbitalStationDeferCount: state.orbitalStationDeferCount,
@@ -796,6 +843,8 @@ export function executeWorldPhase(
         ...retirementNews,
         ...projectNews,
         ...eraTransitionNews,
+        ...unsuppliedOnCompletionNews,
+        ...exhaustionNews,
         ...degradationNews,
         ...blocNews,
         ...mergerNews,

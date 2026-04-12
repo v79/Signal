@@ -83,6 +83,9 @@
                 DEFAULT_WILL_CONFIG[gameStore.state.player.willProfile],
               ) - gameStore.state.player.will,
           },
+          gameStore.state.launchAllocation,
+          gameStore.state.map.spaceNodes,
+          gameStore.state.isruOperational,
         )
       : { funding: [], materials: [], politicalWill: [] },
   );

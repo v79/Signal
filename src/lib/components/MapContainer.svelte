@@ -7,6 +7,7 @@
   import BlocStatusPanel from './BlocStatusPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
   import SpaceOverview from './SpaceOverview.svelte';
+  import SpaceNodePicker from './SpaceNodePicker.svelte';
   import { gameStore } from '../stores/game.svelte';
   import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS, PROJECT_DEFS, TILE_ACTION_DEFS } from '../../data/loader';
   import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
@@ -209,6 +210,10 @@
         game.scene.stop(SCENE_KEYS[fromMapTab]);
         game.scene.start(SCENE_KEYS[tab]);
       }
+      // Deselect space node when leaving the space tab
+      if (fromMapTab === 'space' && tab !== 'space') {
+        gameStore.selectSpaceNode(null);
+      }
       lastMapTab = tab;
       activeTab = tab;
     }
@@ -223,11 +228,18 @@
       : null,
   );
 
-  /** Map of nodeId → next-tier facility name for nodes that can be upgraded. */
-  const upgradableNodeIds = $derived.by<Record<string, string>>(() => {
+  /** The currently selected space node, if any. */
+  const selectedSpaceNode = $derived(
+    gameStore.selectedSpaceNodeId != null && gameStore.state
+      ? (gameStore.state.map.spaceNodes.find((n) => n.id === gameStore.selectedSpaceNodeId) ?? null)
+      : null,
+  );
+
+  /** Map of nodeId → next-tier FacilityDef for nodes that can be upgraded. */
+  const upgradableNodeIds = $derived.by<Record<string, import('../../engine/types').FacilityDef>>(() => {
     const state = gameStore.state;
     if (!state) return {};
-    const result: Record<string, string> = {};
+    const result: Record<string, import('../../engine/types').FacilityDef> = {};
     for (const node of state.map.spaceNodes) {
       const nextDef = canUpgradeFacility(
         node.id,
@@ -236,7 +248,7 @@
         FACILITY_DEFS,
         state.player.techs,
       );
-      if (nextDef) result[node.id] = nextDef.name;
+      if (nextDef) result[node.id] = nextDef;
     }
     return result;
   });
@@ -274,6 +286,7 @@
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
         getCompletedProjects: () => gameStore.state?.player.completedProjectIds ?? [],
         getLaunchAllocation: () => gameStore.state?.launchAllocation ?? {},
+        getConstructionQueue: () => gameStore.state?.player.constructionQueue ?? [],
         onNodeClick: (id: string) => {
           gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
         },
@@ -468,9 +481,35 @@
         launchAllocation={gameStore.state.launchAllocation}
         remainingCapacity={gameStore.remainingLaunchCapacity}
         {upgradableNodeIds}
+        playerResources={gameStore.state.player.resources}
         onClose={() => (showSpaceOverview = false)}
         onToggleSupply={(nodeId) => gameStore.toggleSpaceFacilitySupply(nodeId)}
         onUpgrade={(nodeId) => gameStore.upgradeFacility(nodeId)}
+      />
+    {/if}
+    {#if selectedSpaceNode && activeTab === 'space' && gameStore.state}
+      <SpaceNodePicker
+        node={selectedSpaceNode}
+        facilityDefs={FACILITY_DEFS}
+        facilityInstances={gameStore.state.player.facilities.filter(
+          (f) => f.locationKey === selectedSpaceNode.id,
+        )}
+        spaceNodes={gameStore.state.map.spaceNodes}
+        playerResources={gameStore.state.player.resources}
+        discoveredTechIds={new Set(
+          gameStore.state.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
+        )}
+        techNames={new Map([...TECH_DEFS.values()].map((d) => [d.id, d.name]))}
+        constructionQueue={gameStore.state.player.constructionQueue}
+        launchCapacity={gameStore.state.launchCapacity}
+        remainingCapacity={gameStore.remainingLaunchCapacity}
+        launchAllocation={gameStore.state.launchAllocation}
+        upgradeDef={upgradableNodeIds[selectedSpaceNode.id]}
+        actionsThisTurn={gameStore.state.actionsThisTurn ?? 0}
+        maxActionsPerTurn={(gameStore.state.maxActionsPerTurn ?? 3) + (gameStore.state.bonusActionsThisTurn ?? 0)}
+        onBuild={(defId) => gameStore.buildSpaceFacility(gameStore.selectedSpaceNodeId!, defId)}
+        onUpgrade={() => gameStore.upgradeFacility(gameStore.selectedSpaceNodeId!)}
+        onClose={() => gameStore.selectSpaceNode(null)}
       />
     {/if}
     {#if selectedTile && activeTab === 'earth'}
