@@ -24,25 +24,39 @@ export interface SpaceSceneCallbacks {
   getConstructionQueue: () => OngoingAction[];
 }
 
-// Fixed canvas positions for each node id (normalised to 600 × 400 logical px)
+// Moon body — drawn as a single object with three surface slots.
+// This is a visual-only anchor used for the LEO→Moon connection line.
+const MOON_POS = { x: 300, y: 68 };
+const MOON_RADIUS = 30;
+const LUNAR_SLOT_RADIUS = 6;
+
+// Set of SpaceNode IDs that are rendered as moon surface slots, not standalone nodes.
+const LUNAR_NODE_IDS = new Set(['lunarSurface', 'lunarSouth', 'lunarFar']);
+
+// Slot positions relative to MOON_POS (logical units).
+// All three are within the moon circle (radius 30).
+const LUNAR_SLOTS: { id: string; ox: number; oy: number }[] = [
+  { id: 'lunarSurface', ox: -12, oy:  4 },  // Mare Tranquillitatis — equatorial, near side
+  { id: 'lunarSouth',   ox:   0, oy: 20 },  // Shackleton Crater — south pole
+  { id: 'lunarFar',     ox:  12, oy: -8 },  // Mare Imbrium — upper hemisphere
+];
+
+// Fixed canvas positions for each node id (normalised to 600 × 400 logical px).
+// 'moon' is a visual-only anchor (not a SpaceNode) used for the LEO connection line.
 const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  lunarSurface: { x: 300, y: 40 },
-  lunarSouth:   { x: 155, y: 78 },
-  lunarFar:     { x: 445, y: 78 },
-  l1: { x: 90, y: 195 },
-  leo: { x: 300, y: 195 },
-  l2: { x: 510, y: 195 },
-  l4: { x: 120, y: 345 },
-  l5: { x: 480, y: 345 },
+  moon: { x: 300, y: 68 },
+  l1:   { x: 90,  y: 195 },
+  leo:  { x: 300, y: 195 },
+  l2:   { x: 510, y: 195 },
+  l4:   { x: 120, y: 345 },
+  l5:   { x: 480, y: 345 },
 };
 
 // Transit connections between nodes
 const CONNECTIONS: [string, string][] = [
+  ['leo', 'moon'],
   ['leo', 'l1'],
   ['leo', 'l2'],
-  ['leo', 'lunarSurface'],
-  ['lunarSurface', 'lunarSouth'],
-  ['lunarSurface', 'lunarFar'],
   ['l1', 'l4'],
   ['l2', 'l5'],
 ];
@@ -242,12 +256,26 @@ export class SpaceScene extends Phaser.Scene {
    */
   private hitTestNode(px: number, py: number): string | null {
     const s = Math.min(this.scaleX, this.scaleY);
+
+    // Standard orbital nodes (skip 'moon' — visual anchor only)
     const hitR = (NODE_RADIUS + 8) * s;
     for (const [id, pos] of Object.entries(NODE_POSITIONS)) {
+      if (id === 'moon') continue;
       const cx = pos.x * this.scaleX + this.panX;
       const cy = pos.y * this.scaleY + this.panY;
       if (Math.hypot(px - cx, py - cy) <= hitR) return id;
     }
+
+    // Lunar surface slots — hit test against their actual canvas positions on the moon body
+    const moonX = MOON_POS.x * this.scaleX + this.panX;
+    const moonY = MOON_POS.y * this.scaleY + this.panY;
+    const slotHitR = (LUNAR_SLOT_RADIUS + 8) * s;
+    for (const slot of LUNAR_SLOTS) {
+      const cx = moonX + slot.ox * s;
+      const cy = moonY + slot.oy * s;
+      if (Math.hypot(px - cx, py - cy) <= slotHitR) return slot.id;
+    }
+
     return null;
   }
 
@@ -285,11 +313,13 @@ export class SpaceScene extends Phaser.Scene {
 
     // Orbit arcs first, then Earth on top (masks lower half of arc), then nodes on top of all
     this.drawEarthOrbitArc(leoX, leoY, completed);
-    this.drawMoonOrbitArc(nodes);
     this.drawEarth(leoX, leoY);
+    // Moon drawn after Earth so it renders above any overlapping lines
+    this.drawMoon(nodes, selectedId, launchAllocation, constructionByNode);
 
-    // Nodes
+    // Orbital nodes (lunar nodes are rendered inside drawMoon — skip them here)
     for (const node of nodes) {
+      if (LUNAR_NODE_IDS.has(node.id)) continue;
       const pos = NODE_POSITIONS[node.id];
       if (!pos) continue;
 
@@ -302,6 +332,8 @@ export class SpaceScene extends Phaser.Scene {
       const isInactive = hasFacility && launchAllocation[node.id] === false;
       const action = constructionByNode.get(node.id) ?? null;
 
+      const isLagrange = node.type === 'cislunarPoint' || node.type === 'trojanPoint';
+
       if (node.id === 'leo') {
         const stageCount = STATION_STAGES.filter((s) => completed.includes(s)).length;
         if (stageCount > 0) {
@@ -310,7 +342,7 @@ export class SpaceScene extends Phaser.Scene {
           this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected, isInactive);
         }
       } else {
-        this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected, isInactive);
+        this.drawPlainNode(cx, cy, r, colour, hasFacility, isSelected, isInactive, isLagrange);
       }
 
       // Construction / upgrade overlay
@@ -367,19 +399,22 @@ export class SpaceScene extends Phaser.Scene {
 
   private drawPlainNode(
     cx: number, cy: number, r: number,
-    colour: number, hasFacility: boolean, isSelected: boolean, isInactive = false
+    colour: number, hasFacility: boolean, isSelected: boolean, isInactive = false,
+    outlineOnly = false
   ): void {
     if (isSelected) {
       this.gfx.lineStyle(2, 0x88c8ff, 0.9);
       this.gfx.strokeCircle(cx, cy, r + 5);
     }
     const alpha = isInactive ? 0.25 : (hasFacility ? 1 : 0.55);
-    this.gfx.fillStyle(colour, alpha);
-    this.gfx.fillCircle(cx, cy, r);
-    this.gfx.lineStyle(1.5, isSelected ? 0x88c8ff : colour, isInactive ? 0.3 : 1);
+    if (!outlineOnly) {
+      this.gfx.fillStyle(colour, alpha);
+      this.gfx.fillCircle(cx, cy, r);
+    }
+    this.gfx.lineStyle(1.5, isSelected ? 0x88c8ff : colour, isInactive ? 0.3 : (outlineOnly ? 0.8 : 1));
     this.gfx.strokeCircle(cx, cy, r);
     if (hasFacility) {
-      this.gfx.fillStyle(0xffffff, isInactive ? 0.2 : 0.85);
+      this.gfx.fillStyle(colour, isInactive ? 0.2 : (outlineOnly ? 0.7 : 0.85));
       this.gfx.fillCircle(cx, cy, r * 0.35);
     }
   }
@@ -545,26 +580,116 @@ export class SpaceScene extends Phaser.Scene {
   }
 
   // ---------------------------------------------------------------------------
-  // Moon orbit arc — always visible, auto-populated from future lunar projects
+  // Moon — drawn as a single body with three surface slot indicators.
+  // Replaces the old three separate lunar node circles.
   // ---------------------------------------------------------------------------
 
-  private drawMoonOrbitArc(nodes: SpaceNode[]): void {
-    const lunarNode = nodes.find((n) => n.type === 'lunarSurface');
-    if (!lunarNode) return;
-
-    const pos = NODE_POSITIONS['lunarSurface'];
+  private drawMoon(
+    nodes: SpaceNode[],
+    selectedId: string | null,
+    launchAllocation: Record<string, boolean>,
+    constructionByNode: Map<string, OngoingAction>
+  ): void {
     const s = Math.min(this.scaleX, this.scaleY);
-    const mx = pos.x * this.scaleX + this.panX;
-    const my = pos.y * this.scaleY + this.panY;
-    const arcRx = 38 * this.scaleX;
-    const arcRy = 12 * this.scaleY;
+    const mx = MOON_POS.x * this.scaleX + this.panX;
+    const my = MOON_POS.y * this.scaleY + this.panY;
+    const r = MOON_RADIUS * s;
 
-    // Faint ring — full ellipse (moon is smaller, ring can wrap around)
-    this.gfx.lineStyle(1 * s, 0x506070, 0.45);
-    this.gfx.strokeEllipse(mx, my, arcRx * 2, arcRy * 2);
+    // Moon body base
+    this.gfx.fillStyle(0x5e6570, 1);
+    this.gfx.fillCircle(mx, my, r);
 
-    // 3 slot positions (upper arc) — empty for now, ready for future projects
-    // No icons drawn until lunar orbit projects are defined
+    // Subtle lit hemisphere (upper-left highlight)
+    this.gfx.fillStyle(0x7a8490, 0.35);
+    this.gfx.fillEllipse(mx - r * 0.18, my - r * 0.22, r * 1.0, r * 0.85);
+
+    // Craters
+    const craters = [
+      { ox: -0.30, oy: -0.28, cr: 0.16 },
+      { ox:  0.22, oy:  0.18, cr: 0.13 },
+      { ox: -0.08, oy:  0.42, cr: 0.11 },
+      { ox:  0.38, oy: -0.12, cr: 0.09 },
+      { ox:  0.08, oy: -0.44, cr: 0.08 },
+    ];
+    for (const c of craters) {
+      this.gfx.fillStyle(0x464c56, 0.55);
+      this.gfx.fillCircle(mx + c.ox * r, my + c.oy * r, c.cr * r);
+      this.gfx.lineStyle(0.5 * s, 0x7a8898, 0.3);
+      this.gfx.strokeCircle(mx + c.ox * r, my + c.oy * r, c.cr * r);
+    }
+
+    // Rim
+    this.gfx.lineStyle(1.5 * s, 0x8090a0, 0.55);
+    this.gfx.strokeCircle(mx, my, r);
+
+    // "MOON" label above the body
+    const moonLabel = this.add
+      .text(mx, my - r - 7, 'MOON', {
+        fontSize: `${Math.round(9 * this.scaleX)}px`,
+        color: '#8090a0',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5, 1);
+    this.labelGroup.add(moonLabel);
+
+    // Surface slot indicators
+    for (const slot of LUNAR_SLOTS) {
+      const node = nodes.find((n) => n.id === slot.id);
+      if (!node) continue;
+
+      const sx = mx + slot.ox * s;
+      const sy = my + slot.oy * s;
+      const slotR = LUNAR_SLOT_RADIUS * s;
+      const isSelected = node.id === selectedId;
+      const hasFacility = node.facilityId !== null;
+      const isInactive = hasFacility && launchAllocation[node.id] === false;
+      const action = constructionByNode.get(node.id) ?? null;
+
+      // Selection ring
+      if (isSelected) {
+        this.gfx.lineStyle(2, 0x88c8ff, 0.9);
+        this.gfx.strokeCircle(sx, sy, slotR + 5);
+      }
+
+      // Slot circle
+      const alpha = isInactive ? 0.25 : hasFacility ? 1 : 0.6;
+      const slotColour = hasFacility ? 0xd0d8e0 : 0x4a5060;
+      this.gfx.fillStyle(slotColour, alpha);
+      this.gfx.fillCircle(sx, sy, slotR);
+      this.gfx.lineStyle(1 * s, isSelected ? 0x88c8ff : 0x8090a8, isInactive ? 0.3 : 0.9);
+      this.gfx.strokeCircle(sx, sy, slotR);
+
+      // Construction / upgrade overlay
+      if (action) {
+        this.drawConstructionOverlay(sx, sy, slotR, action);
+      }
+
+      // Label and cost — placed radially outside the moon body, anchored
+      // at angle from moon center toward the slot position.
+      const angle = Math.atan2(slot.oy, slot.ox);
+      const labelDist = r + 10 * s;
+      const lx = mx + Math.cos(angle) * labelDist;
+      const ly = my + Math.sin(angle) * labelDist;
+      const hAnchor = Math.cos(angle) < -0.2 ? 1 : Math.cos(angle) > 0.2 ? 0 : 0.5;
+
+      const nameLabel = this.add
+        .text(lx, ly, node.label, {
+          fontSize: `${Math.round(8.5 * this.scaleX)}px`,
+          color: isSelected ? '#88c8ff' : isInactive ? '#3a5060' : '#8aacca',
+          fontFamily: 'monospace',
+        })
+        .setOrigin(hAnchor, 0.5);
+      this.labelGroup.add(nameLabel);
+
+      const costLabel = this.add
+        .text(lx, ly + Math.round(12 * this.scaleY), `${node.launchCost}M`, {
+          fontSize: `${Math.round(7.5 * this.scaleX)}px`,
+          color: '#4a7090',
+          fontFamily: 'monospace',
+        })
+        .setOrigin(hAnchor, 0);
+      this.labelGroup.add(costLabel);
+    }
   }
 
   // ---------------------------------------------------------------------------

@@ -158,10 +158,10 @@ export function deserialiseGameState(json: string): GameState {
 
   // Add L4/L5 if missing (added Phase 33).
   if (!knownIds.has('l4')) {
-    state.map.spaceNodes.push({ id: 'l4', type: 'trojanPoint', label: 'L4', launchCost: 30, facilityId: null });
+    state.map.spaceNodes.push({ id: 'l4', type: 'trojanPoint', label: 'Trojan L4', launchCost: 30, facilityId: null });
   }
   if (!knownIds.has('l5')) {
-    state.map.spaceNodes.push({ id: 'l5', type: 'trojanPoint', label: 'L5', launchCost: 30, facilityId: null });
+    state.map.spaceNodes.push({ id: 'l5', type: 'trojanPoint', label: 'Trojan L5', launchCost: 30, facilityId: null });
   }
 
   // Upgrade lagrangePoint → cislunarPoint/trojanPoint (added Phase 34).
