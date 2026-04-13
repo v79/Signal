@@ -1,15 +1,17 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
   import { BLOC_DEFS } from '../../data/loader';
-  import type { BlocState, FieldPoints } from '../../engine/types';
+  import type { BlocState, FieldPoints, Resources } from '../../engine/types';
   import { FIELD_COLOURS_CSS, FIELD_ABBR } from '../fieldColours';
 
   let {
     blocs,
     playerBlocId,
+    playerResources,
   }: {
     blocs: BlocState[];
     playerBlocId: string;
+    playerResources: Resources;
   } = $props();
 
   const ERA_LABELS: Record<string, string> = {
@@ -115,8 +117,12 @@
               <div class="will-value">{Math.round(playerBloc.will)}</div>
             </div>
             <div class="funding-stat">
+              <span class="stat-value">{Math.round(playerResources.funding)}</span>
               <span class="stat-label">F</span>
-              <span class="stat-value">{Math.round(playerBloc.resources.funding)}</span>
+            </div>
+            <div class="detail-stat">
+              <span class="detail-stat-value">{Math.round(playerResources.materials)}</span>
+              <span class="detail-stat-label">MAT</span>
             </div>
             <div class="era-badge">{ERA_LABELS[playerBloc.era] ?? playerBloc.era}</div>
           </div>
@@ -130,10 +136,6 @@
                 </div>
               </div>
               <div class="detail-row">
-                <div class="detail-stat">
-                  <span class="detail-stat-label">MAT</span>
-                  <span class="detail-stat-value">{Math.round(playerBloc.resources.materials)}</span>
-                </div>
                 <div class="detail-stat">
                   <span class="detail-stat-label">SCI</span>
                   <span class="detail-stat-value">{scienceScore(playerBloc.fields)}</span>
@@ -199,8 +201,12 @@
                 <div class="will-value">{Math.round(bloc.will)}</div>
               </div>
               <div class="funding-stat">
-                <span class="stat-label">F</span>
                 <span class="stat-value">{Math.round(bloc.resources.funding)}</span>
+                <span class="stat-label">F</span>
+              </div>
+              <div class="detail-stat">
+                <span class="detail-stat-value">{Math.round(bloc.resources.materials)}</span>
+                <span class="detail-stat-label">MAT</span>
               </div>
               <div class="era-badge">{ERA_LABELS[bloc.era] ?? bloc.era}</div>
             </div>
@@ -215,10 +221,6 @@
                 </div>
               </div>
               <div class="detail-row">
-                <div class="detail-stat">
-                  <span class="detail-stat-label">MAT</span>
-                  <span class="detail-stat-value">{Math.round(bloc.resources.materials)}</span>
-                </div>
                 <div class="detail-stat">
                   <span class="detail-stat-label">SCI</span>
                   <span class="detail-stat-value">{scienceScore(bloc.fields)}</span>
