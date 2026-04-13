@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { browser } from '$app/environment';
   import FacilityPicker from './FacilityPicker.svelte';
   import TileTooltip from './TileTooltip.svelte';
@@ -9,12 +9,12 @@
   import SpaceOverview from './SpaceOverview.svelte';
   import SpaceNodePicker from './SpaceNodePicker.svelte';
   import { gameStore } from '../stores/game.svelte';
-  import { FACILITY_DEFS, TECH_DEFS, BOARD_DEFS, PROJECT_DEFS, TILE_ACTION_DEFS } from '../../data/loader';
-  import type { EarthScene as EarthSceneType, AdjacencyIndicator } from '../../phaser/EarthScene';
+  import { BOARD_DEFS, FACILITY_DEFS, PROJECT_DEFS, TECH_DEFS, TILE_ACTION_DEFS } from '../../data/loader';
+  import type { AdjacencyIndicator, EarthScene as EarthSceneType } from '../../phaser/EarthScene';
   import type { SpaceScene as SpaceSceneType } from '../../phaser/SpaceScene';
   import type { AsteroidScene as AsteroidSceneType } from '../../phaser/AsteroidScene';
-  import type { BoardRole, Era, FacilityInstance, OngoingAction } from '../../engine/types';
-  import { getFacilitiesOnTile, computeHqBonus, canUpgradeFacility, type HqBonus } from '../../engine/facilities';
+  import type { Era, FacilityInstance, OngoingAction, BoardRole } from '../../engine/types';
+  import { canUpgradeFacility, computeHqBonus, getFacilitiesOnTile, type HqBonus } from '../../engine/facilities';
   import Tooltip from './Tooltip.svelte';
 
   type MapTab = 'earth' | 'space' | 'belt';
@@ -223,8 +223,8 @@
   const selectedTile = $derived(
     gameStore.selectedCoordKey != null && gameStore.state
       ? (gameStore.state.map.earthTiles.find(
-          (t) => `${t.coord.q},${t.coord.r}` === gameStore.selectedCoordKey,
-        ) ?? null)
+        (t) => `${t.coord.q},${t.coord.r}` === gameStore.selectedCoordKey,
+      ) ?? null)
       : null,
   );
 
@@ -370,7 +370,8 @@
       onclick={() => switchTab('board')}
     >
       {#if gameStore.state}
-        {@const filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
+        {@const
+          filled = Object.values(gameStore.state.player.board).filter((m) => m !== undefined && m.leftTurn === null).length}
         {@const total = (gameStore.state.era === 'earth' ? 7 : 8) + (hasLunarFacility ? 1 : 0)}
         COMMITTEE (<span class:empty-committee={filled === 0}>{filled}</span>/{total})
       {:else}
@@ -412,7 +413,12 @@
       {#if gameStore.state.launchCapacity > 0}
         {@const used = gameStore.state.launchCapacity - gameStore.remainingLaunchCapacity}
         <div class="launch-widget">
-          <span class="launch-label">LAUNCH CAPACITY</span>
+          <Tooltip
+            text={"Launch capacity limits how many near-space facilities can be actively supplied each turn. Each facility costs 1 or more capacity units.\n\nTo free up capacity, open the ASSETS panel and toggle facilities off — mothballed facilities stop consuming supply but also stop producing output.\n\nA Fuel Depot, another Space Launch Centre, or facilities will increase launch capacity"}
+            direction="below"
+          >
+            <span class="launch-label">LAUNCH CAPACITY</span>
+          </Tooltip>
           <div class="launch-bar-track">
             <div
               class="launch-bar-fill"
@@ -428,7 +434,8 @@
   <!-- Bloc status panel (shown instead of Phaser canvas when blocs tab is active) -->
   {#if activeTab === 'blocs' && gameStore.state}
     <div class="board-panel-wrap">
-      <BlocStatusPanel blocs={gameStore.state.blocs} playerBlocId={gameStore.state.player.blocDefId} playerResources={gameStore.state.player.resources} />
+      <BlocStatusPanel blocs={gameStore.state.blocs} playerBlocId={gameStore.state.player.blocDefId}
+                       playerResources={gameStore.state.player.resources} />
     </div>
   {/if}
 
@@ -571,158 +578,161 @@
 </div>
 
 <style>
-  .map-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+    .map-wrapper {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
 
-  .tab-bar {
-    display: flex;
-    gap: 1px;
-    background: #0a0e14;
-    border-bottom: 1px solid #1e2530;
-    flex-shrink: 0;
-    padding: 2px 4px 0;
-  }
+    .tab-bar {
+        display: flex;
+        gap: 1px;
+        background: #0a0e14;
+        border-bottom: 1px solid #1e2530;
+        flex-shrink: 0;
+        padding: 2px 4px 0;
+    }
 
-  .tab {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: #4a6080;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.04em;
-    padding: 3px 8px 4px;
-    transition:
-      color 0.15s,
-      border-color 0.15s;
-  }
+    .tab {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #4a6080;
+        cursor: pointer;
+        font-family: monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.04em;
+        padding: 3px 8px 4px;
+        transition: color 0.15s,
+        border-color 0.15s;
+    }
 
-  .tab:hover:not(:disabled) {
-    color: #8aacca;
-  }
+    .tab:hover:not(:disabled) {
+        color: #8aacca;
+    }
 
-  .tab.active {
-    border-bottom-color: #4a90c0;
-    color: #a0c8e8;
-  }
+    .tab.active {
+        border-bottom-color: #4a90c0;
+        color: #a0c8e8;
+    }
 
-  .tab.locked {
-    cursor: not-allowed;
-    opacity: 0.4;
-  }
+    .tab.locked {
+        cursor: not-allowed;
+        opacity: 0.4;
+    }
 
-  .empty-committee {
-    color: #e05555;
-  }
+    .empty-committee {
+        color: #e05555;
+    }
 
-  .lock {
-    font-size: 0.55rem;
-    opacity: 0.6;
-    margin-left: 2px;
-  }
+    .lock {
+        font-size: 0.55rem;
+        opacity: 0.6;
+        margin-left: 2px;
+    }
 
-  .board-panel-wrap {
-    flex: 1;
-    overflow: hidden;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
+    .board-panel-wrap {
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
 
-  .map-container {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    min-height: 0;
-    flex-direction: column;
-  }
+    .map-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        min-height: 0;
+        flex-direction: column;
+    }
 
-  .map-container :global(canvas) {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
-  }
+    .map-container :global(canvas) {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
 
-  .map-toolbar {
-    display: flex;
-    gap: 1px;
-    background: #0a0e14;
-    border-bottom: 1px solid #1e2530;
-    flex-shrink: 0;
-    padding: 2px 4px 0;
-  }
+    .map-toolbar {
+        display: flex;
+        gap: 1px;
+        background: #0a0e14;
+        border-bottom: 1px solid #1e2530;
+        flex-shrink: 0;
+        padding: 2px 4px 0;
+    }
 
-  .overview-btn {
-    font-size: 0.6rem;
-    letter-spacing: 0.06em;
-  }
+    .overview-btn {
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
+    }
 
-  .launch-widget {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-left: auto;
-    padding: 2px 6px;
-  }
+    .launch-widget {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-left: auto;
+        padding: 2px 6px;
+    }
 
-  .launch-label {
-    font-size: 0.55rem;
-    letter-spacing: 0.08em;
-    color: #4a7a9a;
-    flex-shrink: 0;
-  }
+    .launch-label {
+        font-size: 0.55rem;
+        letter-spacing: 0.08em;
+        color: #4a7a9a;
+        flex-shrink: 0;
+    }
 
-  .launch-bar-track {
-    width: 60px;
-    height: 4px;
-    background: #1a2530;
-    border-radius: 2px;
-    overflow: hidden;
-  }
+    .launch-bar-track {
+        width: 60px;
+        height: 4px;
+        background: #1a2530;
+        border-radius: 2px;
+        overflow: hidden;
+    }
 
-  .launch-bar-fill {
-    height: 100%;
-    background: #4a90c0;
-    border-radius: 2px;
-    transition: width 0.2s;
-  }
+    .launch-bar-fill {
+        height: 100%;
+        background: #4a90c0;
+        border-radius: 2px;
+        transition: width 0.2s;
+    }
 
-  .launch-value {
-    font-size: 0.55rem;
-    color: #8aaabb;
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
+    .launch-value {
+        font-size: 0.55rem;
+        color: #8aaabb;
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+    }
 
-  .map-loading {
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #060a10;
-  }
+    .map-loading {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #060a10;
+    }
 
-  .loading-text {
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
-    color: #2a4a6a;
-    text-transform: uppercase;
-  }
+    .loading-text {
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        color: #2a4a6a;
+        text-transform: uppercase;
+    }
 
-  .cursor {
-    animation: blink 1s step-end infinite;
-  }
+    .cursor {
+        animation: blink 1s step-end infinite;
+    }
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
+    @keyframes blink {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
 </style>

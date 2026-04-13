@@ -236,7 +236,7 @@
 
       <!-- Right column: signal track + tech tree + in-progress research -->
       <div class="right-column">
-        <SignalTrack signal={gs.signal} />
+        <SignalTrack signal={gs.signal} era={gs.era} techs={gs.player.techs} />
 
         <button
           class="tree-btn"

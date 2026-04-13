@@ -8,6 +8,9 @@ import {
   commitSignalResponse,
   didCrossStrengthThreshold,
   signalProgressNewsText,
+  computeSignalCap,
+  isSignalPaused,
+  SIGNAL_CAPS,
 } from './signal';
 import { createRng } from './rng';
 import type {
@@ -142,27 +145,149 @@ describe('computeEraStrength', () => {
 
 describe('tickSignalProgress', () => {
   it('advances progress', () => {
-    const next = tickSignalProgress(BASE_SIGNAL, ZERO_FIELDS, [], new Map());
+    const next = tickSignalProgress(BASE_SIGNAL, ZERO_FIELDS, [], new Map(), 'earth', 100);
     expect(next.decodeProgress).toBeCloseTo(0.05);
   });
 
   it('upgrades eraStrength when crossing threshold', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 29 };
-    const next = tickSignalProgress(signal, HIGH_FIELDS, [], new Map());
+    const next = tickSignalProgress(signal, HIGH_FIELDS, [], new Map(), 'earth', 100);
     // 29 + 4.25 > 30 → structured
     expect(next.eraStrength).toBe('structured');
   });
 
-  it('caps at 100', () => {
+  it('caps at 100 when cap is 100', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 99.9 };
-    const next = tickSignalProgress(signal, HIGH_FIELDS, makeArray(5), DEFS);
+    const next = tickSignalProgress(signal, HIGH_FIELDS, makeArray(5), DEFS, 'earth', 100);
     expect(next.decodeProgress).toBe(100);
   });
 
   it('is a no-op when responseCommitted', () => {
     const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 50, responseCommitted: true };
-    const next = tickSignalProgress(signal, HIGH_FIELDS, makeArray(3), DEFS);
+    const next = tickSignalProgress(signal, HIGH_FIELDS, makeArray(3), DEFS, 'earth', 100);
     expect(next.decodeProgress).toBe(50);
+  });
+
+  it('caps at 33 when cap is 33 and fields are high', () => {
+    const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 32 };
+    const next = tickSignalProgress(signal, HIGH_FIELDS, makeArray(3), DEFS, 'earth', 33);
+    expect(next.decodeProgress).toBe(33);
+  });
+
+  it('does not advance past cap even when already near ceiling', () => {
+    const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 33 };
+    const next = tickSignalProgress(signal, HIGH_FIELDS, makeArray(3), DEFS, 'earth', 33);
+    expect(next.decodeProgress).toBe(33);
+  });
+
+  it('is a no-op when paused in nearSpace with no relay facility', () => {
+    const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 20 };
+    const next = tickSignalProgress(signal, HIGH_FIELDS, [], new Map(), 'nearSpace', 100);
+    expect(next.decodeProgress).toBe(20);
+  });
+
+  it('advances normally in nearSpace when relay facility is present', () => {
+    const relayDef: FacilityDef = {
+      id: 'signalRelayStation',
+      name: 'Signal Relay Station',
+      description: '',
+      era: 'nearSpace',
+      allowedTileTypes: [],
+      buildCost: {},
+      upkeepCost: {},
+      buildTime: 1,
+      deleteTime: 1,
+      canDelete: true,
+      fieldOutput: { physics: 2, mathematics: 2 },
+      resourceOutput: {},
+      adjacencyBonuses: [],
+      adjacencyPenalties: [],
+      depletes: false,
+      requiredTechId: null,
+    };
+    const relayInstance: FacilityInstance = {
+      id: 'relay-1',
+      defId: 'signalRelayStation',
+      locationKey: 'space-0',
+      condition: 1,
+      builtTurn: 1,
+    };
+    const defs = new Map([['signalRelayStation', relayDef]]);
+    const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 20 };
+    const next = tickSignalProgress(signal, ZERO_FIELDS, [relayInstance], defs, 'nearSpace', 100);
+    expect(next.decodeProgress).toBeGreaterThan(20);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeSignalCap
+// ---------------------------------------------------------------------------
+
+describe('computeSignalCap', () => {
+  it('returns 33 when neither gate tech is discovered', () => {
+    expect(computeSignalCap(new Set())).toBe(33);
+  });
+
+  it('returns 66 when only era1Gate is discovered', () => {
+    expect(computeSignalCap(new Set([SIGNAL_CAPS.era1Gate]))).toBe(66);
+  });
+
+  it('returns 100 when both gates are discovered', () => {
+    expect(computeSignalCap(new Set([SIGNAL_CAPS.era1Gate, SIGNAL_CAPS.era2Gate]))).toBe(100);
+  });
+
+  it('returns 33 when only era2Gate is discovered (era1 still required first)', () => {
+    expect(computeSignalCap(new Set([SIGNAL_CAPS.era2Gate]))).toBe(33);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isSignalPaused
+// ---------------------------------------------------------------------------
+
+describe('isSignalPaused', () => {
+  const relayDef: FacilityDef = {
+    id: 'signalRelayStation',
+    name: 'Signal Relay Station',
+    description: '',
+    era: 'nearSpace',
+    allowedTileTypes: [],
+    buildCost: {},
+    upkeepCost: {},
+    buildTime: 1,
+    deleteTime: 1,
+    canDelete: true,
+    fieldOutput: {},
+    resourceOutput: {},
+    adjacencyBonuses: [],
+    adjacencyPenalties: [],
+    depletes: false,
+    requiredTechId: null,
+  };
+  const relayInstance: FacilityInstance = {
+    id: 'relay-1',
+    defId: 'signalRelayStation',
+    locationKey: 'space-0',
+    condition: 1,
+    builtTurn: 1,
+  };
+  const relayDefs = new Map([['signalRelayStation', relayDef]]);
+
+  it('returns false in earth era regardless of facilities', () => {
+    expect(isSignalPaused('earth', [], new Map())).toBe(false);
+    expect(isSignalPaused('earth', [relayInstance], relayDefs)).toBe(false);
+  });
+
+  it('returns true in nearSpace with no relay facility', () => {
+    expect(isSignalPaused('nearSpace', [], new Map())).toBe(true);
+  });
+
+  it('returns false in nearSpace when relay facility is present', () => {
+    expect(isSignalPaused('nearSpace', [relayInstance], relayDefs)).toBe(false);
+  });
+
+  it('returns true in deepSpace with no relay facility', () => {
+    expect(isSignalPaused('deepSpace', [], new Map())).toBe(true);
   });
 });
 

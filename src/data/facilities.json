@@ -1438,6 +1438,37 @@
     "depletes": false,
     "requiredTechId": "cislunarTransportNetwork"
   },
+  "signalRelayStation": {
+    "id": "signalRelayStation",
+    "name": "Signal Relay Station",
+    "description": "A dedicated signal analysis relay positioned in cislunar space, maintaining continuous contact with the outer-solar-system transmission. Required to resume signal decode progress in Era 2.",
+    "era": "nearSpace",
+    "allowedTileTypes": [],
+    "allowedNodeTypes": [
+      "cislunarPoint",
+      "trojanPoint"
+    ],
+    "buildCost": {
+      "funding": 30,
+      "materials": 20
+    },
+    "upkeepCost": {
+      "funding": 3
+    },
+    "buildTime": 1,
+    "deleteTime": 1,
+    "canDelete": true,
+    "supplyCost": 1,
+    "fieldOutput": {
+      "physics": 2,
+      "mathematics": 2
+    },
+    "resourceOutput": {},
+    "adjacencyBonuses": [],
+    "adjacencyPenalties": [],
+    "depletes": false,
+    "requiredTechId": "deepSpaceRelayNetwork"
+  },
   "heliopauseRelay": {
     "id": "heliopauseRelay",
     "name": "Heliopause Signal Relay",
