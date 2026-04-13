@@ -16,7 +16,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Prevent the action card bar from ever having a scrollbar
   - Ensure duplicate cards are not drawn at the same time
   - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
-  - I need a card which gives engineering research. Or possibly, building a facility could give an engineeering boost?
 - **Events:**
   - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
   - Bloc partnership events need to be clearer on the costs and benefits
@@ -26,8 +25,6 @@ This is a list of future requirements for the game but they are not to be implem
   - What to do once all the tech for an era has been researched?
   - Each Era should have a tier 5 technology that represents the end of the era.
   - The game is based around the idea that the player cannot choose the next technology to research, but perhaps they could initiate a project to focus on a tech that is near completion, with a percentage chance of success.
-- **Climate:**
-  - Irradiated damage shouldn't exist without nuclear facilities
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Move the wormhole response panel into a dedicated tab, then later replace the panel with the signal minigames.
@@ -47,6 +44,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Projects need to be visible on the Maps
   - The Facilities that support projects (space launch centre) need to be visually distinct
   - Once the orbital station has been built, we don't need the project programme panel any more
+  - I do want visibilty of projects though
 - **Competitor blocs**
   - First implementation in `planning/PLAN_PHASE28.md`
   - The middle-east bloc always collapses in every game; a bit racist.
@@ -67,7 +65,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
   - Show building icons on hex map?
   - Generic profile pictures for board members
-  - Flavour text for board members
 - **Tech tree dependencies:**
 - **News feed & ticker rework**
   - The ticker is cute but not very useful
@@ -76,15 +73,20 @@ This is a list of future requirements for the game but they are not to be implem
 - **Game menu:**
 - **Steering Committee (formerly Board):**
   - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
+  - Flavour text for board members
+  - Board members should be procedurally generated, not a fixed list, so we have enough content for three eras
 - **Climate management:**
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
+  - Irradiated damage shouldn't exist without nuclear facilities
   - Events frequency may be affected by the current Climate or Global Will scores
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
-  - Terrain restoration actions should probably be gated by current climate damage %
+  - Terrain restoration actions should probably be gated by current climate damage %, i.e. you must first lower the climate threat level before you can use restoration actions
   - The Space Launch Centre can be destroyed by climate damage, and it's possible to get into a situation where it cannot be rebuilt anywhere. Either the space launch centre needs to be immune to climate damage, or it needs to be more flexible in its placement.
+  - Terrain Actions such as Urbanize and Clear Industrial Site must make sense (Clear Industrial Site doesn't do anything?)
+  - If climate pressure drops low enough, and the player reaches Era 3, then coastal flooding could start to recede
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc
@@ -93,9 +95,6 @@ This is a list of future requirements for the game but they are not to be implem
   - DEV mode: start in a different Era (era unlocked, technologies for previous eras unlocked, but no facilities built)
 
 ## BUGS:
-
-- Need a full review of the terrain manipulation actions. An entire phase required to fix this. Also a review of the tech tree.
-
 
 ## FACILITY IDEAS:
 
@@ -107,5 +106,6 @@ Era 1:
 
 Era 2:
 
+- There are 3 nodes on Lunar. I would like there to be 4 facility chains available for luna, forcing the player to make a choice.
 
 Era 3:
