@@ -25,11 +25,58 @@ import type { Rng } from './rng';
 // increasing and locked once responseCommitted is true.
 // ---------------------------------------------------------------------------
 
-/** Facility def IDs that qualify as Deep Space Array infrastructure. */
-export const DEEP_SPACE_ARRAY_DEF_IDS: ReadonlySet<string> = new Set([
+/** Facility def IDs that qualify as earth-era signal array infrastructure. */
+export const EARTH_SIGNAL_ARRAY_DEF_IDS: ReadonlySet<string> = new Set([
   'deepSpaceArray',
   'deepSpaceArrayMk2',
 ]);
+
+/**
+ * Facility def IDs whose presence re-enables signal ticking in nearSpace.
+ * Signal ticking is paused when the player is in nearSpace (or later) and has
+ * none of these facilities built.
+ */
+export const NEAR_SPACE_RELAY_DEF_IDS: ReadonlySet<string> = new Set([
+  'signalRelayStation',
+]);
+
+/**
+ * Tech IDs that gate signal decode progress caps.
+ * Each gate tech, when discovered, lifts the progress ceiling to the next level.
+ */
+export const SIGNAL_CAPS = {
+  era1Gate: 'signalPatternAnalysis',
+  era2Gate: 'interstellarSignalDecryption',
+} as const;
+
+/**
+ * Compute the maximum allowed decode progress given the set of discovered tech IDs.
+ * - Neither gate discovered → 33%
+ * - Era 1 gate only         → 66%
+ * - Both gates discovered   → 100% (no cap)
+ */
+export function computeSignalCap(discoveredTechIds: ReadonlySet<string>): number {
+  if (!discoveredTechIds.has(SIGNAL_CAPS.era1Gate)) return 33;
+  if (!discoveredTechIds.has(SIGNAL_CAPS.era2Gate)) return 66;
+  return 100;
+}
+
+/**
+ * Returns true when signal ticking should produce zero progress this turn.
+ * In nearSpace (and beyond), signal ticking is paused until the player has
+ * built at least one NEAR_SPACE_RELAY_DEF_IDS facility.
+ */
+export function isSignalPaused(
+  era: Era,
+  facilities: FacilityInstance[],
+  facilityDefs: Map<string, FacilityDef>,
+): boolean {
+  if (era === 'earth') return false;
+  return !facilities.some((f) => {
+    const def = facilityDefs.get(f.defId);
+    return def !== undefined && NEAR_SPACE_RELAY_DEF_IDS.has(def.id);
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Progress computation
@@ -66,7 +113,7 @@ export function computeSignalProgressDelta(
 ): number {
   const arrayCount = facilities.filter((f) => {
     const def = facilityDefs.get(f.defId);
-    return def !== undefined && DEEP_SPACE_ARRAY_DEF_IDS.has(def.id);
+    return def !== undefined && EARTH_SIGNAL_ARRAY_DEF_IDS.has(def.id);
   }).length;
 
   const fieldContribution = (fields.physics + fields.mathematics) / FIELD_DIVISOR;
@@ -87,17 +134,22 @@ export function computeEraStrength(progress: number): SignalEraStrength {
 /**
  * Advance signal state by one World Phase tick.
  * No-op if the player has already committed a response.
+ * No-op if the signal is paused (nearSpace+ with no relay facility).
+ * Progress is clamped to `cap` (derived from tech gate discoveries).
  */
 export function tickSignalProgress(
   signal: SignalState,
   fields: FieldPoints,
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
+  era: Era,
+  cap: number,
 ): SignalState {
   if (signal.responseCommitted) return signal;
+  if (isSignalPaused(era, facilities, facilityDefs)) return signal;
 
   const delta = computeSignalProgressDelta(fields, facilities, facilityDefs);
-  const newProgress = Math.min(100, signal.decodeProgress + delta);
+  const newProgress = Math.min(cap, signal.decodeProgress + delta);
   const newStrength = computeEraStrength(newProgress);
 
   return {

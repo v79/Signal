@@ -13,6 +13,7 @@ import type {
   Resources,
   FieldPoints,
   TileActionDef,
+  SignalState,
 } from './types';
 import {
   computeAdjacencyEffects,
@@ -50,7 +51,13 @@ import {
   addCommitteeNotification,
   getBoardAutoCounterTags,
 } from './board';
-import { tickSignalProgress, didCrossStrengthThreshold, signalProgressNewsText } from './signal';
+import {
+  tickSignalProgress,
+  didCrossStrengthThreshold,
+  signalProgressNewsText,
+  computeSignalCap,
+  isSignalPaused,
+} from './signal';
 import { tickActiveProjects } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
@@ -769,21 +776,71 @@ export function executeWorldPhase(
 
   // 16. Signal progress tick — starts from post-project signal so project
   //     rewards (one-time signal boosts) are included before further ticking.
+  const discoveredTechIds = new Set<string>(
+    state.player.techs.filter((t) => t.stage === 'discovered').map((t) => t.defId),
+  );
+  const signalCap = computeSignalCap(discoveredTechIds);
+  const prevSignalPaused = isSignalPaused(state.era, state.player.facilities, facilityDefs);
+  const nowSignalPaused = isSignalPaused(state.era, newFacilities, facilityDefs);
+
+  // Clamp signal-after-projects: project boosts can't bypass the cap or the relay lock.
+  const clampedSignalAfterProjects: SignalState = {
+    ...signalAfterProjects,
+    decodeProgress: nowSignalPaused
+      ? signalAfterProjects.decodeProgress
+      : Math.min(signalCap, signalAfterProjects.decodeProgress),
+  };
+
   const prevSignalProgress = state.signal.decodeProgress;
-  const newSignal = tickSignalProgress(signalAfterProjects, newFields, newFacilities, facilityDefs);
-  const signalNews: NewsItem[] = didCrossStrengthThreshold(
-    prevSignalProgress,
-    newSignal.decodeProgress,
-  )
-    ? [
-        {
-          id: `signal-${nextTurn}`,
-          turn: nextTurn,
-          text: signalProgressNewsText(newSignal.decodeProgress, nextTurn),
-          category: 'signal' as const,
-        },
-      ]
-    : [];
+  const newSignal = tickSignalProgress(
+    clampedSignalAfterProjects,
+    newFields,
+    newFacilities,
+    facilityDefs,
+    state.era,
+    signalCap,
+  );
+
+  // Generate a news item when signal ticking first pauses (era transition without relay).
+  const relayLostNews: NewsItem[] =
+    !prevSignalPaused && nowSignalPaused
+      ? [
+          {
+            id: `signal-relay-lost-${nextTurn}`,
+            turn: nextTurn,
+            text: 'Ground-based signal arrays have lost coherent contact with the outer-solar-system transmission. Build a Signal Relay Station in cislunar space to re-establish signal lock.',
+            category: 'signal' as const,
+          },
+        ]
+      : [];
+
+  // Generate a news item when the relay is restored.
+  const relayRestoredNews: NewsItem[] =
+    prevSignalPaused && !nowSignalPaused
+      ? [
+          {
+            id: `signal-relay-restored-${nextTurn}`,
+            turn: nextTurn,
+            text: 'Signal relay contact restored. Decode progress resuming from cislunar relay station.',
+            category: 'signal' as const,
+          },
+        ]
+      : [];
+
+  const signalNews: NewsItem[] = [
+    ...relayLostNews,
+    ...relayRestoredNews,
+    ...(didCrossStrengthThreshold(prevSignalProgress, newSignal.decodeProgress)
+      ? [
+          {
+            id: `signal-${nextTurn}`,
+            turn: nextTurn,
+            text: signalProgressNewsText(newSignal.decodeProgress, nextTurn),
+            category: 'signal' as const,
+          },
+        ]
+      : []),
+  ];
 
   // 17. Earth welfare tick
   const newEarthWelfare = tickEarthWelfare(state);

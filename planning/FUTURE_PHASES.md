@@ -3,14 +3,12 @@
 This is a list of future requirements for the game but they are not to be implemented until a specific plan is created. This list is not ordered.
 
 - **UI visual flare:**
-  - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card etc
+  - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card, etc
   - The game is just too dark, the colour scheme is too muted
 - **Era 2: nearSpace:**
-  - Research progresses far too quickly, even with little effort.
   - Starting a game in Era 2 breaks the LEO station; not a big concern
   - There isn't enough to do, there are no choices to make
-  - The launch capacity limit has no effect; it's always possible to sustain all nearSpace facilities within the capacity limits, especially as tech progresses too quickly
-  - It's probably possible to progress in Era 2 by doing nothing - we need some way of blocking tech progress if there's no Era 2 facilities built?
+  - It's probably possible to progress in Era 2 by doing nothing - we need some way of blocking tech progress if there are no Era 2 facilities built?
 - **Card rework:**
   - More cards, gated by technologies and eras
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
@@ -23,6 +21,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
   - Bloc partnership events need to be clearer on the costs and benefits
   - The solar storm event is countered by political will. Which is a weird choice.
+  - Limit to only one diplomatic event active at any time?
 - **Research:**
   - What to do once all the tech for an era has been researched?
   - Each Era should have a tier 5 technology that represents the end of the era.
@@ -31,26 +30,26 @@ This is a list of future requirements for the game but they are not to be implem
   - Irradiated damage shouldn't exist without nuclear facilities
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
-  - Signal should not be decoded before era 3
   - Move the wormhole response panel into a dedicated tab, then later replace the panel with the signal minigames.
 - **Political Will:**
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
+  - For how long should the player be allowed to stay in debt? A lose condition? But very hard to recover from a debt spiral.
 - **Era Gates**
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
   - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
 - **The Signal**
-  - Needs to be slowed down even further. Progress needs to be gated to certain technologies (i.e. cannot get more than 33% researched in Era 1)
   - Signal mini-games and especially at the end with the Wormhole
+  - Progress seems to jump from 33% to about 65% when the first signal tech is unlocked.
 - **Projects**
   - Projects need to be visible on the Maps
   - The Facilities that support projects (space launch centre) need to be visually distinct
   - Once the orbital station has been built, we don't need the project programme panel any more
 - **Competitor blocs**
   - First implementation in `planning/PLAN_PHASE28.md`
-  - The middle east bloc always collapses in every game; a bit racist.
+  - The middle-east bloc always collapses in every game; a bit racist.
 - **Earth map**
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
@@ -61,7 +60,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Need more facilities to build (only Deep Space Relay & Orbital Solar Array exist)
   - Nodes can only have one facility type, which means it's not possible to build a lot of the facilities that exist. And no way to demolish facilities. Or even to know what the alternatives are.
     - The moon especially - doesn't make since to restrict it to one
-  - Launch capacity is still broken and not really making sense to me
 - **LEO era content pass**
 - **Asteroid era content pass**
   - Map improvement actions such as reforestation, radiation cleanup, floating cities
@@ -85,7 +83,8 @@ This is a list of future requirements for the game but they are not to be implem
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
-  - Terrain restoration actions should probably be gated by current climate damange %
+  - Terrain restoration actions should probably be gated by current climate damage %
+  - The Space Launch Centre can be destroyed by climate damage, and it's possible to get into a situation where it cannot be rebuilt anywhere. Either the space launch centre needs to be immune to climate damage, or it needs to be more flexible in its placement.
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc

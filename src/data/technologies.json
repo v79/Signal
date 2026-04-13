@@ -874,5 +874,69 @@
         }
       ]
     }
+  },
+  "deepSpaceRelayNetwork": {
+    "id": "deepSpaceRelayNetwork",
+    "name": "Deep Space Relay Network",
+    "rumourText": "Ground-based observatories are approaching the theoretical limit of what they can resolve from the signal. The next step would require infrastructure beyond the atmosphere.",
+    "baseRecipe": {
+      "physics": 40,
+      "engineering": 60,
+      "computing": 50,
+      "mathematics": 30
+    },
+    "recipeVariance": 0.2,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": ["signalRelayStation"],
+    "signalDerived": true,
+    "tier": 5,
+    "requiredTechIds": ["signalPatternAnalysis", "internetProtocols"],
+    "narrative": {
+      "id": "narrative-tech-deepSpaceRelayNetwork",
+      "title": "Discovery — Deep Space Relay Network",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "Ground-based analysis was always going to hit a wall. The signal's origin is too distant and its structure too compressed for any Earth-side instrument to fully resolve."
+        },
+        {
+          "text": "The programme has committed to deploying a continuous relay network from cislunar space outward. A Signal Relay Station can now be constructed at any cislunar or trojan-point node."
+        }
+      ]
+    }
+  },
+  "interstellarSignalDecryption": {
+    "id": "interstellarSignalDecryption",
+    "name": "Interstellar Signal Decryption",
+    "era": "nearSpace",
+    "rumourText": "Quantum sensor arrays in cislunar space are detecting coherent substructure within the signal layers that ground-based analysis consistently classified as noise.",
+    "baseRecipe": {
+      "physics": 120,
+      "mathematics": 100,
+      "computing": 80
+    },
+    "recipeVariance": 0.25,
+    "requiresSimultaneous": false,
+    "unlocksCards": [],
+    "unlocksProjects": [],
+    "unlocksFacilities": [],
+    "signalDerived": true,
+    "tier": 4,
+    "requiredTechIds": ["quantumSensing", "cislunarTransportNetwork"],
+    "narrative": {
+      "id": "narrative-tech-interstellarSignalDecryption",
+      "title": "Discovery — Interstellar Signal Decryption",
+      "skippable": true,
+      "slides": [
+        {
+          "text": "The deep-space sensor network, operating at quantum sensitivity, has resolved the signal's nested encoding structure. The operational core — the part that describes activation rather than provenance — is now legible."
+        },
+        {
+          "text": "What was noise is now instruction. The signal's full decode range is now within reach."
+        }
+      ]
+    }
   }
 }
