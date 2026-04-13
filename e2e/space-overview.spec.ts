@@ -137,7 +137,7 @@ test.describe('SpaceOverview panel', () => {
 
   test('shows launch capacity bar with correct used/total values', async ({ page }) => {
     await startAndSave(page);
-    // launchCapacity=5, orbitalModule has supplyCost=2, so used=2, remaining=3
+    // launchCapacity=5, orbitalModule has supplyCost=1, so used=1, remaining=4
     await patchSpaceState(page, { launchAllocation: { leo: true } });
     await openSpaceOverview(page);
 
@@ -162,7 +162,7 @@ test.describe('SpaceOverview panel', () => {
     await expect(facilityRow.locator('.item-name')).toContainText('Orbital Module');
 
     // Supply cost badge visible
-    await expect(facilityRow.locator('.supply-cost')).toContainText('2u');
+    await expect(facilityRow.locator('.supply-cost')).toContainText('1u');
 
     // Toggle button should show "ON" (facility is supplied)
     const toggleBtn = facilityRow.locator('.toggle-btn');
