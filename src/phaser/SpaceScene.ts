@@ -19,6 +19,7 @@ export interface SpaceSceneCallbacks {
   getFacilities: () => FacilityInstance[];
   getSelectedNode: () => string | null;
   onNodeClick: (id: string) => void;
+  onEarthClick: () => void;
   getCompletedProjects: () => string[];
   getLaunchAllocation: () => Record<string, boolean>;
   getConstructionQueue: () => OngoingAction[];
@@ -188,6 +189,14 @@ export class SpaceScene extends Phaser.Scene {
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       if (!ptr.leftButtonDown()) return;
       if (this.isDragging && this.dragMoved) return;
+      // Earth hit-test (drawn at EARTH_POS, radius EARTH_RADIUS)
+      const s = Math.min(this.scaleX, this.scaleY);
+      const earthCX = EARTH_POS.x * this.scaleX + this.panX;
+      const earthCY = EARTH_POS.y * this.scaleY + this.panY;
+      if (Math.hypot(ptr.x - earthCX, ptr.y - earthCY) <= EARTH_RADIUS * s) {
+        this.callbacks?.onEarthClick();
+        return;
+      }
       const nodeId = this.hitTestNode(ptr.x, ptr.y);
       if (nodeId) this.callbacks?.onNodeClick(nodeId);
     });

@@ -290,6 +290,9 @@
         onNodeClick: (id: string) => {
           gameStore.selectSpaceNode(gameStore.selectedSpaceNodeId === id ? null : id);
         },
+        onEarthClick: () => {
+          switchTab('earth');
+        },
       });
     });
 
@@ -412,7 +415,7 @@
   <!-- Bloc status panel (shown instead of Phaser canvas when blocs tab is active) -->
   {#if activeTab === 'blocs' && gameStore.state}
     <div class="board-panel-wrap">
-      <BlocStatusPanel blocs={gameStore.state.blocs} playerBlocId={gameStore.state.player.blocDefId} />
+      <BlocStatusPanel blocs={gameStore.state.blocs} playerBlocId={gameStore.state.player.blocDefId} playerResources={gameStore.state.player.resources} />
     </div>
   {/if}
 

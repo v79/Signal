@@ -426,5 +426,15 @@
     },
     "counterEffect": null,
     "upgradesFrom": null
+  },
+  "recyclingInitiative": {
+    "id": "recyclingInitiative",
+    "name": "Recycling Initiative",
+    "description": "Redirect closed-loop waste processing to recover programme materials.",
+    "flavourText": "Nothing is wasted when the loop is closed.",
+    "era": "nearSpace",
+    "effect": { "resources": { "politicalWill": -10, "materials": 20 } },
+    "counterEffect": null,
+    "upgradesFrom": null
   }
 }
