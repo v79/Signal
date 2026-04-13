@@ -409,6 +409,19 @@
           ≡ ASSETS
         </button>
       </Tooltip>
+      {#if gameStore.state.launchCapacity > 0}
+        {@const used = gameStore.state.launchCapacity - gameStore.remainingLaunchCapacity}
+        <div class="launch-widget">
+          <span class="launch-label">LAUNCH CAPACITY</span>
+          <div class="launch-bar-track">
+            <div
+              class="launch-bar-fill"
+              style="width: {Math.min(100, (used / gameStore.state.launchCapacity) * 100)}%"
+            ></div>
+          </div>
+          <span class="launch-value">{used}/{gameStore.state.launchCapacity}</span>
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -648,6 +661,43 @@
   .overview-btn {
     font-size: 0.6rem;
     letter-spacing: 0.06em;
+  }
+
+  .launch-widget {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    padding: 2px 6px;
+  }
+
+  .launch-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    color: #4a7a9a;
+    flex-shrink: 0;
+  }
+
+  .launch-bar-track {
+    width: 60px;
+    height: 4px;
+    background: #1a2530;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .launch-bar-fill {
+    height: 100%;
+    background: #4a90c0;
+    border-radius: 2px;
+    transition: width 0.2s;
+  }
+
+  .launch-value {
+    font-size: 0.55rem;
+    color: #8aaabb;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
   }
 
   .map-loading {
