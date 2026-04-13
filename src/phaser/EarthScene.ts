@@ -119,6 +119,8 @@ export class EarthScene extends Phaser.Scene {
   private isDragging = false;
   private dragMoved = false;
   private static readonly DRAG_THRESHOLD = 5; // px
+  /** Timestamp until which left-click tile selection is suppressed (scene just started). */
+  private clickSuppressUntil = 0;
 
   constructor() {
     super({ key: 'EarthScene' });
@@ -135,6 +137,8 @@ export class EarthScene extends Phaser.Scene {
 
   create(): void {
     this.cameras.main.setBackgroundColor(0x060a10);
+    // Suppress stale clicks that arrive in the same frame as scene start
+    this.clickSuppressUntil = this.time.now + 100;
 
     this.tileGfx = this.add.graphics();
     this.overlayGfx = this.add.graphics();
@@ -184,6 +188,7 @@ export class EarthScene extends Phaser.Scene {
     // Left-click → select tile (completely independent of pan)
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       if (!ptr.leftButtonDown()) return;
+      if (this.time.now < this.clickSuppressUntil) return;
       const key = this.hitTest(ptr.x, ptr.y);
       if (key && this.cb) this.cb.onTileClick(key);
     });
