@@ -27,7 +27,7 @@ function getRules(climatePressure: number): DegradationRule[] {
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.03, newsVerb: 'drought' });
   }
   if (climatePressure > 85) {
-    rules.push({ tileType: 'coastal',      status: 'flooded',  probability: 0.04, newsVerb: 'flooding' });
+    rules.push({ tileType: 'coastal',      status: 'flooded',  probability: 0.04, newsVerb: 'rising sea levels' });
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
   }
 

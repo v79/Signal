@@ -48,6 +48,10 @@ This is a list of future requirements for the game but they are not to be implem
 - **Competitor blocs**
   - First implementation in `planning/PLAN_PHASE28.md`
   - The middle-east bloc always collapses in every game; a bit racist.
+- **Coastal tile appearance:**
+  - Coastal tiles are rendered as solid blue hexes, which players read as "open sea". The semantic problem is that coastal tiles represent inhabited shoreline that can be submerged, not open ocean — but the colour makes them look like the sea already.
+  - Attempted a colour shift to teal/cyan but the dark palette made it hard to distinguish coastal from forested tiles without pushing so far cyan that it lost the "water" feel.
+  - Options to explore: neighbour-aware beach edges (sandy strip on land-facing edges only), a uniform inner sandy ring, or a full art pass with distinct coastal tile textures. See discussion in `planning/PLAN_PHASE35.md`.
 - **Earth map**
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.

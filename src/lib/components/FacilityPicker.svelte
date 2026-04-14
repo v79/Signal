@@ -100,10 +100,10 @@
 
   const SLOT_LABELS = ['SLOT 0', 'SLOT 1', 'SLOT 2'];
   const DESTROYED_LABELS: Record<string, string> = {
-    flooded: 'FLOODED', dustbowl: 'DUST BOWL', irradiated: 'IRRADIATED',
+    flooded: 'SUBMERGED', dustbowl: 'DUST BOWL', irradiated: 'IRRADIATED',
   };
   const DESTROYED_DESC: Record<string, string> = {
-    flooded: 'This tile has been inundated. No construction is possible.',
+    flooded: 'This coastal zone has been permanently submerged by rising sea levels. No construction is possible.',
     dustbowl: 'Sustained drought has rendered this tile uninhabitable.',
     irradiated: 'Contamination has made this tile unsafe. No construction is permitted.',
   };

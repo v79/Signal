@@ -9,6 +9,9 @@ The climate system has several known gaps that this phase addresses:
 3. Climate events don't scale in severity as pressure rises
 4. "Clean Industrial Site" tile action has no completion news/feedback
 5. The `computeClimateBreakdown()` data (biggest polluters) is only shown in a hover tooltip — low discoverability
+6. `seaWallProtected` flag is set by the tile action but never checked in `applyClimateDegradation` — sea walls have no effect on passive flooding
+7. Highland tiles have zero climate exposure despite being buildable land — drought should reach them at high pressure
+8. Spontaneous industrial contamination has no low-stakes pathway; the `industrialContamination` event (now geopolitical-only) covers intentional conflict but not routine industrial decay
 
 Items deferred: events targeting specific map tiles, coastal flooding recession in Era 3, terrain restoration gated by climate %, Era 1 loss balance.
  
@@ -34,6 +37,17 @@ Items deferred: events targeting specific map tiles, coastal flooding recession 
  
 35.5 Biggest polluters panel
   HUD.svelte   ─── add click-to-toggle detail panel below climate bar
+
+35.6 Sea wall enforcement in applyClimateDegradation
+  climate.ts   ─── add seaWallProtected check to candidate filter
+                    (events.ts already handles this correctly)
+
+35.7 Highland drought rule
+  climate.ts   ─── add highland → dustbowl rule at pressure > 80 (probability 0.02)
+
+35.8 Industrial accident event
+  events.json  ─── add industrialAccident event (pushFactors: null, low weight)
+                    targets industrial tiles; separate from geopolitical-gated industrialContamination
 ```
  
 ---
@@ -326,14 +340,112 @@ The `climate-group` div needs `position: relative` added so the `climate-detail`
  
 ---
 
+## 35.6 — Sea wall enforcement in `applyClimateDegradation`
+
+**Problem:** `seaWallProtected` is written by the `buildSeaWall` tile action and is already checked in `applyEventEffect` (`events.ts:233`) when event-driven flooding picks a tile target. However `applyClimateDegradation` in `climate.ts` never checks it — sea walls provide no protection against the passive flooding rule at climate > 85%.
+
+**Fix:** Add one guard to the candidate filter in `applyClimateDegradation` (line 55–60):
+
+Current:
+```ts
+const candidates = updatedTiles.filter((t) => {
+  if (t.type !== rule.tileType) return false;
+  if (t.destroyedStatus !== null) return false;
+  if (t.facilitySlots.some((id) => id && updatedFacilities.find((f) => f.id === id)?.defId === 'hq')) return false;
+  return true;
+});
+```
+
+Replace with:
+```ts
+const candidates = updatedTiles.filter((t) => {
+  if (t.type !== rule.tileType) return false;
+  if (t.destroyedStatus !== null) return false;
+  if (rule.status === 'flooded' && t.seaWallProtected) return false;
+  if (t.facilitySlots.some((id) => {
+    if (!id) return false;
+    const f = updatedFacilities.find((fac) => fac.id === id);
+    if (!f) return false;
+    const def = facilityDefs.get(f.defId);
+    return f.defId === 'hq' || def?.climateImmune === true;
+  })) return false;
+  return true;
+});
+```
+
+Note: this also folds in the `climateImmune` extension from 35.2, replacing the original candidate filter shown there.
+
+**File:** `src/engine/climate.ts` — candidate filter only. No signature change.
+
+---
+
+## 35.7 — Highland drought rule
+
+**Problem:** `highland` tiles can be developed (they appear in `urbanize`'s `appliesTo` list) and can host facilities, but they have zero climate exposure. Droughts should eventually reach highland terrain at extreme pressure.
+
+**Fix:** Add a rule to `getRules()` in `climate.ts`:
+
+```ts
+if (climatePressure > 80) {
+  rules.push({ tileType: 'highland', status: 'dustbowl', probability: 0.02, newsVerb: 'desertification' });
+}
+```
+
+Threshold is higher than agricultural (> 70%) to reflect the natural resilience of elevated terrain. Probability is low (0.02 vs 0.03–0.06 for other types). The news verb `"desertification"` is distinct from `"drought"` to give it a different character in the feed.
+
+**File:** `src/engine/climate.ts` — `getRules()` only.
+
+---
+
+## 35.8 — Industrial accident event
+
+**Problem:** After 35.1, `industrialContamination` only fires under `geopoliticalTension`. There is now no pathway for routine industrial contamination — aging infrastructure, poorly maintained sites — that occurs independent of geopolitical context.
+
+**Fix:** Add a separate `industrialAccident` event to `events.json`. This is distinct in tone (mundane failure, not sabotage or conflict) and fires on any push factor at low weight.
+
+```json
+"industrialAccident": {
+  "id": "industrialAccident",
+  "name": "Industrial Accident",
+  "description": "An ageing industrial site suffers a containment failure, contaminating the surrounding area.",
+  "flavourText": "The warning systems had been flagged for years. Nobody had the budget to fix them.",
+  "tags": ["climate", "incident"],
+  "eras": ["earth"],
+  "pushFactors": null,
+  "blocIds": null,
+  "countdownTurns": 1,
+  "weight": 0.25,
+  "minClimate": null,
+  "responseTier": "partialMitigation",
+  "negativeEffect": {
+    "resources": { "funding": -10, "politicalWill": -10 },
+    "tileTypeTarget": "industrial",
+    "destroyTileStatus": "irradiated"
+  },
+  "positiveEffect": null,
+  "mitigationCost": { "funding": 25 }
+}
+```
+
+Key differences from `industrialContamination`:
+- `pushFactors: null` — fires on any push factor
+- `weight: 0.25` (vs `industrialContamination`'s existing weight) — rare but not geopolitically gated
+- `responseTier: "partialMitigation"` — the player can spend 25F to contain it before the tile is lost
+- Smaller resource hit (−10F/−10W vs the geopolitical event's harsher effect)
+- `countdownTurns: 1` — short warning; the player can react if they're watching
+
+**File:** `src/data/events.json`
+
+---
+
 ## Files modified
 
 | File | Change |
 |---|---|
-| `src/data/events.json` | Restrict `industrialContamination` to geopolitical push factor; add `coastalFloodingMajor` and `heatwave` events |
+| `src/data/events.json` | Restrict `industrialContamination` to geopolitical push factor; add `coastalFloodingMajor`, `heatwave`, and `industrialAccident` events |
 | `src/engine/types.ts` | Add `climateImmune?: boolean` to `FacilityDef` |
 | `src/data/facilities.json` | Add `"climateImmune": true` to `spaceLaunchCentre` |
-| `src/engine/climate.ts` | Extend HQ exclusion to also exclude `climateImmune` facilities |
+| `src/engine/climate.ts` | Extend candidate filter: `climateImmune` exclusion + `seaWallProtected` guard; add highland dustbowl rule |
 | `src/engine/turn.ts` | Add tile action completion news for `clearsDestroyedStatus` actions |
 | `src/lib/components/HUD.svelte` | Add click-to-toggle climate detail panel |
 
@@ -351,3 +463,6 @@ No engine changes needed for 35.1 (pushFactors already filtered) or 35.3 (minCli
 6. Manual: queue "Clean Industrial Site" on an irradiated tile, advance turns — news item appears on completion
 7. Manual: click the CLIMATE bar in HUD — detail panel expands with per-facility breakdown; click again to collapse
 8. Manual: at climate > 60 with `climateChange`, verify `coastalFloodingMajor` can appear
+9. Manual: build a sea wall on a coastal tile, raise climate above 85% — that specific tile should never degrade passively
+10. Manual: at climate > 80%, verify highland tiles can appear as dustbowl candidates; news reads "desertification" not "drought"
+11. Manual: in a non-geopolitical game, verify `industrialAccident` can appear; verify player can spend 25F to mitigate before tile is lost
