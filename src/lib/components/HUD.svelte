@@ -274,6 +274,7 @@
         </button>
       </Tooltip>
       {#if climateDetailOpen}
+        <div class="detail-backdrop" onclick={() => { climateDetailOpen = false; }} role="none" tabindex="-1"></div>
         <div class="climate-detail" role="region" aria-label="Climate breakdown">
           <div class="climate-detail-row">
             <span class="climate-detail-label">Base rate</span>
@@ -429,6 +430,12 @@
     position: fixed;
     inset: 0;
     z-index: 99;
+  }
+
+  .detail-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
   }
 
   .menu-dropdown {

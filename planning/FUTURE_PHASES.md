@@ -102,6 +102,8 @@ This is a list of future requirements for the game but they are not to be implem
 
 ## BUGS:
 
+- Sea wall facility deletes existing facilities and protects... itself?
+
 ## FACILITY IDEAS:
 
 Era 1:

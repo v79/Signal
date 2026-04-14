@@ -436,6 +436,7 @@
             </button>
           </Tooltip>
           {#if launchDetailOpen}
+            <div class="detail-backdrop" onclick={() => { launchDetailOpen = false; }} role="none" tabindex="-1"></div>
             <div class="launch-detail" role="region" aria-label="Launch capacity sources">
               {#each breakdown.entries as entry}
                 <div class="launch-detail-row">
@@ -691,6 +692,12 @@
     .overview-btn {
         font-size: 0.6rem;
         letter-spacing: 0.06em;
+    }
+
+    .detail-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 49;
     }
 
     .launch-widget {

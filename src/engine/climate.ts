@@ -51,6 +51,9 @@ export function applyClimateDegradation(
   let updatedFacilities = [...facilities];
   const newsLines: string[] = [];
 
+  // Pre-index facilities by id to avoid O(n) scans inside the tile-filtering loop.
+  let facilityById = new Map(updatedFacilities.map((f) => [f.id, f]));
+
   for (const rule of rules) {
     if (rng.next() >= rule.probability) continue;
 
@@ -62,7 +65,7 @@ export function applyClimateDegradation(
       if (rule.status === 'flooded' && t.seaWallProtected) return false;
       if (t.facilitySlots.some((id) => {
         if (!id) return false;
-        const f = updatedFacilities.find((fac) => fac.id === id);
+        const f = facilityById.get(id);
         if (!f) return false;
         return facilityDefs.get(f.defId)?.climateImmune === true;
       })) return false;
@@ -89,8 +92,9 @@ export function applyClimateDegradation(
         : t,
     );
 
-    // Remove all non-HQ facilities from the destroyed tile
+    // Remove all non-immune facilities from the destroyed tile; rebuild index.
     updatedFacilities = updatedFacilities.filter((f) => !removeIds.has(f.id));
+    facilityById = new Map(updatedFacilities.map((f) => [f.id, f]));
 
     newsLines.push(`A ${rule.tileType} tile has been lost to ${rule.newsVerb}.`);
   }

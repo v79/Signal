@@ -209,26 +209,29 @@ export interface LaunchCapacityBreakdown {
   entries: { label: string; amount: number }[];
 }
 
+const LAUNCH_CAPACITY_BY_DEF: Record<string, number> = {
+  spaceLaunchCentre: 3,
+  fuelDepot: 2,
+  lunarLaunchFacility: 2,
+  lunarSpaceport: 4,
+};
+
+const LAUNCH_FACILITY_LABELS: Record<string, string> = {
+  spaceLaunchCentre: 'Space Launch Centre',
+  fuelDepot: 'Fuel Depot',
+  lunarLaunchFacility: 'Lunar Launch Facility',
+  lunarSpaceport: 'Lunar Spaceport',
+};
+
+const LAUNCH_CAPACITY_TECHS: Record<string, string> = {
+  reusableLaunchSystems: 'Reusable Launch Systems',
+  cislunarTransportNetwork: 'Cislunar Transport Network',
+};
+
 export function computeLaunchCapacityBreakdown(
   facilities: FacilityInstance[],
   techs: TechState[],
 ): LaunchCapacityBreakdown {
-  const CAPACITY_BY_DEF: Record<string, number> = {
-    spaceLaunchCentre: 3,
-    fuelDepot: 2,
-    lunarLaunchFacility: 2,
-    lunarSpaceport: 4,
-  };
-  const FACILITY_LABELS: Record<string, string> = {
-    spaceLaunchCentre: 'Space Launch Centre',
-    fuelDepot: 'Fuel Depot',
-    lunarLaunchFacility: 'Lunar Launch Facility',
-    lunarSpaceport: 'Lunar Spaceport',
-  };
-  const CAPACITY_TECHS: Record<string, string> = {
-    reusableLaunchSystems: 'Reusable Launch Systems',
-    cislunarTransportNetwork: 'Cislunar Transport Network',
-  };
 
   const entries: { label: string; amount: number }[] = [];
   let total = 0;
@@ -236,19 +239,19 @@ export function computeLaunchCapacityBreakdown(
   // Aggregate by facility type
   const countByDef: Record<string, number> = {};
   for (const inst of facilities) {
-    if (CAPACITY_BY_DEF[inst.defId]) {
+    if (LAUNCH_CAPACITY_BY_DEF[inst.defId]) {
       countByDef[inst.defId] = (countByDef[inst.defId] ?? 0) + 1;
     }
   }
   for (const [defId, count] of Object.entries(countByDef)) {
-    const amount = CAPACITY_BY_DEF[defId] * count;
-    entries.push({ label: count > 1 ? `${FACILITY_LABELS[defId]} ×${count}` : FACILITY_LABELS[defId], amount });
+    const amount = LAUNCH_CAPACITY_BY_DEF[defId] * count;
+    entries.push({ label: count > 1 ? `${LAUNCH_FACILITY_LABELS[defId]} ×${count}` : LAUNCH_FACILITY_LABELS[defId], amount });
     total += amount;
   }
 
   for (const ts of techs) {
-    if (ts.stage === 'discovered' && CAPACITY_TECHS[ts.defId]) {
-      entries.push({ label: CAPACITY_TECHS[ts.defId], amount: 2 });
+    if (ts.stage === 'discovered' && LAUNCH_CAPACITY_TECHS[ts.defId]) {
+      entries.push({ label: LAUNCH_CAPACITY_TECHS[ts.defId], amount: 2 });
       total += 2;
     }
   }
