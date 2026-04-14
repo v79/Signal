@@ -81,6 +81,8 @@ The SLC `allowedTileTypes` in `facilities.json:518` is `["arid", "agricultural"]
 
 **Fix:** Add `climateImmune?: boolean` to `FacilityDef` and check it in `applyClimateDegradation`.
 
+- _Though I note that the real space launch centre at Cape Canaveral is at high risk of flooding_
+
 **Files and changes:**
 
 ### `src/engine/types.ts` — `FacilityDef` interface (around line 228)
@@ -93,14 +95,11 @@ Add after `climateImpact?: number;`:
 climateImmune?: boolean;
 ```
 
-### `src/data/facilities.json` — `spaceLaunchCentre` (around line 533)
-Add after `"climateImpact": 0.2,`:
-```json
-"climateImmune": true,
-```
+### `src/data/facilities.json` — `hq` and `spaceLaunchCentre`
+Add `"climateImmune": true` to both entries. This replaces the existing hardcoded `defId === 'hq'` check — HQ becomes immune via the same flag, not special-cased in code.
 
 ### `src/engine/climate.ts` — `applyClimateDegradation` (lines 55–59)
-The candidate filter currently excludes HQ tiles. Extend it to also exclude tiles hosting any `climateImmune` facility:
+The candidate filter currently special-cases HQ by `defId`. Replace with a uniform `climateImmune` check:
 
 Current:
 ```ts
@@ -120,9 +119,7 @@ const candidates = updatedTiles.filter((t) => {
   if (t.facilitySlots.some((id) => {
     if (!id) return false;
     const f = updatedFacilities.find((fac) => fac.id === id);
-    if (!f) return false;
-    const def = facilityDefs.get(f.defId);
-    return f.defId === 'hq' || def?.climateImmune === true;
+    return facilityDefs.get(f?.defId ?? '')?.climateImmune === true;
   })) return false;
   return true;
 });
@@ -365,15 +362,13 @@ const candidates = updatedTiles.filter((t) => {
   if (t.facilitySlots.some((id) => {
     if (!id) return false;
     const f = updatedFacilities.find((fac) => fac.id === id);
-    if (!f) return false;
-    const def = facilityDefs.get(f.defId);
-    return f.defId === 'hq' || def?.climateImmune === true;
+    return facilityDefs.get(f?.defId ?? '')?.climateImmune === true;
   })) return false;
   return true;
 });
 ```
 
-Note: this also folds in the `climateImmune` extension from 35.2, replacing the original candidate filter shown there.
+Note: this also folds in the `climateImmune` extension from 35.2, replacing the original candidate filter shown there. The `defId === 'hq'` special-case is gone — HQ carries `climateImmune: true` in `facilities.json` like any other immune facility.
 
 **File:** `src/engine/climate.ts` — candidate filter only. No signature change.
 
@@ -444,8 +439,8 @@ Key differences from `industrialContamination`:
 |---|---|
 | `src/data/events.json` | Restrict `industrialContamination` to geopolitical push factor; add `coastalFloodingMajor`, `heatwave`, and `industrialAccident` events |
 | `src/engine/types.ts` | Add `climateImmune?: boolean` to `FacilityDef` |
-| `src/data/facilities.json` | Add `"climateImmune": true` to `spaceLaunchCentre` |
-| `src/engine/climate.ts` | Extend candidate filter: `climateImmune` exclusion + `seaWallProtected` guard; add highland dustbowl rule |
+| `src/data/facilities.json` | Add `"climateImmune": true` to `hq` and `spaceLaunchCentre` |
+| `src/engine/climate.ts` | Replace `defId === 'hq'` special-case with uniform `climateImmune` check; add `seaWallProtected` guard; add highland dustbowl rule |
 | `src/engine/turn.ts` | Add tile action completion news for `clearsDestroyedStatus` actions |
 | `src/lib/components/HUD.svelte` | Add click-to-toggle climate detail panel |
 
