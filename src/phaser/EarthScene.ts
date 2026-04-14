@@ -51,6 +51,38 @@ const DAMAGE_FLASH_COLOR: Record<TileDestroyedStatus, number> = {
   irradiated: 0x80ff50,
 };
 
+// ---------------------------------------------------------------------------
+// Colour helpers
+// ---------------------------------------------------------------------------
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+/** Linear interpolation between two packed 0xRRGGBB colours. */
+function lerpColor(a: number, b: number, t: number): number {
+  const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
+  const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
+  return (
+    (Math.round(ar + (br - ar) * t) << 16) |
+    (Math.round(ag + (bg - ag) * t) << 8) |
+     Math.round(ab + (bb - ab) * t)
+  );
+}
+
+/**
+ * Edge index → axial direction of the neighbouring hex for a flat-top hex
+ * whose vertices are generated at angle = i * π/3 (i = 0..5).
+ */
+const EDGE_NEIGHBOR_DIRS: { q: number; r: number }[] = [
+  { q:  1, r:  0 }, // edge 0: v0→v1
+  { q:  0, r:  1 }, // edge 1: v1→v2
+  { q: -1, r:  1 }, // edge 2: v2→v3
+  { q: -1, r:  0 }, // edge 3: v3→v4
+  { q:  0, r: -1 }, // edge 4: v4→v5
+  { q:  1, r: -1 }, // edge 5: v5→v0
+];
+
 /** Facility indicator colours by defId. */
 const FACILITY_COLORS: Record<string, number> = {
   hq: 0xd4a820,
@@ -341,6 +373,7 @@ export class EarthScene extends Phaser.Scene {
 
     const facilityById = new Map(facilities.map((f) => [f.id, f]));
     const queueMap = new Map(queue.map((a) => [a.coordKey, a]));
+    const tileByKey = new Map(tiles.map((t) => [`${t.coord.q},${t.coord.r}`, t]));
 
     for (const tile of tiles) {
       const key = `${tile.coord.q},${tile.coord.r}`;
@@ -355,7 +388,18 @@ export class EarthScene extends Phaser.Scene {
       const isSelected = key === selected;
       const flash = this.flashingTiles.get(key) ?? null;
 
-      this.drawTile(tile, verts, x, y, isHovered, isSelected, slotInstances, action, climate, adjacencyMap.get(key) ?? [], flash, now);
+      // For coastal tiles, compute which edges face a non-coastal neighbour and what colour it is.
+      // null entry = same type or no neighbour (no gradient needed).
+      let coastalEdgeColors: (number | null)[] | null = null;
+      if (tile.type === 'coastal') {
+        coastalEdgeColors = EDGE_NEIGHBOR_DIRS.map(({ q: dq, r: dr }) => {
+          const neighbor = tileByKey.get(`${tile.coord.q + dq},${tile.coord.r + dr}`);
+          if (!neighbor || neighbor.type === 'coastal') return null;
+          return TILE_FILL[neighbor.type];
+        });
+      }
+
+      this.drawTile(tile, verts, x, y, isHovered, isSelected, slotInstances, action, climate, adjacencyMap.get(key) ?? [], flash, now, coastalEdgeColors);
     }
   }
 
@@ -372,6 +416,7 @@ export class EarthScene extends Phaser.Scene {
     adjacency: AdjacencyIndicator[],
     flash: { startTime: number; color: number } | null,
     now: number,
+    coastalEdgeColors: (number | null)[] | null = null,
   ): void {
     const baseFill = TILE_FILL[tile.type] ?? 0x1e2d40;
     const baseStroke = TILE_STROKE[tile.type] ?? 0x3a5878;
@@ -382,6 +427,31 @@ export class EarthScene extends Phaser.Scene {
     // Draw hex fill
     this.tileGfx.fillStyle(baseFill, prodAlpha);
     this.tileGfx.fillPoints(verts, true);
+
+    // Coastal edge gradients — blend land-facing edges from the neighbour's colour inward.
+    // Skipped if the tile is flooded (destroyed overlay covers it anyway).
+    if (coastalEdgeColors && !tile.destroyedStatus) {
+      const STEPS = 5;
+      const DEPTH = 0.44; // how far toward centre the gradient reaches (0 = edge, 1 = centre)
+      for (let i = 0; i < 6; i++) {
+        const neighborColor = coastalEdgeColors[i];
+        if (neighborColor === null) continue;
+        const j = (i + 1) % 6;
+        for (let s = 0; s < STEPS; s++) {
+          const t0 = (s / STEPS) * DEPTH;
+          const t1 = ((s + 1) / STEPS) * DEPTH;
+          const col = lerpColor(neighborColor, baseFill, (s + 0.5) / STEPS);
+          // Trapezoid corners (outer edge → inner edge)
+          const ax = lerp(verts[i].x, cx, t0), ay = lerp(verts[i].y, cy, t0);
+          const bx = lerp(verts[j].x, cx, t0), by = lerp(verts[j].y, cy, t0);
+          const ex = lerp(verts[j].x, cx, t1), ey = lerp(verts[j].y, cy, t1);
+          const fx = lerp(verts[i].x, cx, t1), fy = lerp(verts[i].y, cy, t1);
+          this.tileGfx.fillStyle(col, prodAlpha);
+          this.tileGfx.fillTriangle(ax, ay, bx, by, ex, ey);
+          this.tileGfx.fillTriangle(ax, ay, ex, ey, fx, fy);
+        }
+      }
+    }
 
     // Destroyed overlay
     if (tile.destroyedStatus) {
