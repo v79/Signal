@@ -227,6 +227,10 @@ export interface FacilityDef {
    */
   climateImpact?: number;
   /**
+   * If true, the tile this facility occupies is excluded from climate degradation candidate selection.
+   */
+  climateImmune?: boolean;
+  /**
    * Launch units consumed per turn to keep this space facility supplied.
    * Undefined or 0 = Earth facility (unaffected by launch capacity).
    */

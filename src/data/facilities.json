@@ -27,7 +27,8 @@
     "adjacencyBonuses": [],
     "adjacencyPenalties": [],
     "depletes": false,
-    "requiredTechId": null
+    "requiredTechId": null,
+    "climateImmune": true
   },
   "researchLab": {
     "id": "researchLab",
@@ -531,6 +532,7 @@
     "canDelete": true,
     "slotCost": 3,
     "climateImpact": 0.2,
+    "climateImmune": true,
     "fieldOutput": {
       "engineering": 3,
       "physics": 4,

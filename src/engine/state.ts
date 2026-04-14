@@ -204,25 +204,61 @@ export function deserialiseGameState(json: string): GameState {
  *   - reusableLaunchSystems (tech):      +2
  *   - cislunarTransportNetwork (tech):   +2
  */
-export function recomputeLaunchCapacity(
+export interface LaunchCapacityBreakdown {
+  total: number;
+  entries: { label: string; amount: number }[];
+}
+
+export function computeLaunchCapacityBreakdown(
   facilities: FacilityInstance[],
   techs: TechState[],
-): number {
+): LaunchCapacityBreakdown {
   const CAPACITY_BY_DEF: Record<string, number> = {
     spaceLaunchCentre: 3,
     fuelDepot: 2,
     lunarLaunchFacility: 2,
     lunarSpaceport: 4,
   };
-  let capacity = 0;
+  const FACILITY_LABELS: Record<string, string> = {
+    spaceLaunchCentre: 'Space Launch Centre',
+    fuelDepot: 'Fuel Depot',
+    lunarLaunchFacility: 'Lunar Launch Facility',
+    lunarSpaceport: 'Lunar Spaceport',
+  };
+  const CAPACITY_TECHS: Record<string, string> = {
+    reusableLaunchSystems: 'Reusable Launch Systems',
+    cislunarTransportNetwork: 'Cislunar Transport Network',
+  };
+
+  const entries: { label: string; amount: number }[] = [];
+  let total = 0;
+
+  // Aggregate by facility type
+  const countByDef: Record<string, number> = {};
   for (const inst of facilities) {
-    capacity += CAPACITY_BY_DEF[inst.defId] ?? 0;
-  }
-  const CAPACITY_TECHS = new Set(['reusableLaunchSystems', 'cislunarTransportNetwork']);
-  for (const ts of techs) {
-    if (ts.stage === 'discovered' && CAPACITY_TECHS.has(ts.defId)) {
-      capacity += 2;
+    if (CAPACITY_BY_DEF[inst.defId]) {
+      countByDef[inst.defId] = (countByDef[inst.defId] ?? 0) + 1;
     }
   }
-  return capacity;
+  for (const [defId, count] of Object.entries(countByDef)) {
+    const amount = CAPACITY_BY_DEF[defId] * count;
+    entries.push({ label: count > 1 ? `${FACILITY_LABELS[defId]} ×${count}` : FACILITY_LABELS[defId], amount });
+    total += amount;
+  }
+
+  for (const ts of techs) {
+    if (ts.stage === 'discovered' && CAPACITY_TECHS[ts.defId]) {
+      entries.push({ label: CAPACITY_TECHS[ts.defId], amount: 2 });
+      total += 2;
+    }
+  }
+
+  return { total, entries };
+}
+
+export function recomputeLaunchCapacity(
+  facilities: FacilityInstance[],
+  techs: TechState[],
+): number {
+  return computeLaunchCapacityBreakdown(facilities, techs).total;
 }

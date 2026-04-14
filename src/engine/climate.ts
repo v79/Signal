@@ -30,6 +30,9 @@ function getRules(climatePressure: number): DegradationRule[] {
     rules.push({ tileType: 'coastal',      status: 'flooded',  probability: 0.04, newsVerb: 'rising sea levels' });
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
   }
+  if (climatePressure > 80) {
+    rules.push({ tileType: 'highland', status: 'dustbowl', probability: 0.02, newsVerb: 'desertification' });
+  }
 
   return rules;
 }
@@ -51,11 +54,18 @@ export function applyClimateDegradation(
   for (const rule of rules) {
     if (rng.next() >= rule.probability) continue;
 
-    // Candidates: non-destroyed tiles of the target type, excluding any tile with HQ in a slot
+    // Candidates: non-destroyed tiles of the target type, excluding sea-wall-protected coastal tiles
+    // and any tile hosting a climate-immune facility (e.g. HQ, Space Launch Centre).
     const candidates = updatedTiles.filter((t) => {
       if (t.type !== rule.tileType) return false;
       if (t.destroyedStatus !== null) return false;
-      if (t.facilitySlots.some((id) => id && updatedFacilities.find((f) => f.id === id)?.defId === 'hq')) return false;
+      if (rule.status === 'flooded' && t.seaWallProtected) return false;
+      if (t.facilitySlots.some((id) => {
+        if (!id) return false;
+        const f = updatedFacilities.find((fac) => fac.id === id);
+        if (!f) return false;
+        return facilityDefs.get(f.defId)?.climateImmune === true;
+      })) return false;
       return true;
     });
 
@@ -64,11 +74,12 @@ export function applyClimateDegradation(
     const chosen = candidates[Math.floor(rng.next() * candidates.length)];
     const chosenKey = `${chosen.coord.q},${chosen.coord.r}`;
 
-    // Collect all non-HQ facility IDs on the chosen tile
+    // Collect facility IDs on the chosen tile, excluding climate-immune facilities.
     const slotIds = new Set(chosen.facilitySlots.filter(Boolean) as string[]);
-    const facilsToRemove = updatedFacilities.filter(
-      (f) => slotIds.has(f.id) && f.defId !== 'hq',
-    );
+    const facilsToRemove = updatedFacilities.filter((f) => {
+      if (!slotIds.has(f.id)) return false;
+      return facilityDefs.get(f.defId)?.climateImmune !== true;
+    });
     const removeIds = new Set(facilsToRemove.map((f) => f.id));
 
     // Destroy the tile: clear all slots, set status

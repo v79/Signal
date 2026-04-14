@@ -27,7 +27,9 @@ This is a list of future requirements for the game but they are not to be implem
   - The game is based around the idea that the player cannot choose the next technology to research, but perhaps they could initiate a project to focus on a tech that is near completion, with a percentage chance of success.
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
+  - Signal breakthrough events should not happen when signal progress has stalled (gated by tech)
   - Move the wormhole response panel into a dedicated tab, then later replace the panel with the signal minigames.
+  - Should deactivating the Signal Relay Station (going unsupplied) pause signal progress? Currently `isSignalPaused` only checks if the relay exists, not if it's supplied. Pausing on deactivation would make supply disruption events (fuel shortage, orbital debris) more consequential, but the relay is unique — clear player feedback (news item) would be essential to avoid it feeling opaque.
 - **Political Will:**
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)
@@ -44,7 +46,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Projects need to be visible on the Maps
   - The Facilities that support projects (space launch centre) need to be visually distinct
   - Once the orbital station has been built, we don't need the project programme panel any more
-  - I do want visibilty of projects though
+  - I do want visibilty of projects though - a new tab after BLOCS.
 - **Competitor blocs**
   - First implementation in `planning/PLAN_PHASE28.md`
   - The middle-east bloc always collapses in every game; a bit racist.

@@ -65,6 +65,7 @@
   /** Whether the facility overview panel is open. */
   let showFacilityOverview = $state(false);
   let showSpaceOverview = $state(false);
+  let launchDetailOpen = $state(false);
 
   /** HQ bonus including tech field bonuses — passed to TileTooltip for the HQ tile. */
   const hqBonus = $derived.by<HqBonus>(() => {
@@ -412,20 +413,43 @@
       </Tooltip>
       {#if gameStore.state.launchCapacity > 0}
         {@const used = gameStore.state.launchCapacity - gameStore.remainingLaunchCapacity}
+        {@const breakdown = gameStore.launchCapacityBreakdown}
         <div class="launch-widget">
           <Tooltip
-            text={"Launch capacity limits how many near-space facilities can be actively supplied each turn. Each facility costs 1 or more capacity units.\n\nTo free up capacity, open the ASSETS panel and toggle facilities off — mothballed facilities stop consuming supply but also stop producing output.\n\nA Fuel Depot, another Space Launch Centre, or facilities will increase launch capacity"}
+            text={"Launch capacity limits how many near-space facilities can be actively supplied each turn. Each facility costs 1 or more capacity units.\n\nTo free up capacity, open the ASSETS panel and toggle facilities off — mothballed facilities stop consuming supply but also stop producing output.\n\nClick to see a breakdown of capacity sources."}
             direction="below"
           >
-            <span class="launch-label">LAUNCH CAPACITY</span>
+            <button
+              class="launch-toggle"
+              onclick={() => { launchDetailOpen = !launchDetailOpen; }}
+              aria-expanded={launchDetailOpen}
+              aria-label="Toggle launch capacity breakdown"
+            >
+              <span class="launch-label">LAUNCH CAPACITY</span>
+              <div class="launch-bar-track">
+                <div
+                  class="launch-bar-fill"
+                  style="width: {Math.min(100, (used / gameStore.state.launchCapacity) * 100)}%"
+                ></div>
+              </div>
+              <span class="launch-value">{used}/{gameStore.state.launchCapacity}</span>
+            </button>
           </Tooltip>
-          <div class="launch-bar-track">
-            <div
-              class="launch-bar-fill"
-              style="width: {Math.min(100, (used / gameStore.state.launchCapacity) * 100)}%"
-            ></div>
-          </div>
-          <span class="launch-value">{used}/{gameStore.state.launchCapacity}</span>
+          {#if launchDetailOpen}
+            <div class="launch-detail" role="region" aria-label="Launch capacity sources">
+              {#each breakdown.entries as entry}
+                <div class="launch-detail-row">
+                  <span class="launch-detail-label">{entry.label}</span>
+                  <span class="launch-detail-value">+{entry.amount}</span>
+                </div>
+              {/each}
+              {#if breakdown.entries.length === 0}
+                <div class="launch-detail-row">
+                  <span class="launch-detail-label">No sources</span>
+                </div>
+              {/if}
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -675,6 +699,54 @@
         gap: 5px;
         margin-left: auto;
         padding: 2px 6px;
+        position: relative;
+    }
+
+    .launch-toggle {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+    }
+
+    .launch-detail {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: #0a1018;
+        border: 1px solid #2a3a50;
+        padding: 0.4rem 0.6rem;
+        min-width: 13rem;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        margin-top: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .launch-detail-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.62rem;
+        letter-spacing: 0.06em;
+    }
+
+    .launch-detail-label {
+        color: #6a7888;
+    }
+
+    .launch-detail-value {
+        color: #4a90c0;
+        font-variant-numeric: tabular-nums;
     }
 
     .launch-label {
