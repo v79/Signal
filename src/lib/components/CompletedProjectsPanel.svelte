@@ -106,6 +106,7 @@
   };
 </script>
 
+<div class="panel-header">COMPLETED PROJECTS</div>
 <div class="panel">
   {#if entries().length === 0}
     <div class="empty-state">No projects completed yet.</div>
@@ -153,6 +154,15 @@
 </div>
 
 <style>
+  .panel-header {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: #4a6080;
+    padding: 8px 12px 6px;
+    border-bottom: 1px solid #1e2530;
+    flex-shrink: 0;
+  }
+
   .panel {
     flex: 1;
     overflow-y: auto;
