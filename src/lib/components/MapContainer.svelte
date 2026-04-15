@@ -5,6 +5,7 @@
   import TileTooltip from './TileTooltip.svelte';
   import BoardPanel from './BoardPanel.svelte';
   import BlocStatusPanel from './BlocStatusPanel.svelte';
+  import CompletedProjectsPanel from './CompletedProjectsPanel.svelte';
   import FacilityOverview from './FacilityOverview.svelte';
   import SpaceOverview from './SpaceOverview.svelte';
   import SpaceNodePicker from './SpaceNodePicker.svelte';
@@ -18,7 +19,7 @@
   import Tooltip from './Tooltip.svelte';
 
   type MapTab = 'earth' | 'space' | 'belt';
-  type AllTab = MapTab | 'board' | 'blocs';
+  type AllTab = MapTab | 'board' | 'blocs' | 'projects';
 
   type MapTabDef = { id: MapTab; label: string; requiredEra: Era | null; requiredProject?: string };
 
@@ -200,13 +201,13 @@
   function switchTab(tab: AllTab): void {
     if (activeTab === tab) return;
 
-    if (tab === 'board' || tab === 'blocs') {
+    if (tab === 'board' || tab === 'blocs' || tab === 'projects') {
       // Just show the panel — don't stop the running Phaser scene.
       // The canvas becomes hidden via CSS; state is preserved on return.
       activeTab = tab;
     } else {
       // Switching to a map tab. Stop the previously active map scene if it differs.
-      const fromMapTab: MapTab = activeTab !== 'board' && activeTab !== 'blocs' ? (activeTab as MapTab) : lastMapTab;
+      const fromMapTab: MapTab = activeTab !== 'board' && activeTab !== 'blocs' && activeTab !== 'projects' ? (activeTab as MapTab) : lastMapTab;
       if (game && fromMapTab !== tab) {
         game.scene.stop(SCENE_KEYS[fromMapTab]);
         game.scene.start(SCENE_KEYS[tab]);
@@ -386,6 +387,26 @@
     >
       BLOCS
     </button>
+    {#if gameStore.state}
+      {@const hasCompleted = gameStore.state.player.completedProjectIds.length > 0}
+      <Tooltip
+        text={hasCompleted ? 'View completed projects' : 'Complete a project to unlock this view'}
+        direction="below"
+      >
+        <button
+          class="tab"
+          class:active={activeTab === 'projects'}
+          class:locked={!hasCompleted}
+          disabled={!hasCompleted}
+          onclick={() => switchTab('projects')}
+        >
+          PROJECTS
+          {#if !hasCompleted}
+            <span class="lock">&#x1F512;</span>
+          {/if}
+        </button>
+      </Tooltip>
+    {/if}
   </div>
   {#if activeTab === 'earth' && gameStore.state}
     <div class="map-toolbar">
@@ -464,6 +485,16 @@
     </div>
   {/if}
 
+  <!-- Projects panel (shown instead of Phaser canvas when projects tab is active) -->
+  {#if activeTab === 'projects' && gameStore.state}
+    <div class="board-panel-wrap">
+      <CompletedProjectsPanel
+        completedProjectIds={gameStore.state.player.completedProjectIds}
+        projectDefs={PROJECT_DEFS}
+      />
+    </div>
+  {/if}
+
   <!-- Board panel (shown instead of Phaser canvas when board tab is active) -->
   {#if activeTab === 'board' && gameStore.state}
     <div class="board-panel-wrap">
@@ -497,7 +528,7 @@
     class="map-container"
     role="application"
     aria-label="Game map"
-    style="display: {activeTab === 'board' || activeTab === 'blocs' ? 'none' : 'flex'}"
+    style="display: {activeTab === 'board' || activeTab === 'blocs' || activeTab === 'projects' ? 'none' : 'flex'}"
     bind:this={container}
     onmousemove={(e) => {
       mouseX = e.offsetX;
