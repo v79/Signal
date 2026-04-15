@@ -671,6 +671,7 @@
     ],
     "adjacencyPenalties": [],
     "depletes": false,
+    "climateImpact": -0.1,
     "requiredTechId": "atmosphericChemistry"
   },
   "observatory": {
