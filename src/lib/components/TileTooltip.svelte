@@ -169,7 +169,7 @@
       <div class="empty-hint">Empty — click to build</div>
     {/if}
     {#if tile.destroyedStatus}
-      <div class="stat-line warn">{tile.destroyedStatus}</div>
+      <div class="stat-line warn">{{ flooded: 'Submerged', dustbowl: 'Dust bowl', irradiated: 'Irradiated' }[tile.destroyedStatus] ?? tile.destroyedStatus}</div>
     {/if}
   </div>
 {/if}

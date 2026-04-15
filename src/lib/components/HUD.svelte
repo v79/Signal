@@ -43,6 +43,7 @@
   } = $props();
 
   let menuOpen = $state(false);
+  let climateDetailOpen = $state(false);
   let dropdownPos = $state({ top: 0, left: 0 });
   let seedCopied = $state(false);
   let importError = $state<string | null>(null);
@@ -252,20 +253,45 @@
   </div>
 
   <div class="hud-center">
-    <Tooltip text={climateTooltip(climateBreakdown)} direction="below">
-      <div class="climate-group">
-        <span class="label">CLIMATE</span>
-        <div class="bar-track climate-track">
-          <div
-            class="bar-fill"
-            style="width: {climatePressure}%; background: {climateColor(climatePressure)}"
-          ></div>
-        </div>
-        <span class="value" style="color: {climateColor(climatePressure)}"
-          >{climatePressure.toFixed(0)}%</span
+    <div class="climate-group">
+      <Tooltip text={climateTooltip(climateBreakdown)} direction="below">
+        <button
+          class="climate-toggle"
+          onclick={() => { climateDetailOpen = !climateDetailOpen; }}
+          aria-expanded={climateDetailOpen}
+          aria-label="Toggle climate breakdown"
         >
-      </div>
-    </Tooltip>
+          <span class="label">CLIMATE</span>
+          <div class="bar-track climate-track">
+            <div
+              class="bar-fill"
+              style="width: {climatePressure}%; background: {climateColor(climatePressure)}"
+            ></div>
+          </div>
+          <span class="value" style="color: {climateColor(climatePressure)}"
+            >{climatePressure.toFixed(0)}%</span
+          >
+        </button>
+      </Tooltip>
+      {#if climateDetailOpen}
+        <div class="detail-backdrop" onclick={() => { climateDetailOpen = false; }} role="none" tabindex="-1"></div>
+        <div class="climate-detail" role="region" aria-label="Climate breakdown">
+          <div class="climate-detail-row">
+            <span class="climate-detail-label">Base rate</span>
+            <span class="climate-detail-value">+{climateBreakdown.base.toFixed(2)}/turn</span>
+          </div>
+          {#each climateBreakdown.entries as entry}
+            <div class="climate-detail-row">
+              <span class="climate-detail-label">{entry.label}</span>
+              <span
+                class="climate-detail-value"
+                style="color: {entry.amount > 0 ? '#c87050' : '#4a9b7a'}"
+              >{entry.amount > 0 ? '+' : ''}{entry.amount.toFixed(2)}/turn</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
 
     <Tooltip text="Global political will level." direction="below">
       <span class="label" style="margin-left: 1rem">WILL</span>
@@ -404,6 +430,12 @@
     position: fixed;
     inset: 0;
     z-index: 99;
+  }
+
+  .detail-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
   }
 
   .menu-dropdown {
@@ -610,6 +642,54 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    position: relative;
+  }
+
+  .climate-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+
+  .climate-detail {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #0a1018;
+    border: 1px solid #2a3a50;
+    padding: 0.4rem 0.6rem;
+    min-width: 14rem;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-top: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .climate-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+  }
+
+  .climate-detail-label {
+    color: #6a7888;
+  }
+
+  .climate-detail-value {
+    color: #c8d0d8;
+    font-variant-numeric: tabular-nums;
   }
 
   .climate-track {

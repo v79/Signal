@@ -79,19 +79,23 @@
   },
   "industrialAccident": {
     "id": "industrialAccident",
-    "name": "Facility Incident",
-    "description": "A containment failure at an industrial site threatens operations.",
-    "flavourText": "The evacuation order came too late for some.",
-    "tags": ["crisis", "industrial"],
-    "eras": ["earth", "nearSpace"],
+    "name": "Industrial Accident",
+    "description": "An ageing industrial site suffers a containment failure, contaminating the surrounding area.",
+    "flavourText": "The warning systems had been flagged for years. Nobody had the budget to fix them.",
+    "tags": ["climate", "incident"],
+    "eras": ["earth"],
     "pushFactors": null,
     "blocIds": null,
-    "countdownTurns": 2,
-    "weight": 0.6,
+    "countdownTurns": 1,
+    "weight": 0.25,
     "responseTier": "partialMitigation",
-    "negativeEffect": { "resources": { "materials": -20 } },
+    "negativeEffect": {
+      "resources": { "funding": -10, "politicalWill": -10 },
+      "tileTypeTarget": "industrial",
+      "destroyTileStatus": "irradiated"
+    },
     "positiveEffect": null,
-    "mitigationCost": { "materials": 10 }
+    "mitigationCost": { "funding": 25 }
   },
   "coastalFlooding": {
     "id": "coastalFlooding",
@@ -112,6 +116,47 @@
       "destroyTileStatus": "flooded"
     },
     "positiveEffect": null
+  },
+  "coastalFloodingMajor": {
+    "id": "coastalFloodingMajor",
+    "name": "Major Coastal Inundation",
+    "description": "Accelerating sea level rise overwhelms coastal defences across multiple regions.",
+    "flavourText": "There are no more warnings. There is only water.",
+    "tags": ["climate", "crisis"],
+    "eras": ["earth"],
+    "pushFactors": ["climateChange"],
+    "blocIds": null,
+    "countdownTurns": 2,
+    "weight": 0.4,
+    "minClimate": 60,
+    "responseTier": "noCounter",
+    "negativeEffect": {
+      "resources": { "funding": -25, "materials": -20, "politicalWill": -10 },
+      "tileTypeTarget": "coastal",
+      "destroyTileStatus": "flooded"
+    },
+    "positiveEffect": null
+  },
+  "heatwave": {
+    "id": "heatwave",
+    "name": "Extreme Heatwave",
+    "description": "Sustained extreme temperatures collapse agricultural output and trigger political unrest.",
+    "flavourText": "The thermometers ran out of range. The cameras did not.",
+    "tags": ["climate", "crisis"],
+    "eras": ["earth"],
+    "pushFactors": ["climateChange"],
+    "blocIds": null,
+    "countdownTurns": 2,
+    "weight": 0.5,
+    "minClimate": 50,
+    "responseTier": "partialMitigation",
+    "negativeEffect": {
+      "resources": { "politicalWill": -20, "materials": -10 },
+      "tileTypeTarget": "agricultural",
+      "destroyTileStatus": "dustbowl"
+    },
+    "positiveEffect": null,
+    "mitigationCost": { "funding": 20 }
   },
   "drought": {
     "id": "drought",
@@ -140,7 +185,7 @@
     "flavourText": "The cleanup will outlast the careers of everyone responsible.",
     "tags": ["crisis", "industrial"],
     "eras": ["earth", "nearSpace"],
-    "pushFactors": null,
+    "pushFactors": ["geopoliticalTension"],
     "blocIds": null,
     "countdownTurns": 2,
     "weight": 0.4,

@@ -100,10 +100,10 @@
 
   const SLOT_LABELS = ['SLOT 0', 'SLOT 1', 'SLOT 2'];
   const DESTROYED_LABELS: Record<string, string> = {
-    flooded: 'FLOODED', dustbowl: 'DUST BOWL', irradiated: 'IRRADIATED',
+    flooded: 'SUBMERGED', dustbowl: 'DUST BOWL', irradiated: 'IRRADIATED',
   };
   const DESTROYED_DESC: Record<string, string> = {
-    flooded: 'This tile has been inundated. No construction is possible.',
+    flooded: 'This coastal zone has been permanently submerged by rising sea levels. No construction is possible.',
     dustbowl: 'Sustained drought has rendered this tile uninhabitable.',
     irradiated: 'Contamination has made this tile unsafe. No construction is permitted.',
   };
@@ -147,13 +147,15 @@
   /** Tile actions applicable to this tile. */
   const applicableTileActions = $derived(
     [...tileActionDefs.values()].filter((ta) => {
-      // Match by tile type OR by destroyed status
-      const matchesType = ta.appliesTo.includes(tile.type) && tile.destroyedStatus == null;
-      const matchesDestroyed =
-        ta.appliesToDestroyed.length > 0 &&
-        tile.destroyedStatus != null &&
-        ta.appliesToDestroyed.includes(tile.destroyedStatus);
-      if (!matchesType && !matchesDestroyed) return false;
+      // `appliesTo` is a tile-type constraint; `appliesToDestroyed` is a destroyed-status requirement.
+      // When both are set, BOTH must match (e.g. cleanIndustrialSite: industrial AND irradiated).
+      // When only `appliesTo` is set, action applies to healthy tiles of those types.
+      // When only `appliesToDestroyed` is set, action applies to any tile with matching status.
+      const typeMatch = ta.appliesTo.length === 0 || ta.appliesTo.includes(tile.type);
+      const requiresDestroyed = ta.appliesToDestroyed.length > 0;
+      const matchesDestroyed = requiresDestroyed && tile.destroyedStatus != null && ta.appliesToDestroyed.includes(tile.destroyedStatus);
+      const matchesHealthy = !requiresDestroyed && tile.destroyedStatus == null;
+      if (!typeMatch || (!matchesDestroyed && !matchesHealthy)) return false;
       // Skip sea wall if already protected
       if (ta.seaWallProtection && tile.seaWallProtected) return false;
       return true;

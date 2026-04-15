@@ -327,6 +327,20 @@ export function executeWorldPhase(
     }
   }
 
+  // Tile action completion news: notify when a clearsDestroyedStatus action finishes.
+  const tileActionCompletionNews: NewsItem[] = [];
+  for (const action of completedActions) {
+    if (action.type !== 'tileAction' || !action.tileActionDefId) continue;
+    const taDef = tileActionDefs.get(action.tileActionDefId);
+    if (!taDef?.clearsDestroyedStatus) continue;
+    tileActionCompletionNews.push({
+      id: `tileaction-complete-${action.id}-t${nextTurn}`,
+      turn: nextTurn,
+      text: `${taDef.name} complete — tile restored to productive use.`,
+      category: 'climate',
+    });
+  }
+
   // 1. Adjacency effects (Earth map only for now)
   const adjacencyEffects = computeAdjacencyEffects(
     facilitiesAfterQueue,
@@ -901,6 +915,7 @@ export function executeWorldPhase(
         ...projectNews,
         ...eraTransitionNews,
         ...unsuppliedOnCompletionNews,
+        ...tileActionCompletionNews,
         ...exhaustionNews,
         ...degradationNews,
         ...blocNews,

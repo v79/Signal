@@ -15,7 +15,8 @@ import type {
   Era,
 } from '../../engine/types';
 import { initialiseBlocStates } from '../../engine/blocs';
-import { createGameState, recomputeLaunchCapacity } from '../../engine/state';
+import { createGameState, recomputeLaunchCapacity, computeLaunchCapacityBreakdown } from '../../engine/state';
+import type { LaunchCapacityBreakdown } from '../../engine/state';
 import { createRng } from '../../engine/rng';
 import { goto } from '$app/navigation';
 import {
@@ -1562,5 +1563,11 @@ export const gameStore = {
   get remainingLaunchCapacity(): number {
     if (!_state) return 0;
     return computeRemainingCapacity(_state);
+  },
+
+  /** Derived: per-source breakdown of total launch capacity. */
+  get launchCapacityBreakdown(): LaunchCapacityBreakdown {
+    if (!_state) return { total: 0, entries: [] };
+    return computeLaunchCapacityBreakdown(_state.player.facilities, _state.player.techs);
   },
 };
