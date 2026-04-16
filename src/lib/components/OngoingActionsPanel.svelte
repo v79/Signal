@@ -51,11 +51,13 @@
       groupMap.get(def.groupId)!.defs.push(def);
     }
 
-    return [...groupMap.values()].filter(({ defs }) =>
-      defs.some(
+    return [...groupMap.values()].filter(({ defs }) => {
+      // Hide groups where every stage is already complete — they move to the PROJECTS tab
+      if (defs.every((d) => completedSet.has(d.id))) return false;
+      return defs.some(
         (d) => activeDefIds.has(d.id) || completedSet.has(d.id) || availableSet.has(d.id),
-      ),
-    );
+      );
+    });
   });
 
   /** Available projects that don't belong to any group. */

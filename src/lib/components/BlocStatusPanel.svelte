@@ -264,7 +264,7 @@
 
   .panel-header {
     font-size: 0.6rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.15em;
     color: #4a6080;
     padding: 8px 12px 6px;
     border-bottom: 1px solid #1e2530;

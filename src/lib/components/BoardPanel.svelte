@@ -346,11 +346,11 @@
   }
 
   .panel-title {
-    font-size: 0.58rem;
-    letter-spacing: 0.2em;
-    color: #3a5268;
-    padding: 0.5rem 0.75rem 0.3rem;
-    border-bottom: 1px solid #111a24;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: #4a6080;
+    padding: 8px 12px 6px;
+    border-bottom: 1px solid #1e2530;
     margin: 0;
     flex-shrink: 0;
   }
