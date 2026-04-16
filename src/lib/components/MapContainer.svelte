@@ -192,6 +192,10 @@
     return virtualActions.length > 0 ? [...baseQueue, ...virtualActions] : baseQueue;
   });
 
+  function isMapTab(tab: AllTab): tab is MapTab {
+    return tab === 'earth' || tab === 'space' || tab === 'belt';
+  }
+
   const SCENE_KEYS: Record<MapTab, string> = {
     earth: 'EarthScene',
     space: 'SpaceScene',
@@ -201,13 +205,13 @@
   function switchTab(tab: AllTab): void {
     if (activeTab === tab) return;
 
-    if (tab === 'board' || tab === 'blocs' || tab === 'projects') {
+    if (!isMapTab(tab)) {
       // Just show the panel — don't stop the running Phaser scene.
       // The canvas becomes hidden via CSS; state is preserved on return.
       activeTab = tab;
     } else {
       // Switching to a map tab. Stop the previously active map scene if it differs.
-      const fromMapTab: MapTab = activeTab !== 'board' && activeTab !== 'blocs' && activeTab !== 'projects' ? (activeTab as MapTab) : lastMapTab;
+      const fromMapTab: MapTab = isMapTab(activeTab) ? activeTab : lastMapTab;
       if (game && fromMapTab !== tab) {
         game.scene.stop(SCENE_KEYS[fromMapTab]);
         game.scene.start(SCENE_KEYS[tab]);
@@ -229,6 +233,12 @@
       ) ?? null)
       : null,
   );
+
+  const completedProjectKeys = $derived(
+    Object.keys(gameStore.state?.player.completedProjectIds ?? {}),
+  );
+
+  const hasCompletedProjects = $derived(completedProjectKeys.length > 0);
 
   /** The currently selected space node, if any. */
   const selectedSpaceNode = $derived(
@@ -286,7 +296,7 @@
         getNodes: () => gameStore.state?.map.spaceNodes ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
-        getCompletedProjects: () => Object.keys(gameStore.state?.player.completedProjectIds ?? {}),
+        getCompletedProjects: () => completedProjectKeys,
         getLaunchAllocation: () => gameStore.state?.launchAllocation ?? {},
         getConstructionQueue: () => gameStore.state?.player.constructionQueue ?? [],
         onNodeClick: (id: string) => {
@@ -387,26 +397,23 @@
     >
       BLOCS
     </button>
-    {#if gameStore.state}
-      {@const hasCompleted = Object.keys(gameStore.state.player.completedProjectIds).length > 0}
-      <Tooltip
-        text={hasCompleted ? 'View completed projects' : 'Complete a project to unlock this view'}
-        direction="below"
+    <Tooltip
+      text={hasCompletedProjects ? 'View completed projects' : 'Complete a project to unlock this view'}
+      direction="below"
+    >
+      <button
+        class="tab"
+        class:active={activeTab === 'projects'}
+        class:locked={!hasCompletedProjects}
+        disabled={!hasCompletedProjects}
+        onclick={() => switchTab('projects')}
       >
-        <button
-          class="tab"
-          class:active={activeTab === 'projects'}
-          class:locked={!hasCompleted}
-          disabled={!hasCompleted}
-          onclick={() => switchTab('projects')}
-        >
           PROJECTS
-          {#if !hasCompleted}
+          {#if !hasCompletedProjects}
             <span class="lock">&#x1F512;</span>
           {/if}
         </button>
       </Tooltip>
-    {/if}
   </div>
   {#if activeTab === 'earth' && gameStore.state}
     <div class="map-toolbar">
@@ -528,7 +535,7 @@
     class="map-container"
     role="application"
     aria-label="Game map"
-    style="display: {activeTab === 'board' || activeTab === 'blocs' || activeTab === 'projects' ? 'none' : 'flex'}"
+    style="display: {isMapTab(activeTab) ? 'flex' : 'none'}"
     bind:this={container}
     onmousemove={(e) => {
       mouseX = e.offsetX;

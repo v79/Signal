@@ -23,8 +23,6 @@
     completedYear: number;
   };
 
-  const completedSet = $derived(new Set(Object.keys(completedProjectIds)));
-
   const entries = $derived((): DisplayEntry[] => {
     const result: DisplayEntry[] = [];
     const seenGroups = new Set<string>();
@@ -36,7 +34,7 @@
 
         // Collect all stages in this group
         const stageDefs = [...projectDefs.values()].filter((d) => d.groupId === def.groupId);
-        const allComplete = stageDefs.every((d) => completedSet.has(d.id));
+        const allComplete = stageDefs.every((d) => d.id in completedProjectIds);
         if (!allComplete) continue;
 
         // Aggregate rewards across all stages
@@ -76,7 +74,7 @@
           completedYear: turnToYear(latestTurn),
         });
       } else {
-        if (!completedSet.has(def.id)) continue;
+        if (!(def.id in completedProjectIds)) continue;
         result.push({
           id: def.id,
           name: def.name,
