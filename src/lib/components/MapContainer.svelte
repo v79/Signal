@@ -45,7 +45,7 @@
     const state = gameStore.state;
     if (!state) return false;
     if (ERA_ORDER.indexOf(state.era) >= ERA_ORDER.indexOf(tab.requiredEra)) return true;
-    if (tab.requiredProject && state.player.completedProjectIds.includes(tab.requiredProject)) return true;
+    if (tab.requiredProject && tab.requiredProject in state.player.completedProjectIds) return true;
     return false;
   }
 
@@ -286,7 +286,7 @@
         getNodes: () => gameStore.state?.map.spaceNodes ?? [],
         getFacilities: () => gameStore.state?.player.facilities ?? [],
         getSelectedNode: () => gameStore.selectedSpaceNodeId,
-        getCompletedProjects: () => gameStore.state?.player.completedProjectIds ?? [],
+        getCompletedProjects: () => Object.keys(gameStore.state?.player.completedProjectIds ?? {}),
         getLaunchAllocation: () => gameStore.state?.launchAllocation ?? {},
         getConstructionQueue: () => gameStore.state?.player.constructionQueue ?? [],
         onNodeClick: (id: string) => {
@@ -388,7 +388,7 @@
       BLOCS
     </button>
     {#if gameStore.state}
-      {@const hasCompleted = gameStore.state.player.completedProjectIds.length > 0}
+      {@const hasCompleted = Object.keys(gameStore.state.player.completedProjectIds).length > 0}
       <Tooltip
         text={hasCompleted ? 'View completed projects' : 'Complete a project to unlock this view'}
         direction="below"

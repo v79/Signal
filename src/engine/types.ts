@@ -836,7 +836,8 @@ export interface PlayerState {
   will: number;
   willProfile: WillProfile;
   facilities: FacilityInstance[];
-  completedProjectIds: string[];
+  /** Maps project defId → turn number on which it was completed. */
+  completedProjectIds: Record<string, number>;
   activeProjects: ProjectInstance[];
   techs: TechState[];
   cards: CardInstance[];

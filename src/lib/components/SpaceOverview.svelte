@@ -20,7 +20,7 @@
     facilities: FacilityInstance[];
     facilityDefs: Map<string, FacilityDef>;
     projectDefs: Map<string, ProjectDef>;
-    completedProjectIds: string[];
+    completedProjectIds: Record<string, number>;
     launchCapacity: number;
     launchAllocation: Record<string, boolean>;
     remainingCapacity: number;
@@ -51,14 +51,14 @@
 
   const earthOrbitCompleted = $derived(
     EARTH_ORBIT_IDS
-      .filter((id) => completedProjectIds.includes(id))
+      .filter((id) => id in completedProjectIds)
       .map((id) => projectDefs.get(id))
       .filter((d): d is ProjectDef => d !== undefined),
   );
 
   const lunarOrbitCompleted = $derived(
     LUNAR_ORBIT_IDS
-      .filter((id) => completedProjectIds.includes(id))
+      .filter((id) => id in completedProjectIds)
       .map((id) => projectDefs.get(id))
       .filter((d): d is ProjectDef => d !== undefined),
   );

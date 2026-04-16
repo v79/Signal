@@ -82,6 +82,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Flavour text for board members
   - Board members should be procedurally generated, not a fixed list, so we have enough content for three eras
 - **Climate management:**
+  - See `planning/PLAN_PHASE35.md` for current progress; list below mostly obsolete
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
   - Irradiated damage shouldn't exist without nuclear facilities
@@ -96,9 +97,9 @@ This is a list of future requirements for the game but they are not to be implem
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc
+  - Style consistency review
 - **Game management**
   - Continue game after winning
-  - DEV mode: start in a different Era (era unlocked, technologies for previous eras unlocked, but no facilities built)
 
 ## BUGS:
 

@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { ProjectDef, ProjectReward, ResearchField } from '../../engine/types';
+  import { turnToYear } from '../../engine/projects';
 
   let {
     completedProjectIds,
     projectDefs,
   }: {
-    completedProjectIds: string[];
+    completedProjectIds: Record<string, number>;
     projectDefs: Map<string, ProjectDef>;
   } = $props();
 
@@ -19,9 +20,10 @@
     description: string;
     reward: ProjectReward;
     era: string;
+    completedYear: number;
   };
 
-  const completedSet = $derived(new Set(completedProjectIds));
+  const completedSet = $derived(new Set(Object.keys(completedProjectIds)));
 
   const entries = $derived((): DisplayEntry[] => {
     const result: DisplayEntry[] = [];
@@ -64,12 +66,14 @@
           }
         }
 
+        const latestTurn = Math.max(...stageDefs.map((d) => completedProjectIds[d.id] ?? 0));
         result.push({
           id: def.groupId,
           name: def.groupName ?? def.groupId,
           description: stageDefs[stageDefs.length - 1].description,
           reward: combined,
           era: def.era,
+          completedYear: turnToYear(latestTurn),
         });
       } else {
         if (!completedSet.has(def.id)) continue;
@@ -79,6 +83,7 @@
           description: def.description,
           reward: def.reward,
           era: def.era,
+          completedYear: turnToYear(completedProjectIds[def.id] ?? 0),
         });
       }
     }
@@ -120,7 +125,7 @@
             </div>
             <div class="card-info">
               <div class="project-name">{entry.name}</div>
-              <div class="era-badge">{ERA_LABELS[entry.era] ?? entry.era}</div>
+              <div class="era-badge">{ERA_LABELS[entry.era] ?? entry.era} · {entry.completedYear}</div>
             </div>
           </div>
           <div class="reward-row">
