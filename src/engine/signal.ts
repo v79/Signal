@@ -62,6 +62,23 @@ export function computeSignalCap(discoveredTechIds: ReadonlySet<string>): number
 }
 
 /**
+ * Count facilities whose defId is present in `defIds` AND whose def exists in
+ * the facility-def map. The def existence guard protects against stale
+ * facility references pointing at removed defs.
+ */
+function countFacilitiesInDefSet(
+  facilities: FacilityInstance[],
+  defIds: ReadonlySet<string>,
+  facilityDefs: Map<string, FacilityDef>,
+): number {
+  let n = 0;
+  for (const f of facilities) {
+    if (defIds.has(f.defId) && facilityDefs.has(f.defId)) n++;
+  }
+  return n;
+}
+
+/**
  * Returns true when signal ticking should produce zero progress this turn.
  * In nearSpace (and beyond), signal ticking is paused until the player has
  * built at least one NEAR_SPACE_RELAY_DEF_IDS facility.
@@ -72,10 +89,7 @@ export function isSignalPaused(
   facilityDefs: Map<string, FacilityDef>,
 ): boolean {
   if (era === 'earth') return false;
-  return !facilities.some((f) => {
-    const def = facilityDefs.get(f.defId);
-    return def !== undefined && NEAR_SPACE_RELAY_DEF_IDS.has(def.id);
-  });
+  return countFacilitiesInDefSet(facilities, NEAR_SPACE_RELAY_DEF_IDS, facilityDefs) === 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +116,12 @@ const STRENGTH_THRESHOLD: Record<SignalEraStrength, number> = {
   urgent: 70,
 };
 
+/** Non-zero thresholds — the ones that represent newsworthy crossings. */
+const NEWSWORTHY_STRENGTH_THRESHOLDS: readonly number[] = [
+  STRENGTH_THRESHOLD.structured,
+  STRENGTH_THRESHOLD.urgent,
+];
+
 /**
  * Compute the raw decode progress delta for one World Phase tick.
  * Returns a positive number (progress never decreases).
@@ -111,11 +131,7 @@ export function computeSignalProgressDelta(
   facilities: FacilityInstance[],
   facilityDefs: Map<string, FacilityDef>,
 ): number {
-  const arrayCount = facilities.filter((f) => {
-    const def = facilityDefs.get(f.defId);
-    return def !== undefined && EARTH_SIGNAL_ARRAY_DEF_IDS.has(def.id);
-  }).length;
-
+  const arrayCount = countFacilitiesInDefSet(facilities, EARTH_SIGNAL_ARRAY_DEF_IDS, facilityDefs);
   const fieldContribution = (fields.physics + fields.mathematics) / FIELD_DIVISOR;
   return BASE_PROGRESS + fieldContribution + arrayCount * ARRAY_BONUS;
 }
@@ -254,8 +270,5 @@ export function signalProgressNewsText(progress: number, turn: number): string {
  * this tick (i.e. previous progress was below threshold, new is at or above).
  */
 export function didCrossStrengthThreshold(previous: number, current: number): boolean {
-  return (
-    (previous < STRENGTH_THRESHOLD.structured && current >= STRENGTH_THRESHOLD.structured) ||
-    (previous < STRENGTH_THRESHOLD.urgent && current >= STRENGTH_THRESHOLD.urgent)
-  );
+  return NEWSWORTHY_STRENGTH_THRESHOLDS.some((t) => previous < t && current >= t);
 }
