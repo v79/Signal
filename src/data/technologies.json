@@ -880,10 +880,10 @@
     "name": "Deep Space Relay Network",
     "rumourText": "Ground-based observatories are approaching the theoretical limit of what they can resolve from the signal. The next step would require infrastructure beyond the atmosphere.",
     "baseRecipe": {
-      "physics": 40,
-      "engineering": 60,
-      "computing": 50,
-      "mathematics": 30
+      "physics": 27,
+      "engineering": 40,
+      "computing": 33,
+      "mathematics": 20
     },
     "recipeVariance": 0.2,
     "requiresSimultaneous": false,

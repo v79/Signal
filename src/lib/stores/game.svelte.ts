@@ -787,11 +787,13 @@ export const gameStore = {
     // Apply the residual (mitigated) negative effect
     const residualEffect = getEffectForResolution(def, 'mitigation');
     let updatedTiles = _state.map.earthTiles;
+    let updatedSignal = _state.signal;
     if (residualEffect) {
       const eventRng = createRng(`${_state.seed}-mitigate-${eventId}-t${_state.turn}`);
-      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn, eventRng);
+      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn, eventRng, _state.signal);
       playerAfterCost = result.player;
       updatedTiles = result.mapTiles;
+      if (result.signal) updatedSignal = result.signal;
     }
 
     // News item
@@ -804,6 +806,7 @@ export const gameStore = {
 
     mutateState({
       ..._state,
+      signal: updatedSignal,
       map: { ..._state.map, earthTiles: updatedTiles },
       player: {
         ...playerAfterCost,
@@ -828,11 +831,13 @@ export const gameStore = {
     const effect = getEffectForResolution(def, 'accepted');
     let updatedPlayer = _state.player;
     let updatedTiles = _state.map.earthTiles;
+    let updatedSignal = _state.signal;
     if (effect) {
       const eventRng = createRng(`${_state.seed}-accept-${eventId}-t${_state.turn}`);
-      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng);
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, _state.signal);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
+      if (result.signal) updatedSignal = result.signal;
     }
 
     const isBoardProposal = def.id === 'boardProposalOrbitalStation';
@@ -845,6 +850,7 @@ export const gameStore = {
 
     mutateState({
       ..._state,
+      signal: updatedSignal,
       map: { ..._state.map, earthTiles: updatedTiles },
       orbitalStationAuthorised: isBoardProposal ? true : _state.orbitalStationAuthorised,
       orbitalStationDeferResurfaceTurn: isBoardProposal ? null : _state.orbitalStationDeferResurfaceTurn,
@@ -913,16 +919,19 @@ export const gameStore = {
     const effect = getEffectForResolution(def, 'expired');
     let updatedPlayer = _state.player;
     let updatedTiles = _state.map.earthTiles;
+    let updatedSignal = _state.signal;
     if (effect) {
       const eventRng = createRng(`${_state.seed}-decline-${eventId}-t${_state.turn}`);
-      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng);
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, _state.signal);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
+      if (result.signal) updatedSignal = result.signal;
     }
 
     const summary = effect ? formatEffectForNews(effect) : 'no effect';
     mutateState({
       ..._state,
+      signal: updatedSignal,
       map: { ..._state.map, earthTiles: updatedTiles },
       player: {
         ...updatedPlayer,

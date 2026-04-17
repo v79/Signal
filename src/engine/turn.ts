@@ -150,6 +150,7 @@ export function executeEventPhase(
   // 2. Apply effects of events that just expired
   let updatedPlayer = { ...player };
   let updatedTiles = [...state.map.earthTiles];
+  let updatedSignalFromEvents = state.signal;
   const expired = getJustExpiredEvents(tickedEvents);
   const expiryNews: NewsItem[] = [];
 
@@ -158,9 +159,10 @@ export function executeEventPhase(
     if (!def) continue;
     const effect = getEffectForResolution(def, 'expired');
     if (!effect) continue;
-    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn, rng);
+    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn, rng, updatedSignalFromEvents);
     updatedPlayer = result.player;
     updatedTiles = result.mapTiles;
+    if (result.signal) updatedSignalFromEvents = result.signal;
     const summary = formatEffectForNews(effect);
     expiryNews.push({
       id: `event-expired-${event.id}-t${state.turn}`,
@@ -206,6 +208,7 @@ export function executeEventPhase(
   return {
     ...state,
     phase: 'draw',
+    signal: updatedSignalFromEvents,
     activeEvents: [...tickedEvents.filter((e) => !e.resolved), ...finalNewEvents],
     map: { ...state.map, earthTiles: updatedTiles },
     player: {

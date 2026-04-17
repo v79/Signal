@@ -44,10 +44,22 @@ export function drawCards(cards: CardInstance[], rng: Rng, handLimit = HAND_LIMI
     working = working.map((c) => (c.zone === 'discard' ? { ...c, zone: 'deck' as const } : c));
   }
 
-  // Shuffle all deck card IDs and pick the first N
-  const deckIds = working.filter((c) => c.zone === 'deck').map((c) => c.id);
-  const shuffled = rng.shuffle([...deckIds]); // copy before shuffle — shuffle mutates
-  const drawSet = new Set(shuffled.slice(0, toDraw));
+  // Shuffle all deck cards and pick the first N with unique defIds.
+  // This prevents drawing two copies of the same card definition in one hand.
+  const deckCards = working.filter((c) => c.zone === 'deck');
+  const shuffledDeck = rng.shuffle([...deckCards]); // copy before shuffle — shuffle mutates
+  const seenDefIds = new Set<string>();
+  // Also exclude defIds already in hand (from banked cards returned to hand, etc.)
+  for (const c of working) {
+    if (c.zone === 'hand') seenDefIds.add(c.defId);
+  }
+  const drawSet = new Set<string>();
+  for (const c of shuffledDeck) {
+    if (drawSet.size >= toDraw) break;
+    if (seenDefIds.has(c.defId)) continue;
+    seenDefIds.add(c.defId);
+    drawSet.add(c.id);
+  }
 
   return working.map((c) =>
     c.zone === 'deck' && drawSet.has(c.id) ? { ...c, zone: 'hand' as const } : c,

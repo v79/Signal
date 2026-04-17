@@ -70,9 +70,12 @@ const defs = new Map([
 // drawCards
 // ---------------------------------------------------------------------------
 
+// Unique defIds for draw tests — each card needs a distinct defId to avoid dedup filtering
+const drawDefIds = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+
 describe('drawCards', () => {
   it('draws up to HAND_LIMIT cards from the deck', () => {
-    const cards = Array.from({ length: 8 }, (_, i) => makeCard(`c${i}`, 'academic', 'deck'));
+    const cards = Array.from({ length: 8 }, (_, i) => makeCard(`c${i}`, drawDefIds[i], 'deck'));
     const result = drawCards(cards, createRng('draw1'));
     expect(result.filter((c) => c.zone === 'hand')).toHaveLength(HAND_LIMIT);
     expect(result.filter((c) => c.zone === 'deck')).toHaveLength(3);
@@ -80,18 +83,18 @@ describe('drawCards', () => {
 
   it('does not draw if hand is already at limit', () => {
     const hand = Array.from({ length: HAND_LIMIT }, (_, i) =>
-      makeCard(`h${i}`, 'academic', 'hand'),
+      makeCard(`h${i}`, drawDefIds[i], 'hand'),
     );
-    const deck = [makeCard('d1', 'academic', 'deck')];
+    const deck = [makeCard('d1', drawDefIds[HAND_LIMIT], 'deck')];
     const result = drawCards([...hand, ...deck], createRng('draw2'));
     expect(result.filter((c) => c.zone === 'hand')).toHaveLength(HAND_LIMIT);
     expect(result.filter((c) => c.zone === 'deck')).toHaveLength(1);
   });
 
   it('recycles discard pile when deck is depleted', () => {
-    const deck = [makeCard('d1', 'academic', 'deck')];
+    const deck = [makeCard('d1', drawDefIds[0], 'deck')];
     const discard = Array.from({ length: 6 }, (_, i) =>
-      makeCard(`disc${i}`, 'academic', 'discard'),
+      makeCard(`disc${i}`, drawDefIds[i + 1], 'discard'),
     );
     const result = drawCards([...deck, ...discard], createRng('recycle'));
     expect(result.filter((c) => c.zone === 'hand')).toHaveLength(HAND_LIMIT);
@@ -101,23 +104,70 @@ describe('drawCards', () => {
   });
 
   it('only draws as many cards as exist when total < hand limit', () => {
-    const cards = [makeCard('d1', 'academic', 'deck'), makeCard('d2', 'academic', 'deck')];
+    const cards = [makeCard('d1', drawDefIds[0], 'deck'), makeCard('d2', drawDefIds[1], 'deck')];
     const result = drawCards(cards, createRng('few'));
     expect(result.filter((c) => c.zone === 'hand')).toHaveLength(2);
   });
 
   it('is deterministic for the same seed', () => {
-    const cards = Array.from({ length: 10 }, (_, i) => makeCard(`c${i}`, 'academic', 'deck'));
+    const cards = Array.from({ length: 10 }, (_, i) => makeCard(`c${i}`, drawDefIds[i], 'deck'));
     const r1 = drawCards(cards, createRng('det'));
     const r2 = drawCards(cards, createRng('det'));
     expect(r1.map((c) => c.zone)).toEqual(r2.map((c) => c.zone));
   });
 
   it('does not mutate the input array', () => {
-    const cards = Array.from({ length: 6 }, (_, i) => makeCard(`c${i}`, 'academic', 'deck'));
+    const cards = Array.from({ length: 6 }, (_, i) => makeCard(`c${i}`, drawDefIds[i], 'deck'));
     const original = cards.map((c) => ({ ...c }));
     drawCards(cards, createRng('mut'));
     expect(cards).toEqual(original);
+  });
+
+  it('never draws two cards with the same defId', () => {
+    // 10 cards but only 5 unique defIds (each duplicated)
+    const cards = Array.from({ length: 10 }, (_, i) =>
+      makeCard(`c${i}`, drawDefIds[i % 5], 'deck'),
+    );
+    const result = drawCards(cards, createRng('dedup'));
+    const hand = result.filter((c) => c.zone === 'hand');
+    expect(hand).toHaveLength(HAND_LIMIT);
+    const handDefIds = hand.map((c) => c.defId);
+    expect(new Set(handDefIds).size).toBe(handDefIds.length);
+  });
+
+  it('draws fewer cards when not enough unique defIds available', () => {
+    // 6 cards but only 3 unique defIds
+    const cards = [
+      makeCard('c0', 'x', 'deck'),
+      makeCard('c1', 'x', 'deck'),
+      makeCard('c2', 'y', 'deck'),
+      makeCard('c3', 'y', 'deck'),
+      makeCard('c4', 'z', 'deck'),
+      makeCard('c5', 'z', 'deck'),
+    ];
+    const result = drawCards(cards, createRng('limited'));
+    const hand = result.filter((c) => c.zone === 'hand');
+    expect(hand).toHaveLength(3);
+    const handDefIds = hand.map((c) => c.defId);
+    expect(new Set(handDefIds).size).toBe(3);
+  });
+
+  it('excludes defIds already in hand from draw candidates', () => {
+    // Player already has 'x' in hand, deck has another 'x' plus other cards
+    const cards = [
+      makeCard('h0', 'x', 'hand'),
+      makeCard('d0', 'x', 'deck'),
+      makeCard('d1', 'y', 'deck'),
+      makeCard('d2', 'z', 'deck'),
+      makeCard('d3', 'w', 'deck'),
+      makeCard('d4', 'v', 'deck'),
+    ];
+    const result = drawCards(cards, createRng('hand-dedup'));
+    const hand = result.filter((c) => c.zone === 'hand');
+    // Should draw 4 more (to reach HAND_LIMIT=5), none of which are defId 'x'
+    expect(hand).toHaveLength(HAND_LIMIT);
+    const xInHand = hand.filter((c) => c.defId === 'x');
+    expect(xInHand).toHaveLength(1); // only the original
   });
 });
 
