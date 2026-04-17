@@ -28,6 +28,14 @@ import type {
 const ERA_ORDER = ['earth', 'nearSpace', 'deepSpace'] as const;
 type Era = (typeof ERA_ORDER)[number];
 
+/**
+ * Convert a turn number to an in-world year.
+ * Turn 1 = 1970; each turn advances one year.
+ */
+export function turnToYear(turn: number): number {
+  return 1969 + turn;
+}
+
 // ---------------------------------------------------------------------------
 // Prerequisite / availability checks
 // ---------------------------------------------------------------------------
@@ -71,9 +79,8 @@ export function canInitiateProject(state: GameState, def: ProjectDef): boolean {
 
   // Required completed projects
   if (prereqs.requiredProjects) {
-    const completedSet = new Set(player.completedProjectIds);
     for (const projId of prereqs.requiredProjects) {
-      if (!completedSet.has(projId)) return false;
+      if (!(projId in player.completedProjectIds)) return false;
     }
   }
 
@@ -110,9 +117,9 @@ export function getAvailableProjects(
   defs: Map<string, ProjectDef>,
 ): ProjectDef[] {
   const activeDefIds = new Set(state.player.activeProjects.map((p) => p.defId));
-  const completedIds = new Set(state.player.completedProjectIds);
+  const completed = state.player.completedProjectIds;
   return [...defs.values()].filter(
-    (def) => !activeDefIds.has(def.id) && !completedIds.has(def.id) && canInitiateProject(state, def),
+    (def) => !activeDefIds.has(def.id) && !(def.id in completed) && canInitiateProject(state, def),
   );
 }
 
@@ -201,7 +208,7 @@ export function tickActiveProjects(
     if (advanced.turnsElapsed >= advanced.effectiveDuration) {
       // ---- Completion ----
       completedDefIds.push(def.id);
-      player = { ...player, completedProjectIds: [...player.completedProjectIds, def.id] };
+      player = { ...player, completedProjectIds: { ...player.completedProjectIds, [def.id]: turn } };
 
       // Deduct final turn upkeep before applying reward
       if (def.upkeepCost.funding || def.upkeepCost.materials || def.upkeepCost.politicalWill) {

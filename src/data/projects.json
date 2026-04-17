@@ -66,7 +66,7 @@
     "cost": { "funding": 60, "materials": 40 },
     "upkeepCost": {},
     "baseDuration": 3,
-    "reward": { "signalProgress": 5, "politicalWill": 20 },
+    "reward": { "signalProgress": 5, "resources": { "politicalWill": 20 } },
     "landmarkGate": null,
     "groupId": "orbitalStation",
     "groupName": "Orbital Station Programme",
@@ -103,7 +103,7 @@
     "cost": { "funding": 20, "materials": 10 },
     "upkeepCost": {},
     "baseDuration": 2,
-    "reward": { "signalProgress": 10 },
+    "reward": { "resources": { "politicalWill": 30 } },
     "landmarkGate": "opensEra2",
     "groupId": "orbitalStation",
     "groupName": "Orbital Station Programme",
@@ -143,6 +143,68 @@
     "prerequisites": {
       "requiredTechs": ["particlePhysicsDetectors"],
       "requiredFacilityDefs": ["publicUniversity"]
+    }
+  },
+  "lunarProspectingMission": {
+    "id": "lunarProspectingMission",
+    "name": "Lunar Prospecting Mission",
+    "description": "A systematic geological survey of candidate extraction sites across multiple lunar regions. Automated drills and chemical analysers map subsurface composition to depth — the data underpins every future extraction decision and reveals resource concentrations substantially richer than surface analysis suggested.",
+    "type": "scientific",
+    "era": "nearSpace",
+    "cost": { "funding": 25, "materials": 15 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "resources": { "materials": 50 }, "fields": { "engineering": 10 } },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["inSituResourceUtilization"]
+    }
+  },
+  "longDurationOrbitalStudy": {
+    "id": "longDurationOrbitalStudy",
+    "name": "Long-Duration Orbital Study",
+    "description": "A six-person crew rotates through a continuous 360-day orbital mission, pushing life support systems to their operational limits. The scientific returns — from microgravity biology, closed-loop atmospheric analysis, and signal-environment characterisation — substantially exceed pre-mission projections.",
+    "type": "scientific",
+    "era": "nearSpace",
+    "cost": { "funding": 45 },
+    "upkeepCost": {},
+    "baseDuration": 3,
+    "reward": { "signalProgress": 8, "fields": { "biochemistry": 15, "computing": 8 } },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["advancedLifeSupport"],
+      "requiredFacilityDefs": ["orbitalLaboratory"]
+    }
+  },
+  "autonomousLunarSurveyGrid": {
+    "id": "autonomousLunarSurveyGrid",
+    "name": "Autonomous Lunar Survey Grid",
+    "description": "A fleet of autonomous robots systematically traverses the entire lunar near side, mapping subsurface structure, regolith depth, and resource concentrations in high resolution. The combined dataset is the most complete geological map of any extraterrestrial body in human history — and reveals that the near side is riddled with anomalies.",
+    "type": "scientific",
+    "era": "nearSpace",
+    "cost": { "funding": 55, "materials": 30 },
+    "upkeepCost": {},
+    "baseDuration": 2,
+    "reward": { "signalProgress": 15, "resources": { "materials": 40 } },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["autonomousSpaceConstruction"]
+    }
+  },
+  "outerSystemProbe": {
+    "id": "outerSystemProbe",
+    "name": "Outer System Probe",
+    "description": "A nuclear-thermal probe launched on a trajectory toward the heliopause — the first human-made object designed to reach the boundary of the solar system. Its instruments are tuned to the signal's known frequency bands. Telemetry will take years to accumulate, but its launch is a statement of intent.",
+    "type": "scientific",
+    "era": "nearSpace",
+    "cost": { "funding": 90, "materials": 50 },
+    "upkeepCost": {},
+    "baseDuration": 4,
+    "reward": { "signalProgress": 30, "fields": { "physics": 15 } },
+    "landmarkGate": null,
+    "prerequisites": {
+      "requiredTechs": ["cislunarTransportNetwork"],
+      "requiredFacilityDefs": ["deepSpaceRelay"]
     }
   },
   "moonColony_stage1": {

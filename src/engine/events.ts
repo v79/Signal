@@ -9,6 +9,7 @@ import type {
   PushFactor,
   FacilityInstance,
   BlocState,
+  SignalState,
 } from './types';
 import type { Rng } from './rng';
 
@@ -183,12 +184,14 @@ export function resolveEvent(
 export interface EventEffectResult {
   player: PlayerState;
   mapTiles: MapTile[];
+  signal?: SignalState;
 }
 
 /**
  * Apply an EventEffect to the player state and map.
  *
  * @param rng - Seeded RNG used for dynamic tile selection (`tileTypeTarget`).
+ * @param signal - Optional signal state; required for effects with `signalProgress`.
  */
 export function applyEventEffect(
   effect: EventEffect,
@@ -196,6 +199,7 @@ export function applyEventEffect(
   mapTiles: MapTile[],
   currentTurn: number,
   rng: Rng,
+  signal?: SignalState,
 ): EventEffectResult {
   let updatedPlayer = { ...player };
   let updatedTiles = mapTiles;
@@ -256,8 +260,17 @@ export function applyEventEffect(
     }
   }
 
-  // eliminateBloc, signalProgress, triggersEventId — deferred
-  return { player: updatedPlayer, mapTiles: updatedTiles };
+  // signalProgress: apply delta directly, bypassing era stall caps
+  let updatedSignal = signal;
+  if (effect.signalProgress != null && updatedSignal) {
+    updatedSignal = {
+      ...updatedSignal,
+      decodeProgress: Math.max(0, Math.min(100, updatedSignal.decodeProgress + effect.signalProgress)),
+    };
+  }
+
+  // eliminateBloc, triggersEventId — deferred
+  return { player: updatedPlayer, mapTiles: updatedTiles, signal: updatedSignal };
 }
 
 /** Destroy a tile and remove one random non-HQ facility slot from it. */
@@ -364,6 +377,8 @@ export function formatEffectForNews(effect: EventEffect): string {
     if (total > 0) parts.push('research fields +');
     else if (total < 0) parts.push('research fields −');
   }
+  if (effect.signalProgress != null && effect.signalProgress !== 0)
+    parts.push(`Signal ${effect.signalProgress > 0 ? '+' : ''}${effect.signalProgress}`);
   return parts.length > 0 ? parts.join(', ') : 'no immediate effect';
 }
 

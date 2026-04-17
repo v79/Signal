@@ -14,13 +14,14 @@ This is a list of future requirements for the game but they are not to be implem
   - Animate reshuffle of cards at the start of each turn (clearer that new cards have been dealt)
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
-  - Ensure duplicate cards are not drawn at the same time
   - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
 - **Events:**
   - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
   - Bloc partnership events need to be clearer on the costs and benefits
+  - The bloc collapse event should not fire if no bloc has collapsed
   - The solar storm event is countered by political will. Which is a weird choice.
   - Limit to only one diplomatic event active at any time?
+  - Lunar seismic event should not fire if there are no lunar facilities
 - **Research:**
   - What to do once all the tech for an era has been researched?
   - Each Era should have a tier 5 technology that represents the end of the era.
@@ -30,6 +31,8 @@ This is a list of future requirements for the game but they are not to be implem
   - Signal breakthrough events should not happen when signal progress has stalled (gated by tech)
   - Move the wormhole response panel into a dedicated tab, then later replace the panel with the signal minigames.
   - Should deactivating the Signal Relay Station (going unsupplied) pause signal progress? Currently `isSignalPaused` only checks if the relay exists, not if it's supplied. Pausing on deactivation would make supply disruption events (fuel shortage, orbital debris) more consequential, but the relay is unique — clear player feedback (news item) would be essential to avoid it feeling opaque.
+  - The signal caps at 33% and 66% are usually active just as the player has access to signal boosting cards and facilities.
+  - There should be an event which reduces the signal - scientists have gone down the wrong path
 - **Political Will:**
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)
@@ -82,6 +85,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Flavour text for board members
   - Board members should be procedurally generated, not a fixed list, so we have enough content for three eras
 - **Climate management:**
+  - See `planning/PLAN_PHASE35.md` for current progress; list below mostly obsolete
   - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
   - Irradiated damage shouldn't exist without nuclear facilities
@@ -96,9 +100,9 @@ This is a list of future requirements for the game but they are not to be implem
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc
+  - Style consistency review
 - **Game management**
   - Continue game after winning
-  - DEV mode: start in a different Era (era unlocked, technologies for previous eras unlocked, but no facilities built)
 
 ## BUGS:
 

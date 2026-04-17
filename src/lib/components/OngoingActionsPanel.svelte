@@ -8,7 +8,7 @@
     availableProjects = [],
     activeProjects = [],
     projectDefs = new Map(),
-    completedProjectIds = [],
+    completedProjectIds = {},
     actionsRemaining = 0,
     onInitiateProject,
   }: {
@@ -17,7 +17,7 @@
     availableProjects?: ProjectDef[];
     activeProjects?: ProjectInstance[];
     projectDefs?: Map<string, ProjectDef>;
-    completedProjectIds?: string[];
+    completedProjectIds?: Record<string, number>;
     actionsRemaining?: number;
     onInitiateProject?: (defId: string) => void;
   } = $props();
@@ -35,7 +35,7 @@
    */
   const visibleGroups = $derived((): GroupEntry[] => {
     const activeDefIds = new Set(activeProjects.map((p) => p.defId));
-    const completedSet = new Set(completedProjectIds);
+    const completedSet = new Set(Object.keys(completedProjectIds));
     const availableSet = new Set(availableProjects.map((d) => d.id));
 
     const groupMap = new Map<string, GroupEntry>();
@@ -69,7 +69,7 @@
   function groupMemberStatus(
     defId: string,
   ): 'completed' | 'active' | 'available' | 'locked' {
-    if (completedProjectIds.includes(defId)) return 'completed';
+    if (defId in completedProjectIds) return 'completed';
     if (activeProjects.some((p) => p.defId === defId)) return 'active';
     if (availableProjects.some((d) => d.id === defId)) return 'available';
     return 'locked';

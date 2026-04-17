@@ -180,7 +180,7 @@ describe('canInitiateProject', () => {
   });
 
   it('returns true when required project is completed', () => {
-    const state = { ...makeState(), player: { ...makeState().player, completedProjectIds: ['testProject'] } };
+    const state = { ...makeState(), player: { ...makeState().player, completedProjectIds: { testProject: 1 } } };
     expect(canInitiateProject(state, DEF_PROJECT_GATED)).toBe(true);
   });
 });
@@ -207,13 +207,13 @@ describe('getAvailableProjects', () => {
 
   it('excludes completed projects', () => {
     const state = makeState();
-    const done = { ...state, player: { ...state.player, completedProjectIds: [DEF_SIMPLE.id] } };
+    const done = { ...state, player: { ...state.player, completedProjectIds: { [DEF_SIMPLE.id]: 1 } } };
     const available = getAvailableProjects(done, ALL_DEFS);
     expect(available.map((d) => d.id)).not.toContain(DEF_SIMPLE.id);
   });
 
   it('unlocks a project-gated project once its prerequisite is completed', () => {
-    const state = { ...makeState(), player: { ...makeState().player, completedProjectIds: ['testProject'] } };
+    const state = { ...makeState(), player: { ...makeState().player, completedProjectIds: { testProject: 1 } } };
     const available = getAvailableProjects(state, ALL_DEFS);
     expect(available.map((d) => d.id)).toContain(DEF_PROJECT_GATED.id);
   });
@@ -266,7 +266,7 @@ describe('tickActiveProjects', () => {
     const { state: after2, completedDefIds } = tickActiveProjects(after1, defs, 3);
     expect(completedDefIds).toContain(DEF_SIMPLE.id);
     expect(after2.player.activeProjects).toHaveLength(0);
-    expect(after2.player.completedProjectIds).toContain(DEF_SIMPLE.id);
+    expect(after2.player.completedProjectIds).toHaveProperty(DEF_SIMPLE.id);
   });
 
   it('applies resource reward on completion', () => {

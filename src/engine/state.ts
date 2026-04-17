@@ -68,7 +68,7 @@ function createPlayerState(config: GameConfig): PlayerState {
     will: config.startingWill,
     willProfile: config.willProfile,
     facilities: [],
-    completedProjectIds: [],
+    completedProjectIds: {},
     activeProjects: [],
     techs: [],
     cards: [],

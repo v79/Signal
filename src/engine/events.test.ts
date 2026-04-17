@@ -24,7 +24,7 @@ const basePlayer: PlayerState = {
   will: 60,
   willProfile: 'democratic',
   facilities: [],
-  completedProjectIds: [],
+  completedProjectIds: {},
   activeProjects: [],
   techs: [],
   cards: [],

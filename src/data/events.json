@@ -678,5 +678,20 @@
       "resources": { "funding": -25, "politicalWill": -30 }
     },
     "positiveEffect": null
+  },
+  "paradigmRevision": {
+    "id": "paradigmRevision",
+    "name": "Paradigm Revision",
+    "description": "A peer-reviewed paper from an independent institute has demolished a key assumption in the programme's signal interpretation framework. Years of accumulated analysis must be re-evaluated against the revised model.",
+    "flavourText": "The paper is five pages. It undoes five years of work.",
+    "tags": ["signal", "scientific"],
+    "eras": ["earth", "nearSpace", "deepSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 1,
+    "weight": 0.15,
+    "responseTier": "noCounter",
+    "negativeEffect": { "signalProgress": -10 },
+    "positiveEffect": null
   }
 }
