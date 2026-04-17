@@ -59,14 +59,21 @@ function addPartialResources(acc: Resources, delta: Partial<Resources>): void {
  * multi-slot entries that repeat the same instance ID.
  */
 export function getFacilitiesOnTile(tile: MapTile, facilities: FacilityInstance[]): FacilityInstance[] {
+  const byId = new Map(facilities.map((f) => [f.id, f]));
+  return uniqueFacilitiesOnTile(tile, byId);
+}
+
+function uniqueFacilitiesOnTile(
+  tile: MapTile,
+  byId: Map<string, FacilityInstance>,
+): FacilityInstance[] {
   const seen = new Set<string>();
   const result: FacilityInstance[] = [];
   for (const id of tile.facilitySlots) {
-    if (id && !seen.has(id)) {
-      seen.add(id);
-      const f = facilities.find((fac) => fac.id === id);
-      if (f) result.push(f);
-    }
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    const f = byId.get(id);
+    if (f) result.push(f);
   }
   return result;
 }
@@ -83,6 +90,46 @@ export function findContiguousFreeStart(
     if (slots.slice(i, i + slotCost).every((s) => s === null)) return i;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Tile productivity map — shared by output and breakdown helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Map of coordKey → productivity for tiles that host at least one facility.
+ * Destroyed tiles return 0 so any remaining facilities produce nothing.
+ */
+function buildTileProductivityMap(tiles: MapTile[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const tile of tiles) {
+    if (!tile.facilitySlots.some((s) => s !== null)) continue;
+    map.set(coordKey(tile.coord), tile.destroyedStatus !== null ? 0 : tile.productivity);
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// Unsupplied-space-facility logic — shared guard for output and breakdown
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when a space facility's output should be suppressed because it
+ * has not been allocated launch capacity this turn. Upkeep is still paid by
+ * the caller in that case. Lunar surface facilities are exempt when ISRU is
+ * operational (they are self-sustaining).
+ */
+function isOutputSuppressed(
+  facility: FacilityInstance,
+  def: FacilityDef,
+  launchAllocation: Record<string, boolean>,
+  lunarSurfaceNodeIds: Set<string>,
+  isruOperational: boolean,
+): boolean {
+  if (!def.supplyCost || def.supplyCost <= 0) return false;
+  if (launchAllocation[facility.locationKey] !== false) return false;
+  if (isruOperational && lunarSurfaceNodeIds.has(facility.locationKey)) return false;
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -137,20 +184,21 @@ export function computeAdjacencyEffects(
   facilityDefs: Map<string, FacilityDef>,
   earthTiles: MapTile[],
 ): AdjacencyEffect[] {
-  // Build coord-key → unique FacilityInstance[] per tile, skipping destroyed tiles
-  const keyToFacilities = new Map<string, FacilityInstance[]>();
+  // Group each intact tile's unique facilities by coordKey, retaining the coord
+  // so we don't have to re-parse keys later.
+  const byId = new Map(facilities.map((f) => [f.id, f]));
+  const tileEntries = new Map<string, { coord: HexCoord; facilities: FacilityInstance[] }>();
   for (const tile of earthTiles) {
     if (tile.destroyedStatus !== null) continue;
-    const tileFacilities = getFacilitiesOnTile(tile, facilities);
-    if (tileFacilities.length > 0) {
-      keyToFacilities.set(coordKey(tile.coord), tileFacilities);
-    }
+    const tileFacilities = uniqueFacilitiesOnTile(tile, byId);
+    if (tileFacilities.length === 0) continue;
+    tileEntries.set(coordKey(tile.coord), { coord: tile.coord, facilities: tileFacilities });
   }
 
   const effects: AdjacencyEffect[] = [];
 
-  for (const [key, tileFacilities] of keyToFacilities) {
-    const coord = parseCoordKey(key);
+  for (const { coord, facilities: tileFacilities } of tileEntries.values()) {
+    const nKeys = neighborKeys(coord);
 
     for (const facility of tileFacilities) {
       const def = facilityDefs.get(facility.defId);
@@ -163,8 +211,8 @@ export function computeAdjacencyEffects(
       };
 
       // Hex neighbours
-      for (const nKey of neighborKeys(coord)) {
-        const neighbors = keyToFacilities.get(nKey);
+      for (const nKey of nKeys) {
+        const neighbors = tileEntries.get(nKey)?.facilities;
         if (!neighbors) continue;
         for (const neighbor of neighbors) {
           applyAdjacencyRules(def, neighbor, effect);
@@ -221,65 +269,56 @@ export function computeFacilityOutput(
   const totalResources: Resources = { ...ZERO_RESOURCES };
 
   const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
-
-  // Tile productivity by locationKey for Earth facilities.
-  // Destroyed tiles get 0 so any remaining facilities produce nothing.
-  const tileProductivity = new Map<string, number>();
-  for (const tile of earthTiles) {
-    const key = coordKey(tile.coord);
-    if (tile.destroyedStatus !== null) {
-      if (tile.facilitySlots.some((s) => s !== null)) {
-        tileProductivity.set(key, 0);
-      }
-    } else if (tile.facilitySlots.some((s) => s !== null)) {
-      tileProductivity.set(key, tile.productivity);
-    }
-  }
+  const tileProductivity = buildTileProductivityMap(earthTiles);
+  const lunarSurfaceNodeIds = collectLunarSurfaceNodeIds(spaceNodes);
 
   for (const facility of facilities) {
     const def = facilityDefs.get(facility.defId);
     if (!def) continue;
 
-    // Skip space facilities that are not supplied this turn.
-    // ISRU exception: lunar surface facilities are self-sustaining when ISRU is active.
-    if (def.supplyCost && def.supplyCost > 0 && launchAllocation[facility.locationKey] === false) {
-      const isLunarSurface =
-        isruOperational &&
-        spaceNodes.some((n) => n.id === facility.locationKey && n.type === 'lunarSurface');
-      if (!isLunarSurface) {
-        // Still pay upkeep for an unsupplied facility
-        for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
-          totalResources[k] -= def.upkeepCost[k] ?? 0;
-        }
-        continue;
+    const suppressOutput = isOutputSuppressed(
+      facility,
+      def,
+      launchAllocation,
+      lunarSurfaceNodeIds,
+      isruOperational,
+    );
+
+    if (!suppressOutput) {
+      const tileProd = tileProductivity.get(facility.locationKey) ?? 1;
+      const scale = facility.condition * tileProd;
+
+      // Scaled base output
+      for (const k of Object.keys(def.fieldOutput) as (keyof FieldPoints)[]) {
+        totalFields[k] += (def.fieldOutput[k] ?? 0) * scale;
+      }
+      for (const k of Object.keys(def.resourceOutput) as (keyof Resources)[]) {
+        totalResources[k] += (def.resourceOutput[k] ?? 0) * scale;
+      }
+
+      // Unscaled adjacency bonuses (only when the facility is producing)
+      const adj = adjById.get(facility.id);
+      if (adj) {
+        addPartialFields(totalFields, adj.fieldBonus);
+        addPartialResources(totalResources, adj.resourceBonus);
       }
     }
 
-    const tileProd = tileProductivity.get(facility.locationKey) ?? 1;
-    const scale = facility.condition * tileProd;
-
-    // Scaled base output
-    for (const k of Object.keys(def.fieldOutput) as (keyof FieldPoints)[]) {
-      totalFields[k] += (def.fieldOutput[k] ?? 0) * scale;
-    }
-    for (const k of Object.keys(def.resourceOutput) as (keyof Resources)[]) {
-      totalResources[k] += (def.resourceOutput[k] ?? 0) * scale;
-    }
-
-    // Unscaled adjacency bonuses
-    const adj = adjById.get(facility.id);
-    if (adj) {
-      addPartialFields(totalFields, adj.fieldBonus);
-      addPartialResources(totalResources, adj.resourceBonus);
-    }
-
-    // Upkeep (subtracted at full cost regardless of condition)
+    // Upkeep (subtracted at full cost regardless of condition or supply state)
     for (const k of Object.keys(def.upkeepCost) as (keyof Resources)[]) {
       totalResources[k] -= def.upkeepCost[k] ?? 0;
     }
   }
 
   return { totalFields, totalResources };
+}
+
+function collectLunarSurfaceNodeIds(spaceNodes: SpaceNode[]): Set<string> {
+  const ids = new Set<string>();
+  for (const n of spaceNodes) {
+    if (n.type === 'lunarSurface') ids.add(n.id);
+  }
+  return ids;
 }
 
 // ---------------------------------------------------------------------------
@@ -297,6 +336,8 @@ export interface ResourceBreakdown {
   materials: ResourceBreakdownEntry[];
   politicalWill: ResourceBreakdownEntry[];
 }
+
+const RESOURCE_KEYS: (keyof Resources)[] = ['funding', 'materials', 'politicalWill'];
 
 /**
  * Returns a per-facility-name breakdown of net resource contributions for the
@@ -318,22 +359,8 @@ export function computeResourceBreakdown(
   isruOperational = false,
 ): ResourceBreakdown {
   const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
-  const spaceNodeIds = new Set(spaceNodes.map((n) => n.id));
-  const lunarSurfaceIds = new Set(
-    spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id),
-  );
-
-  const tileProductivity = new Map<string, number>();
-  for (const tile of earthTiles) {
-    const key = coordKey(tile.coord);
-    if (tile.destroyedStatus !== null) {
-      if (tile.facilitySlots.some((s) => s !== null)) {
-        tileProductivity.set(key, 0);
-      }
-    } else if (tile.facilitySlots.some((s) => s !== null)) {
-      tileProductivity.set(key, tile.productivity);
-    }
-  }
+  const tileProductivity = buildTileProductivityMap(earthTiles);
+  const lunarSurfaceNodeIds = collectLunarSurfaceNodeIds(spaceNodes);
 
   // Accumulate net per facility def name
   const nameToNet = new Map<string, Partial<Resources>>();
@@ -342,54 +369,45 @@ export function computeResourceBreakdown(
     const def = facilityDefs.get(facility.defId);
     if (!def) continue;
 
-    // Mirror computeFacilityOutput: unsupplied space facilities pay upkeep only.
-    const isSpaceNode = spaceNodeIds.has(facility.locationKey);
-    const isUnsupplied =
-      isSpaceNode &&
-      def.supplyCost != null && def.supplyCost > 0 &&
-      launchAllocation[facility.locationKey] === false;
-    const isruExempt = isUnsupplied && isruOperational && lunarSurfaceIds.has(facility.locationKey);
-    const skipOutput = isUnsupplied && !isruExempt;
+    const skipOutput = isOutputSuppressed(
+      facility,
+      def,
+      launchAllocation,
+      lunarSurfaceNodeIds,
+      isruOperational,
+    );
 
     const scale = facility.condition * (tileProductivity.get(facility.locationKey) ?? 1);
-    const net: Partial<Resources> = {};
+    const net = nameToNet.get(def.name) ?? {};
 
     if (!skipOutput) {
       for (const [k, v] of Object.entries(def.resourceOutput) as [keyof Resources, number][]) {
         if (v) net[k] = (net[k] ?? 0) + v * scale;
       }
+      const adj = adjById.get(facility.id);
+      if (adj) {
+        for (const [k, v] of Object.entries(adj.resourceBonus) as [keyof Resources, number][]) {
+          if (v) net[k] = (net[k] ?? 0) + v;
+        }
+      }
     }
     for (const [k, v] of Object.entries(def.upkeepCost) as [keyof Resources, number][]) {
       if (v) net[k] = (net[k] ?? 0) - v;
     }
-    const adj = adjById.get(facility.id);
-    if (!skipOutput && adj) {
-      for (const [k, v] of Object.entries(adj.resourceBonus) as [keyof Resources, number][]) {
-        if (v) net[k] = (net[k] ?? 0) + v;
-      }
-    }
 
-    const existing = nameToNet.get(def.name);
-    if (existing) {
-      for (const [k, v] of Object.entries(net) as [keyof Resources, number][]) {
-        existing[k] = (existing[k] ?? 0) + (v as number);
-      }
-    } else {
-      nameToNet.set(def.name, { ...net });
-    }
+    nameToNet.set(def.name, net);
   }
 
   const result: ResourceBreakdown = { funding: [], materials: [], politicalWill: [] };
-  const resourceKeys: (keyof Resources)[] = ['funding', 'materials', 'politicalWill'];
 
   for (const [name, net] of nameToNet) {
-    for (const key of resourceKeys) {
+    for (const key of RESOURCE_KEYS) {
       const amount = Math.round(net[key] ?? 0);
       if (amount !== 0) result[key].push({ label: name, amount });
     }
   }
 
-  for (const key of resourceKeys) {
+  for (const key of RESOURCE_KEYS) {
     result[key].sort((a, b) => b.amount - a.amount);
   }
 
@@ -439,7 +457,7 @@ export function computeClimateBreakdown(
   for (const facility of facilities) {
     const def = facilityDefs.get(facility.defId);
     const impact = def?.climateImpact;
-    if (!def || impact === undefined || impact === 0) continue;
+    if (!def || !impact) continue;
     nameToAmount.set(def.name, (nameToAmount.get(def.name) ?? 0) + impact);
   }
 
@@ -486,55 +504,58 @@ export function tickMineDepletion(
   spaceNodes: SpaceNode[] = [],
   launchAllocation: Record<string, boolean> = {},
 ): MineDepletionResult {
+  const spaceNodesById = new Map(spaceNodes.map((n) => [n.id, n]));
   const earthDepletingKeys = new Set<string>();
   const exhaustedSpaceNodeIds = new Set<string>();
   const exhaustionMessages: string[] = [];
 
-  const updatedFacilities = facilities
-    .map((facility) => {
-      const def = facilityDefs.get(facility.defId);
-      if (!def?.depletes) return facility;
+  const updatedFacilities: FacilityInstance[] = [];
+  for (const facility of facilities) {
+    const def = facilityDefs.get(facility.defId);
+    if (!def?.depletes) {
+      updatedFacilities.push(facility);
+      continue;
+    }
 
-      // Is this a space facility?
-      const isSpaceFacility = spaceNodes.some((n) => n.id === facility.locationKey);
-      if (isSpaceFacility) {
-        // Don't deplete unsupplied space facilities
-        if (launchAllocation[facility.locationKey] === false) return facility;
-        const newCondition = Math.max(0, facility.condition - MINE_DEPLETION_RATE);
-        return { ...facility, condition: newCondition };
+    const spaceNode = spaceNodesById.get(facility.locationKey);
+    if (spaceNode) {
+      // Unsupplied space facilities do not deplete.
+      if (launchAllocation[facility.locationKey] === false) {
+        updatedFacilities.push(facility);
+        continue;
       }
-
-      // Earth facility
-      earthDepletingKeys.add(facility.locationKey);
-      return { ...facility, condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE) };
-    })
-    .filter((facility) => {
-      const def = facilityDefs.get(facility.defId);
-      if (!def?.depletes) return true;
-      const isSpaceFacility = spaceNodes.some((n) => n.id === facility.locationKey);
-      if (isSpaceFacility && facility.condition <= 0) {
+      const newCondition = Math.max(0, facility.condition - MINE_DEPLETION_RATE);
+      if (newCondition <= 0) {
         exhaustedSpaceNodeIds.add(facility.locationKey);
-        const node = spaceNodes.find((n) => n.id === facility.locationKey);
         exhaustionMessages.push(
-          `${def.name} at ${node?.label ?? facility.locationKey} has been exhausted and removed.`,
+          `${def.name} at ${spaceNode.label} has been exhausted and removed.`,
         );
-        return false;
+        continue; // drop the facility
       }
-      return true;
+      updatedFacilities.push({ ...facility, condition: newCondition });
+      continue;
+    }
+
+    // Earth facility
+    earthDepletingKeys.add(facility.locationKey);
+    updatedFacilities.push({
+      ...facility,
+      condition: Math.max(0, facility.condition - MINE_DEPLETION_RATE),
     });
+  }
 
-  const updatedTiles = tiles.map((tile) => {
-    const key = `${tile.coord.q},${tile.coord.r}`;
-    if (!earthDepletingKeys.has(key)) return tile;
-    return { ...tile, mineDepletion: Math.max(0, tile.mineDepletion - MINE_DEPLETION_RATE) };
-  });
+  const updatedTiles = earthDepletingKeys.size === 0
+    ? tiles
+    : tiles.map((tile) => {
+        if (!earthDepletingKeys.has(coordKey(tile.coord))) return tile;
+        return { ...tile, mineDepletion: Math.max(0, tile.mineDepletion - MINE_DEPLETION_RATE) };
+      });
 
-  const updatedSpaceNodes =
-    exhaustedSpaceNodeIds.size > 0
-      ? spaceNodes.map((n) =>
-          exhaustedSpaceNodeIds.has(n.id) ? { ...n, facilityId: null } : n,
-        )
-      : spaceNodes;
+  const updatedSpaceNodes = exhaustedSpaceNodeIds.size === 0
+    ? spaceNodes
+    : spaceNodes.map((n) =>
+        exhaustedSpaceNodeIds.has(n.id) ? { ...n, facilityId: null } : n,
+      );
 
   return { facilities: updatedFacilities, tiles: updatedTiles, updatedSpaceNodes, exhaustionMessages };
 }
@@ -612,6 +633,7 @@ export function getTileSummary(
     };
   }
 
+  const adjById = new Map(adjacencyEffects.map((e) => [e.facilityInstanceId, e]));
   const fieldOutput: Partial<FieldPoints> = {};
   const resourceOutput: Partial<Resources> = {};
   let canDelete = false;
@@ -631,7 +653,7 @@ export function getTileSummary(
       resourceOutput[k] = (resourceOutput[k] ?? 0) - (def.upkeepCost[k] ?? 0);
     }
 
-    const adj = adjacencyEffects.find((e) => e.facilityInstanceId === facility.id);
+    const adj = adjById.get(facility.id);
     if (adj) {
       for (const k of Object.keys(adj.fieldBonus) as (keyof FieldPoints)[]) {
         if (adj.fieldBonus[k]) fieldOutput[k] = (fieldOutput[k] ?? 0) + adj.fieldBonus[k];
@@ -708,9 +730,6 @@ export function tickConstructionQueue(
       // Space facility upgrade: replace node's facilityId and swap FacilityInstance
       const nodeId = action.spaceNodeId;
       const facilityId = `${action.facilityDefId}-${nodeId}-t${completedTurn}`;
-      // Remove old facility instance on this node
-      updatedFacilities = updatedFacilities.filter((f) => f.locationKey !== nodeId);
-      // Add new facility instance
       const newInstance: FacilityInstance = {
         id: facilityId,
         defId: action.facilityDefId,
@@ -718,8 +737,9 @@ export function tickConstructionQueue(
         condition: 1.0,
         builtTurn: completedTurn,
       };
-      updatedFacilities = [...updatedFacilities, newInstance];
-      // Update space node facilityId
+      updatedFacilities = updatedFacilities
+        .filter((f) => f.locationKey !== nodeId)
+        .concat(newInstance);
       updatedSpaceNodes = updatedSpaceNodes.map((n) =>
         n.id === nodeId ? { ...n, facilityId: action.facilityDefId } : n,
       );
@@ -740,8 +760,8 @@ export function tickConstructionQueue(
       updatedTiles = updatedTiles.map((t) => {
         if (coordKey(t.coord) !== action.coordKey) return t;
         const newSlots = [...t.facilitySlots] as [string | null, string | null, string | null];
-        for (let i = action.slotIndex; i < action.slotIndex + slotCost; i++) {
-          if (i < 3) newSlots[i] = facilityId;
+        for (let i = action.slotIndex; i < action.slotIndex + slotCost && i < 3; i++) {
+          newSlots[i] = facilityId;
         }
         return { ...t, facilitySlots: newSlots, pendingActionId: null };
       });
@@ -843,7 +863,10 @@ export function canUpgradeFacility(
  */
 export function getChainRoot(defId: string, facilityDefs: Map<string, FacilityDef>): string {
   let id = defId;
+  const seen = new Set<string>();
   while (true) {
+    if (seen.has(id)) return id; // guard against cycles in malformed data
+    seen.add(id);
     const parent = facilityDefs.get(id)?.upgradesFrom;
     if (!parent) return id;
     id = parent;
@@ -865,16 +888,14 @@ export function isLunarChainTaken(
 ): boolean {
   const targetRoot = getChainRoot(defId, facilityDefs);
 
-  // Check built facilities on other lunar nodes
+  const lunarNodeIds = new Set<string>();
   for (const node of spaceNodes) {
-    if (node.type !== 'lunarSurface' || node.id === excludeNodeId || !node.facilityId) continue;
+    if (node.type !== 'lunarSurface') continue;
+    lunarNodeIds.add(node.id);
+    if (node.id === excludeNodeId || !node.facilityId) continue;
     if (getChainRoot(node.facilityId, facilityDefs) === targetRoot) return true;
   }
 
-  // Check construction queue entries targeting other lunar nodes
-  const lunarNodeIds = new Set(
-    spaceNodes.filter((n) => n.type === 'lunarSurface').map((n) => n.id),
-  );
   for (const action of constructionQueue) {
     if (!action.spaceNodeId || action.spaceNodeId === excludeNodeId) continue;
     if (!lunarNodeIds.has(action.spaceNodeId)) continue;
@@ -882,13 +903,4 @@ export function isLunarChainTaken(
   }
 
   return false;
-}
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-function parseCoordKey(key: string): HexCoord {
-  const [q, r] = key.split(',').map(Number);
-  return { q, r };
 }
