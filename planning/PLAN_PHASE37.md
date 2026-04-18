@@ -40,38 +40,50 @@ Ordered by value-for-effort:
 - ✅ **`space-overview.spec.ts`** — 10 tests, 5 screenshots. Fill the gaps (NEAR SPACE tab unlocked state, EARTH ORBIT section, capacity-bar overfull state).
 - ✅ **`game-flow.spec.ts`** — 6 tests, 6 screenshots. Already well-covered; skip unless a state is missed.
 
-### A.3 Component-state screenshots (new `visual.spec.ts`)
+### ✅ A.3 Component-state screenshots (new `visual.spec.ts`)
 
 Add a single new spec whose only job is to parade every major component through its visual states with a clip bound (`page.screenshot({ clip: bbox })`) so the PNGs show only the component, not the whole page. Covers:
 
-- HUD (resources at 0, resources formatted, deficit state)
-- CardHand (empty hand, full hand, banked card, expired card)
-- EventZone (pending event, countered event, collapsed vs expanded)
-- ResearchFeed / SignalTrack / TechProgressSummary
-- NewsTicker collapsed + expanded popup
-- PhaseControls in each phase
-- FacilityPicker and SpaceNodePicker open states
-- Tooltip component in isolation (already partly covered by tooltips.spec.ts)
+- ✅ HUD (resource bar, research fields, center bars, menu open)
+- ✅ CardHand (full hand turn 1, turn 2 state)
+- ✅ EventZone (empty, pending event, urgent event, multiple events — injected via localStorage patch)
+- ✅ ResearchFeed / SignalTrack / TechProgressSummary (empty + tech-in-progress state)
+- ✅ NewsTicker collapsed + expanded popup
+- ✅ PhaseControls in action phase and post-end-turn
+- ✅ FacilityPicker (closed, build list open, occupied) and SpaceNodePicker open states
+- ✅ MapContainer (EARTH, BLOCS, COMMITTEE tabs)
+- ✅ Full-page snapshots (newgame, turn 1, turn 2, summary)
+- Tooltip component in isolation — covered by `tooltips.spec.ts`
 
-### A.4 CI / local workflow
+### ✅ A.4 CI / local workflow
 
-- `npm run test:e2e -- --update-screenshots` (new alias in `package.json`) to regenerate the entire set cleanly.
-- Add a README note in `e2e/README.md` (new file) explaining the baseline → diff flow.
+- ✅ `npm run test:e2e:screenshots` alias in `package.json` runs `playwright test --reporter=list` for clean screenshot regeneration (plain `page.screenshot()` writes update on every run — no `--update-screenshots` flag needed).
+- ✅ `e2e/README.md` explains subfolder layout, baseline capture, and the before/after CSS diff workflow.
 
 ## Part B — CSS Audit & Central Files
 
-### B.1 Build the audit table
+### ✅ B.1 Build the audit table
 
 One-shot script (not checked in) walks `src/**/*.svelte`, extracts every `<style>` block, and tallies:
 
-- Unique `color` values
-- Unique `background` values
-- Unique `border` colour/width pairs
-- Unique `font-size` values
-- Unique `padding` / `gap` values
-- Repeated class names across files (hint at shared utility candidates)
+- ✅ Unique `color` values
+- ✅ Unique `background` values
+- ✅ Unique `border` colour/width pairs
+- ✅ Unique `font-size` values
+- ✅ Unique `padding` / `gap` values
+- ✅ Repeated class names across files (hint at shared utility candidates)
 
 Produces `planning/DESIGN_css_audit.md` with the full distributions. This is the evidence we design the token set from — no canonical values guessed at.
+
+**Key findings from the audit (26 files):**
+
+- **176** distinct `color` values; **117** distinct `background` values — severe sprawl confirmed
+- **Primary panel border** is overwhelmingly `1px solid #1e2530` (31 uses, 16 files) — clear canonical
+- **Top surface backgrounds:** `#0a1018` (11), `#0d1520` (8), `#060a10` (7) — three-level surface scale visible
+- **Font sizes:** 31 distinct values; top five are `0.58rem` (39), `0.65rem` (39), `0.6rem` (35), `0.55rem` (28), `0.62rem` (25) — the 7-step scale in B.3 needs to collapse these
+- **FacilityPicker / SpaceNodePicker** share 22 class names verbatim (`.facility-row`, `.build-btn`, `.picker-header`, `.locked-row`, etc.) — the largest dedup win
+- **70 class names** appear in 2+ files; `.panel` / `.panel-header` / `.close-btn` / `.empty` / `.facility-*` top the list
+- Border radius is almost entirely `2px` (34) or `1px` (21) — confirming `--radius-sm: 2px` as the primary token
 
 ### B.2 Central files to create
 

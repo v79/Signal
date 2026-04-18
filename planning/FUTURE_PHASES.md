@@ -33,6 +33,8 @@ This is a list of future requirements for the game but they are not to be implem
   - Should deactivating the Signal Relay Station (going unsupplied) pause signal progress? Currently `isSignalPaused` only checks if the relay exists, not if it's supplied. Pausing on deactivation would make supply disruption events (fuel shortage, orbital debris) more consequential, but the relay is unique — clear player feedback (news item) would be essential to avoid it feeling opaque.
   - The signal caps at 33% and 66% are usually active just as the player has access to signal boosting cards and facilities.
   - There should be an event which reduces the signal - scientists have gone down the wrong path
+  - Signal mini-games and especially at the end with the Wormhole
+  - Progress seems to jump from 33% to about 65% when the first signal tech is unlocked.
 - **Political Will:**
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)
@@ -42,9 +44,6 @@ This is a list of future requirements for the game but they are not to be implem
   - See `planning/DESIGN_ERA_TRANSITIONS.md` for design discussion.
   - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
   - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
-- **The Signal**
-  - Signal mini-games and especially at the end with the Wormhole
-  - Progress seems to jump from 33% to about 65% when the first signal tech is unlocked.
 - **Projects**
   - Projects need to be visible on the Maps
   - The Facilities that support projects (space launch centre) need to be visually distinct
@@ -93,6 +92,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Events may impact a specific map tile or a specific facility - disabling, destroying, or boosting the facility for the duration
   - It should not really be possible to lose the game by climate disaster in the Earth era, unless you try really really hard
   - Player should get a list of the biggest polluters
+  - What happens when a tile is destroyed by climate while a facility is being built? The facility stays and functions. Is that correct?
   - Terrain restoration actions should probably be gated by current climate damage %, i.e. you must first lower the climate threat level before you can use restoration actions
   - The Space Launch Centre can be destroyed by climate damage, and it's possible to get into a situation where it cannot be rebuilt anywhere. Either the space launch centre needs to be immune to climate damage, or it needs to be more flexible in its placement.
   - Terrain Actions such as Urbanize and Clear Industrial Site must make sense (Clear Industrial Site doesn't do anything?)

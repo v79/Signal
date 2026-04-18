@@ -263,6 +263,155 @@ test.describe('Visual — MapContainer', () => {
 });
 
 // ---------------------------------------------------------------------------
+// EventZone
+// ---------------------------------------------------------------------------
+
+async function patchActiveEvent(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const raw = localStorage.getItem('signal-autosave');
+    if (!raw) throw new Error('No autosave found');
+    const envelope = JSON.parse(raw) as { version: number; savedAt: string; state: Record<string, unknown> };
+    const state = envelope.state as Record<string, unknown>;
+    state.activeEvents = [
+      {
+        id: 'evt-visual-test-1',
+        defId: 'fundingCrisis',
+        arrivedTurn: 1,
+        countdownRemaining: 3,
+        resolved: false,
+        resolvedWith: null,
+      },
+    ];
+    localStorage.setItem('signal-autosave', JSON.stringify(envelope));
+  });
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+}
+
+test.describe('Visual — EventZone', () => {
+  test('event zone — empty (no events)', async ({ page }) => {
+    await startNewGame(page);
+    const zone = page.locator('.event-zone');
+    await expect(zone).toBeVisible();
+    await zone.screenshot({ path: 'screenshots/visual/event-zone-empty.png' });
+  });
+
+  test('event zone — pending event visible', async ({ page }) => {
+    await startNewGame(page);
+    await patchActiveEvent(page);
+    const zone = page.locator('.event-zone');
+    await expect(zone).toBeVisible();
+    await expect(zone.locator('.event-card')).toBeVisible();
+    await zone.screenshot({ path: 'screenshots/visual/event-zone-pending.png' });
+  });
+
+  test('event zone — urgent event (countdown 1)', async ({ page }) => {
+    await startNewGame(page);
+    await page.evaluate(() => {
+      const raw = localStorage.getItem('signal-autosave');
+      if (!raw) return;
+      const envelope = JSON.parse(raw) as { version: number; savedAt: string; state: Record<string, unknown> };
+      const state = envelope.state as Record<string, unknown>;
+      state.activeEvents = [
+        {
+          id: 'evt-visual-test-urgent',
+          defId: 'fundingCrisis',
+          arrivedTurn: 1,
+          countdownRemaining: 1,
+          resolved: false,
+          resolvedWith: null,
+        },
+      ];
+      localStorage.setItem('signal-autosave', JSON.stringify(envelope));
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
+    const zone = page.locator('.event-zone');
+    await expect(zone.locator('.event-card')).toBeVisible();
+    await zone.screenshot({ path: 'screenshots/visual/event-zone-urgent.png' });
+  });
+
+  test('event zone — multiple events', async ({ page }) => {
+    await startNewGame(page);
+    await page.evaluate(() => {
+      const raw = localStorage.getItem('signal-autosave');
+      if (!raw) return;
+      const envelope = JSON.parse(raw) as { version: number; savedAt: string; state: Record<string, unknown> };
+      const state = envelope.state as Record<string, unknown>;
+      state.activeEvents = [
+        {
+          id: 'evt-multi-1',
+          defId: 'fundingCrisis',
+          arrivedTurn: 1,
+          countdownRemaining: 3,
+          resolved: false,
+          resolvedWith: null,
+        },
+        {
+          id: 'evt-multi-2',
+          defId: 'diplomaticOverture',
+          arrivedTurn: 1,
+          countdownRemaining: 2,
+          resolved: false,
+          resolvedWith: null,
+        },
+      ];
+      localStorage.setItem('signal-autosave', JSON.stringify(envelope));
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500);
+    const zone = page.locator('.event-zone');
+    await expect(zone.locator('.event-card').first()).toBeVisible();
+    await zone.screenshot({ path: 'screenshots/visual/event-zone-multiple.png' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TechProgressSummary
+// ---------------------------------------------------------------------------
+
+async function patchTechProgress(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const raw = localStorage.getItem('signal-autosave');
+    if (!raw) throw new Error('No autosave found');
+    const envelope = JSON.parse(raw) as { version: number; savedAt: string; state: Record<string, unknown> };
+    const state = envelope.state as Record<string, unknown>;
+    const player = state.player as Record<string, unknown>;
+    const techs = player.techs as Array<Record<string, unknown>>;
+    const target = techs.find((t) => t.defId === 'microprocessors');
+    if (target) {
+      target.stage = 'progress';
+      target.recipe = { physics: 0, mathematics: 20, engineering: 30, biochemistry: 0, computing: 25, socialScience: 0 };
+      target.fieldProgress = { physics: 0, mathematics: 8, engineering: 12, biochemistry: 0, computing: 6, socialScience: 0 };
+    }
+    localStorage.setItem('signal-autosave', JSON.stringify(envelope));
+  });
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+}
+
+test.describe('Visual — TechProgressSummary', () => {
+  test('tech progress summary — no techs in progress', async ({ page }) => {
+    await startNewGame(page);
+    const summary = page.locator('.summary').first();
+    await expect(page.locator('.summary-header')).toBeVisible();
+    await page.locator('.summary-header').first().screenshot({ path: 'screenshots/visual/tech-progress-empty.png' });
+  });
+
+  test('tech progress summary — tech in progress', async ({ page }) => {
+    await startNewGame(page);
+    await patchTechProgress(page);
+    await expect(page.locator('.tech-card').first()).toBeVisible();
+    const summary = page.locator('.summary').first();
+    await summary.screenshot({ path: 'screenshots/visual/tech-progress-active.png' });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // SpaceNodePicker (Near Space era)
 // ---------------------------------------------------------------------------
 
