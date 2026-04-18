@@ -90,43 +90,43 @@
         flex-direction: column;
         gap: 0.35rem;
         padding: 0.6rem 0.6rem 0;
-        background: #0c1018;
-        border-left: 1px solid #1e2530;
+        background: var(--surface-1);
+        border-left: 1px solid var(--border-panel);
         flex-shrink: 0;
     }
 
     .panel-title {
-        font-size: 0.65rem;
+        font-size: var(--fs-base);
         letter-spacing: 0.2em;
-        color: #5a6878;
+        color: var(--text-dim);
     }
 
     .signal-row {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.7rem;
+        font-size: var(--fs-md);
     }
 
     .signal-label {
         width: 5.5rem;
-        font-size: 0.65rem;
-        letter-spacing: 0.1em;
+        font-size: var(--fs-base);
+        letter-spacing: var(--ls-wide);
         flex-shrink: 0;
     }
 
     .signal-track {
         flex: 1;
         height: 6px;
-        background: #1a2030;
-        border-radius: 2px;
+        background: var(--surface-3);
+        border-radius: var(--radius-sm);
         overflow: visible;
         position: relative;
     }
 
     .signal-fill {
         height: 100%;
-        border-radius: 2px;
+        border-radius: var(--radius-sm);
         transition: width 0.4s ease;
     }
 
@@ -149,13 +149,13 @@
         width: 2.5rem;
         text-align: right;
         font-variant-numeric: tabular-nums;
-        font-size: 0.68rem;
+        font-size: var(--fs-base);
         flex-shrink: 0;
     }
 
     .divider {
         height: 1px;
-        background: #1a2030;
+        background: var(--surface-3);
         margin-top: 0.2rem;
     }
 </style>

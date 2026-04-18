@@ -59,6 +59,8 @@
   color: var(--text-muted);
   padding: var(--sp-2) var(--sp-3) var(--sp-1);
   flex-shrink: 0;
+  font-weight: normal;
+  margin: 0;
 }
 
 /* ── Picker shell (FacilityPicker / SpaceNodePicker) ───────────────────── */

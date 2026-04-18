@@ -76,9 +76,9 @@
     align-items: center;
     gap: 0;
     height: 1.6rem;
-    background: #080c14;
-    border-top: 1px solid #1a2530;
-    border-bottom: 1px solid #1a2530;
+    background: var(--surface-0);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
     overflow: hidden;
     flex-shrink: 0;
     cursor: pointer;
@@ -89,16 +89,16 @@
   }
 
   .ticker-label {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.18em;
-    color: #8aacca;
+    color: var(--text-accent);
     padding: 0 0.6rem;
-    border-right: 1px solid #1a2530;
+    border-right: 1px solid var(--border-subtle);
     height: 100%;
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    background: #060a10;
+    background: var(--surface-0);
     transition: color 0.15s;
   }
 
@@ -138,7 +138,7 @@
   .news-popup {
     position: fixed;
     z-index: 201;
-    background: #0a1018;
+    background: var(--surface-1);
     border: 1px solid #1e2d40;
     border-bottom: none;
     display: flex;
@@ -152,12 +152,12 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.4rem 0.6rem;
-    border-bottom: 1px solid #1a2530;
+    border-bottom: 1px solid var(--border-subtle);
     flex-shrink: 0;
   }
 
   .popup-title {
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.2em;
     color: #5a7890;
   }
@@ -166,7 +166,7 @@
     background: none;
     border: none;
     color: #4a6070;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     cursor: pointer;
     padding: 0 0.2rem;
     line-height: 1;
@@ -195,7 +195,7 @@
 
   .popup-turn {
     color: #4a6878;
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     flex-shrink: 0;
     padding-top: 0.05rem;
     font-variant-numeric: tabular-nums;
@@ -209,7 +209,7 @@
 
   /* Category colour overrides */
   .cat-event-loss {
-    background: #180a0a;
+    background: var(--danger-hover);
   }
   .cat-event-loss .popup-text {
     color: #d47070;
@@ -219,7 +219,7 @@
   }
 
   .cat-event-gain {
-    background: #0a1810;
+    background: var(--ok-hover);
   }
   .cat-event-gain .popup-text {
     color: #5ab880;
@@ -229,14 +229,14 @@
   }
 
   .cat-event-neutral .popup-text {
-    color: #c8a040;
+    color: var(--warn);
   }
   .cat-event-neutral .popup-turn {
     color: #6a5820;
   }
 
   .cat-discovery {
-    background: #080e18;
+    background: var(--info-hover);
   }
   .cat-discovery .popup-text {
     color: #6ab0d8;
@@ -250,14 +250,14 @@
   }
 
   .cat-signal .popup-text {
-    color: #c8a040;
+    color: var(--warn);
   }
   .cat-signal .popup-turn {
     color: #6a5820;
   }
 
   .cat-board .popup-text {
-    color: #a07ad8;
+    color: var(--will);
   }
   .cat-board .popup-turn {
     color: #503870;

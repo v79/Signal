@@ -178,12 +178,12 @@
   .tooltip {
     position: absolute;
     pointer-events: none;
-    background: #0a1018;
+    background: var(--surface-1);
     border: 1px solid #1e3050;
     padding: 0.45rem 0.6rem;
     min-width: 10rem;
     max-width: 14rem;
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.04em;
     line-height: 1.55;
     z-index: 20;
@@ -201,7 +201,7 @@
 
   .tile-type {
     color: #4a6880;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0.15rem;
@@ -209,12 +209,12 @@
 
   .facility-name {
     color: #a8c8e8;
-    font-size: 0.7rem;
+    font-size: var(--fs-md);
     margin-bottom: 0.1rem;
   }
 
   .divider {
-    border-top: 1px solid #1a2a3a;
+    border-top: 1px solid var(--border-subtle);
     margin: 0.25rem 0;
   }
 
@@ -239,7 +239,7 @@
   }
 
   .stat-line.climate {
-    color: #4a9b7a; /* green = mitigation */
+    color: var(--ok); /* green = mitigation */
   }
 
   .stat-line.climate.climate-positive {

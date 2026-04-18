@@ -131,12 +131,12 @@ All 70 shared classes catalogued in `planning/DESIGN_css_audit.md §12`. High-va
 Landed as **separate commits** inside the phase branch, each verifiable against the A-phase screenshots:
 
 1. ✅ Introduce `src/styles/` files + wire into `+layout.svelte`. No component changes.
-2. **HUD + PhaseControls + SignalTrack + ResearchFeed** — the top-bar / right-column cluster.
-3. **FacilityPicker + SpaceNodePicker** — extract shared row/button classes. Largest dedup win.
-4. **BlocStatusPanel + BoardPanel + CompletedProjectsPanel + SpaceOverview + FacilityOverview** — panel family.
-5. **CardHand + EventZone + NewsTicker + ScienceNewsFeed + TechProgressSummary** — card/feed family.
-6. **Tooltip + TileTooltip + NarrativeModal + TechTreeModal** — overlay family.
-7. **MapContainer** — last, because it straddles Phaser and DOM and is likely the trickiest.
+2. ✅ **HUD + PhaseControls + SignalTrack + ResearchFeed** — the top-bar / right-column cluster.
+3. ✅ **FacilityPicker + SpaceNodePicker** — extract shared row/button classes. Largest dedup win.
+4. ✅ **BlocStatusPanel + BoardPanel + CompletedProjectsPanel + SpaceOverview + FacilityOverview** — panel family.
+5. ✅ **CardHand + EventZone + NewsTicker + ScienceNewsFeed + TechProgressSummary** — card/feed family.
+6. ✅ **Tooltip + TileTooltip + NarrativeModal + TechTreeModal** — overlay family.
+7. ✅ **MapContainer** — last, because it straddles Phaser and DOM and is likely the trickiest.
 
 After each pass: re-run e2e → regenerate `screenshots/` → manually diff against `screenshots-baseline/`. Commit the pass once diffs are intentional-only.
 

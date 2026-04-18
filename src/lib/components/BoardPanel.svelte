@@ -341,16 +341,16 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background: #06090f;
-    border-left: 1px solid #1a2530;
+    background: var(--surface-0);
+    border-left: 1px solid var(--border-subtle);
   }
 
   .panel-title {
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: #4a6080;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
+    color: var(--text-dim);
     padding: 8px 12px 6px;
-    border-bottom: 1px solid #1e2530;
+    border-bottom: 1px solid var(--border-panel);
     margin: 0;
     flex-shrink: 0;
   }
@@ -376,8 +376,8 @@
   /* ---- Slot card ---- */
 
   .slot-card {
-    background: #080f1a;
-    border: 1px solid #0e1820;
+    background: var(--surface-1);
+    border: 1px solid var(--surface-3);
     border-radius: 3px;
     overflow: hidden;
     display: flex;
@@ -385,7 +385,7 @@
   }
 
   .slot-card.vacant {
-    border-color: #0e1a22;
+    border-color: var(--surface-3);
   }
 
   /* ---- Header bar ---- */
@@ -395,7 +395,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.3rem 0.5rem;
-    background: #1e2a3a;
+    background: var(--surface-3);
     gap: 0.3rem;
   }
 
@@ -434,8 +434,8 @@
   }
 
   .dismiss-btn:hover:not(.disabled) {
-    color: #ef4444;
-    background: #1a0808;
+    color: var(--danger);
+    background: var(--danger-hover);
   }
 
   .dismiss-btn.disabled {
@@ -459,14 +459,14 @@
     height: 52px;
     flex-shrink: 0;
     border-radius: 3px;
-    background: #1a2a3a;
+    background: var(--surface-3);
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .portrait.vacant-portrait {
-    background: #0a1420;
+    background: var(--surface-alt);
     border: 1.5px dashed #475569;
   }
 
@@ -553,14 +553,14 @@
   .recruit-btn {
     margin-top: 0.25rem;
     padding: 0.25rem 0.5rem;
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     font-family: inherit;
     letter-spacing: 0.08em;
     border-radius: 2px;
     cursor: pointer;
-    border: 1px solid #1a5030;
-    background: #0a2e1a;
-    color: #5ad486;
+    border: 1px solid var(--ok-border);
+    background: var(--ok-hover);
+    color: var(--ok);
     align-self: flex-start;
   }
 
@@ -609,12 +609,12 @@
   /* ---- Inline notifications section ---- */
 
   .notifications-section {
-    border-top: 1px solid #0e1820;
+    border-top: 1px solid var(--surface-3);
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
     padding: 0.4rem 0.5rem;
-    background: #06101a;
+    background: var(--surface-0);
   }
 
   .notification-item {
@@ -644,9 +644,9 @@
     letter-spacing: 0.06em;
     border-radius: 2px;
     cursor: pointer;
-    border: 1px solid #1a5030;
-    background: #0a2e1a;
-    color: #5ad486;
+    border: 1px solid var(--ok-border);
+    background: var(--ok-hover);
+    color: var(--ok);
   }
 
   .choice-btn:hover {

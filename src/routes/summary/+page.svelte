@@ -184,7 +184,7 @@
     margin: 0;
     background: #060a10;
     color: #8aacca;
-    font-family: monospace;
+    font-family: var(--ff-mono);
   }
 
   .summary-layout {
@@ -330,7 +330,7 @@
     border: 1px solid #2a4a6a;
     color: #6aacca;
     cursor: pointer;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.75rem;
     letter-spacing: 0.1em;
     padding: 0.6rem 2rem;

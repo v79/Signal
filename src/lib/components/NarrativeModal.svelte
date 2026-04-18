@@ -123,7 +123,7 @@
     width: 80vw;
     max-width: 900px;
     max-height: 80vh;
-    background: #0c1018;
+    background: var(--surface-1);
     border: 1px solid #2a6090;
     display: flex;
     flex-direction: column;
@@ -137,14 +137,14 @@
     align-items: center;
     gap: 1rem;
     padding: 0.8rem 1.2rem;
-    background: #080c12;
-    border-bottom: 1px solid #1e2530;
+    background: var(--surface-0);
+    border-bottom: 1px solid var(--border-panel);
     flex-shrink: 0;
   }
 
   .modal-label {
-    font-family: monospace;
-    font-size: 0.55rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
     letter-spacing: 0.25em;
     color: #2a6090;
     border: 1px solid #2a6090;
@@ -153,8 +153,8 @@
   }
 
   .modal-title {
-    font-family: monospace;
-    font-size: 0.85rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-lg);
     letter-spacing: 0.12em;
     color: #c8dce8;
     font-weight: normal;
@@ -165,10 +165,10 @@
 
   .skip-btn {
     background: none;
-    border: 1px solid #1e2530;
+    border: 1px solid var(--border-panel);
     color: #4a6070;
-    font-family: monospace;
-    font-size: 0.55rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
     letter-spacing: 0.2em;
     padding: 0.2rem 0.6rem;
     cursor: pointer;
@@ -177,7 +177,7 @@
   }
 
   .skip-btn:hover {
-    color: #8aacca;
+    color: var(--text-accent);
     border-color: #4a6070;
   }
 
@@ -188,12 +188,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-bottom: 1px solid #1e2530;
+    border-bottom: 1px solid var(--border-panel);
     position: relative;
   }
 
   .image-placeholder-label {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.65rem;
     letter-spacing: 0.2em;
     color: rgba(255, 255, 255, 0.2);
@@ -217,7 +217,7 @@
   }
 
   .slide-text {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 1rem;
     line-height: 1.8;
     color: #a8c4d8;
@@ -229,8 +229,8 @@
   .unlocks-panel {
     width: 14rem;
     flex-shrink: 0;
-    border-left: 1px solid #1e2530;
-    background: #080c12;
+    border-left: 1px solid var(--border-panel);
+    background: var(--surface-0);
     padding: 1.2rem 1rem;
     overflow-y: auto;
     display: flex;
@@ -239,8 +239,8 @@
   }
 
   .unlocks-label {
-    font-family: monospace;
-    font-size: 0.5rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xxs);
     letter-spacing: 0.25em;
     color: #2a6090;
     margin-bottom: 0.2rem;
@@ -262,7 +262,7 @@
   }
 
   .unlock-type {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.45rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -287,9 +287,9 @@
   }
 
   .unlock-name {
-    font-family: monospace;
-    font-size: 0.6rem;
-    color: #8aacca;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-accent);
     line-height: 1.4;
   }
 
@@ -299,8 +299,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.8rem 1.2rem;
-    border-top: 1px solid #1e2530;
-    background: #080c12;
+    border-top: 1px solid var(--border-panel);
+    background: var(--surface-0);
     flex-shrink: 0;
   }
 
@@ -314,8 +314,8 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: #1e2530;
-    border: 1px solid #2a3a4a;
+    background: var(--border-panel);
+    border: 1px solid var(--border-active);
     cursor: pointer;
     padding: 0;
     transition: background 0.15s;
@@ -327,7 +327,7 @@
   }
 
   .pip:hover:not(.active) {
-    background: #2a3a4a;
+    background: var(--border-active);
   }
 
   .nav-buttons {
@@ -338,11 +338,11 @@
 
   .nav-btn {
     background: none;
-    border: 1px solid #1e2530;
+    border: 1px solid var(--border-panel);
     color: #4a6070;
-    font-family: monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
     padding: 0.35rem 0.9rem;
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
@@ -354,12 +354,12 @@
   }
 
   .nav-btn:not(:disabled):hover {
-    color: #8aacca;
+    color: var(--text-accent);
     border-color: #4a6070;
   }
 
   .nav-btn--next {
-    color: #8aacca;
+    color: var(--text-accent);
     border-color: #2a6090;
     background: rgba(42, 96, 144, 0.1);
   }

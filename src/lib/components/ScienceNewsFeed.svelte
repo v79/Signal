@@ -34,19 +34,19 @@
   .science-feed {
     display: flex;
     flex-direction: column;
-    border-top: 1px solid #1e2530;
-    border-bottom: 1px solid #1e2530;
+    border-top: 1px solid var(--border-panel);
+    border-bottom: 1px solid var(--border-panel);
     flex-shrink: 0;
   }
 
   .feed-header {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.18em;
     color: #3a5060;
     padding: 0.3rem 0.6rem;
-    border-bottom: 1px solid #141c26;
+    border-bottom: 1px solid var(--surface-3);
     flex-shrink: 0;
-    background: #060a10;
+    background: var(--surface-0);
   }
 
   .feed-list {
@@ -65,14 +65,14 @@
 
   .feed-turn {
     color: #2a3a48;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     flex-shrink: 0;
     padding-top: 0.05rem;
     font-variant-numeric: tabular-nums;
   }
 
   .feed-text {
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     flex: 1;
     min-width: 0;
   }
@@ -86,7 +86,7 @@
   }
 
   .cat-discovery {
-    background: #060c18;
+    background: var(--info-hover);
   }
   .cat-discovery .feed-text {
     color: #6ab0d8;
@@ -96,7 +96,7 @@
   }
 
   .cat-signal .feed-text {
-    color: #c8a040;
+    color: var(--warn);
   }
   .cat-signal .feed-turn {
     color: #5a4818;
@@ -104,7 +104,7 @@
 
   .feed-empty {
     color: #2a3840;
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     font-style: italic;
     padding: 0.4rem 0.6rem;
   }

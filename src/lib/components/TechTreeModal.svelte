@@ -513,7 +513,7 @@
     flex-direction: column;
     width: 90vw;
     height: 90vh;
-    background: #050a10;
+    background: var(--surface-0);
     border-top: 1px solid #3a2e08;
     border-right: 1px solid #0e1c28;
     border-bottom: 1px solid #0e1c28;
@@ -555,7 +555,7 @@
     justify-content: space-between;
     padding: 0.45rem 0.9rem;
     border-bottom: 1px solid #0e1c28;
-    background: #040810;
+    background: var(--surface-0);
     flex-shrink: 0;
     gap: 1rem;
   }
@@ -568,7 +568,7 @@
   }
 
   .classify-badge {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.58rem;
     letter-spacing: 0.18em;
     color: #8a6810;
@@ -587,7 +587,7 @@
   }
 
   .header-datestamp {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.58rem;
     letter-spacing: 0.12em;
     color: #3a5a6a;
@@ -595,8 +595,8 @@
   }
 
   .modal-title {
-    font-family: monospace;
-    font-size: 0.65rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-base);
     letter-spacing: 0.22em;
     color: #4a7888;
     white-space: nowrap;
@@ -610,7 +610,7 @@
   }
 
   .era-tab {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.58rem;
     letter-spacing: 0.12em;
     padding: 0.15rem 0.5rem;
@@ -664,8 +664,8 @@
   }
 
   .header-status {
-    font-family: monospace;
-    font-size: 0.6rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
     letter-spacing: 0.08em;
     color: #304858;
     display: flex;
@@ -683,7 +683,7 @@
   }
 
   .dev-badge {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.58rem;
     letter-spacing: 0.18em;
     color: #e8a820;
@@ -701,7 +701,7 @@
     font-size: 0.7rem;
     padding: 0.18rem 0.45rem;
     cursor: pointer;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     border-radius: 1px;
     transition:
       color 0.15s,
@@ -758,14 +758,14 @@
   .detail-panel {
     width: 280px;
     flex-shrink: 0;
-    background: #06090f;
+    background: var(--surface-0);
     border-left: 1px solid #0e1c28;
     overflow-y: auto;
     padding: 0.75rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    font-family: monospace;
+    font-family: var(--ff-mono);
   }
 
   .detail-header {
@@ -805,10 +805,10 @@
     background: none;
     border: 1px solid #162230;
     color: #3a5868;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     padding: 0.12rem 0.35rem;
     cursor: pointer;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     border-radius: 1px;
     flex-shrink: 0;
     line-height: 1;
@@ -823,7 +823,7 @@
   }
 
   .detail-name {
-    font-size: 0.85rem;
+    font-size: var(--fs-lg);
     letter-spacing: 0.04em;
     line-height: 1.3;
     font-weight: bold;
@@ -994,19 +994,19 @@
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    background: #050a10;
+    background: var(--surface-0);
     z-index: 3;
   }
 
   .loading-label {
-    font-family: monospace;
-    font-size: 0.65rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-base);
     letter-spacing: 0.25em;
     color: #2e5870;
   }
 
   .loading-dots {
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.8rem;
     color: #1e3c50;
     animation: blink 1.4s step-start infinite;
@@ -1038,7 +1038,7 @@
   .zoom-btn {
     width: 28px;
     height: 28px;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 1rem;
     line-height: 1;
     background: rgba(4, 8, 16, 0.88);
@@ -1072,7 +1072,7 @@
     align-items: center;
     gap: 1.5rem;
     padding: 0.45rem 1rem;
-    background: #040810;
+    background: var(--surface-0);
     border-top: 1px solid #0e1c28;
     flex-shrink: 0;
   }
@@ -1081,8 +1081,8 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-family: monospace;
-    font-size: 0.62rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
     letter-spacing: 0.06em;
     color: #587888;
   }
@@ -1096,7 +1096,7 @@
 
   .legend-scroll-hint {
     margin-left: auto;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.58rem;
     letter-spacing: 0.1em;
     color: #1e3040;

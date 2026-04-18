@@ -375,11 +375,11 @@
   }
 
   .picker {
-    background: #0d1520;
-    border: 1px solid #2a4060;
+    background: var(--surface-2);
+    border: 1px solid var(--border-active);
     min-width: 22rem;
     max-width: 28rem;
-    font-size: 0.72rem;
+    font-size: var(--fs-md);
     letter-spacing: 0.04em;
     max-height: 90vh;
     overflow-y: auto;
@@ -390,38 +390,38 @@
     align-items: baseline;
     gap: 0.75rem;
     padding: 0.6rem 0.8rem;
-    border-bottom: 1px solid #1e2a3a;
-    background: #0a1018;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-1);
     position: sticky;
     top: 0;
   }
 
   .picker-title {
     color: #6aaad8;
-    font-size: 0.75rem;
-    letter-spacing: 0.15em;
+    font-size: var(--fs-md);
+    letter-spacing: var(--ls-wider);
   }
 
   .tile-type {
-    color: #5a6878;
-    font-size: 0.65rem;
+    color: var(--text-dim);
+    font-size: var(--fs-base);
     flex: 1;
   }
 
   .close-btn {
     font-family: inherit;
-    font-size: 0.7rem;
+    font-size: var(--fs-md);
     background: transparent;
     border: none;
     color: #4a5868;
     cursor: pointer;
     padding: 0 0.2rem;
   }
-  .close-btn:hover { color: #c8d0d8; }
+  .close-btn:hover { color: var(--text-primary); }
 
   /* Slot panels */
   .slots-section {
-    border-bottom: 1px solid #1a2538;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .slot-row {
@@ -441,8 +441,8 @@
 
   .slot-label {
     color: #3a5878;
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wide);
     min-width: 3.2rem;
     flex-shrink: 0;
   }
@@ -455,33 +455,33 @@
   }
 
   .slot-fac-name {
-    color: #c8d0d8;
-    font-size: 0.72rem;
+    color: var(--text-primary);
+    font-size: var(--fs-md);
     flex: 1;
   }
 
   .condition-badge {
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.06em;
     flex-shrink: 0;
   }
 
   .demolish-btn {
     font-family: inherit;
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.08em;
     padding: 0.2rem 0.5rem;
-    border: 1px solid #602020;
+    border: 1px solid var(--danger-border);
     background: transparent;
-    color: #c04040;
+    color: var(--danger);
     cursor: pointer;
     flex-shrink: 0;
     transition: background 0.15s;
   }
-  .demolish-btn:hover { background: #200808; }
+  .demolish-btn:hover { background: var(--danger-hover); }
 
   .no-demolish {
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     color: #3a4858;
     font-style: italic;
     flex-shrink: 0;
@@ -496,13 +496,13 @@
   .empty-label {
     color: #2a3848;
     font-style: italic;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
   }
 
   .slot-secondary-label {
     flex: 1;
-    color: #3a5060;
-    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
     font-style: italic;
   }
 
@@ -516,48 +516,48 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.45rem 0.8rem;
-    background: #0a1018;
-    border-bottom: 1px solid #1a2538;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .build-section-title {
-    color: #4a9b7a;
-    font-size: 0.65rem;
+    color: var(--ok);
+    font-size: var(--fs-base);
     letter-spacing: 0.12em;
     flex: 1;
   }
 
   .build-section-hint {
-    color: #3a5060;
-    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
   }
 
   .close-build-btn {
     font-family: inherit;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     background: transparent;
     border: none;
     color: #4a5868;
     cursor: pointer;
     padding: 0 0.2rem;
   }
-  .close-build-btn:hover { color: #c8d0d8; }
+  .close-build-btn:hover { color: var(--text-primary); }
 
   .open-build-btn {
     font-family: inherit;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     letter-spacing: 0.06em;
     width: 100%;
     padding: 0.6rem;
     border: none;
-    border-bottom: 1px solid #1a2538;
+    border-bottom: 1px solid var(--border-subtle);
     background: #0d1825;
-    color: #4a9b7a;
+    color: var(--ok);
     cursor: pointer;
     text-align: left;
     transition: background 0.15s;
   }
-  .open-build-btn:hover:not(:disabled) { background: #0a2018; }
+  .open-build-btn:hover:not(:disabled) { background: var(--ok-hover); }
   .open-build-btn:disabled { color: #3a4858; cursor: not-allowed; }
 
   .facility-list {
@@ -584,8 +584,8 @@
     gap: 0.22rem;
   }
 
-  .facility-name { color: #c8d0d8; font-size: 0.76rem; }
-  .facility-desc { color: #5a6a7a; font-size: 0.62rem; line-height: 1.4; }
+  .facility-name { color: var(--text-primary); font-size: var(--fs-md); }
+  .facility-desc { color: #5a6a7a; font-size: var(--fs-sm); line-height: 1.4; }
 
   .facility-outputs {
     display: flex;
@@ -594,16 +594,16 @@
   }
 
   .output-line {
-    font-size: 0.6rem;
-    color: #4a9b7a;
-    border: 1px solid #1a4030;
+    font-size: var(--fs-sm);
+    color: var(--ok);
+    border: 1px solid var(--ok-border);
     padding: 0 0.25rem;
   }
-  .output-line.climate-line { color: #4a9b7a; border-color: #1a4030; }
+  .output-line.climate-line { color: var(--ok); border-color: var(--ok-border); }
   .output-line.climate-line.pollution-line { color: #9b6a4a; border-color: #4a2a10; }
 
-  .upkeep { font-size: 0.58rem; color: #5a4a2a; }
-  .build-time { font-size: 0.58rem; color: #4a5a6a; }
+  .upkeep { font-size: var(--fs-sm); color: #5a4a2a; }
+  .build-time { font-size: var(--fs-sm); color: #4a5a6a; }
 
   .facility-action {
     display: flex;
@@ -614,47 +614,47 @@
   }
 
   .build-cost {
-    font-size: 0.68rem;
-    color: #c8d050;
+    font-size: var(--fs-base);
+    color: var(--funding);
     text-align: right;
   }
   .build-cost.cant-afford { color: #9b4a4a; }
 
   .build-btn {
     font-family: inherit;
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wide);
     padding: 0.28rem 0.65rem;
-    border: 1px solid #2a6050;
+    border: 1px solid var(--ok-border);
     background: transparent;
-    color: #4a9b7a;
+    color: var(--ok);
     cursor: pointer;
     transition: background 0.15s;
     white-space: nowrap;
   }
-  .build-btn:hover:not(:disabled) { background: #0a2018; }
-  .build-btn:disabled { color: #2a3848; border-color: #1a2535; cursor: not-allowed; }
+  .build-btn:hover:not(:disabled) { background: var(--ok-hover); }
+  .build-btn:disabled { color: #2a3848; border-color: var(--border-subtle); cursor: not-allowed; }
 
   .locked-row { opacity: 0.4; }
   .locked-name { color: #4a5868; }
   .locked-label {
-    font-size: 0.56rem;
+    font-size: var(--fs-xs);
     color: #5a4a2a;
     text-align: right;
     line-height: 1.5;
     letter-spacing: 0.04em;
   }
 
-  .no-facilities { padding: 0.8rem; color: #3a4858; font-style: italic; }
+  .no-facilities { padding: 0.8rem; color: var(--text-muted); font-style: italic; }
 
   .tile-action-section {
     padding: 0;
-    border-top: 1px solid #1a2538;
+    border-top: 1px solid var(--border-subtle);
   }
 
   .tile-action-title {
     color: #7a7acd;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     letter-spacing: 0.12em;
     flex: 1;
   }
@@ -666,14 +666,14 @@
     gap: 0.45rem;
   }
   .destroyed-badge {
-    font-size: 0.75rem;
+    font-size: var(--fs-md);
     letter-spacing: 0.14em;
     color: #9b4a4a;
     border: 1px solid #4a1a1a;
     padding: 0.15rem 0.5rem;
     align-self: flex-start;
   }
-  .destroyed-desc { color: #5a4040; font-size: 0.65rem; line-height: 1.5; font-style: italic; }
+  .destroyed-desc { color: #5a4040; font-size: var(--fs-base); line-height: 1.5; font-style: italic; }
 
   .pending-panel {
     padding: 0.8rem;
@@ -681,6 +681,6 @@
     flex-direction: column;
     gap: 0.35rem;
   }
-  .pending-label { color: #c8a040; font-size: 0.72rem; letter-spacing: 0.05em; }
-  .pending-hint { color: #4a5868; font-size: 0.62rem; font-style: italic; }
+  .pending-label { color: var(--warn); font-size: var(--fs-md); letter-spacing: 0.05em; }
+  .pending-hint { color: #4a5868; font-size: var(--fs-sm); font-style: italic; }
 </style>

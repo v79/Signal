@@ -652,8 +652,8 @@
     .tab-bar {
         display: flex;
         gap: 1px;
-        background: #0a0e14;
-        border-bottom: 1px solid #1e2530;
+        background: var(--surface-1);
+        border-bottom: 1px solid var(--border-panel);
         flex-shrink: 0;
         padding: 2px 4px 0;
     }
@@ -662,10 +662,10 @@
         background: transparent;
         border: none;
         border-bottom: 2px solid transparent;
-        color: #4a6080;
+        color: var(--text-dim);
         cursor: pointer;
-        font-family: monospace;
-        font-size: 0.65rem;
+        font-family: var(--ff-mono);
+        font-size: var(--fs-base);
         letter-spacing: 0.04em;
         padding: 3px 8px 4px;
         transition: color 0.15s,
@@ -673,7 +673,7 @@
     }
 
     .tab:hover:not(:disabled) {
-        color: #8aacca;
+        color: var(--text-accent);
     }
 
     .tab.active {
@@ -691,7 +691,7 @@
     }
 
     .lock {
-        font-size: 0.55rem;
+        font-size: var(--fs-xs);
         opacity: 0.6;
         margin-left: 2px;
     }
@@ -721,14 +721,14 @@
     .map-toolbar {
         display: flex;
         gap: 1px;
-        background: #0a0e14;
-        border-bottom: 1px solid #1e2530;
+        background: var(--surface-1);
+        border-bottom: 1px solid var(--border-panel);
         flex-shrink: 0;
         padding: 2px 4px 0;
     }
 
     .overview-btn {
-        font-size: 0.6rem;
+        font-size: var(--fs-sm);
         letter-spacing: 0.06em;
     }
 
@@ -765,8 +765,8 @@
         position: absolute;
         top: 100%;
         right: 0;
-        background: #0a1018;
-        border: 1px solid #2a3a50;
+        background: var(--surface-1);
+        border: 1px solid var(--border-active);
         padding: 0.4rem 0.6rem;
         min-width: 13rem;
         z-index: 50;
@@ -781,7 +781,7 @@
         display: flex;
         justify-content: space-between;
         gap: 1rem;
-        font-size: 0.62rem;
+        font-size: var(--fs-sm);
         letter-spacing: 0.06em;
     }
 
@@ -795,7 +795,7 @@
     }
 
     .launch-label {
-        font-size: 0.55rem;
+        font-size: var(--fs-xs);
         letter-spacing: 0.08em;
         color: #4a7a9a;
         flex-shrink: 0;
@@ -804,7 +804,7 @@
     .launch-bar-track {
         width: 60px;
         height: 4px;
-        background: #1a2530;
+        background: var(--border-subtle);
         border-radius: 2px;
         overflow: hidden;
     }
@@ -817,7 +817,7 @@
     }
 
     .launch-value {
-        font-size: 0.55rem;
+        font-size: var(--fs-xs);
         color: #8aaabb;
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
@@ -830,11 +830,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #060a10;
+        background: var(--surface-0);
     }
 
     .loading-text {
-        font-size: 0.7rem;
+        font-size: var(--fs-md);
         letter-spacing: 0.18em;
         color: #2a4a6a;
         text-transform: uppercase;

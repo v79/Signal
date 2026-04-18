@@ -71,8 +71,8 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 0.5rem 0.75rem 0.5rem 0.75rem;
-    background: #070b12;
-    border-left: 1px solid #1e2530;
+    background: var(--surface-0);
+    border-left: 1px solid var(--border-panel);
     flex-shrink: 0;
     min-width: 13rem;
     gap: 0.5rem;
@@ -86,8 +86,8 @@
   }
 
   .phase-desc {
-    font-size: 0.6rem;
-    color: #3a4858;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
     letter-spacing: 0.04em;
     font-style: italic;
     line-height: 1.4;
@@ -101,8 +101,8 @@
     background: transparent;
     border: 1px solid #3a2020;
     color: #6a4040;
-    font-family: monospace;
-    font-size: 0.7rem;
+    font-family: var(--ff-mono);
+    font-size: var(--fs-md);
     font-weight: bold;
     line-height: 1;
     cursor: pointer;
@@ -137,20 +137,20 @@
   .action-counter .count {
     font-size: 1.4rem;
     font-weight: 700;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     color: #4a8ab4;
     letter-spacing: -0.02em;
     line-height: 1;
   }
 
   .action-counter .label {
-    font-size: 0.5rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.14em;
     color: #2a5070;
     text-transform: uppercase;
   }
 
-  .action-counter.at-one .count { color: #c8a040; }
+  .action-counter.at-one .count { color: var(--warn); }
   .action-counter.at-one .label { color: #7a6020; }
 
   .action-counter.at-zero .count { color: #c84a4a; }
@@ -158,14 +158,14 @@
 
   .advance-btn {
     padding: 0.45rem 1.1rem;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     font-family: inherit;
     letter-spacing: 0.14em;
     font-weight: 700;
     background: #0d1e30;
     color: #2a5070;
     border: 1px solid #1a3050;
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;

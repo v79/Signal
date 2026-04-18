@@ -56,16 +56,16 @@
     visibility: hidden;
     opacity: 0;
     position: fixed; /* overridden by inline style; declared here for specificity */
-    background: #1a2236;
-    color: #c8d8f0;
-    font-size: 0.6rem;
+    background: var(--surface-3);
+    color: var(--text-primary);
+    font-size: var(--fs-sm);
     padding: 0.25rem 0.5rem;
     border-radius: 3px;
     white-space: pre-wrap;
     max-width: 18rem;
     pointer-events: none;
     transition: opacity 0.15s;
-    border: 1px solid #2a3a56;
+    border: 1px solid var(--border-active);
     z-index: 1000;
   }
 

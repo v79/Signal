@@ -219,7 +219,7 @@
         margin: 0;
         background: #060a10;
         color: #8aacca;
-        font-family: monospace;
+        font-family: var(--ff-mono);
     }
 
     .newgame-layout {
@@ -298,7 +298,7 @@
         background: #0d1520;
         border: 1px solid #2a3a50;
         color: #a0c8e8;
-        font-family: monospace;
+        font-family: var(--ff-mono);
         font-size: 0.9rem;
         letter-spacing: 0.1em;
         padding: 0.5rem 0.75rem;
@@ -349,7 +349,7 @@
         padding: 0.75rem;
         cursor: pointer;
         text-align: left;
-        font-family: monospace;
+        font-family: var(--ff-mono);
         transition: border-color 0.15s,
         background 0.15s;
     }
@@ -458,7 +458,7 @@
         border-radius: 3px;
         padding: 0.75rem 1rem;
         cursor: pointer;
-        font-family: monospace;
+        font-family: var(--ff-mono);
         text-align: left;
         transition: border-color 0.15s,
         background 0.15s;
@@ -512,7 +512,7 @@
         border-radius: 3px;
         padding: 0.5rem 0.75rem;
         cursor: pointer;
-        font-family: monospace;
+        font-family: var(--ff-mono);
         font-size: 0.7rem;
         color: #4a6a4a;
         text-align: left;
@@ -552,7 +552,7 @@
         border: 1px solid #2a4a6a;
         color: #6aacca;
         cursor: pointer;
-        font-family: monospace;
+        font-family: var(--ff-mono);
         font-size: 0.8rem;
         letter-spacing: 0.1em;
         padding: 0.7rem 2.5rem;
