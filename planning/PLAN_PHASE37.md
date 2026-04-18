@@ -85,89 +85,52 @@ Produces `planning/DESIGN_css_audit.md` with the full distributions. This is the
 - **70 class names** appear in 2+ files; `.panel` / `.panel-header` / `.close-btn` / `.empty` / `.facility-*` top the list
 - Border radius is almost entirely `2px` (34) or `1px` (21) — confirming `--radius-sm: 2px` as the primary token
 
-### B.2 Central files to create
+### ✅ B.2 Central files to create
 
 ```
 src/styles/
-  tokens.css        # CSS custom properties: colours, typography scale, spacing, radii, shadows
-  base.css          # resets + :global body/html rules currently in +layout.svelte
-  panels.css        # .panel, .panel-header, .panel-section — used by BlocStatus, Committee, Projects, Space, Facility pickers
-  buttons.css       # .btn, .btn-primary, .btn-danger, .btn-ghost, .btn-sm — the dozens of ad-hoc button styles today
-  forms.css         # inputs, toggles, ranges — lighter usage but still duplicated
-  news.css          # news-item, news-category colour chips — shared by NewsTicker + EventZone
+  tokens.css   ✅  CSS custom properties: colours, type scale, spacing, radii, shadows
+  base.css     ✅  html/*/body resets (moved from +layout.svelte)
+  panels.css   ✅  .panel, .panel-header, .panel-section, .picker, .facility-row
+  buttons.css  ✅  .btn base + .btn-ok/warn/danger/info/ghost/.btn-sm + .close-btn
+  forms.css    ✅  input[type=range] (minimal — only 1 input exists today)
+  news.css     ✅  .cat-* colour chips shared by NewsTicker + ScienceNewsFeed
+  index.css    ✅  @import entry point
 ```
 
-Imported once from `src/routes/+layout.svelte` via `<style>` `@import` or a `src/styles/index.css` root. (Svelte scoped styles cannot see vars unless declared on `:root` in a `:global` block — tokens must live in `:global` scope.)
+Imported via `import '../styles/index.css'` in `+layout.svelte` `<script>`.
+`:global` rules (html/body) moved to `base.css` as plain CSS selectors — no `:global()` wrapper needed in a non-Svelte file.
 
-### B.3 Proposed token shape (first pass — finalised after B.1)
+### ✅ B.3 Final token shape (calibrated from B.1 audit)
 
-```css
-:root {
-  /* Surface palette (dark → darker) */
-  --surface-0: #060a10;    /* deepest — page / modal backdrop */
-  --surface-1: #0a0e14;    /* panel body */
-  --surface-2: #0d1018;    /* panel header */
-  --surface-3: #121a25;    /* raised row / hover */
-  --surface-alt-bloc: #0a1420;  /* bloc / space tint */
+Key deviations from the pre-audit proposal:
+- `--surface-1: #0a1018` (was `#0a0e14`) — more common in codebase (11 vs 5 uses)
+- `--surface-2: #0d1520` (was `#0d1018`) — 8 uses vs 1
+- `--text-muted / --text-dim` swapped to match actual usage: `#3a5060` (12 uses) is muted, `#4a6080` (10 uses) is dim
+- `--ok: #4a9b7a` (was `#4a8ab4`) — 13 uses in codebase vs 4
+- `--fs-base: 0.65rem` (was `0.7rem`) — 0.65 has 39 uses, the dominant second peak
+- `--fs-sm: 0.6rem` — centres the 0.58/0.60/0.62 cluster (99 combined uses)
+- Resource tokens added: `--funding: #c8d050`, `--funding-negative: #d46a4a`, `--will: #b07ad0`
+- Semantic border/hover tokens added per variant (e.g. `--ok-border: #2a6050`)
+- `--ls-wide / --ls-wider` added for letter-spacing values used in panel headers
 
-  /* Text */
-  --text-primary: #c8d0d8;
-  --text-muted: #5a6a7a;
-  --text-dim: #3a4a5a;
-  --text-accent: #8aacca;
+### ✅ B.4 Shared-class candidates (from the audit)
 
-  /* Semantic */
-  --ok: #4a8ab4;
-  --warn: #c8a040;
-  --danger: #d08080;
-  --materials: #8b5e3c;   /* already canonicalised in Phase 17 */
-  --will: #b47aa8;
-  --funding: #6ab08a;
+All 70 shared classes catalogued in `planning/DESIGN_css_audit.md §12`. High-value targets confirmed:
 
-  /* Type scale (7 steps — map existing 25 sizes onto these) */
-  --fs-xxs: 0.5rem;
-  --fs-xs: 0.58rem;
-  --fs-sm: 0.62rem;
-  --fs-base: 0.7rem;
-  --fs-md: 0.8rem;
-  --fs-lg: 1rem;
-  --fs-xl: 1.4rem;
-
-  /* Spacing (4-step scale) */
-  --sp-1: 0.25rem;
-  --sp-2: 0.5rem;
-  --sp-3: 0.75rem;
-  --sp-4: 1rem;
-
-  /* Radii, shadows */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.6);
-
-  /* Font families */
-  --ff-mono: 'Courier New', monospace;
-}
-```
-
-Exact values are placeholders — B.1's audit picks canonicals from the most-used clusters, not arbitrary guesses.
-
-### B.4 Shared-class candidates (from the audit)
-
-Strong duplicates already visible without the full audit:
-
-- `.panel` — shared by BlocStatusPanel, BoardPanel, CompletedProjectsPanel, SpaceOverview, FacilityOverview
-- `.panel-heading` — already harmonised (Phase 36) but style lives per-file
-- `.facility-row` — nearly identical between FacilityPicker and SpaceNodePicker (inline comment noted this in the picker files: `.facility-row:hover { background: #101825; }` appears verbatim in both)
-- `.build-btn` / `.demolish-btn` / `.open-build-btn` — same colour story in both pickers
-- `.news-item` — between NewsTicker and EventZone / science feeds
-- `.modifier-chip` / `.buff-chip` / `.debuff-chip` — BoardPanel, CompletedProjectsPanel, CardHand
-- `.resource-icon` — HUD, CardHand, EventZone
+- ✅ `.panel` / `.panel-header` / `.panel-title` — defined in `panels.css`
+- ✅ `.picker` / `.picker-header` / `.picker-title` / `.picker-backdrop` — defined in `panels.css`
+- ✅ `.facility-row` — defined in `panels.css` (verbatim duplicate in FacilityPicker + SpaceNodePicker)
+- ✅ `.btn` base + semantic variants — defined in `buttons.css`
+- ✅ `.close-btn` — defined in `buttons.css` (5 files: FacilityOverview, FacilityPicker, SpaceNodePicker, SpaceOverview, TechTreeModal)
+- ✅ `.cat-*` news categories — defined in `news.css` (NewsTicker + ScienceNewsFeed)
+- Part C will migrate: `.build-btn`, `.demolish-btn`, `.open-build-btn`, `.modifier-chip`, `.resource-icon`, `.era-badge`, `.empty`
 
 ## Part C — Component Refactor Passes
 
 Landed as **separate commits** inside the phase branch, each verifiable against the A-phase screenshots:
 
-1. Introduce `src/styles/` files + wire into `+layout.svelte`. No component changes.
+1. ✅ Introduce `src/styles/` files + wire into `+layout.svelte`. No component changes.
 2. **HUD + PhaseControls + SignalTrack + ResearchFeed** — the top-bar / right-column cluster.
 3. **FacilityPicker + SpaceNodePicker** — extract shared row/button classes. Largest dedup win.
 4. **BlocStatusPanel + BoardPanel + CompletedProjectsPanel + SpaceOverview + FacilityOverview** — panel family.

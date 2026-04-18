@@ -1,0 +1,93 @@
+/*
+ * News category colour rules — Signal
+ *
+ * Used by NewsTicker.svelte (popup-text / popup-turn sub-elements) and
+ * ScienceNewsFeed.svelte (feed-text / feed-turn sub-elements).
+ *
+ * Migration note (Part C): both components define these per-file.  Once
+ * migrated they should remove their scoped cat-* rules and rely on these.
+ *
+ * The child selectors use descendant combinator so they work regardless
+ * of the inner element's class name (.popup-text, .feed-text, etc.).
+ */
+
+/* ── Positive event ────────────────────────────────────────────────────── */
+
+.cat-event-gain {
+  background: #0a1810;
+}
+.cat-event-gain [class*='-text'] {
+  color: #5ab880;
+}
+.cat-event-gain [class*='-turn'] {
+  color: #2a6040;
+}
+
+/* ── Negative event ────────────────────────────────────────────────────── */
+
+.cat-event-loss {
+  background: #180a0a;
+}
+.cat-event-loss [class*='-text'] {
+  color: #d47070;
+}
+.cat-event-loss [class*='-turn'] {
+  color: #8a3a3a;
+}
+
+/* ── Neutral event ─────────────────────────────────────────────────────── */
+
+.cat-event-neutral [class*='-text'] {
+  color: var(--warn);
+}
+.cat-event-neutral [class*='-turn'] {
+  color: #6a5820;
+}
+
+/* ── Tech discovery ────────────────────────────────────────────────────── */
+
+.cat-discovery {
+  background: #060c18;
+}
+.cat-discovery [class*='-text'] {
+  color: #6ab0d8;
+}
+.cat-discovery [class*='-turn'] {
+  color: #1a4060;
+}
+
+/* ── Research progress ─────────────────────────────────────────────────── */
+
+.cat-research [class*='-text'] {
+  color: var(--text-accent);
+}
+.cat-research [class*='-turn'] {
+  color: var(--text-muted);
+}
+
+/* ── Signal / wormhole ─────────────────────────────────────────────────── */
+
+.cat-signal [class*='-text'] {
+  color: var(--warn);
+}
+.cat-signal [class*='-turn'] {
+  color: #6a5820;
+}
+
+/* ── Board / personnel ─────────────────────────────────────────────────── */
+
+.cat-board [class*='-text'] {
+  color: #a07ad8;
+}
+.cat-board [class*='-turn'] {
+  color: #503870;
+}
+
+/* ── Default / unclassified ────────────────────────────────────────────── */
+
+.cat-default [class*='-text'] {
+  color: var(--text-primary);
+}
+.cat-default [class*='-turn'] {
+  color: var(--text-muted);
+}

@@ -1,0 +1,13 @@
+/*
+ * Global stylesheet entry point — Signal
+ *
+ * Import order matters: tokens must load before anything that references
+ * CSS custom properties.
+ */
+
+@import './tokens.css';
+@import './base.css';
+@import './panels.css';
+@import './buttons.css';
+@import './forms.css';
+@import './news.css';
