@@ -28,7 +28,7 @@ test.describe('Bloc Status Panel — navigation', () => {
   test('BLOCS tab opens the bloc panel', async ({ page }) => {
     await startNewGame(page);
     await openBlocsTab(page);
-    await page.screenshot({ path: 'screenshots/blocs-01-open.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/blocs/01-open.png', fullPage: true });
   });
 
   test('panel heading reads GEOPOLITICAL STATUS', async ({ page }) => {
@@ -67,21 +67,25 @@ test.describe('Bloc Status Panel — content', () => {
       els.findIndex((el) => el.classList.contains('separator')),
     );
     expect(playerIndex).toBeLessThan(separatorIndex);
+    await page.screenshot({ path: 'screenshots/blocs/02-player-row.png', fullPage: true });
   });
 
   test('OTHER BLOCS separator is rendered between player and NPC blocs', async ({ page }) => {
     await expect(page.locator('.separator-label')).toHaveText('OTHER BLOCS');
+    await page.screenshot({ path: 'screenshots/blocs/03-separator.png', fullPage: true });
   });
 
   test('multiple NPC bloc rows are shown below the separator', async ({ page }) => {
     // All .bloc-row elements that are NOT the player bloc
     const npcRows = page.locator('.bloc-row:not(.player-bloc)');
     await expect(npcRows).toHaveCount(7); // 8 blocs total minus 1 player
+    await page.screenshot({ path: 'screenshots/blocs/04-npc-rows.png', fullPage: true });
   });
 
   test('each visible bloc row shows a will bar', async ({ page }) => {
     const willBars = page.locator('.will-bar-fill');
     const count = await willBars.count();
     expect(count).toBeGreaterThanOrEqual(8);
+    await page.screenshot({ path: 'screenshots/blocs/05-will-bars.png', fullPage: true });
   });
 });

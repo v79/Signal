@@ -40,12 +40,12 @@ test('setup screen — select bloc and push factor', async ({ page }) => {
   await page.click('.skip-btn');
 
   // Screenshot: default state (first bloc pre-selected, Climate Change active)
-  await page.screenshot({ path: 'screenshots/01-setup-default.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/01-setup-default.png', fullPage: true });
 
   // Select a different bloc and push factor, then screenshot
   await page.locator('.bloc-card').nth(2).click(); // South American Union
   await page.locator('.push-btn').nth(1).click(); // Geopolitical Tension
-  await page.screenshot({ path: 'screenshots/02-setup-configured.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/02-setup-configured.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ test('setup screen — select bloc and push factor', async ({ page }) => {
 
 test('main game — turn 1 action phase', async ({ page }) => {
   await startNewGame(page);
-  await page.screenshot({ path: 'screenshots/03-turn1-action.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/03-turn1-action.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ test('build facility — open picker, build, verify on map', async ({ page }) =>
 
   // Wait for the FacilityPicker dialog
   await page.waitForSelector('[aria-label="Facility Picker"]');
-  await page.screenshot({ path: 'screenshots/04-facility-picker.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/04-facility-picker.png', fullPage: true });
 
   // Expand the facility list
   await page.click('.open-build-btn');
@@ -85,7 +85,7 @@ test('build facility — open picker, build, verify on map', async ({ page }) =>
 
   // Brief pause for Phaser to re-render the placed facility indicator
   await page.waitForTimeout(600);
-  await page.screenshot({ path: 'screenshots/05-after-build.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/05-after-build.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -98,12 +98,12 @@ test('hud menu — opens with restart, new game, settings options', async ({ pag
   // Open the menu and wait for dropdown to appear in the DOM
   await page.click('.menu-btn');
   await page.waitForSelector('.menu-dropdown');
-  await page.screenshot({ path: 'screenshots/08-hud-menu-open.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/08-hud-menu-open.png', fullPage: true });
 
   // Close by clicking backdrop, wait for dropdown to disappear
   await page.click('.menu-backdrop');
   await page.waitForSelector('.menu-dropdown', { state: 'hidden' });
-  await page.screenshot({ path: 'screenshots/09-hud-menu-closed.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/09-hud-menu-closed.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -118,7 +118,7 @@ test('phase advance — action → turn 2', async ({ page }) => {
 
   // World phase processes synchronously; wait briefly for re-render
   await page.waitForTimeout(800);
-  await page.screenshot({ path: 'screenshots/07-turn2-action.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/07-turn2-action.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -166,5 +166,5 @@ test('build facility — button disabled at action cap', async ({ page }) => {
   await expect(buildBtn).toBeDisabled();
   await expect(buildBtn).toHaveText('NO ACTIONS REMAINING');
 
-  await page.screenshot({ path: 'screenshots/10-build-disabled-at-cap.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/game-flow/10-build-disabled-at-cap.png', fullPage: true });
 });

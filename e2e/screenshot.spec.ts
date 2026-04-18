@@ -5,7 +5,7 @@ test('screenshot new-game screen', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await page.waitForSelector('.skip-btn');
   await page.click('.skip-btn');
-  await page.screenshot({ path: 'screenshots/newgame-setup.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/general/newgame-setup.png', fullPage: true });
 });
 
 test('screenshot main game HUD', async ({ page }) => {
@@ -23,5 +23,5 @@ test('screenshot main game HUD', async ({ page }) => {
   // Give Phaser a moment to render the hex map
   await page.waitForTimeout(1500);
 
-  await page.screenshot({ path: 'screenshots/main-game.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/general/main-game.png', fullPage: true });
 });

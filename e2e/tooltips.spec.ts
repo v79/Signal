@@ -75,12 +75,14 @@ test.describe('HUD resource tooltips', () => {
     // HQ provides +5 funding/turn from game start, so the breakdown format is always shown.
     expect(text).toContain('Funding');
     expect(text).toContain('Headquarters');
+    await page.screenshot({ path: 'screenshots/tooltips/fund-tooltip.png', fullPage: true });
   });
 
   test('MAT tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.tooltip-host:has(.res-label:text("MAT"))');
     const text = await assertTooltipInViewport(page, host);
     expect(text).toBe('Raw materials. Gained from mines and industrial zones.');
+    await page.screenshot({ path: 'screenshots/tooltips/mat-tooltip.png', fullPage: true });
   });
 
   test('WILL resource tooltip is visible and on screen', async ({ page }) => {
@@ -88,6 +90,7 @@ test.describe('HUD resource tooltips', () => {
     const text = await assertTooltipInViewport(page, host);
     expect(text).toContain('Political Will');
     expect(text).toMatch(/Natural (drift|recovery)/);
+    await page.screenshot({ path: 'screenshots/tooltips/will-resource-tooltip.png', fullPage: true });
   });
 });
 
@@ -114,6 +117,10 @@ test.describe('HUD research field tooltips', () => {
       const host = page.locator(`.tooltip-host:has(.field-label:text("${label}"))`);
       const text = await assertTooltipInViewport(page, host);
       expect(text).toBe(expectedText);
+      await page.screenshot({
+        path: `screenshots/tooltips/field-${label.toLowerCase()}-tooltip.png`,
+        fullPage: true,
+      });
     });
   }
 });
@@ -131,12 +138,14 @@ test.describe('HUD bar tooltips', () => {
     const host = page.locator('.hud-center .tooltip-host').first();
     const text = await assertTooltipInViewport(page, host);
     expect(text).toContain('Climate pressure');
+    await page.screenshot({ path: 'screenshots/tooltips/climate-bar-tooltip.png', fullPage: true });
   });
 
   test('WILL bar tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.hud-center .tooltip-host').last();
     const text = await assertTooltipInViewport(page, host);
     expect(text).toBe('Global political will level.');
+    await page.screenshot({ path: 'screenshots/tooltips/will-bar-tooltip.png', fullPage: true });
   });
 });
 
@@ -150,6 +159,7 @@ test.describe('HUD menu button tooltip', () => {
     const host = page.locator('.tooltip-host:has(.menu-btn)');
     const text = await assertTooltipInViewport(page, host);
     expect(text).toBe('Game menu');
+    await page.screenshot({ path: 'screenshots/tooltips/menu-btn-tooltip.png', fullPage: true });
   });
 });
 
@@ -166,6 +176,7 @@ test.describe('Map tab bar tooltips', () => {
     const host = page.locator('.tab-bar .tooltip-host').first();
     const text = await assertTooltipInViewport(page, host);
     expect(text).toContain('EARTH');
+    await page.screenshot({ path: 'screenshots/tooltips/earth-tab-tooltip.png', fullPage: true });
   });
 
   test('locked tab tooltips mention unlocking', async ({ page }) => {
@@ -175,6 +186,10 @@ test.describe('Map tab bar tooltips', () => {
     for (let i = 1; i < count; i++) {
       const text = await assertTooltipInViewport(page, hosts.nth(i));
       expect(text).toMatch(/unlock|switch/i);
+      await page.screenshot({
+        path: `screenshots/tooltips/locked-tab-${i}-tooltip.png`,
+        fullPage: true,
+      });
       await page.mouse.move(0, 0);
     }
   });
@@ -190,6 +205,7 @@ test.describe('ResearchFeed signal tooltip', () => {
     const host = page.locator('.tooltip-host:has(.signal-label)');
     const text = await assertTooltipInViewport(page, host);
     expect(text).toContain('signal');
+    await page.screenshot({ path: 'screenshots/tooltips/signal-label-tooltip.png', fullPage: true });
   });
 });
 
@@ -206,6 +222,10 @@ test('all tooltip hosts are within the viewport', async ({ page }) => {
 
   for (let i = 0; i < count; i++) {
     await assertTooltipInViewport(page, hosts.nth(i));
+    if (i === 0) {
+      // Capture one representative active-tooltip state from the sweep
+      await page.screenshot({ path: 'screenshots/tooltips/all-hosts-sweep.png', fullPage: true });
+    }
     // Move mouse away between iterations so the next hover registers cleanly
     await page.mouse.move(0, 0);
   }

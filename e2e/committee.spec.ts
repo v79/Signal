@@ -29,7 +29,7 @@ test.describe('Committee panel — navigation', () => {
   test('COMMITTEE tab opens the committee panel', async ({ page }) => {
     await startNewGame(page);
     await openBoardTab(page);
-    await page.screenshot({ path: 'screenshots/committee-01-open.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/committee/01-open.png', fullPage: true });
   });
 
   test('panel heading reads COMMITTEE', async ({ page }) => {
@@ -58,6 +58,7 @@ test.describe('Committee panel — slot cards', () => {
 
   test('renders exactly seven role slots at game start', async ({ page }) => {
     await expect(page.locator('.slot-card')).toHaveCount(7);
+    await page.screenshot({ path: 'screenshots/committee/04-all-slots.png', fullPage: true });
   });
 
   test('Head of Finance slot is filled at game start', async ({ page }) => {
@@ -92,6 +93,7 @@ test.describe('Committee panel — slot cards', () => {
     for (let i = 0; i < count; i++) {
       await expect(vacantCards.nth(i).locator('.vacant-badge')).toBeVisible();
     }
+    await page.screenshot({ path: 'screenshots/committee/05-vacant-slots.png', fullPage: true });
   });
 
   test('vacant slots show grace-period message on turn 1', async ({ page }) => {
@@ -106,6 +108,7 @@ test.describe('Committee panel — slot cards', () => {
       // Penalty line not shown
       await expect(card.locator('.penalty-line')).not.toBeVisible();
     }
+    await page.screenshot({ path: 'screenshots/committee/06-grace-period.png', fullPage: true });
   });
 
   test('member name and age are shown for filled slots', async ({ page }) => {
@@ -126,6 +129,7 @@ test.describe('Committee panel — slot cards', () => {
       const modifiers = filledCards.nth(i).locator('.modifier');
       await expect(modifiers.first()).toBeVisible();
     }
+    await page.screenshot({ path: 'screenshots/committee/07-filled-with-modifiers.png', fullPage: true });
   });
 });
 
@@ -156,6 +160,7 @@ test.describe('Committee panel — recruitment', () => {
     expect(costText).toMatch(/1 action/);
     expect(costText).toMatch(/F/);
     expect(costText).toMatch(/W/);
+    await page.screenshot({ path: 'screenshots/committee/08-recruit-cost.png', fullPage: true });
   });
 
   test('recruiting a Chief Scientist fills the slot', async ({ page }) => {
@@ -168,7 +173,7 @@ test.describe('Committee panel — recruitment', () => {
     // Slot should now be occupied: VACANT badge gone, member name visible
     await expect(csCard.locator('.vacant-badge')).not.toBeVisible();
     await expect(csCard.locator('.member-name')).toBeVisible();
-    await page.screenshot({ path: 'screenshots/committee-02-after-recruit.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/committee/02-after-recruit.png', fullPage: true });
   });
 
   test('recruiting a member is reflected in the action counter on the card hand', async ({
@@ -217,6 +222,7 @@ test.describe('Committee panel — recruitment', () => {
     for (let i = 0; i < count; i++) {
       await expect(remainingVacant.nth(i)).toBeDisabled();
     }
+    await page.screenshot({ path: 'screenshots/committee/09-recruit-disabled.png', fullPage: true });
   });
 });
 
@@ -239,7 +245,7 @@ test.describe('Committee panel — dismissal', () => {
 
     await expect(hfCard.locator('.vacant-badge')).toBeVisible();
     await expect(hfCard.locator('.member-name')).not.toBeVisible();
-    await page.screenshot({ path: 'screenshots/committee-03-after-dismiss.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/committee/03-after-dismiss.png', fullPage: true });
   });
 
   test('dismissed slot shows Recruit button', async ({ page }) => {
@@ -249,6 +255,7 @@ test.describe('Committee panel — dismissal', () => {
 
     await doCard.locator('.dismiss-btn').click();
     await expect(doCard.locator('.recruit-btn')).toBeVisible();
+    await page.screenshot({ path: 'screenshots/committee/10-dismissed-recruit.png', fullPage: true });
   });
 
   test('dismiss button shows required-Will tooltip when insufficient funds', async ({ page }) => {
@@ -272,6 +279,7 @@ test.describe('Committee panel — notifications', () => {
     await startNewGame(page);
     await openBoardTab(page);
     await expect(page.locator('.notification-badge')).not.toBeVisible();
+    await page.screenshot({ path: 'screenshots/committee/11-no-notifications.png', fullPage: true });
   });
 
   test('no notification sections shown on a fresh game', async ({ page }) => {
@@ -304,6 +312,7 @@ test.describe('Committee panel — tech gate', () => {
 
     // Exactly one of these should be true
     expect(hasRecruit || hasNoCandidate).toBe(true);
+    await page.screenshot({ path: 'screenshots/committee/12-signal-analyst.png', fullPage: true });
   });
 
   test('tech-gate hint mentions a tech requirement when candidate is locked', async ({
