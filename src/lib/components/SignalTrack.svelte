@@ -99,6 +99,8 @@
         font-size: var(--fs-base);
         letter-spacing: 0.2em;
         color: var(--text-dim);
+        width: 5.5rem;
+        padding: 0;
     }
 
     .signal-row {
@@ -146,7 +148,7 @@
     }
 
     .signal-pct {
-        width: 2.5rem;
+        width: 3rem;
         text-align: right;
         font-variant-numeric: tabular-nums;
         font-size: var(--fs-base);
@@ -154,7 +156,7 @@
     }
 
     .divider {
-        height: 1px;
+        /*height: 1px;*/
         background: var(--surface-3);
         margin-top: 0.2rem;
     }

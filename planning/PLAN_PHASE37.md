@@ -142,9 +142,9 @@ After each pass: re-run e2e → regenerate `screenshots/` → manually diff agai
 
 ## Part D — Verification
 
-- `npm run lint` (svelte-check + tsc) must pass after each pass — refactor must not touch behaviour.
-- `npm run test` — unit suite must still pass (engine is unaffected but runs as sanity).
-- `npm run test:e2e` — all 91 tests must still pass; screenshots regenerate.
+- ✅ `npm run lint` (svelte-check + tsc) must pass after each pass — refactor must not touch behaviour.
+- ✅ `npm run test` — unit suite must still pass (engine is unaffected but runs as sanity).
+- ✅ `npm run test:e2e` — all 91 tests must still pass; screenshots regenerate.
 - Manual: spot-check every component visually on Chromium 1920×1080 and a narrow viewport (Phase 17 noted small-screen feed issues in FUTURE_PHASES.md — call out anything we break or improve).
 
 ## Open Questions
