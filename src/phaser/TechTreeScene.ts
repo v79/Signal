@@ -361,7 +361,7 @@ export class TechTreeScene extends Phaser.Scene {
       );
 
       this.addWorldText(colCX[i], 14, `TIER  ${toRoman(i + 1)}`, {
-        fontFamily: 'monospace',
+        fontFamily: 'Tektur',
         fontSize: FS_TIER_HEADER,
         color: '#4a8092',
         align: 'center',
@@ -564,7 +564,7 @@ export class TechTreeScene extends Phaser.Scene {
     // Breakthrough indicator: small ⚡ marker in bottom-left corner
     if (tech.unlockedByBreakthrough) {
       this.addWorldText(x + 6, y + NODE_H - 14, '⚡', {
-        fontFamily: 'monospace',
+        fontFamily: 'Tektur',
         fontSize: '10px',
         color: '#8ab8d0',
       })
@@ -610,7 +610,7 @@ export class TechTreeScene extends Phaser.Scene {
     }
 
     this.addWorldText(x + NODE_W / 2, y + NODE_H - 13, 'ACCESS RESTRICTED', {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_SECONDARY,
       color: '#1e3040',
     }).setOrigin(0.5, 1);
@@ -640,13 +640,13 @@ export class TechTreeScene extends Phaser.Scene {
     }
 
     this.addWorldText(cx, cy + 22, 'SIGNAL SOURCE: UNRESOLVED', {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_SECONDARY,
       color: '#243c52',
     }).setOrigin(0.5, 0);
 
     this.addWorldText(cx, y + NODE_H - 13, 'PENDING SIGNAL ANALYSIS', {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_SECONDARY,
       color: '#1a3048',
     }).setOrigin(0.5, 1);
@@ -658,7 +658,7 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.fillCircle(x + NODE_W - 14, y + 16, 4);
 
     const nameText = this.addWorldText(x + NODE_PAD, y + NODE_PAD, def.name, {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_NODE_NAME,
       color: '#7aaab8',
       wordWrap: { width: NODE_W - NODE_PAD * 2 - 18 },
@@ -669,7 +669,7 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.lineBetween(x + NODE_PAD, sepY, x + NODE_W - NODE_PAD, sepY);
 
     this.addWorldText(x + NODE_PAD, sepY + 5, def.rumourText, {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_SECONDARY,
       color: '#4a6a7a',
       fontStyle: 'italic',
@@ -677,7 +677,7 @@ export class TechTreeScene extends Phaser.Scene {
     }).setOrigin(0, 0);
 
     this.addWorldText(x + NODE_W / 2, y + NODE_H - 13, 'UNCONFIRMED', {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_SECONDARY,
       color: '#2e5060',
     }).setOrigin(0.5, 1);
@@ -692,7 +692,7 @@ export class TechTreeScene extends Phaser.Scene {
     y: number,
   ): void {
     const nameText = this.addWorldText(x + NODE_PAD, y + NODE_PAD, def.name, {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_NODE_NAME,
       color: '#a8c8d8',
       wordWrap: { width: NODE_W - NODE_PAD * 2 },
@@ -708,7 +708,7 @@ export class TechTreeScene extends Phaser.Scene {
 
     if (def.requiresSimultaneous) {
       this.addWorldText(x + NODE_W / 2, barY + 3, '\u2295 ALL FIELDS SIMULTANEOUS', {
-        fontFamily: 'monospace',
+        fontFamily: 'Tektur',
         fontSize: FS_SECONDARY,
         color: '#4a7080',
       }).setOrigin(0.5, 0);
@@ -727,7 +727,7 @@ export class TechTreeScene extends Phaser.Scene {
     this.worldGfx.lineBetween(x + 4, y + 4, x + NODE_W - 4, y + 4);
 
     const nameText = this.addWorldText(x + NODE_PAD, y + NODE_PAD + 4, def.name, {
-      fontFamily: 'monospace',
+      fontFamily: 'Tektur',
       fontSize: FS_NODE_NAME,
       color: '#f0e4a0',
       wordWrap: { width: NODE_W - NODE_PAD * 2 },
@@ -745,7 +745,7 @@ export class TechTreeScene extends Phaser.Scene {
     ];
     if (unlocks.length > 0) {
       this.addWorldText(x + NODE_PAD, barY + 4, '\u25b8 ' + unlocks.join(', '), {
-        fontFamily: 'monospace',
+        fontFamily: 'Tektur',
         fontSize: FS_SECONDARY,
         color: '#4a8858',
         wordWrap: { width: NODE_W - NODE_PAD * 2 },
@@ -777,7 +777,7 @@ export class TechTreeScene extends Phaser.Scene {
       const cssColor = FIELD_COLOURS_CSS[field] ?? '#4a6880';
 
       this.addWorldText(labelX, y, FIELD_ABBR[field] ?? field.slice(0, 3).toUpperCase(), {
-        fontFamily: 'monospace',
+        fontFamily: 'Tektur',
         fontSize: FS_FIELD_LABEL,
         color: discovered ? cssColor : '#4a7080',
       }).setOrigin(0, 0.5);
