@@ -81,7 +81,6 @@
       >{signal.decodeProgress.toFixed(0)}%</span>
     </div>
   </Tooltip>
-  <div class="divider"></div>
 </div>
 
 <style>
@@ -89,7 +88,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
-        padding: 0.6rem 0.6rem 0;
+        padding: 0.6rem 0.6rem 0.8rem;
         background: var(--surface-1);
         border-left: 1px solid var(--border-panel);
         flex-shrink: 0;
@@ -155,9 +154,4 @@
         flex-shrink: 0;
     }
 
-    .divider {
-        /*height: 1px;*/
-        background: var(--surface-3);
-        margin-top: 0.2rem;
-    }
 </style>

@@ -174,7 +174,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 0.6rem;
+    padding: 4px 0.6rem 0.6rem;
     background: var(--surface-1);
     border-right: 1px solid var(--border-panel);
     overflow-y: auto;

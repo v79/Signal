@@ -79,7 +79,7 @@
   --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.6);
 
   /* ── Typography ───────────────────────────────────────────────────────── */
-  --ff-mono: 'Courier New', monospace;
+  --ff-mono: 'Tektur', monospace;
   --ls-wide: 0.1em;
   --ls-wider: 0.15em;
 }
