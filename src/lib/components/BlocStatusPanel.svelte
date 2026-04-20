@@ -257,17 +257,17 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background: #060a10;
-    color: #8aacca;
-    font-family: monospace;
+    background: var(--surface-0);
+    color: var(--text-accent);
+    font-family: var(--ff-mono);
   }
 
   .panel-header {
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: #4a6080;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
+    color: var(--text-dim);
     padding: 8px 12px 6px;
-    border-bottom: 1px solid #1e2530;
+    border-bottom: 1px solid var(--border-panel);
     flex-shrink: 0;
   }
 
@@ -281,8 +281,8 @@
   }
 
   .bloc-row {
-    background: #0a0e14;
-    border: 1px solid #1e2530;
+    background: var(--surface-1);
+    border: 1px solid var(--border-panel);
     border-radius: 2px;
     padding: 6px 8px;
     display: flex;
@@ -293,7 +293,7 @@
   }
 
   .bloc-row:hover {
-    border-color: #2a3a50;
+    border-color: var(--border-active);
   }
 
   .bloc-row.expanded {
@@ -302,7 +302,7 @@
 
   .bloc-row.player-bloc {
     border-color: #2a4a6a;
-    background: #0a1420;
+    background: var(--surface-alt);
   }
 
   .bloc-row.player-bloc:hover {
@@ -320,7 +320,7 @@
   }
 
   .player-label {
-    font-size: 0.5rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.08em;
     padding: 1px 4px;
     border-radius: 2px;
@@ -340,18 +340,18 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: #1e2530;
+    background: var(--border-panel);
   }
 
   .separator-label {
-    font-size: 0.5rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.1em;
-    color: #2a3a50;
+    color: var(--border-active);
     white-space: nowrap;
   }
 
   .bloc-name {
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     color: #a0c8e8;
     display: flex;
     align-items: center;
@@ -359,7 +359,7 @@
   }
 
   .profile-badge {
-    font-size: 0.5rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.06em;
     padding: 1px 4px;
     border-radius: 2px;
@@ -373,7 +373,7 @@
   }
 
   .eliminated-label {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.1em;
     color: #4a3030;
   }
@@ -392,8 +392,8 @@
   }
 
   .will-bar-label {
-    font-size: 0.5rem;
-    color: #4a6080;
+    font-size: var(--fs-xxs);
+    color: var(--text-dim);
     letter-spacing: 0.06em;
     width: 22px;
     flex-shrink: 0;
@@ -414,7 +414,7 @@
   }
 
   .will-value {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     color: #6a8aa8;
     width: 24px;
     text-align: right;
@@ -430,22 +430,22 @@
   }
 
   .stat-label {
-    font-size: 0.5rem;
-    color: #4a6080;
+    font-size: var(--fs-xxs);
+    color: var(--text-dim);
   }
 
   .stat-value {
-    font-size: 0.6rem;
-    color: #8aacca;
+    font-size: var(--fs-sm);
+    color: var(--text-accent);
     min-width: 28px;
   }
 
   .era-badge {
-    font-size: 0.5rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.06em;
-    color: #4a6080;
+    color: var(--text-dim);
     padding: 1px 4px;
-    border: 1px solid #1e2530;
+    border: 1px solid var(--border-panel);
     border-radius: 2px;
     flex-shrink: 0;
   }
@@ -453,7 +453,7 @@
   /* --- Expanded detail section --- */
 
   .bloc-detail {
-    border-top: 1px solid #1e2530;
+    border-top: 1px solid var(--border-panel);
     padding-top: 6px;
     display: flex;
     flex-direction: column;
@@ -469,11 +469,11 @@
   .detail-label {
     font-size: 0.48rem;
     letter-spacing: 0.1em;
-    color: #2a3a50;
+    color: var(--border-active);
   }
 
   .victory-bias-badge {
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.06em;
   }
 
@@ -491,13 +491,13 @@
 
   .detail-stat-label {
     font-size: 0.48rem;
-    color: #4a6080;
+    color: var(--text-dim);
     letter-spacing: 0.06em;
   }
 
   .detail-stat-value {
-    font-size: 0.6rem;
-    color: #8aacca;
+    font-size: var(--fs-sm);
+    color: var(--text-accent);
     min-width: 24px;
   }
 
@@ -514,7 +514,7 @@
   }
 
   .field-abbr {
-    font-size: 0.5rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.06em;
     width: 32px;
     flex-shrink: 0;
@@ -536,8 +536,8 @@
   }
 
   .field-value {
-    font-size: 0.5rem;
-    color: #4a6080;
+    font-size: var(--fs-xxs);
+    color: var(--text-dim);
     width: 22px;
     text-align: right;
     flex-shrink: 0;

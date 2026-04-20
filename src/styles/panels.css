@@ -1,0 +1,118 @@
+/*
+ * Panel utility classes — Signal
+ *
+ * Used by BlocStatusPanel, CompletedProjectsPanel, FacilityOverview,
+ * OngoingActionsPanel, SpaceOverview (and their pickers).
+ *
+ * Migration note (Part C): components currently define .panel / .panel-header
+ * per-file as scoped styles.  When a component is migrated, remove its
+ * scoped definitions and rely on these globals instead.
+ */
+
+/* ── Panel shell ───────────────────────────────────────────────────────── */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Panel header bar ──────────────────────────────────────────────────── */
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--border-panel);
+  flex-shrink: 0;
+  font-size: var(--fs-sm);
+  letter-spacing: var(--ls-wider);
+  color: var(--text-dim);
+}
+
+/* ── Panel content section ─────────────────────────────────────────────── */
+
+.panel-section {
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--border-panel);
+}
+
+.panel-section:last-child {
+  border-bottom: none;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────── */
+
+.panel-empty {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--sp-3);
+}
+
+/* ── Panel title label (used in EventZone, SignalTrack, BoardPanel) ────── */
+
+.panel-title {
+  font-size: var(--fs-xxs);
+  letter-spacing: var(--ls-wider);
+  color: var(--text-muted);
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
+  flex-shrink: 0;
+  font-weight: normal;
+  margin: 0;
+}
+
+/* ── Picker shell (FacilityPicker / SpaceNodePicker) ───────────────────── */
+
+.picker {
+  background: var(--surface-2);
+  border: 1px solid var(--border-active);
+  font-size: var(--fs-md);
+  letter-spacing: 0.04em;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.picker-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.picker-title {
+  font-size: var(--fs-sm);
+  letter-spacing: var(--ls-wider);
+  color: var(--text-accent);
+  flex: 1;
+}
+
+.picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+/* ── Facility row (shared by FacilityPicker / SpaceNodePicker) ─────────── */
+
+.facility-row {
+  display: flex;
+  gap: var(--sp-3);
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #101820;
+  align-items: flex-start;
+}
+
+.facility-row:hover {
+  background: #101825;
+}
+
+.facility-row.unaffordable {
+  opacity: 0.55;
+}

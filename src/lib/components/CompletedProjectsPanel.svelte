@@ -158,11 +158,11 @@
 
 <style>
   .panel-header {
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: #4a6080;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
+    color: var(--text-dim);
     padding: 8px 12px 6px;
-    border-bottom: 1px solid #1e2530;
+    border-bottom: 1px solid var(--border-panel);
     flex-shrink: 0;
   }
 
@@ -174,7 +174,7 @@
   }
 
   .empty-state {
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     color: #3a5070;
     text-align: center;
     padding: 2rem 0;
@@ -188,8 +188,8 @@
   }
 
   .project-card {
-    background: #0a0f18;
-    border: 1px solid #1a2535;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
     border-radius: 3px;
     padding: 0.6rem;
     display: flex;
@@ -207,7 +207,7 @@
     width: 44px;
     height: 44px;
     flex-shrink: 0;
-    background: #0d1520;
+    background: var(--surface-2);
     border: 1px solid #1e2f42;
     border-radius: 2px;
     display: flex;
@@ -229,13 +229,13 @@
   }
 
   .project-name {
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     color: #a0c8e8;
     line-height: 1.3;
   }
 
   .era-badge {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.08em;
     color: #2a5070;
   }

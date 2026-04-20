@@ -38,6 +38,7 @@ test('Help button — open, page through all slides, close', async ({ page }) =>
   const modal = page.locator('[role="dialog"]');
   await expect(modal).toBeVisible();
   await expect(modal.locator('.modal-title')).toHaveText(NARRATIVE_GAME_HELP.title);
+  await page.screenshot({ path: 'screenshots/narrative/01-help-modal-open.png', fullPage: true });
 
   // TRANSMISSION badge should be visible
   await expect(modal.locator('.modal-label')).toHaveText('TRANSMISSION');
@@ -55,10 +56,12 @@ test('Help button — open, page through all slides, close', async ({ page }) =>
   await expect(modal.locator('.nav-btn--next')).not.toBeVisible();
   const closeBtn = modal.locator('.nav-btn--close');
   await expect(closeBtn).toBeVisible();
+  await page.screenshot({ path: 'screenshots/narrative/02-help-modal-final-slide.png', fullPage: true });
   await closeBtn.click();
 
   // Modal should be gone
   await expect(modal).not.toBeVisible();
+  await page.screenshot({ path: 'screenshots/narrative/03-help-modal-closed.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -73,6 +76,7 @@ test('opening narrative — Skip button dismisses immediately', async ({ page })
   const modal = page.locator('[role="dialog"]');
   await expect(modal).toBeVisible();
   await expect(modal.locator('.skip-btn')).toBeVisible();
+  await page.screenshot({ path: 'screenshots/narrative/04-opening-narrative.png', fullPage: true });
 
   // Skip should dismiss without paging through
   await modal.locator('.skip-btn').click();
@@ -80,6 +84,7 @@ test('opening narrative — Skip button dismisses immediately', async ({ page })
 
   // Bloc picker should now be accessible
   await expect(page.locator('button.btn-begin')).toBeVisible();
+  await page.screenshot({ path: 'screenshots/narrative/05-after-skip.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -97,6 +102,7 @@ test('Help modal — keyboard navigation (ArrowRight / ArrowLeft)', async ({ pag
   await page.keyboard.press('ArrowRight');
   const prevBtn = modal.locator('button', { hasText: '← PREV' });
   await expect(prevBtn).not.toBeDisabled();
+  await page.screenshot({ path: 'screenshots/narrative/06-keyboard-slide2.png', fullPage: true });
 
   // ArrowLeft should go back to slide 1 (PREV disabled again)
   await page.keyboard.press('ArrowLeft');

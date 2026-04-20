@@ -130,9 +130,12 @@ test.describe('SpaceOverview panel', () => {
     await page.click('.map-toolbar button:has-text("ASSETS")');
     await expect(spacePanel).toBeVisible();
 
+    await page.screenshot({ path: 'screenshots/space-overview/06-panel-open.png', fullPage: true });
+
     // Close via ✕ button
     await page.click('.panel .close-btn');
     await expect(spacePanel).not.toBeVisible();
+    await page.screenshot({ path: 'screenshots/space-overview/07-panel-closed.png', fullPage: true });
   });
 
   test('shows launch capacity bar with correct used/total values', async ({ page }) => {
@@ -147,7 +150,7 @@ test.describe('SpaceOverview panel', () => {
     const capacityValue = page.locator('.capacity-value');
     await expect(capacityValue).toContainText('5');
 
-    await page.screenshot({ path: 'screenshots/space-01-capacity-bar.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/space-overview/01-capacity-bar.png', fullPage: true });
   });
 
   test('shows facility row with supply toggle for LEO orbital module', async ({ page }) => {
@@ -170,7 +173,7 @@ test.describe('SpaceOverview panel', () => {
     await expect(toggleBtn).toHaveText('ON');
     await expect(toggleBtn).toHaveClass(/on/);
 
-    await page.screenshot({ path: 'screenshots/space-02-facility-row.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/space-overview/02-facility-row.png', fullPage: true });
   });
 
   test('supply toggle switches facility ON → OFF', async ({ page }) => {
@@ -188,7 +191,7 @@ test.describe('SpaceOverview panel', () => {
     // Row should be dimmed (unsupplied class applied)
     await expect(page.locator('.facility-row').first()).toHaveClass(/unsupplied/);
 
-    await page.screenshot({ path: 'screenshots/space-03-toggled-off.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/space-overview/03-toggled-off.png', fullPage: true });
   });
 
   test('supply toggle switches facility OFF → ON', async ({ page }) => {
@@ -206,7 +209,7 @@ test.describe('SpaceOverview panel', () => {
     await expect(toggleBtn).toHaveText('ON');
     await expect(facilityRow).not.toHaveClass(/unsupplied/);
 
-    await page.screenshot({ path: 'screenshots/space-04-toggled-on.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/space-overview/04-toggled-on.png', fullPage: true });
   });
 
   test('upgrade button appears when required tech is discovered', async ({ page }) => {
@@ -221,7 +224,7 @@ test.describe('SpaceOverview panel', () => {
     await expect(upgradeBtn).toBeVisible();
     await expect(upgradeBtn).toContainText('Orbital Laboratory');
 
-    await page.screenshot({ path: 'screenshots/space-05-upgrade-btn.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/space-overview/05-upgrade-btn.png', fullPage: true });
   });
 
   test('upgrade button absent when required tech is not discovered', async ({ page }) => {
@@ -241,6 +244,7 @@ test.describe('SpaceOverview panel', () => {
     const spaceTab = page.locator('.tab-bar button:has-text("NEAR SPACE")');
     await expect(spaceTab).toBeEnabled();
     await expect(spaceTab).not.toHaveClass(/locked/);
+    await page.screenshot({ path: 'screenshots/space-overview/08-near-space-tab-unlocked.png', fullPage: true });
   });
 
   test('EARTH ORBIT section shown in panel', async ({ page }) => {
@@ -250,5 +254,6 @@ test.describe('SpaceOverview panel', () => {
 
     await expect(page.locator('.section-heading:has-text("EARTH ORBIT")')).toBeVisible();
     await expect(page.locator('.section-heading:has-text("LUNAR ORBIT")')).toBeVisible();
+    await page.screenshot({ path: 'screenshots/space-overview/09-orbit-sections.png', fullPage: true });
   });
 });

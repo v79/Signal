@@ -102,6 +102,42 @@ function getAutoCounterMemberName(
 }
 
 /**
+ * Auto-counter a list of events in place. Events whose tags match the player's
+ * board auto-counter tags (and which aren't already resolved or `noCounter`)
+ * are marked resolved with counterType 'counter' and a news item is produced.
+ * Returns the resulting events array (a new array) alongside the news items.
+ */
+function applyAutoCounters(
+  events: EventInstance[],
+  autoCounterTags: string[],
+  eventDefs: Map<string, EventDef>,
+  board: BoardSlots,
+  boardDefs: Map<string, BoardMemberDef>,
+  turn: number,
+  idPrefix: string,
+  newsText: (eventName: string, memberName: string) => string,
+): { events: EventInstance[]; news: NewsItem[] } {
+  if (autoCounterTags.length === 0) return { events, news: [] };
+  const news: NewsItem[] = [];
+  const out = events.map((e) => {
+    if (e.resolved) return e;
+    const def = eventDefs.get(e.defId);
+    if (!def || def.responseTier === 'noCounter') return e;
+    const matchingTag = def.tags.find((t) => autoCounterTags.includes(t));
+    if (!matchingTag) return e;
+    const memberName = getAutoCounterMemberName(board, boardDefs, matchingTag);
+    news.push({
+      id: `${idPrefix}-${e.id}-t${turn}`,
+      turn,
+      text: newsText(def.name, memberName),
+      category: 'event-gain',
+    });
+    return { ...e, resolved: true, resolvedWith: 'counter' as const };
+  });
+  return { events: out, news };
+}
+
+/**
  * Automated portion of the Event Phase:
  *   1. Tick countdowns on all active events.
  *   2. Apply effects of any events that just expired.
@@ -122,30 +158,22 @@ export function executeEventPhase(
 
   // 0. Board auto-counter — resolve matching active events before the countdown tick.
   const autoCounterTags = getBoardAutoCounterTags(player.board, boardDefs);
-  let eventsBeforeTick = [...state.activeEvents];
   const autoCounterNews: NewsItem[] = [];
 
-  if (autoCounterTags.length > 0) {
-    for (let i = 0; i < eventsBeforeTick.length; i++) {
-      const e = eventsBeforeTick[i];
-      if (e.resolved) continue;
-      const evDef = eventDefs.get(e.defId);
-      if (!evDef || evDef.responseTier === 'noCounter') continue;
-      const matchingTag = evDef.tags.find((t) => autoCounterTags.includes(t));
-      if (!matchingTag) continue;
-      const memberName = getAutoCounterMemberName(player.board, boardDefs, matchingTag);
-      eventsBeforeTick[i] = { ...e, resolved: true, resolvedWith: 'counter' as const };
-      autoCounterNews.push({
-        id: `auto-counter-${e.id}-t${state.turn}`,
-        turn: state.turn,
-        text: `${evDef.name} automatically countered by ${memberName}.`,
-        category: 'event-gain' as const,
-      });
-    }
-  }
+  const preTick = applyAutoCounters(
+    state.activeEvents,
+    autoCounterTags,
+    eventDefs,
+    player.board,
+    boardDefs,
+    state.turn,
+    'auto-counter',
+    (eventName, memberName) => `${eventName} automatically countered by ${memberName}.`,
+  );
+  autoCounterNews.push(...preTick.news);
 
   // 1. Tick countdowns
-  const tickedEvents = tickEventCountdowns(eventsBeforeTick);
+  const tickedEvents = tickEventCountdowns(preTick.events);
 
   // 2. Apply effects of events that just expired
   let updatedPlayer = { ...player };
@@ -186,24 +214,19 @@ export function executeEventPhase(
   );
 
   // Auto-counter newly arrived events.
-  let finalNewEvents = newEvents;
-  if (autoCounterTags.length > 0) {
-    for (let i = 0; i < finalNewEvents.length; i++) {
-      const e = finalNewEvents[i];
-      const evDef = eventDefs.get(e.defId);
-      if (!evDef || evDef.responseTier === 'noCounter') continue;
-      const matchingTag = evDef.tags.find((t) => autoCounterTags.includes(t));
-      if (!matchingTag) continue;
-      const memberName = getAutoCounterMemberName(player.board, boardDefs, matchingTag);
-      finalNewEvents[i] = { ...e, resolved: true, resolvedWith: 'counter' as const };
-      autoCounterNews.push({
-        id: `auto-counter-new-${e.id}-t${state.turn}`,
-        turn: state.turn,
-        text: `${evDef.name} intercepted and countered by ${memberName} before it could take effect.`,
-        category: 'event-gain' as const,
-      });
-    }
-  }
+  const postSelect = applyAutoCounters(
+    newEvents,
+    autoCounterTags,
+    eventDefs,
+    player.board,
+    boardDefs,
+    state.turn,
+    'auto-counter-new',
+    (eventName, memberName) =>
+      `${eventName} intercepted and countered by ${memberName} before it could take effect.`,
+  );
+  const finalNewEvents = postSelect.events;
+  autoCounterNews.push(...postSelect.news);
 
   return {
     ...state,
@@ -298,22 +321,32 @@ export function executeWorldPhase(
 
   // 0c. Auto-unsupply any space facilities that completed this tick but would exceed capacity.
   //     Supply defaults to ON (launchAllocation[id] !== false), so we must explicitly set
-  //     to false when there isn't enough headroom.
+  //     to false when there isn't enough headroom. Just-completed nodes are excluded
+  //     from the initial allocated sum so their cost isn't double-counted below.
   const launchAllocationAfterQueue = { ...state.launchAllocation };
   const unsuppliedOnCompletionNews: NewsItem[] = [];
   {
     const supplyCost = (defId: string) => facilityDefs.get(defId)?.supplyCost ?? 0;
+    const newlyCompletedNodeIds = new Set(
+      completedActions.filter((a) => a.spaceNodeId).map((a) => a.spaceNodeId!),
+    );
 
     let allocated = spaceNodesAfterQueue
-      .filter((n) => n.facilityId && launchAllocationAfterQueue[n.id] !== false)
+      .filter(
+        (n) =>
+          n.facilityId &&
+          launchAllocationAfterQueue[n.id] !== false &&
+          !newlyCompletedNodeIds.has(n.id),
+      )
       .reduce((sum, n) => sum + supplyCost(n.facilityId!), 0);
 
     for (const action of completedActions) {
       if (!action.spaceNodeId) continue;
       const cost = supplyCost(action.facilityDefId);
       if (cost === 0) continue;
-      // This node was just set to facilityId in spaceNodesAfterQueue.
-      // It defaults to supplied — check if adding it would exceed capacity.
+      // Respect a pre-existing manual off-toggle (e.g. player unsupplied the node
+      // before queueing an upgrade).
+      if (launchAllocationAfterQueue[action.spaceNodeId] === false) continue;
       if (allocated + cost > newLaunchCapacity) {
         launchAllocationAfterQueue[action.spaceNodeId] = false;
         const facName = facilityDefs.get(action.facilityDefId)?.name ?? action.facilityDefId;
@@ -353,12 +386,14 @@ export function executeWorldPhase(
 
   // 2. Facility output (fields + resources, net of upkeep)
   //    Space facilities where launchAllocation[nodeId] === false are skipped.
+  //    Uses launchAllocationAfterQueue so just-completed facilities that exceeded
+  //    capacity (set to false in step 0c) don't produce output their first turn.
   const { totalFields, totalResources } = computeFacilityOutput(
     facilitiesAfterQueue,
     facilityDefs,
     adjacencyEffects,
     tilesAfterQueue,
-    state.launchAllocation,
+    launchAllocationAfterQueue,
     spaceNodesAfterQueue,
     state.isruOperational,
   );
@@ -414,12 +449,12 @@ export function executeWorldPhase(
   const breakthroughs = checkBreakthroughConditions(
     player.techs, techDefs, newFields, activeFacilityDefIds,
   );
-  let techsAfterBreakthroughs = player.techs.map((tech) => {
-    if (breakthroughs.some((b) => b.techId === tech.defId)) {
-      return { ...tech, stage: 'rumour' as const, unlockedByBreakthrough: true };
-    }
-    return tech;
-  });
+  const breakthroughTechIds = new Set(breakthroughs.map((b) => b.techId));
+  const techsAfterBreakthroughs = player.techs.map((tech) =>
+    breakthroughTechIds.has(tech.defId)
+      ? { ...tech, stage: 'rumour' as const, unlockedByBreakthrough: true }
+      : tech,
+  );
 
   // 6b. Distribute research points across rumour/progress techs
   const researchRng = createRng(`${state.seed}-research-t${nextTurn}`);
@@ -641,7 +676,7 @@ export function executeWorldPhase(
     facilityDefs,
     tilesAfterQueue,
     spaceNodesAfterQueue,
-    state.launchAllocation,
+    launchAllocationAfterQueue,
   );
   const exhaustionNews: NewsItem[] = exhaustionMessages.map((text, i) => ({
     id: `mine-exhausted-${nextTurn}-${i}`,
@@ -705,91 +740,54 @@ export function executeWorldPhase(
   const chiefName = chiefScientistMember
     ? (boardDefs.get(chiefScientistMember.defId)?.name ?? 'The Chief Scientist')
     : 'The Chief Scientist';
+  const chiefMemberDefId = chiefScientistMember?.defId ?? 'unknown';
+  const addChiefNote = (condition: boolean, id: string, text: string) => {
+    if (!condition) return;
+    committeeNotificationsAfterBoard = addCommitteeNotification(committeeNotificationsAfterBoard, {
+      id: `${id}-t${nextTurn}`,
+      memberDefId: chiefMemberDefId,
+      text,
+      turnCreated: nextTurn,
+      dismissed: false,
+    });
+  };
+  const stageCompleted = (id: string) => projectTickResult.completedDefIds.includes(id);
 
-  if (proposalResurfaces) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `board-proposal-reminder-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName} is again urging the board to authorise the Permanent Orbital Station programme. The proposal has been returned to the agenda.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
-  if (projectTickResult.completedDefIds.includes('orbitalStation_stage1')) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `orbital-stage1-complete-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName}: The Core Module is now in orbit. Phase one of the Orbital Station programme is complete. Construction of the Habitation Ring can begin immediately.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
-  if (projectTickResult.completedDefIds.includes('orbitalStation_stage2')) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `orbital-stage2-complete-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName}: The Habitation Ring has been successfully joined. The station is ready for final systems integration — one more phase and it becomes fully operational.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
-  if (opensEra2) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `station-commander-slot-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName}: With the Station now operational, we should appoint a Station Commander. The role is now open for recruitment.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
-  if (projectTickResult.completedDefIds.includes('moonColony_stage1')) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `moon-colony-stage1-complete-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName}: Habitat expansion is complete. The lunar outpost now supports a permanent crew. ISRU systems can begin construction.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
-  if (projectTickResult.completedDefIds.includes('moonColony_stage2')) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `moon-colony-stage2-complete-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName}: In-situ resource utilisation is now online. The colony produces its own oxygen, water, and materials. Lunar surface facility supply costs are eliminated.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
-  if (moonColonyProposalResurfaces) {
-    committeeNotificationsAfterBoard = addCommitteeNotification(
-      committeeNotificationsAfterBoard,
-      {
-        id: `moon-colony-proposal-reminder-t${nextTurn}`,
-        memberDefId: chiefScientistMember?.defId ?? 'unknown',
-        text: `${chiefName} is again urging the board to authorise the Moon Colony programme. The proposal has been returned to the agenda.`,
-        turnCreated: nextTurn,
-        dismissed: false,
-      },
-    );
-  }
+  addChiefNote(
+    proposalResurfaces,
+    'board-proposal-reminder',
+    `${chiefName} is again urging the board to authorise the Permanent Orbital Station programme. The proposal has been returned to the agenda.`,
+  );
+  addChiefNote(
+    stageCompleted('orbitalStation_stage1'),
+    'orbital-stage1-complete',
+    `${chiefName}: The Core Module is now in orbit. Phase one of the Orbital Station programme is complete. Construction of the Habitation Ring can begin immediately.`,
+  );
+  addChiefNote(
+    stageCompleted('orbitalStation_stage2'),
+    'orbital-stage2-complete',
+    `${chiefName}: The Habitation Ring has been successfully joined. The station is ready for final systems integration — one more phase and it becomes fully operational.`,
+  );
+  addChiefNote(
+    opensEra2,
+    'station-commander-slot',
+    `${chiefName}: With the Station now operational, we should appoint a Station Commander. The role is now open for recruitment.`,
+  );
+  addChiefNote(
+    stageCompleted('moonColony_stage1'),
+    'moon-colony-stage1-complete',
+    `${chiefName}: Habitat expansion is complete. The lunar outpost now supports a permanent crew. ISRU systems can begin construction.`,
+  );
+  addChiefNote(
+    stageCompleted('moonColony_stage2'),
+    'moon-colony-stage2-complete',
+    `${chiefName}: In-situ resource utilisation is now online. The colony produces its own oxygen, water, and materials. Lunar surface facility supply costs are eliminated.`,
+  );
+  addChiefNote(
+    moonColonyProposalResurfaces,
+    'moon-colony-proposal-reminder',
+    `${chiefName} is again urging the board to authorise the Moon Colony programme. The proposal has been returned to the agenda.`,
+  );
 
   // 16. Signal progress tick — starts from post-project signal so project
   //     rewards (one-time signal boosts) are included before further ticking.
@@ -863,15 +861,14 @@ export function executeWorldPhase(
   const newEarthWelfare = tickEarthWelfare(state);
 
   // Assemble updated active events list (carry over non-resolved + any new ones)
-  const eventsAfterWorld = [
-    ...state.activeEvents,
-    ...pendingEventInstances,
-    ...(newBoardProposalEvent ? [newBoardProposalEvent] : []),
-    ...(resurfacedProposalEvent ? [resurfacedProposalEvent] : []),
-    ...(engineeringChallengeEvent ? [engineeringChallengeEvent] : []),
-    ...(newMoonColonyProposalEvent ? [newMoonColonyProposalEvent] : []),
-    ...(resurfacedMoonColonyEvent ? [resurfacedMoonColonyEvent] : []),
-  ];
+  const worldPhaseEvents = [
+    newBoardProposalEvent,
+    resurfacedProposalEvent,
+    engineeringChallengeEvent,
+    newMoonColonyProposalEvent,
+    resurfacedMoonColonyEvent,
+  ].filter((e): e is EventInstance => e !== null);
+  const eventsAfterWorld = [...state.activeEvents, ...pendingEventInstances, ...worldPhaseEvents];
 
   // Assemble the next state (outcome checked below)
   const nextState: GameState = {

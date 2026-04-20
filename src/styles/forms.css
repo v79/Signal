@@ -1,0 +1,36 @@
+/*
+ * Form element styles — Signal
+ *
+ * Minimal: only one interactive input exists today (a range in HUD.svelte).
+ * Placeholder file so the token vocabulary is available if inputs are added.
+ */
+
+/* ── Range / slider ────────────────────────────────────────────────────── */
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-accent);
+  cursor: pointer;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-accent);
+  border: none;
+  cursor: pointer;
+}

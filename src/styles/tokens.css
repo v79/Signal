@@ -1,0 +1,85 @@
+/*
+ * Design tokens — Signal
+ *
+ * Canonical values derived from the B.1 CSS audit (planning/DESIGN_css_audit.md).
+ * All components should reference these vars rather than raw hex/rem literals.
+ *
+ * Mapping guide (for Part C migration):
+ *   surface-0  ← #060a10        surface-1  ← #0a1018 / #0a0e14
+ *   surface-2  ← #0d1520        surface-3  ← #1a2030 / #1a2535
+ *   border-panel ← #1e2530      border-subtle ← #1a2535
+ *   fs-xxs ← 0.45–0.5rem        fs-xs  ← 0.52–0.56rem
+ *   fs-sm  ← 0.58–0.63rem       fs-base← 0.65–0.68rem
+ *   fs-md  ← 0.7–0.76rem        fs-lg  ← 0.78–0.9rem
+ *   fs-xl  ← 1.0rem+
+ */
+
+:root {
+  /* ── Surface palette (dark → lighter) ─────────────────────────────────── */
+  --surface-0:   #060a10;   /* deepest — page backdrop, modal scrim         */
+  --surface-1:   #0a1018;   /* panel body (most common bg, 11 audit uses)   */
+  --surface-2:   #0d1520;   /* secondary surfaces, picker bg                */
+  --surface-3:   #1a2030;   /* raised row / hover state                     */
+  --surface-alt: #0a1420;   /* space / bloc area tint                       */
+
+  /* ── Borders ──────────────────────────────────────────────────────────── */
+  --border-panel:  #1e2530; /* primary panel border (31 uses, 16 files)     */
+  --border-subtle: #1a2535; /* lighter variant (12 uses)                    */
+  --border-active: #2a3a50; /* focus / active border                        */
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --text-primary: #c8d0d8;  /* body text                                    */
+  --text-accent:  #8aacca;  /* label / accent (most-used text colour)       */
+  --text-muted:   #3a5060;  /* secondary / dimmer text                      */
+  --text-dim:     #4a6080;  /* very dim — panel sub-labels, counts          */
+
+  /* ── Semantic states ──────────────────────────────────────────────────── */
+  --ok:            #4a9b7a;
+  --ok-border:     #2a6050;
+  --ok-hover:      #0a2018;
+
+  --warn:          #c8a040;
+  --warn-border:   #7a5a1a;
+  --warn-hover:    #2a1a05;
+
+  --danger:        #c04040;
+  --danger-border: #602020;
+  --danger-hover:  #200808;
+
+  --info:          #4a9bd8;
+  --info-border:   #2a5080;
+  --info-hover:    #081828;
+
+  /* ── Resource colours ─────────────────────────────────────────────────── */
+  --funding:           #c8d050;
+  --funding-negative:  #d46a4a;
+  --materials:         #8b5e3c;  /* canonical since Phase 17                */
+  --will:              #b07ad0;
+
+  /* ── Type scale ───────────────────────────────────────────────────────── */
+  --fs-xxs:  0.5rem;    /* tiny labels, badges            (0.45–0.50)       */
+  --fs-xs:   0.55rem;   /* secondary labels               (0.52–0.56)       */
+  --fs-sm:   0.6rem;    /* small body — dominant cluster  (0.58–0.63)       */
+  --fs-base: 0.65rem;   /* base body — second peak        (0.65–0.68)       */
+  --fs-md:   0.72rem;   /* compact-panel headings         (0.70–0.76)       */
+  --fs-lg:   0.85rem;   /* section headings               (0.78–0.90)       */
+  --fs-xl:   1rem;      /* modal headings                 (1.0+)            */
+
+  /* ── Spacing ──────────────────────────────────────────────────────────── */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+
+  /* ── Radii ────────────────────────────────────────────────────────────── */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+
+  /* ── Shadows ──────────────────────────────────────────────────────────── */
+  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.6);
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  --ff-mono: 'Tektur', monospace;
+  --ls-wide: 0.1em;
+  --ls-wider: 0.15em;
+}

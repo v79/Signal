@@ -35,6 +35,7 @@ test('tech tree — TECH TREE button is visible in the research feed', async ({ 
   const btn = page.locator('.tree-btn');
   await expect(btn).toBeVisible();
   await expect(btn).toHaveText('TECH TREE');
+  await page.screenshot({ path: 'screenshots/tech-tree/03-button-in-feed.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -56,7 +57,7 @@ test('tech tree — modal opens with title and canvas on button click', async ({
   const canvas = modal.locator('canvas');
   await expect(canvas).toBeVisible();
 
-  await page.screenshot({ path: 'screenshots/tech-tree-open.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/tech-tree/01-open.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -67,9 +68,11 @@ test('tech tree — close button dismisses the modal', async ({ page }) => {
   await startNewGame(page);
   await openTechTree(page);
 
+  await page.screenshot({ path: 'screenshots/tech-tree/04-before-close.png', fullPage: true });
   await page.click('.close-btn');
 
   await expect(page.locator('[aria-label="Tech Tree"]')).toBeHidden();
+  await page.screenshot({ path: 'screenshots/tech-tree/05-after-close.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -117,7 +120,7 @@ test('tech tree — modal can be reopened after closing', async ({ page }) => {
 
   await openTechTree(page);
   await expect(page.locator('[aria-label="Tech Tree"]')).toBeVisible();
-  await page.screenshot({ path: 'screenshots/tech-tree-reopened.png', fullPage: true });
+  await page.screenshot({ path: 'screenshots/tech-tree/02-reopened.png', fullPage: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -134,4 +137,5 @@ test('tech tree — game phase controls still work after closing modal', async (
   await page.getByText('END TURN ⟳').click();
   await page.waitForTimeout(800);
   await expect(page.getByText('END TURN ⟳')).toBeVisible();
+  await page.screenshot({ path: 'screenshots/tech-tree/06-game-after-modal.png', fullPage: true });
 });

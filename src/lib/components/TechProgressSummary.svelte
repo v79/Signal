@@ -64,14 +64,14 @@
 
 <style>
   .summary-header {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.18em;
     color: #3a5060;
     padding: 0.3rem 0.6rem;
-    border-top: 1px solid #1e2530;
-    border-bottom: 1px solid #141c26;
+    border-top: 1px solid var(--border-panel);
+    border-bottom: 1px solid var(--surface-3);
     flex-shrink: 0;
-    background: #060a10;
+    background: var(--surface-0);
   }
 
   .summary {
@@ -85,7 +85,7 @@
   }
 
   .empty {
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     color: #3a4a5a;
     margin: 0;
     padding: 0.4rem 0;
@@ -97,13 +97,13 @@
     flex-direction: column;
     gap: 0.3rem;
     padding: 0.45rem 0.5rem;
-    background: #0a1018;
-    border: 1px solid #1a2530;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
     border-radius: 2px;
   }
 
   .tech-name {
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     color: #8ab8c8;
     letter-spacing: 0.04em;
     line-height: 1.2;
@@ -122,14 +122,14 @@
   }
 
   .abbr {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     width: 2.2rem;
     flex-shrink: 0;
     letter-spacing: 0.06em;
   }
 
   .raw {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     color: #2a4050;
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
@@ -140,7 +140,7 @@
   .track {
     flex: 1;
     height: 4px;
-    background: #131e28;
+    background: var(--surface-3);
     border-radius: 2px;
     overflow: hidden;
   }

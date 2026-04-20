@@ -203,14 +203,14 @@
     align-items: stretch;
     gap: 0;
     padding: 0.5rem 0.75rem;
-    border-top: 1px solid #1e2530;
-    background: #090d14;
+    border-top: 1px solid var(--border-panel);
+    background: var(--surface-0);
     overflow-x: auto;
     flex-shrink: 0;
   }
 
   .zone-label {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.2em;
     color: #3a4858;
     display: block;
@@ -224,7 +224,7 @@
 
   .bank-divider {
     width: 1px;
-    background: #1e2530;
+    background: var(--border-panel);
     margin: 0 0.75rem;
     flex-shrink: 0;
   }
@@ -246,7 +246,7 @@
   }
 
   .phase-hint {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     color: #2a3848;
     font-style: italic;
   }
@@ -265,12 +265,12 @@
     border: 1px solid;
     width: 11rem;
     flex-shrink: 0;
-    font-size: 0.7rem;
+    font-size: var(--fs-md);
     position: relative;
   }
 
   .card.hand {
-    border-color: #2a4060;
+    border-color: var(--info-border);
     background: #0d1a28;
   }
   .card.banked {
@@ -285,11 +285,11 @@
   }
 
   .counter-badge {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.1em;
-    color: #c8a040;
+    color: var(--warn);
     background: #1a1400;
-    border: 1px solid #5a4a10;
+    border: 1px solid var(--warn-border);
     padding: 0.1rem 0.3rem;
     text-align: center;
     margin-bottom: 0.1rem;
@@ -302,15 +302,15 @@
   }
 
   .card-name {
-    color: #c8d0d8;
+    color: var(--text-primary);
     font-size: 0.75rem;
     letter-spacing: 0.04em;
     line-height: 1.2;
   }
 
   .counter-tag {
-    font-size: 0.65rem;
-    color: #c8a040;
+    font-size: var(--fs-base);
+    color: var(--warn);
     cursor: help;
   }
 
@@ -327,21 +327,21 @@
 
   .card-flavour {
     color: #3a4858;
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     font-style: italic;
     line-height: 1.35;
     flex: 1;
   }
 
   .counter-info {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     color: #8a6a20;
     border-top: 1px solid #3a2a08;
     padding-top: 0.2rem;
   }
 
   .bank-since {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     color: #6a5020;
   }
 
@@ -353,7 +353,7 @@
 
   .btn {
     font-family: inherit;
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.1em;
     padding: 0.25rem 0.4rem;
     border: 1px solid;
@@ -369,19 +369,19 @@
   }
 
   .btn-play {
-    color: #4a9b7a;
-    border-color: #2a6050;
+    color: var(--ok);
+    border-color: var(--ok-border);
   }
   .btn-play:not(.disabled):hover {
-    background: #0a2018;
+    background: var(--ok-hover);
   }
 
   .btn-bank {
-    color: #c8a040;
-    border-color: #7a5a1a;
+    color: var(--warn);
+    border-color: var(--warn-border);
   }
   .btn-bank:not(.disabled):hover {
-    background: #2a1a05;
+    background: var(--warn-hover);
   }
 
   .btn-unbank {
@@ -395,7 +395,7 @@
 
   .empty-hand {
     color: #2a3848;
-    font-size: 0.7rem;
+    font-size: var(--fs-md);
     font-style: italic;
     padding: 0.5rem;
     align-self: center;

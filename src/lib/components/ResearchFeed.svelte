@@ -52,20 +52,20 @@
     flex-direction: column;
     gap: 0.4rem;
     padding: 0.5rem 0.6rem;
-    border-top: 1px solid #1a2030;
+    border-top: 1px solid var(--surface-3);
     background: #060c18;
     flex-shrink: 0;
   }
 
   .climax-title {
-    font-size: 0.62rem;
-    letter-spacing: 0.15em;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
     color: #6ab0d8;
     font-weight: 600;
   }
 
   .climax-intro {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     color: #5a7080;
     margin: 0;
     line-height: 1.4;
@@ -78,7 +78,7 @@
     padding: 0.35rem 0.5rem;
     background: #0a1828;
     border: 1px solid #1a3050;
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: inherit;
     text-align: left;
@@ -90,42 +90,42 @@
 
   .response-option:hover {
     background: #0f2038;
-    border-color: #2a5080;
+    border-color: var(--info-border);
   }
 
   .opt-label {
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     color: #8ab8d8;
     flex: 1;
     line-height: 1.3;
   }
 
   .opt-hint {
-    font-size: 0.55rem;
-    letter-spacing: 0.1em;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-wide);
     padding: 0.1rem 0.3rem;
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
     flex-shrink: 0;
   }
 
   .hint-high {
     color: #4ad480;
-    background: #0a2818;
+    background: var(--ok-hover);
   }
   .hint-medium {
     color: #d4a840;
-    background: #1e1408;
+    background: var(--warn-hover);
   }
   .hint-low {
-    color: #d46a4a;
-    background: #1e0e08;
+    color: var(--funding-negative);
+    background: var(--danger-hover);
   }
 
   .response-result {
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
+    font-size: var(--fs-base);
+    letter-spacing: var(--ls-wider);
     padding: 0.4rem 0.6rem;
-    border-top: 1px solid #1a2030;
+    border-top: 1px solid var(--surface-3);
     text-align: center;
     font-weight: 600;
     flex-shrink: 0;
@@ -133,11 +133,11 @@
 
   .response-result.success {
     color: #4ad480;
-    background: #0a2818;
+    background: var(--ok-hover);
   }
 
   .response-result.failure {
-    color: #d46a4a;
-    background: #1e0e08;
+    color: var(--funding-negative);
+    background: var(--danger-hover);
   }
 </style>

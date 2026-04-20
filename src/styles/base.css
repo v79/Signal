@@ -1,0 +1,25 @@
+/*
+ * Base resets — Signal
+ *
+ * Global html / body / box-model rules.
+ * Previously lived as :global() blocks in src/routes/+layout.svelte.
+ */
+
+html {
+  font-size: 17px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--ff-mono);
+  overflow: hidden;
+}

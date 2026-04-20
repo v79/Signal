@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import '../styles/index.css';
 
   let { children }: { children: Snippet } = $props();
 </script>
@@ -7,6 +8,11 @@
 <svelte:head>
   <title>Signal: The Game</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400..900&display=swap" rel="stylesheet">
 </svelte:head>
 
 <div class="app">
@@ -14,23 +20,6 @@
 </div>
 
 <style>
-  :global(html) {
-    font-size: 17px;
-  }
-
-  :global(*) {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  :global(body) {
-    background: #0a0a0f;
-    color: #c8d0d8;
-    font-family: 'Courier New', monospace;
-    overflow: hidden;
-  }
-
   .app {
     width: 100vw;
     height: 100vh;

@@ -104,14 +104,14 @@
   }
 
   .panel {
-    background: #0a0e14;
+    background: var(--surface-1);
     border: 1px solid #1e2d40;
     border-top: none;
     width: 220px;
     max-height: 100%;
     display: flex;
     flex-direction: column;
-    box-shadow: 4px 4px 16px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--shadow-panel);
   }
 
   .panel-header {
@@ -119,19 +119,19 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0.6rem;
-    border-bottom: 1px solid #1e2530;
+    border-bottom: 1px solid var(--border-panel);
     flex-shrink: 0;
   }
 
   .title {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.14em;
     color: #4a7a9a;
     flex: 1;
   }
 
   .count {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     color: #3a5060;
     letter-spacing: 0.08em;
   }
@@ -141,7 +141,7 @@
     border: none;
     color: #4a6070;
     font-family: inherit;
-    font-size: 0.7rem;
+    font-size: var(--fs-md);
     cursor: pointer;
     padding: 0 0.1rem;
     line-height: 1;
@@ -160,7 +160,7 @@
 
   .group {
     padding: 0.25rem 0.6rem;
-    border-bottom: 1px solid #111820;
+    border-bottom: 1px solid var(--surface-3);
   }
 
   .group-header {
@@ -171,13 +171,13 @@
   }
 
   .group-name {
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     color: #8aaabb;
     flex: 1;
   }
 
   .group-count {
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     color: #3a5868;
     font-variant-numeric: tabular-nums;
   }
@@ -191,18 +191,18 @@
   }
 
   .tile-type {
-    font-size: 0.58rem;
+    font-size: var(--fs-sm);
     color: #4a6070;
     letter-spacing: 0.06em;
   }
 
   .condition {
-    font-size: 0.55rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.06em;
   }
 
   .empty {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     color: #3a5060;
     text-align: center;
     padding: 1rem;

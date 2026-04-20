@@ -174,24 +174,24 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 0.6rem;
-    background: #0c1018;
-    border-right: 1px solid #1e2530;
+    padding: 4px 0.6rem 0.6rem;
+    background: var(--surface-1);
+    border-right: 1px solid var(--border-panel);
     overflow-y: auto;
     min-width: 0;
   }
 
   .panel-title {
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     letter-spacing: 0.2em;
     color: #5a6878;
-    border-bottom: 1px solid #1e2530;
+    border-bottom: 1px solid var(--border-panel);
     padding-bottom: 0.3rem;
     margin-bottom: 0.2rem;
   }
 
   .empty {
-    font-size: 0.7rem;
+    font-size: var(--fs-md);
     color: #3a4050;
     font-style: italic;
     padding: 0.5rem 0;
@@ -203,21 +203,21 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    font-size: 0.72rem;
+    font-size: var(--fs-md);
   }
 
   .event-card.urgent {
-    border-color: #7a2a2a;
+    border-color: var(--danger-border);
   }
   .event-card.warning {
-    border-color: #7a5a1a;
+    border-color: var(--warn-border);
   }
   .event-card.normal {
     border-color: #2a3545;
   }
   .event-card.proposal {
-    border-color: #2a5080;
-    background: #080f18;
+    border-color: var(--info-border);
+    background: var(--info-hover);
   }
 
   @keyframes slide-out-left {
@@ -245,7 +245,7 @@
   }
 
   .event-name {
-    color: #c8d0d8;
+    color: var(--text-primary);
     font-size: 0.8rem;
     letter-spacing: 0.05em;
   }
@@ -256,10 +256,10 @@
   }
 
   .countdown.urgent {
-    color: #c84a4a;
+    color: var(--danger);
   }
   .countdown.warning {
-    color: #c8a040;
+    color: var(--warn);
   }
   .countdown.normal {
     color: #5a6878;
@@ -272,10 +272,10 @@
   }
 
   .tag {
-    font-size: 0.6rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.08em;
     color: #4a6a8a;
-    border: 1px solid #2a4060;
+    border: 1px solid var(--info-border);
     padding: 0 0.3rem;
   }
 
@@ -297,13 +297,13 @@
   }
 
   .effect-row.negative {
-    color: #c84a4a;
-    background: #1a0a0a;
+    color: var(--danger);
+    background: var(--danger-hover);
   }
 
   .effect-row.positive {
-    color: #4a9b7a;
-    background: #0a1a0f;
+    color: var(--ok);
+    background: var(--ok-hover);
   }
 
   .event-actions {
@@ -315,7 +315,7 @@
 
   .btn {
     font-family: inherit;
-    font-size: 0.62rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.1em;
     padding: 0.3rem 0.5rem;
     border: 1px solid;
@@ -327,27 +327,27 @@
   }
 
   .btn-mitigate {
-    color: #c8a040;
-    border-color: #7a5a1a;
+    color: var(--warn);
+    border-color: var(--warn-border);
   }
   .btn-mitigate:hover {
-    background: #2a1a05;
+    background: var(--warn-hover);
   }
 
   .btn-accept {
-    color: #4a9b7a;
-    border-color: #2a6050;
+    color: var(--ok);
+    border-color: var(--ok-border);
   }
   .btn-accept:hover {
-    background: #0a2018;
+    background: var(--ok-hover);
   }
 
   .btn-authorise {
-    color: #4a9bd8;
-    border-color: #2a5080;
+    color: var(--info);
+    border-color: var(--info-border);
   }
   .btn-authorise:hover {
-    background: #081828;
+    background: var(--info-hover);
   }
 
   .btn-defer {
@@ -359,23 +359,23 @@
   }
 
   .proposal-badge {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.1em;
     color: #4a7aaa;
-    border: 1px solid #2a5080;
+    border: 1px solid var(--info-border);
     padding: 0.1rem 0.35rem;
   }
 
   .btn-cost {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     color: #c88030;
     letter-spacing: 0;
   }
 
   .counter-hint {
-    color: #4a6080;
+    color: var(--text-dim);
     font-style: italic;
-    font-size: 0.65rem;
+    font-size: var(--fs-base);
     align-self: center;
   }
 </style>

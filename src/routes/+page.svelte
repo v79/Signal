@@ -338,7 +338,7 @@
     border-bottom: 1px solid #1e2530;
     border-left: 1px solid #1e2530;
     color: #4a7888;
-    font-family: monospace;
+    font-family: var(--ff-mono);
     font-size: 0.65rem;
     letter-spacing: 0.2em;
     padding: 0.55rem 0;

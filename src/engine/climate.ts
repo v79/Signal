@@ -1,4 +1,4 @@
-import type { MapTile, FacilityInstance, FacilityDef } from './types';
+import type { MapTile, FacilityInstance, FacilityDef, TileDestroyedStatus } from './types';
 import type { Rng } from './rng';
 
 // ---------------------------------------------------------------------------
@@ -6,14 +6,16 @@ import type { Rng } from './rng';
 //
 // Called once per World Phase after climate pressure is updated.
 // Higher pressure raises the probability that tiles degrade spontaneously.
+// Rules at higher thresholds stack with lower ones — each rule gets its own
+// independent roll, so escalating pressure multiplies cumulative risk.
 // ---------------------------------------------------------------------------
 
 interface DegradationRule {
   tileType: MapTile['type'];
-  status: MapTile['destroyedStatus'] & string;
+  status: TileDestroyedStatus;
   /** Probability per turn that one eligible tile of this type degrades. */
   probability: number;
-  newsVerb: string; // "drought" | "flooding"
+  newsVerb: string;
 }
 
 function getRules(climatePressure: number): DegradationRule[] {
@@ -23,11 +25,11 @@ function getRules(climatePressure: number): DegradationRule[] {
     rules.push({ tileType: 'forested', status: 'dustbowl', probability: 0.03, newsVerb: 'drought' });
   }
   if (climatePressure > 70) {
-    rules.push({ tileType: 'forested',     status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
+    rules.push({ tileType: 'forested', status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.03, newsVerb: 'drought' });
   }
   if (climatePressure > 85) {
-    rules.push({ tileType: 'coastal',      status: 'flooded',  probability: 0.04, newsVerb: 'rising sea levels' });
+    rules.push({ tileType: 'coastal', status: 'flooded', probability: 0.04, newsVerb: 'rising sea levels' });
     rules.push({ tileType: 'agricultural', status: 'dustbowl', probability: 0.06, newsVerb: 'drought' });
   }
   if (climatePressure > 80) {
@@ -35,6 +37,21 @@ function getRules(climatePressure: number): DegradationRule[] {
   }
 
   return rules;
+}
+
+const tileKey = (t: MapTile) => `${t.coord.q},${t.coord.r}`;
+
+function hasClimateImmuneFacility(
+  tile: MapTile,
+  facilityById: Map<string, FacilityInstance>,
+  facilityDefs: Map<string, FacilityDef>,
+): boolean {
+  for (const id of tile.facilitySlots) {
+    if (!id) continue;
+    const inst = facilityById.get(id);
+    if (inst && facilityDefs.get(inst.defId)?.climateImmune === true) return true;
+  }
+  return false;
 }
 
 export function applyClimateDegradation(
@@ -47,64 +64,71 @@ export function applyClimateDegradation(
   const rules = getRules(climatePressure);
   if (rules.length === 0) return { changed: false, tiles, facilities, newsText: '' };
 
-  let updatedTiles = [...tiles];
-  let updatedFacilities = [...facilities];
+  // Lazy copies — only allocate once a rule actually fires.
+  let workingTiles: MapTile[] | null = null;
+  let workingFacilities: FacilityInstance[] | null = null;
   const newsLines: string[] = [];
 
-  // Pre-index facilities by id to avoid O(n) scans inside the tile-filtering loop.
-  let facilityById = new Map(updatedFacilities.map((f) => [f.id, f]));
+  // Mutable index of live facilities; updated in place as facilities are removed.
+  const facilityById = new Map(facilities.map((f) => [f.id, f]));
+  // Fixed tile index by coord — tile identity (q,r) doesn't change, only its
+  // slot in the working array.
+  const tileIndexByKey = new Map(tiles.map((t, i) => [tileKey(t), i]));
 
   for (const rule of rules) {
     if (rng.next() >= rule.probability) continue;
 
-    // Candidates: non-destroyed tiles of the target type, excluding sea-wall-protected coastal tiles
-    // and any tile hosting a climate-immune facility (e.g. HQ, Space Launch Centre).
-    const candidates = updatedTiles.filter((t) => {
+    const currentTiles = workingTiles ?? tiles;
+    const candidates = currentTiles.filter((t) => {
       if (t.type !== rule.tileType) return false;
       if (t.destroyedStatus !== null) return false;
       if (rule.status === 'flooded' && t.seaWallProtected) return false;
-      if (t.facilitySlots.some((id) => {
-        if (!id) return false;
-        const f = facilityById.get(id);
-        if (!f) return false;
-        return facilityDefs.get(f.defId)?.climateImmune === true;
-      })) return false;
+      if (hasClimateImmuneFacility(t, facilityById, facilityDefs)) return false;
       return true;
     });
 
     if (candidates.length === 0) continue;
 
     const chosen = candidates[Math.floor(rng.next() * candidates.length)];
-    const chosenKey = `${chosen.coord.q},${chosen.coord.r}`;
+    const chosenIdx = tileIndexByKey.get(tileKey(chosen))!;
 
-    // Collect facility IDs on the chosen tile, excluding climate-immune facilities.
-    const slotIds = new Set(chosen.facilitySlots.filter(Boolean) as string[]);
-    const facilsToRemove = updatedFacilities.filter((f) => {
-      if (!slotIds.has(f.id)) return false;
-      return facilityDefs.get(f.defId)?.climateImmune !== true;
-    });
-    const removeIds = new Set(facilsToRemove.map((f) => f.id));
+    if (workingTiles === null) workingTiles = [...tiles];
+    workingTiles[chosenIdx] = {
+      ...chosen,
+      destroyedStatus: rule.status,
+      facilitySlots: [null, null, null],
+      pendingActionId: null,
+    };
 
-    // Destroy the tile: clear all slots, set status
-    updatedTiles = updatedTiles.map((t) =>
-      `${t.coord.q},${t.coord.r}` === chosenKey
-        ? { ...t, destroyedStatus: rule.status, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null }
-        : t,
-    );
-
-    // Remove all non-immune facilities from the destroyed tile; rebuild index.
-    updatedFacilities = updatedFacilities.filter((f) => !removeIds.has(f.id));
-    facilityById = new Map(updatedFacilities.map((f) => [f.id, f]));
+    // Remove non-immune facilities occupying the destroyed tile. Climate-immune
+    // facilities can't be on a degrading tile (filter above excludes them), so
+    // every slot ID here belongs to a facility slated for removal — but we
+    // still check the def in case of stale/orphaned IDs.
+    const removeIds = new Set<string>();
+    for (const id of chosen.facilitySlots) {
+      if (!id) continue;
+      const inst = facilityById.get(id);
+      if (inst && facilityDefs.get(inst.defId)?.climateImmune !== true) {
+        removeIds.add(id);
+      }
+    }
+    if (removeIds.size > 0) {
+      if (workingFacilities === null) workingFacilities = [...facilities];
+      workingFacilities = workingFacilities.filter((f) => !removeIds.has(f.id));
+      for (const id of removeIds) facilityById.delete(id);
+    }
 
     newsLines.push(`A ${rule.tileType} tile has been lost to ${rule.newsVerb}.`);
   }
 
-  if (newsLines.length === 0) return { changed: false, tiles, facilities, newsText: '' };
+  if (newsLines.length === 0) {
+    return { changed: false, tiles, facilities, newsText: '' };
+  }
 
   return {
     changed: true,
-    tiles: updatedTiles,
-    facilities: updatedFacilities,
+    tiles: workingTiles ?? tiles,
+    facilities: workingFacilities ?? facilities,
     newsText: newsLines.join(' '),
   };
 }
