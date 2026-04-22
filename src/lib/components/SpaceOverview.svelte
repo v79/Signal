@@ -118,18 +118,22 @@
           {@const upgradeDef = upgradableNodeIds[entry.node.id]}
           <div class="facility-row" class:unsupplied={!supplied}>
             <div class="row-main">
-              <span class="node-label">{entry.node.label}</span>
-              <span class="item-name">{entry.def!.name}</span>
+              <div class="row-left">
+                <span class="node-label">{entry.node.label}</span>
+                <span class="item-name">{entry.def!.name}</span>
+              </div>
               {#if supplyCost > 0}
-                <span class="supply-cost">{supplyCost}u</span>
-                <button
-                  class="toggle-btn"
-                  class:on={supplied}
-                  disabled={!supplied && !canToggleOn(entry.node.id, supplyCost)}
-                  onclick={() => onToggleSupply(entry.node.id)}
-                >
-                  {supplied ? 'ON' : 'OFF'}
-                </button>
+                <div class="supply-controls">
+                  <span class="supply-cost">{supplyCost}u</span>
+                  <button
+                    class="toggle-btn"
+                    class:on={supplied}
+                    disabled={!supplied && !canToggleOn(entry.node.id, supplyCost)}
+                    onclick={() => onToggleSupply(entry.node.id)}
+                  >
+                    {supplied ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               {/if}
             </div>
             {#if upgradeDef}
@@ -285,7 +289,10 @@
   }
 
   .facility-row {
-    padding: 0.15rem 0.6rem 0.15rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.15rem 0.6rem 0.25rem 0.9rem;
     transition: opacity 0.15s;
   }
 
@@ -295,8 +302,25 @@
 
   .row-main {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.4rem;
+  }
+
+  .row-left {
+    display: flex;
     align-items: baseline;
     gap: 0.35rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .supply-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
   }
 
   .row {
@@ -317,7 +341,7 @@
   .item-name {
     font-size: var(--fs-sm);
     color: #8aaabb;
-    flex: 1;
+    min-width: 0;
   }
 
   .supply-cost {
@@ -352,7 +376,9 @@
   }
 
   .upgrade-row {
-    margin-top: 0.2rem;
+    display: block;
+    width: 100%;
+    padding-left: 2.35rem;
   }
 
   .upgrade-btn {
@@ -366,6 +392,7 @@
     font-family: var(--ff-mono);
     border-radius: 2px;
     transition: all 0.1s;
+    white-space: nowrap;
   }
 
   .upgrade-btn:hover {
