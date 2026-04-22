@@ -10,7 +10,7 @@ import {
   formatEffectForNews,
 } from './events';
 import { createRng } from './rng';
-import type { EventDef, EventInstance, PlayerState } from './types';
+import type { EventDef, EventInstance, FacilityDef, PlayerState } from './types';
 import { ZERO_FIELDS, ZERO_RESOURCES } from './state';
 
 // ---------------------------------------------------------------------------
@@ -460,30 +460,35 @@ describe('getEffectForResolution', () => {
 
 describe('applyEventEffect', () => {
   const rng = createRng('test');
+  const facilityDefs = new Map<string, FacilityDef>([
+    ['hq', { climateImmune: true } as unknown as FacilityDef],
+    ['spaceLaunchCentre', { climateImmune: true } as unknown as FacilityDef],
+    ['offshoreWindFarm', {} as unknown as FacilityDef],
+  ]);
 
   it('applies resource delta to player', () => {
     const effect = { resources: { funding: -20, materials: 10 } };
-    const { player } = applyEventEffect(effect, basePlayer, [], 5, rng);
+    const { player } = applyEventEffect(effect, basePlayer, [], 5, rng, facilityDefs);
     expect(player.resources.funding).toBe(80);
     expect(player.resources.materials).toBe(60);
   });
 
   it('allows funding to go negative; clamps materials at 0', () => {
-    const { player: p1 } = applyEventEffect({ resources: { funding: -999 } }, basePlayer, [], 5, rng);
+    const { player: p1 } = applyEventEffect({ resources: { funding: -999 } }, basePlayer, [], 5, rng, facilityDefs);
     expect(p1.resources.funding).toBe(basePlayer.resources.funding - 999);
-    const { player: p2 } = applyEventEffect({ resources: { materials: -999 } }, basePlayer, [], 5, rng);
+    const { player: p2 } = applyEventEffect({ resources: { materials: -999 } }, basePlayer, [], 5, rng, facilityDefs);
     expect(p2.resources.materials).toBe(0);
   });
 
   it('applies field delta to player', () => {
     const effect = { fields: { physics: 10 } };
-    const { player } = applyEventEffect(effect, basePlayer, [], 5, rng);
+    const { player } = applyEventEffect(effect, basePlayer, [], 5, rng, facilityDefs);
     expect(player.fields.physics).toBe(10);
   });
 
   it('handles effects with no resource or field changes', () => {
     const effect = {};
-    const { player } = applyEventEffect(effect, basePlayer, [], 5, rng);
+    const { player } = applyEventEffect(effect, basePlayer, [], 5, rng, facilityDefs);
     expect(player.resources).toEqual(basePlayer.resources);
   });
 
@@ -492,7 +497,7 @@ describe('applyEventEffect', () => {
       { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
       { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
-    const { mapTiles } = applyEventEffect({ destroyTile: { coordKey: '1,0', status: 'flooded' } }, basePlayer, tiles, 1, rng);
+    const { mapTiles } = applyEventEffect({ destroyTile: { coordKey: '1,0', status: 'flooded' } }, basePlayer, tiles, 1, rng, facilityDefs);
     expect(mapTiles.find(t => t.coord.q === 1 && t.coord.r === 0)?.destroyedStatus).toBe('flooded');
     expect(mapTiles.find(t => t.coord.q === 0 && t.coord.r === 0)?.destroyedStatus).toBeNull();
   });
@@ -505,7 +510,7 @@ describe('applyEventEffect', () => {
     ];
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
-      basePlayer, tiles, 1, createRng('seed-a'),
+      basePlayer, tiles, 1, createRng('seed-a'), facilityDefs,
     );
     const destroyed = mapTiles.filter(t => t.destroyedStatus === 'flooded');
     expect(destroyed).toHaveLength(1);
@@ -524,14 +529,14 @@ describe('applyEventEffect', () => {
     };
     const { player, mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
-      playerWithFacility, tiles, 1, createRng('seed-b'),
+      playerWithFacility, tiles, 1, createRng('seed-b'), facilityDefs,
     );
     expect(mapTiles[0].destroyedStatus).toBe('flooded');
     expect(mapTiles[0].facilitySlots.every((s) => s === null)).toBe(true);
     expect(player.facilities).toHaveLength(0);
   });
 
-  it('tileTypeTarget: never destroys the HQ tile', () => {
+  it('tileTypeTarget: never destroys a tile hosting a climate-immune facility (HQ)', () => {
     const facilityId = 'hq-inst';
     const tiles = [
       { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [facilityId, facilityId, facilityId] as [string, string, string], pendingActionId: null },
@@ -542,10 +547,26 @@ describe('applyEventEffect', () => {
     };
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'urban', destroyTileStatus: 'flooded' },
-      playerWithHq, tiles, 1, createRng('seed-c'),
+      playerWithHq, tiles, 1, createRng('seed-c'), facilityDefs,
     );
-    // Only candidate was the HQ tile — should not be destroyed
     expect(mapTiles[0].destroyedStatus).toBeNull();
+  });
+
+  it('tileTypeTarget: never destroys a tile hosting a Space Launch Centre', () => {
+    const facilityId = 'slc-inst';
+    const tiles = [
+      { coord: { q: 0, r: 0 }, type: 'agricultural' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [facilityId, null, null] as [string | null, null, null], pendingActionId: null },
+    ];
+    const playerWithSlc: PlayerState = {
+      ...basePlayer,
+      facilities: [{ id: facilityId, defId: 'spaceLaunchCentre', locationKey: '0,0', condition: 1, builtTurn: 1 }],
+    };
+    const { mapTiles, player } = applyEventEffect(
+      { tileTypeTarget: 'agricultural', destroyTileStatus: 'dustbowl' },
+      playerWithSlc, tiles, 1, createRng('seed-slc'), facilityDefs,
+    );
+    expect(mapTiles[0].destroyedStatus).toBeNull();
+    expect(player.facilities).toHaveLength(1);
   });
 
   it('tileTypeTarget: skips already-destroyed tiles', () => {
@@ -554,7 +575,7 @@ describe('applyEventEffect', () => {
     ];
     const { mapTiles } = applyEventEffect(
       { tileTypeTarget: 'coastal', destroyTileStatus: 'flooded' },
-      basePlayer, tiles, 1, rng,
+      basePlayer, tiles, 1, rng, facilityDefs,
     );
     expect(mapTiles[0].destroyedStatus).toBe('flooded'); // unchanged, was already destroyed
   });

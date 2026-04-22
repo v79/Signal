@@ -152,6 +152,7 @@ export function executeEventPhase(
   eventDefs: Map<string, EventDef>,
   eventPool: EventDef[],
   boardDefs: Map<string, BoardMemberDef>,
+  facilityDefs: Map<string, FacilityDef>,
   rng: Rng,
 ): GameState {
   const { player } = state;
@@ -187,7 +188,7 @@ export function executeEventPhase(
     if (!def) continue;
     const effect = getEffectForResolution(def, 'expired');
     if (!effect) continue;
-    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn, rng, updatedSignalFromEvents);
+    const result = applyEventEffect(effect, updatedPlayer, updatedTiles, state.turn, rng, facilityDefs, updatedSignalFromEvents);
     updatedPlayer = result.player;
     updatedTiles = result.mapTiles;
     if (result.signal) updatedSignalFromEvents = result.signal;

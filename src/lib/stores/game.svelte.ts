@@ -790,7 +790,7 @@ export const gameStore = {
     let updatedSignal = _state.signal;
     if (residualEffect) {
       const eventRng = createRng(`${_state.seed}-mitigate-${eventId}-t${_state.turn}`);
-      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn, eventRng, _state.signal);
+      const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn, eventRng, FACILITY_DEFS, _state.signal);
       playerAfterCost = result.player;
       updatedTiles = result.mapTiles;
       if (result.signal) updatedSignal = result.signal;
@@ -834,7 +834,7 @@ export const gameStore = {
     let updatedSignal = _state.signal;
     if (effect) {
       const eventRng = createRng(`${_state.seed}-accept-${eventId}-t${_state.turn}`);
-      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, _state.signal);
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, FACILITY_DEFS, _state.signal);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
       if (result.signal) updatedSignal = result.signal;
@@ -922,7 +922,7 @@ export const gameStore = {
     let updatedSignal = _state.signal;
     if (effect) {
       const eventRng = createRng(`${_state.seed}-decline-${eventId}-t${_state.turn}`);
-      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, _state.signal);
+      const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, FACILITY_DEFS, _state.signal);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
       if (result.signal) updatedSignal = result.signal;
@@ -1203,7 +1203,7 @@ export const gameStore = {
         goto('/summary');
         return;
       }
-      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], BOARD_DEFS, rng);
+      next = executeEventPhase(next, EVENT_DEFS, [...EVENT_DEFS.values()], BOARD_DEFS, FACILITY_DEFS, rng);
       next = executeDrawPhase(next, rng);
       mutateState(next);
     }

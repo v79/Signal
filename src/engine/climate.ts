@@ -83,8 +83,7 @@ export function applyClimateDegradation(
       if (t.type !== rule.tileType) return false;
       if (t.destroyedStatus !== null) return false;
       if (rule.status === 'flooded' && t.seaWallProtected) return false;
-      if (hasClimateImmuneFacility(t, facilityById, facilityDefs)) return false;
-      return true;
+      return !hasClimateImmuneFacility(t, facilityById, facilityDefs);
     });
 
     if (candidates.length === 0) continue;

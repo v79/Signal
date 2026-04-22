@@ -7,6 +7,7 @@ import type {
   FieldPoints,
   Era,
   PushFactor,
+  FacilityDef,
   FacilityInstance,
   BlocState,
   SignalState,
@@ -191,6 +192,7 @@ export interface EventEffectResult {
  * Apply an EventEffect to the player state and map.
  *
  * @param rng - Seeded RNG used for dynamic tile selection (`tileTypeTarget`).
+ * @param facilityDefs - Used to honour `climateImmune` on tile-destroying effects.
  * @param signal - Optional signal state; required for effects with `signalProgress`.
  */
 export function applyEventEffect(
@@ -199,6 +201,7 @@ export function applyEventEffect(
   mapTiles: MapTile[],
   currentTurn: number,
   rng: Rng,
+  facilityDefs: Map<string, FacilityDef>,
   signal?: SignalState,
 ): EventEffectResult {
   let updatedPlayer = { ...player };
@@ -227,7 +230,8 @@ export function applyEventEffect(
     updatedPlayer = { ...updatedPlayer, fields: newFields };
   }
 
-  // Dynamic tile targeting: pick a random non-destroyed, non-HQ tile of the target type
+  // Dynamic tile targeting: pick a random non-destroyed tile of the target type,
+  // excluding tiles that host any climate-immune facility.
   if (effect.tileTypeTarget) {
     const status = effect.destroyTileStatus ?? 'flooded';
     const candidates = updatedTiles.filter((t) => {
@@ -235,13 +239,16 @@ export function applyEventEffect(
       if (t.destroyedStatus !== null) return false;
       // Sea walls protect coastal tiles from flooding
       if (status === 'flooded' && t.seaWallProtected) return false;
-      // Exclude tiles that have the HQ in any slot
-      if (t.facilitySlots.some((id) => id && updatedPlayer.facilities.find((f) => f.id === id)?.defId === 'hq')) return false;
+      if (t.facilitySlots.some((id) => {
+        if (!id) return false;
+        const inst = updatedPlayer.facilities.find((f) => f.id === id);
+        return inst ? facilityDefs.get(inst.defId)?.climateImmune === true : false;
+      })) return false;
       return true;
     });
     if (candidates.length > 0) {
       const chosen = candidates[Math.floor(rng.next() * candidates.length)];
-      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, chosen, status, rng);
+      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, chosen, status, facilityDefs, rng);
       updatedTiles = destruction.tiles;
       updatedPlayer = destruction.player;
     }
@@ -254,7 +261,7 @@ export function applyEventEffect(
       (t) => `${t.coord.q},${t.coord.r}` === coordKey,
     );
     if (target && target.destroyedStatus === null) {
-      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, target, status, rng);
+      const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, target, status, facilityDefs, rng);
       updatedTiles = destruction.tiles;
       updatedPlayer = destruction.player;
     }
@@ -273,24 +280,25 @@ export function applyEventEffect(
   return { player: updatedPlayer, mapTiles: updatedTiles, signal: updatedSignal };
 }
 
-/** Destroy a tile and remove one random non-HQ facility slot from it. */
+/** Destroy a tile and remove one random non-immune facility slot from it. */
 function destroyTileAndFacility(
   tiles: MapTile[],
   player: PlayerState,
   target: MapTile,
   status: import('./types').TileDestroyedStatus,
+  facilityDefs: Map<string, FacilityDef>,
   rng?: Rng,
 ): { tiles: MapTile[]; player: PlayerState } {
   const tileCoordKey = `${target.coord.q},${target.coord.r}`;
 
-  // Collect unique non-HQ facility instances on this tile
+  // Collect unique non-immune facility instances on this tile
   const seen = new Set<string>();
   const candidates: FacilityInstance[] = [];
   for (const id of target.facilitySlots) {
     if (id && !seen.has(id)) {
       seen.add(id);
       const f = player.facilities.find((fac) => fac.id === id);
-      if (f && f.defId !== 'hq') candidates.push(f);
+      if (f && facilityDefs.get(f.defId)?.climateImmune !== true) candidates.push(f);
     }
   }
 
