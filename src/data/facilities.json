@@ -261,7 +261,7 @@
   "publicUniversity": {
     "id": "publicUniversity",
     "name": "Public University",
-    "description": "Broad academic research output across Physics, Biochemistry, Mathematics, Computing, and Social Science. High upkeep; high reward.",
+    "description": "Broad academic research output across Physics, Biochemistry, Mathematics, Computing, Social Science, and Engineering. High upkeep; high reward.",
     "era": "earth",
     "allowedTileTypes": [
       "urban"
@@ -282,7 +282,8 @@
       "biochemistry": 2,
       "mathematics": 3,
       "computing": 2,
-      "socialScience": 3
+      "socialScience": 3,
+      "engineering": 2
     },
     "resourceOutput": {},
     "adjacencyBonuses": [

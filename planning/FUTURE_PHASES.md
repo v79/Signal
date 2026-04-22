@@ -15,6 +15,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Fix the height of the action had to be the height of a banked card
   - Prevent the action card bar from ever having a scrollbar
   - Cards may be made obsolete by technology or era — mechanism implemented (`obsoletedByTech`/`obsoletedByEra`, `retireObsoleteCards()`); more cards need wiring up
+  - Should there be a cost, or a benefit, to not using all your actions in a turn?
 - **Events:**
   - Option to collapse an event panel to just its title, useful for timed events that are available for several turns
   - Bloc partnership events need to be clearer on the costs and benefits
@@ -26,6 +27,7 @@ This is a list of future requirements for the game but they are not to be implem
   - What to do once all the tech for an era has been researched?
   - Each Era should have a tier 5 technology that represents the end of the era.
   - The game is based around the idea that the player cannot choose the next technology to research, but perhaps they could initiate a project to focus on a tech that is near completion, with a percentage chance of success.
+  - Every technology unlocked should give the player something new (facility, action, project, event)
 - **The Signal:**
   - Some events conflict and cannot appear at the same time (e.g. signal interference / signal breakthrough)
   - Signal breakthrough events should not happen when signal progress has stalled (gated by tech)
@@ -60,6 +62,7 @@ This is a list of future requirements for the game but they are not to be implem
   - Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
   - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
   - The proposal to build the space launch centre costs money and time, but there's no subsequent prompt to actually build the thing
+  - A random map generator option?
 - **Earth era content pass**
   - More playtesting required; Computing and physics remain a problem
 - **Near Earth/LEO Map**
@@ -85,7 +88,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Board members should be procedurally generated, not a fixed list, so we have enough content for three eras
 - **Climate management:**
   - See `planning/PLAN_PHASE35.md` for current progress; list below mostly obsolete
-  - This is not fleshed out at all
   - Postponed phase 20.2 on climate pressure scaling event severity
   - Irradiated damage shouldn't exist without nuclear facilities
   - Events frequency may be affected by the current Climate or Global Will scores
@@ -97,10 +99,11 @@ This is a list of future requirements for the game but they are not to be implem
   - The Space Launch Centre can be destroyed by climate damage, and it's possible to get into a situation where it cannot be rebuilt anywhere. Either the space launch centre needs to be immune to climate damage, or it needs to be more flexible in its placement.
   - Terrain Actions such as Urbanize and Clear Industrial Site must make sense (Clear Industrial Site doesn't do anything?)
   - If climate pressure drops low enough, and the player reaches Era 3, then coastal flooding could start to recede
+  - If a tile is destroyed by a climate action, the news feed should say which tile it is
 - **Next Turn / Phase Control**
 - **Architecture Review**
   - Review project structure, architecture, security, code duplication, etc
-  - Style consistency review
+  - Style consistency review - implemented in [phase 37](/planning/PLAN_PHASE37.md)
 - **Game management**
   - Continue game after winning
 

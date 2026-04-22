@@ -265,6 +265,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .section-header {
