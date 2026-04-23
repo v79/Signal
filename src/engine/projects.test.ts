@@ -31,7 +31,7 @@ const DEF_SIMPLE: ProjectDef = {
   cost: { funding: 20, materials: 10 },
   upkeepCost: { funding: 2 },
   baseDuration: 2,
-  reward: { signalProgress: 10, resources: { funding: 15 } },
+  oneOffReward: { signalProgress: 10, resources: { funding: 15 } },
   landmarkGate: null,
   prerequisites: {},
 };
@@ -70,7 +70,7 @@ const DEF_LONG: ProjectDef = {
   id: 'longProject',
   upkeepCost: { funding: 5 },
   baseDuration: 3,
-  reward: { signalProgress: 20, resources: { funding: 30 } },
+  oneOffReward: { signalProgress: 20, resources: { funding: 30 } },
   prerequisites: {},
 };
 

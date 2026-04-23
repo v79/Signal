@@ -9,7 +9,7 @@ import type { GameState, Era, TurnPhase } from './types';
 import { serialiseGameState, deserialiseGameState } from './state';
 
 export const SAVE_KEY = 'signal-autosave';
-export const SAVE_FORMAT_VERSION = 1;
+export const SAVE_FORMAT_VERSION = 2;
 
 const VALID_ERAS: Era[] = ['earth', 'nearSpace', 'deepSpace'];
 const VALID_PHASES: TurnPhase[] = ['event', 'draw', 'action', 'world'];

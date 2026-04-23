@@ -69,6 +69,7 @@ function createPlayerState(config: GameConfig): PlayerState {
     willProfile: config.willProfile,
     facilities: [],
     completedProjectIds: {},
+    projectHostFacilityIds: {},
     activeProjects: [],
     techs: [],
     cards: [],

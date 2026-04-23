@@ -13,6 +13,7 @@ import type {
   SignalState,
 } from './types';
 import type { Rng } from './rng';
+import { reanchorCern } from './projects';
 
 // ---------------------------------------------------------------------------
 // Event pool selection
@@ -326,6 +327,8 @@ function destroyTileAndFacility(
       facilities: player.facilities.filter((f) => f.id !== victimId),
       constructionQueue: player.constructionQueue.filter((a) => a.coordKey !== tileCoordKey),
     };
+    // If the destroyed facility was CERN's host university, find the next eligible one
+    updatedPlayer = reanchorCern(updatedPlayer);
   }
 
   return { tiles: updatedTiles, player: updatedPlayer };

@@ -4,6 +4,7 @@ import type {
   ProjectInstance,
   PlayerState,
   Resources,
+  FieldPoints,
   NewsItem,
 } from './types';
 
@@ -222,9 +223,10 @@ export function tickActiveProjects(
         };
       }
 
-      // Apply resource reward
-      if (def.reward.resources) {
-        const r = def.reward.resources;
+      // Apply one-off resource reward
+      const oneOff = def.oneOffReward;
+      if (oneOff?.resources) {
+        const r = oneOff.resources;
         player = {
           ...player,
           resources: {
@@ -238,17 +240,31 @@ export function tickActiveProjects(
         };
       }
 
+      // Apply one-off field reward
+      if (oneOff?.fields) {
+        for (const [k, v] of Object.entries(oneOff.fields) as [keyof FieldPoints, number][]) {
+          // Field boosts from one-off rewards are applied to accumulated fields next turn;
+          // here we just note them. The ongoing reward path handles per-turn output.
+          // One-off field grants are rare (e.g. computingResearchProgramme) and applied as
+          // a direct addition to the player's current field snapshot.
+          player = {
+            ...player,
+            fields: { ...player.fields, [k]: (player.fields[k] ?? 0) + (v ?? 0) },
+          };
+        }
+      }
+
       // Apply signal progress reward
-      if (def.reward.signalProgress) {
+      if (oneOff?.signalProgress) {
         signal = {
           ...signal,
-          decodeProgress: Math.min(100, signal.decodeProgress + def.reward.signalProgress),
+          decodeProgress: Math.min(100, signal.decodeProgress + oneOff.signalProgress),
         };
       }
 
       // Add unlocked cards to deck
-      if (def.reward.unlocksCards) {
-        for (const cardDefId of def.reward.unlocksCards) {
+      if (oneOff?.unlocksCards) {
+        for (const cardDefId of oneOff.unlocksCards) {
           player = {
             ...player,
             cards: [
@@ -257,6 +273,15 @@ export function tickActiveProjects(
             ],
           };
         }
+      }
+
+      // Resolve host facility for projects that anchor to a facility on the map
+      if (def.id === 'cern') {
+        const hostId = resolveHostFacility(player, 'publicUniversity');
+        player = {
+          ...player,
+          projectHostFacilityIds: { ...player.projectHostFacilityIds, cern: hostId },
+        };
       }
 
       projectNews.push({
@@ -310,10 +335,69 @@ export function tickActiveProjects(
 
 function formatRewardForNews(def: ProjectDef): string {
   const parts: string[] = [];
-  if (def.reward.signalProgress) parts.push(`+${def.reward.signalProgress} signal progress`);
-  if (def.reward.resources?.funding) parts.push(`+${def.reward.resources.funding}F`);
-  if (def.reward.resources?.materials) parts.push(`+${def.reward.resources.materials}M`);
-  if (def.reward.resources?.politicalWill) parts.push(`+${def.reward.resources.politicalWill}W`);
-  if (def.reward.unlocksCards?.length) parts.push(`${def.reward.unlocksCards.length} new card(s) added to deck`);
+  const r = def.oneOffReward;
+  if (r?.signalProgress) parts.push(`+${r.signalProgress} signal progress`);
+  if (r?.resources?.funding) parts.push(`+${r.resources.funding}F`);
+  if (r?.resources?.materials) parts.push(`+${r.resources.materials}M`);
+  if (r?.resources?.politicalWill) parts.push(`+${r.resources.politicalWill}W`);
+  if (r?.unlocksCards?.length) parts.push(`${r.unlocksCards.length} new card(s) added to deck`);
+  if (def.ongoingReward) parts.push('ongoing output each turn');
   return parts.length > 0 ? `(${parts.join(', ')})` : '';
+}
+
+/**
+ * Returns the field and resource output from all completed scientific/landmark
+ * projects with an ongoingReward. Called each world phase.
+ */
+export function applyOngoingProjectRewards(
+  player: PlayerState,
+  defs: Map<string, ProjectDef>,
+): { fields: Partial<FieldPoints>; resources: Partial<Resources> } {
+  const fields: Partial<FieldPoints> = {};
+  const resources: Partial<Resources> = {};
+
+  for (const defId of Object.keys(player.completedProjectIds)) {
+    const def = defs.get(defId);
+    if (!def?.ongoingReward) continue;
+    if (def.type !== 'scientific' && def.type !== 'landmark') continue;
+
+    const r = def.ongoingReward;
+    if (r.fields) {
+      for (const [k, v] of Object.entries(r.fields) as [keyof FieldPoints, number][]) {
+        fields[k] = (fields[k] ?? 0) + (v ?? 0);
+      }
+    }
+    if (r.resources) {
+      for (const [k, v] of Object.entries(r.resources) as [keyof Resources, number][]) {
+        resources[k] = (resources[k] ?? 0) + (v ?? 0);
+      }
+    }
+  }
+
+  return { fields, resources };
+}
+
+/**
+ * Finds the earliest-built facility instance with the given defId.
+ * Tie-break: builtTurn asc, then id asc (lexicographic).
+ * Returns the instance id, or null if none exists.
+ */
+function resolveHostFacility(player: PlayerState, defId: string): string | null {
+  const candidates = player.facilities
+    .filter((f) => f.defId === defId)
+    .sort((a, b) => a.builtTurn - b.builtTurn || a.id.localeCompare(b.id));
+  return candidates[0]?.id ?? null;
+}
+
+/**
+ * Re-resolves CERN's host facility after a publicUniversity is destroyed.
+ * Called from the facility destruction path in turn.ts.
+ */
+export function reanchorCern(player: PlayerState): PlayerState {
+  if (!('cern' in player.completedProjectIds)) return player;
+  const hostId = resolveHostFacility(player, 'publicUniversity');
+  return {
+    ...player,
+    projectHostFacilityIds: { ...player.projectHostFacilityIds, cern: hostId },
+  };
 }
