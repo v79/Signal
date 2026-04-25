@@ -141,10 +141,11 @@ This is a list of future requirements for the game but they are not to be implem
   - Player should get a list of the biggest polluters
   - What happens when a tile is destroyed by climate while a facility is being built? The facility stays and functions. Is that correct?
   - Terrain restoration actions should probably be gated by current climate damage %, i.e. you must first lower the climate threat level before you can use restoration actions
-  - The Space Launch Centre can be destroyed by climate damage, and it's possible to get into a situation where it cannot be rebuilt anywhere. Either the space launch centre needs to be immune to climate damage, or it needs to be more flexible in its placement.
   - Terrain Actions such as Urbanize and Clear Industrial Site must make sense (Clear Industrial Site doesn't do anything?)
   - If climate pressure drops low enough, and the player reaches Era 3, then coastal flooding could start to recede
+  - There should be a per-turn chance of a damaged tile being restored automatically, at least at lower climate scores.
   - If a tile is destroyed by a climate action, the news feed should say which tile it is
+  - Climate damage feels too frequent and too harsh just now, even when the climate score is lower (<70%)
 
 ## Next Turn / Phase Control
 

@@ -92,42 +92,41 @@ Also filter/group by type is a nice-to-have but out of scope.
 
 ### Engine (`src/engine/`)
 
-- [ ] `types.ts`: add `"contract"` to `ProjectType`. Replace `ProjectDef.reward` with optional `oneOffReward` and `ongoingReward`; type-lock `signalProgress` to the one-off shape.
-- [ ] `types.ts`: on the completed-project record, add `hostFacilityInstanceId?: string | null` (only used by CERN today but the hook is cheap).
-- [ ] Project-completion path: apply `oneOffReward`. Where the current code applies `reward`, split it. For CERN, resolve and persist the host `publicUniversity` id using the tie-break rule above.
-- [ ] `turn.ts`: in the world phase, after facility output, apply `ongoingReward` for every completed scientific/landmark project. Order: after facility output, before signal decode, so ongoing research contributes to the same turn's tech progress. Confirm with an explicit test.
-- [ ] Event effects that destroy facilities: if the destroyed facility is the CERN host, recompute the anchor. Never let an event remove or damage a scientific/landmark project itself.
-- [ ] `save.ts`: no migration; bump `SaveEnvelope.version` and reject older saves with a clear error.
+- ✅ `types.ts`: add `"contract"` to `ProjectType`. Replace `ProjectDef.reward` with optional `oneOffReward` and `ongoingReward`; type-lock `signalProgress` to the one-off shape.
+- ✅ `types.ts`: added `projectHostFacilityIds: Record<string, string | null>` to `PlayerState` (generalised form of the planned `hostFacilityInstanceId`).
+- ✅ Project-completion path: apply `oneOffReward`. For CERN, resolve and persist the host `publicUniversity` id using the tie-break rule.
+- ✅ `turn.ts`: step 5b applies `ongoingReward` for every completed scientific/landmark project, after facility output, before signal decode.
+- ✅ Event effects that destroy facilities: `reanchorCern` called in `destroyTileAndFacility`; scientific/landmark projects themselves are never removed.
+- ✅ `save.ts`: bumped `SAVE_FORMAT_VERSION` to 2; old saves rejected.
 
 ### Data
 
-- [ ] Rewrite `src/data/projects.json` per the table above.
-- [ ] Delete `longDurationOrbitalStudy` entry.
+- ✅ Rewrite `src/data/projects.json` per the table above.
+- ✅ Delete `longDurationOrbitalStudy` entry.
 
 ### Rendering
 
-- [ ] `EarthScene.ts`: read current `publicUniversity` rendering; add a ring around the CERN-host university when CERN is complete. Hide the ring if the anchor is `null`.
-- [ ] `SpaceScene.ts`: no functional change; confirm `EARTH_ORBIT_PROJECTS` entries still match data.
+- ✅ `EarthScene.ts`: double concentric ring drawn on the CERN-host tile; hides when anchor is `null`.
+- ✅ `SpaceScene.ts`: `EARTH_ORBIT_PROJECTS` entries confirmed matching data (orbitalTelescopeArray, hubbleSpaceTelescope unchanged).
 
 ### UI
 
-- [ ] `CompletedProjectsPanel.svelte`: render the type glyph next to each entry.
-- [ ] Project tooltip / detail views: show one-off and ongoing rewards as separate lines ("On completion: …" / "Each turn: …").
+- ✅ `CompletedProjectsPanel.svelte`: type glyph (!/=/¤) added; ongoing reward shown as separate green `/t` chips.
+- ✅ `OngoingActionsPanel.svelte`: reward summary notes "ongoing output" for scientific projects.
 
 ### Tests
 
-- [ ] `projects.test.ts` (new or extended):
-  - [ ] one-off reward is applied exactly once on completion.
-  - [ ] ongoing reward ticks every world phase after completion, including across save/load boundaries.
-  - [ ] `signalProgress` is rejected at type-level in `ongoingReward` (covered by `tsc --noEmit`).
-  - [ ] CERN anchor resolution picks the earliest-built university; relocates on destruction; becomes null when none remain; CERN output continues regardless.
-  - [ ] Destruction events cannot remove a scientific project.
-- [ ] Save test: old-format save envelope is rejected with the expected error.
+- ✅ one-off reward applied exactly once on completion — covered by existing `tickActiveProjects` tests.
+- [ ] ongoing reward ticks every world phase after completion — not yet explicitly tested.
+- ✅ `signalProgress` rejected at type-level in `ongoingReward` — enforced by `tsc --noEmit`.
+- [ ] CERN anchor resolution (earliest-built, relocate on destruction, null when none) — not yet tested.
+- [ ] Destruction events cannot remove a scientific project — not yet tested.
+- [ ] Save test: v1 envelope rejected with a clear error — not yet tested.
 
 ### Docs / memory
 
 - [ ] Update `MEMORY.md` phase list once merged.
-- [ ] Note the save-format bump in the project's change log if one exists.
+- [ ] No project changelog exists; save-format bump documented in this plan only.
 
 ## Out of scope / deferred
 
@@ -137,3 +136,4 @@ Also filter/group by type is a nice-to-have but out of scope.
 - Wider balance pass on ongoing research magnitudes vs. facility output.
 - Asteroid-era project visual representation.
 - Type/era filtering in the Completed Projects panel.
+- CERN tile tooltip: the ring renders correctly but the tile hover tooltip has no awareness of anchored projects (only facilities). A player who didn't build CERN wouldn't know what the ring means. Fix when next touching tile tooltip infrastructure — add a "projects on this tile" section driven by `projectHostFacilityIds`.
