@@ -12,6 +12,9 @@ import {
   isSignalPaused,
   SIGNAL_CAPS,
 } from './signal';
+import { applyEventEffect } from './events';
+import { tickActiveProjects } from './projects';
+import { createGameState, ZERO_FIELDS as ZERO_FIELDS_STATE, ZERO_RESOURCES } from './state';
 import { createRng } from './rng';
 import type {
   SignalState,
@@ -19,6 +22,9 @@ import type {
   FacilityInstance,
   FacilityDef,
   SignalResponseOption,
+  PlayerState,
+  GameState,
+  ProjectDef,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -442,5 +448,304 @@ describe('signalProgressNewsText', () => {
     expect(signalProgressNewsText(50, 10)).toContain('non-random');
     expect(signalProgressNewsText(80, 20)).toContain('urgent');
     expect(signalProgressNewsText(95, 30)).toContain('response window');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Signal cap enforcement at the two threshold points (33% and 66%)
+//
+// Two tech-gated thresholds block decode progress until the gate techs are
+// discovered:
+//   - 33% cap until `signalPatternAnalysis` is discovered
+//   - 66% cap until `interstellarSignalDecryption` is discovered
+//
+// These tests verify that no source of progress (passive ticking from fields
+// + Deep Space Arrays, event signal effects, project one-off rewards) can
+// drive `decodeProgress` past the active cap.
+// ---------------------------------------------------------------------------
+
+describe('signal cap blocks progress at threshold points', () => {
+  // Maximal inputs: any combination here produces a per-tick delta in the
+  // hundreds, so if the cap weren't enforced these would blow past it on
+  // the first tick.
+  const HUGE_FIELDS: FieldPoints = {
+    physics: 1000,
+    mathematics: 1000,
+    engineering: 0,
+    biochemistry: 0,
+    computing: 0,
+    socialScience: 0,
+  };
+  const MANY_ARRAYS = (() => makeArray(50))();
+
+  // -------------------------------------------------------------------------
+  // Direct passive tick — caps must hold even with maximal inputs
+  // -------------------------------------------------------------------------
+
+  describe('tickSignalProgress passive accumulation', () => {
+    it('caps progress at 33 (era1 gate undiscovered) when starting below cap', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 0 };
+      const next = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 33);
+      expect(next.decodeProgress).toBe(33);
+    });
+
+    it('caps progress at 66 (era2 gate undiscovered) when starting below cap', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 0 };
+      const next = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 66);
+      expect(next.decodeProgress).toBe(66);
+    });
+
+    it('does not advance once at 33 cap, even with maximal inputs', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 33 };
+      const next = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 33);
+      expect(next.decodeProgress).toBe(33);
+    });
+
+    it('does not advance once at 66 cap, even with maximal inputs', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 66 };
+      const next = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 66);
+      expect(next.decodeProgress).toBe(66);
+    });
+
+    it('stays at 33 cap across many ticks with maximal inputs', () => {
+      let signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 33 };
+      for (let i = 0; i < 100; i++) {
+        signal = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 33);
+      }
+      expect(signal.decodeProgress).toBe(33);
+    });
+
+    it('stays at 66 cap across many ticks with maximal inputs', () => {
+      let signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 66 };
+      for (let i = 0; i < 100; i++) {
+        signal = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 66);
+      }
+      expect(signal.decodeProgress).toBe(66);
+    });
+
+    it('cap derived from computeSignalCap(no gates) feeds directly into tick clamp', () => {
+      const cap = computeSignalCap(new Set());
+      expect(cap).toBe(33);
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 32 };
+      const next = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', cap);
+      expect(next.decodeProgress).toBe(33);
+    });
+
+    it('cap derived from computeSignalCap(era1Gate only) feeds directly into tick clamp', () => {
+      const cap = computeSignalCap(new Set([SIGNAL_CAPS.era1Gate]));
+      expect(cap).toBe(66);
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 65 };
+      const next = tickSignalProgress(signal, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', cap);
+      expect(next.decodeProgress).toBe(66);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Re-clamp invariant — if some other path (event effect, project reward)
+  // pushed the signal above the cap, the next passive tick must bring it
+  // back down. This is what the World Phase orchestrator relies on.
+  // -------------------------------------------------------------------------
+
+  describe('re-clamp after over-cap input', () => {
+    it('re-clamps to 33 when entering tick already over cap', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 80 };
+      const next = tickSignalProgress(signal, ZERO_FIELDS, [], new Map(), 'earth', 33);
+      expect(next.decodeProgress).toBe(33);
+    });
+
+    it('re-clamps to 66 when entering tick already over cap', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 95 };
+      const next = tickSignalProgress(signal, ZERO_FIELDS, [], new Map(), 'earth', 66);
+      expect(next.decodeProgress).toBe(66);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Event signal effects must not persist above the cap.
+  // applyEventEffect itself only clamps to [0, 100] (it intentionally bypasses
+  // the era cap so an event can cause a temporary surge), but the next signal
+  // tick is required to bring decodeProgress back to the cap.
+  // -------------------------------------------------------------------------
+
+  describe('positive event signalProgress cannot push past cap once tick runs', () => {
+    const eventPlayer: PlayerState = {
+      blocDefId: 'eu',
+      resources: { funding: 100, materials: 50, politicalWill: 60 },
+      fields: { ...ZERO_FIELDS_STATE },
+      will: 60,
+      willProfile: 'democratic',
+      facilities: [],
+      completedProjectIds: {},
+      projectHostFacilityIds: {},
+      activeProjects: [],
+      techs: [],
+      cards: [],
+      board: {},
+      newsFeed: [],
+      constructionQueue: [],
+    };
+
+    it('event +50 signal at cap=33: tick re-clamps to 33', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 30 };
+      const result = applyEventEffect(
+        { signalProgress: 50 },
+        eventPlayer,
+        [],
+        1,
+        createRng('cap-evt-33'),
+        new Map(),
+        signal,
+      );
+      // Sanity: applyEventEffect alone bypasses the cap (clamps to [0, 100] only).
+      expect(result.signal!.decodeProgress).toBe(80);
+
+      // The next passive tick at cap=33 brings the signal back to the cap.
+      const after = tickSignalProgress(result.signal!, ZERO_FIELDS, [], new Map(), 'earth', 33);
+      expect(after.decodeProgress).toBe(33);
+    });
+
+    it('event +50 signal at cap=66: tick re-clamps to 66', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 60 };
+      const result = applyEventEffect(
+        { signalProgress: 50 },
+        eventPlayer,
+        [],
+        1,
+        createRng('cap-evt-66'),
+        new Map(),
+        signal,
+      );
+      expect(result.signal!.decodeProgress).toBe(100);
+
+      const after = tickSignalProgress(result.signal!, ZERO_FIELDS, [], new Map(), 'earth', 66);
+      expect(after.decodeProgress).toBe(66);
+    });
+
+    it('an event already at cap with positive signalProgress: tick still caps', () => {
+      const signal: SignalState = { ...BASE_SIGNAL, decodeProgress: 33 };
+      const result = applyEventEffect(
+        { signalProgress: 25 },
+        eventPlayer,
+        [],
+        1,
+        createRng('cap-evt-at-cap'),
+        new Map(),
+        signal,
+      );
+      expect(result.signal!.decodeProgress).toBe(58);
+
+      const after = tickSignalProgress(result.signal!, HUGE_FIELDS, MANY_ARRAYS, DEFS, 'earth', 33);
+      expect(after.decodeProgress).toBe(33);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Project one-off signalProgress rewards must not persist above the cap.
+  // tickActiveProjects clamps the reward to [0, 100]; the cap is enforced by
+  // the World Phase via tickSignalProgress on the next signal tick.
+  // -------------------------------------------------------------------------
+
+  describe('project one-off signalProgress reward cannot push past cap once tick runs', () => {
+    /** Build a state with an active project that completes in one tick. */
+    function makeStateWithActiveProject(
+      def: ProjectDef,
+      initialDecode: number,
+    ): { state: GameState; defs: Map<string, ProjectDef> } {
+      const state = createGameState({
+        seed: 'cap-test',
+        playerBlocDefId: 'northAmericanAlliance',
+        pushFactor: 'climateChange',
+        startYear: 1970,
+        willProfile: 'democratic',
+        startingWill: 50,
+        startingResources: { funding: 100, materials: 80, politicalWill: 50 },
+      });
+      state.signal = { ...state.signal, decodeProgress: initialDecode };
+      state.player = {
+        ...state.player,
+        activeProjects: [
+          {
+            id: `${def.id}-t${state.turn}`,
+            defId: def.id,
+            startTurn: state.turn,
+            turnsElapsed: def.baseDuration - 1,
+            effectiveDuration: def.baseDuration,
+          },
+        ],
+      };
+      return { state, defs: new Map([[def.id, def]]) };
+    }
+
+    const BIG_REWARD_PROJECT: ProjectDef = {
+      id: 'bigSignalProject',
+      name: 'Big Signal Project',
+      description: 'Hands out a large one-off signal boost.',
+      type: 'scientific',
+      era: 'earth',
+      cost: { funding: 0 },
+      upkeepCost: {},
+      baseDuration: 1,
+      oneOffReward: { signalProgress: 60 },
+      landmarkGate: null,
+      prerequisites: {},
+    };
+
+    it('project +60 signal at cap=33: tick re-clamps to 33', () => {
+      const { state, defs } = makeStateWithActiveProject(BIG_REWARD_PROJECT, 30);
+      const { state: afterProjects } = tickActiveProjects(state, defs, state.turn + 1);
+      // The project reward bypasses the cap (it just clamps to 100).
+      expect(afterProjects.signal.decodeProgress).toBe(90);
+
+      // The next passive tick at cap=33 brings the signal back to the cap.
+      const after = tickSignalProgress(
+        afterProjects.signal,
+        ZERO_FIELDS,
+        [],
+        new Map(),
+        'earth',
+        33,
+      );
+      expect(after.decodeProgress).toBe(33);
+    });
+
+    it('project +60 signal at cap=66: tick re-clamps to 66', () => {
+      const { state, defs } = makeStateWithActiveProject(BIG_REWARD_PROJECT, 60);
+      const { state: afterProjects } = tickActiveProjects(state, defs, state.turn + 1);
+      expect(afterProjects.signal.decodeProgress).toBe(100);
+
+      const after = tickSignalProgress(
+        afterProjects.signal,
+        ZERO_FIELDS,
+        [],
+        new Map(),
+        'earth',
+        66,
+      );
+      expect(after.decodeProgress).toBe(66);
+    });
+
+    it('project completing while signal is at cap: tick still holds at cap', () => {
+      const { state, defs } = makeStateWithActiveProject(BIG_REWARD_PROJECT, 33);
+      const { state: afterProjects } = tickActiveProjects(state, defs, state.turn + 1);
+      expect(afterProjects.signal.decodeProgress).toBe(93);
+
+      const after = tickSignalProgress(
+        afterProjects.signal,
+        HUGE_FIELDS,
+        MANY_ARRAYS,
+        DEFS,
+        'earth',
+        33,
+      );
+      expect(after.decodeProgress).toBe(33);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Suppress unused-warnings for ZERO_RESOURCES (kept for parity with
+  // other engine tests that import it from state.ts).
+  // -------------------------------------------------------------------------
+  it('ZERO_RESOURCES is importable (smoke check)', () => {
+    expect(ZERO_RESOURCES.funding).toBe(0);
   });
 });
