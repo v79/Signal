@@ -1,5 +1,6 @@
 import type { MapTile, FacilityInstance, FacilityDef, TileDestroyedStatus } from './types';
 import type { Rng } from './rng';
+import { tileArticle } from './events';
 
 // ---------------------------------------------------------------------------
 // Climate-driven tile degradation
@@ -117,7 +118,9 @@ export function applyClimateDegradation(
       for (const id of removeIds) facilityById.delete(id);
     }
 
-    newsLines.push(`A ${rule.tileType} tile has been lost to ${rule.newsVerb}.`);
+    newsLines.push(
+      `${tileArticle(rule.tileType)} ${rule.tileType} tile at (${chosen.coord.q},${chosen.coord.r}) has been lost to ${rule.newsVerb}.`,
+    );
   }
 
   if (newsLines.length === 0) {

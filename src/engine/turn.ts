@@ -41,6 +41,7 @@ import {
   applyEventEffect,
   getEffectForResolution,
   formatEffectForNews,
+  tileDestructionNewsItems,
 } from './events';
 import { simulateBlocs, checkBlocMergers } from './blocs';
 import {
@@ -199,6 +200,7 @@ export function executeEventPhase(
       text: `${def.name} expired — ${summary}.`,
       category: 'event-loss',
     });
+    expiryNews.push(...tileDestructionNewsItems(result.destroyedTiles, event.id, 'expired', state.turn));
   }
 
   // 3. Select and add new events

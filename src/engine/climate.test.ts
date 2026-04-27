@@ -139,6 +139,7 @@ describe('applyClimateDegradation — successful degradation', () => {
     expect(result.tiles[0].facilitySlots).toEqual([null, null, null]);
     expect(result.newsText).toContain('forested');
     expect(result.newsText).toContain('drought');
+    expect(result.newsText).toContain('(0,0)');
   });
 
   it('clears pendingActionId when a tile is destroyed', () => {

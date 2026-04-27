@@ -8,6 +8,7 @@ import {
   applyEventEffect,
   getEffectForResolution,
   formatEffectForNews,
+  formatTileDestroyedNews,
 } from './events';
 import { createRng } from './rng';
 import type { EventDef, EventInstance, FacilityDef, PlayerState } from './types';
@@ -498,9 +499,23 @@ describe('applyEventEffect', () => {
       { coord: { q: 1, r: 0 }, type: 'coastal' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
       { coord: { q: 0, r: 0 }, type: 'urban' as const, destroyedStatus: null, productivity: 1, mineDepletion: 1, facilitySlots: [null, null, null] as [null, null, null], pendingActionId: null },
     ];
-    const { mapTiles } = applyEventEffect({ destroyTile: { coordKey: '1,0', status: 'flooded' } }, basePlayer, tiles, 1, rng, facilityDefs);
+    const { mapTiles, destroyedTiles } = applyEventEffect({ destroyTile: { coordKey: '1,0', status: 'flooded' } }, basePlayer, tiles, 1, rng, facilityDefs);
     expect(mapTiles.find(t => t.coord.q === 1 && t.coord.r === 0)?.destroyedStatus).toBe('flooded');
     expect(mapTiles.find(t => t.coord.q === 0 && t.coord.r === 0)?.destroyedStatus).toBeNull();
+    expect(destroyedTiles).toEqual([
+      { coord: { q: 1, r: 0 }, tileType: 'coastal', status: 'flooded' },
+    ]);
+  });
+
+  it('formatTileDestroyedNews: includes the tile type, coords, and status cause', () => {
+    expect(formatTileDestroyedNews({ tileType: 'industrial', coord: { q: 3, r: -2 }, status: 'irradiated' }))
+      .toBe('An industrial tile at (3,-2) has been lost to contamination.');
+    expect(formatTileDestroyedNews({ tileType: 'coastal', coord: { q: 0, r: 1 }, status: 'flooded' }))
+      .toBe('A coastal tile at (0,1) has been lost to flooding.');
+    expect(formatTileDestroyedNews({ tileType: 'forested', coord: { q: -1, r: 4 }, status: 'dustbowl' }))
+      .toBe('A forested tile at (-1,4) has been lost to drought.');
+    expect(formatTileDestroyedNews({ tileType: 'agricultural', coord: { q: 2, r: 2 }, status: 'dustbowl' }))
+      .toBe('An agricultural tile at (2,2) has been lost to drought.');
   });
 
   it('tileTypeTarget: destroys a random tile of the given type', () => {

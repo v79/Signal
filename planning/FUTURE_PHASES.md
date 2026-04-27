@@ -87,6 +87,7 @@ This is a list of future requirements for the game but they are not to be implem
 ## Earth era content pass
 
   - More playtesting required; Computing and physics remain a problem
+  - Engineering research slows down a lot if you focus on keeping climate pressure low
 
 ## Near Earth/LEO Map
 
