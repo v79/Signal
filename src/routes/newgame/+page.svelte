@@ -434,15 +434,15 @@
     }
 
     .bar-fill.funding {
-        background: #4a90c0;
+        background: var(--funding);
     }
 
     .bar-fill.materials {
-        background: #60a860;
+        background: var(--materials);
     }
 
     .bar-fill.will {
-        background: #9060c0;
+        background: var(--will);
     }
 
     /* Push factor */
