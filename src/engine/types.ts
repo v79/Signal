@@ -269,7 +269,7 @@ export interface FacilityInstance {
 // Projects
 // ---------------------------------------------------------------------------
 
-export type ProjectType = 'landmark' | 'scientific' | 'commercial' | 'narrative';
+export type ProjectType = 'landmark' | 'scientific' | 'contract';
 
 /** Whether a landmark project gates an era transition. */
 export type LandmarkGate =
@@ -290,8 +290,10 @@ export interface ProjectDef {
   upkeepCost: Partial<Resources>;
   /** Estimated turns to complete. */
   baseDuration: number;
-  /** One-time rewards on completion. */
-  reward: ProjectReward;
+  /** Applied once when the project completes. Signal progress only allowed here. */
+  oneOffReward?: ProjectReward;
+  /** Applied every turn after completion (scientific/landmark projects). No signal progress. */
+  ongoingReward?: OngoingProjectReward;
   /** Landmark gate this project opens, if any. */
   landmarkGate: LandmarkGate;
   /** Conditions that must be true for this project to be available. */
@@ -306,15 +308,22 @@ export interface ProjectDef {
   groupName?: string;
 }
 
+/** One-time reward applied when a project completes. */
 export interface ProjectReward {
   resources?: Partial<Resources>;
   fields?: Partial<FieldPoints>;
   /** Card IDs added to the player's deck on completion. */
   unlocksCards?: string[];
-  /** Signal decode progress added on completion. */
+  /** Signal decode progress added on completion. Signal progress is always one-off. */
   signalProgress?: number;
   /** Narrative event ID fired on completion. */
   triggersEventId?: string;
+}
+
+/** Per-turn reward for completed scientific/landmark projects. No signal progress allowed. */
+export interface OngoingProjectReward {
+  resources?: Partial<Resources>;
+  fields?: Partial<FieldPoints>;
 }
 
 export interface ProjectPrerequisites {
@@ -838,6 +847,8 @@ export interface PlayerState {
   facilities: FacilityInstance[];
   /** Maps project defId → turn number on which it was completed. */
   completedProjectIds: Record<string, number>;
+  /** Maps project defId → the FacilityInstance id of the host facility (e.g. cern → publicUniversity id). */
+  projectHostFacilityIds: Record<string, string | null>;
   activeProjects: ProjectInstance[];
   techs: TechState[];
   cards: CardInstance[];

@@ -30,6 +30,7 @@ This is a list of future requirements for the game but they are not to be implem
   - The solar storm event is countered by political will. Which is a weird choice.
   - Limit to only one diplomatic event active at any time?
   - Lunar seismic event should not fire if there are no lunar facilities
+  - The ongoing actions panel may need a new home - left column can get very busy
 
 ## Research:
 
@@ -45,7 +46,6 @@ This is a list of future requirements for the game but they are not to be implem
   - Move the wormhole response panel into a dedicated tab, then later replace the panel with the signal minigames.
   - Should deactivating the Signal Relay Station (going unsupplied) pause signal progress? Currently `isSignalPaused` only checks if the relay exists, not if it's supplied. Pausing on deactivation would make supply disruption events (fuel shortage, orbital debris) more consequential, but the relay is unique — clear player feedback (news item) would be essential to avoid it feeling opaque.
   - The signal caps at 33% and 66% are usually active just as the player has access to signal boosting cards and facilities.
-  - There should be an event which reduces the signal - scientists have gone down the wrong path
   - Signal mini-games and especially at the end with the Wormhole
   - Progress seems to jump from 33% to about 65% when the first signal tech is unlocked.
 
@@ -54,7 +54,7 @@ This is a list of future requirements for the game but they are not to be implem
   - What is the difference between Global Will and Political Will?
   - Political Will is too easy to gain and too hard to spend (same as Materials)
   - Maybe a better name is Influence?
-  - For how long should the player be allowed to stay in debt? A lose condition? But very hard to recover from a debt spiral.
+  - For how long should the player be allowed to stay in debt? A lose condition? But it's very hard to recover from a debt spiral.
 
 ## Era Gates
 
@@ -64,10 +64,7 @@ This is a list of future requirements for the game but they are not to be implem
 
 ## Projects
 
-  - Projects need to be visible on the Maps
-  - The Facilities that support projects (space launch centre) need to be visually distinct
-  - Once the orbital station has been built, we don't need the project programme panel any more
-  - I do want visibilty of projects though - a new tab after BLOCS.
+- See `planning/PLAN_PHASE38.md` for Project panel and improvements
 
 ## Competitor blocs
 
@@ -90,15 +87,17 @@ This is a list of future requirements for the game but they are not to be implem
 ## Earth era content pass
 
   - More playtesting required; Computing and physics remain a problem
+  - Engineering research slows down a lot if you focus on keeping climate pressure low
 
 ## Near Earth/LEO Map
 
   - Need more facilities to build (only Deep Space Relay & Orbital Solar Array exist)
   - Nodes can only have one facility type, which means it's not possible to build a lot of the facilities that exist. And no way to demolish facilities. Or even to know what the alternatives are.
-    - The moon especially - doesn't make since to restrict it to one
+    - The moon especially - doesn't make sense to restrict it to one
 
 ## LEO era content pass
 
+- There should be four lunar build chains, but only three build slots, forcing a choice
 
 ## Asteroid era content pass
 
@@ -106,7 +105,7 @@ This is a list of future requirements for the game but they are not to be implem
 
 ## Game art:
 
-  - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow )
+  - Low poly or pixel art, clear colour coding (e.g. mines will be brown, research facilities blue, funding generators yellow)
   - Show building icons on hex map?
   - Generic profile pictures for board members
 
@@ -141,10 +140,11 @@ This is a list of future requirements for the game but they are not to be implem
   - Player should get a list of the biggest polluters
   - What happens when a tile is destroyed by climate while a facility is being built? The facility stays and functions. Is that correct?
   - Terrain restoration actions should probably be gated by current climate damage %, i.e. you must first lower the climate threat level before you can use restoration actions
-  - The Space Launch Centre can be destroyed by climate damage, and it's possible to get into a situation where it cannot be rebuilt anywhere. Either the space launch centre needs to be immune to climate damage, or it needs to be more flexible in its placement.
   - Terrain Actions such as Urbanize and Clear Industrial Site must make sense (Clear Industrial Site doesn't do anything?)
   - If climate pressure drops low enough, and the player reaches Era 3, then coastal flooding could start to recede
+  - There should be a per-turn chance of a damaged tile being restored automatically, at least at lower climate scores.
   - If a tile is destroyed by a climate action, the news feed should say which tile it is
+  - Climate damage feels too frequent and too harsh just now, even when the climate score is lower (<70%)
 
 ## Next Turn / Phase Control
 
@@ -157,6 +157,10 @@ This is a list of future requirements for the game but they are not to be implem
 ## Game management
 
   - Continue game after winning
+  - Wormhole is currently disabled, so there is no win condition
+  - New game experience - more guidance on what to do to play the game
+  - New game experience - start with a couple of pre-built facilities
+  - Fully random game map experience (custom bloc setup?)
 
 
 ## BUGS:
@@ -169,7 +173,6 @@ This is a list of future requirements for the game but they are not to be implem
 Era 1:
 
 - Petrochemical Refinery (+funding, +climate) or Oil wells
-- ~~Observatory (+physics, +computing, -funding) on Highland tiles only~~ ✅ implemented
 
 ## Observatory signal bonus:
  Once `spaceImaging` is discovered, the Observatory should also contribute Signal research each turn. Requires engine support for tech-conditional facility output (no such mechanism exists in `FacilityDef` yet — `fieldOutput` is static).

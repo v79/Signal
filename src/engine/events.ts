@@ -11,8 +11,13 @@ import type {
   FacilityInstance,
   BlocState,
   SignalState,
+  HexCoord,
+  TileType,
+  TileDestroyedStatus,
+  NewsItem,
 } from './types';
 import type { Rng } from './rng';
+import { reanchorCern } from './projects';
 
 // ---------------------------------------------------------------------------
 // Event pool selection
@@ -182,10 +187,17 @@ export function resolveEvent(
 // Effect application
 // ---------------------------------------------------------------------------
 
+export interface DestroyedTileRecord {
+  coord: HexCoord;
+  tileType: TileType;
+  status: TileDestroyedStatus;
+}
+
 export interface EventEffectResult {
   player: PlayerState;
   mapTiles: MapTile[];
   signal?: SignalState;
+  destroyedTiles: DestroyedTileRecord[];
 }
 
 /**
@@ -206,6 +218,7 @@ export function applyEventEffect(
 ): EventEffectResult {
   let updatedPlayer = { ...player };
   let updatedTiles = mapTiles;
+  const destroyedTiles: DestroyedTileRecord[] = [];
 
   // Resources delta
   if (effect.resources) {
@@ -251,6 +264,7 @@ export function applyEventEffect(
       const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, chosen, status, facilityDefs, rng);
       updatedTiles = destruction.tiles;
       updatedPlayer = destruction.player;
+      destroyedTiles.push({ coord: chosen.coord, tileType: chosen.type, status });
     }
   }
 
@@ -264,6 +278,7 @@ export function applyEventEffect(
       const destruction = destroyTileAndFacility(updatedTiles, updatedPlayer, target, status, facilityDefs, rng);
       updatedTiles = destruction.tiles;
       updatedPlayer = destruction.player;
+      destroyedTiles.push({ coord: target.coord, tileType: target.type, status });
     }
   }
 
@@ -277,7 +292,41 @@ export function applyEventEffect(
   }
 
   // eliminateBloc, triggersEventId — deferred
-  return { player: updatedPlayer, mapTiles: updatedTiles, signal: updatedSignal };
+  return { player: updatedPlayer, mapTiles: updatedTiles, signal: updatedSignal, destroyedTiles };
+}
+
+export type EventResolution = 'mitigated' | 'accepted' | 'declined' | 'expired';
+
+const TILE_DESTRUCTION_CAUSE: Record<TileDestroyedStatus, string> = {
+  flooded: 'flooding',
+  dustbowl: 'drought',
+  irradiated: 'contamination',
+};
+
+/** "An" before tile types beginning with a vowel (arid, agricultural), else "A". */
+export function tileArticle(tileType: TileType): 'A' | 'An' {
+  return /^[aeiou]/i.test(tileType) ? 'An' : 'A';
+}
+
+/** e.g. "An industrial tile at (3,-2) has been lost to contamination." */
+export function formatTileDestroyedNews(record: DestroyedTileRecord): string {
+  const { tileType, coord, status } = record;
+  return `${tileArticle(tileType)} ${tileType} tile at (${coord.q},${coord.r}) has been lost to ${TILE_DESTRUCTION_CAUSE[status]}.`;
+}
+
+/** Build news items for tiles destroyed during an event resolution. */
+export function tileDestructionNewsItems(
+  destroyed: DestroyedTileRecord[],
+  eventId: string,
+  resolution: EventResolution,
+  turn: number,
+): NewsItem[] {
+  return destroyed.map((dt, i) => ({
+    id: `event-${resolution}-${eventId}-tile-${i}-t${turn}`,
+    turn,
+    text: formatTileDestroyedNews(dt),
+    category: 'event-loss',
+  }));
 }
 
 /** Destroy a tile and remove one random non-immune facility slot from it. */
@@ -326,6 +375,8 @@ function destroyTileAndFacility(
       facilities: player.facilities.filter((f) => f.id !== victimId),
       constructionQueue: player.constructionQueue.filter((a) => a.coordKey !== tileCoordKey),
     };
+    // If the destroyed facility was CERN's host university, find the next eligible one
+    updatedPlayer = reanchorCern(updatedPlayer);
   }
 
   return { tiles: updatedTiles, player: updatedPlayer };

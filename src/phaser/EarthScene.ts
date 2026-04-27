@@ -90,6 +90,8 @@ export interface EarthSceneCallbacks {
   getClimate: () => number;
   /** Per-coordKey list of directional indicators to draw at each hex edge. */
   getAdjacencyMap: () => Map<string, AdjacencyIndicator[]>;
+  /** Coord key of the tile hosting CERN's anchor publicUniversity, or null if not completed. */
+  getCernHostCoordKey: () => string | null;
   onTileClick: (coordKey: string) => void;
   onTileHover: (coordKey: string | null) => void;
 }
@@ -341,6 +343,7 @@ export class EarthScene extends Phaser.Scene {
 
     const facilityById = new Map(facilities.map((f) => [f.id, f]));
     const queueMap = new Map(queue.map((a) => [a.coordKey, a]));
+    const cernHostKey = this.cb.getCernHostCoordKey();
 
     for (const tile of tiles) {
       const key = `${tile.coord.q},${tile.coord.r}`;
@@ -356,6 +359,14 @@ export class EarthScene extends Phaser.Scene {
       const flash = this.flashingTiles.get(key) ?? null;
 
       this.drawTile(tile, verts, x, y, isHovered, isSelected, slotInstances, action, climate, adjacencyMap.get(key) ?? [], flash, now);
+
+      // CERN ring — drawn over the host publicUniversity tile
+      if (cernHostKey && key === cernHostKey) {
+        this.overlayGfx.lineStyle(1.5, FACILITY_COLORS['publicUniversity'] ?? 0xa070d8, 0.6);
+        this.overlayGfx.strokeCircle(x, y, HEX_SIZE * 0.5);
+        this.overlayGfx.lineStyle(1, FACILITY_COLORS['publicUniversity'] ?? 0xa070d8, 0.3);
+        this.overlayGfx.strokeCircle(x, y, HEX_SIZE * 0.56);
+      }
     }
   }
 

@@ -87,11 +87,13 @@
 
   function rewardSummary(def: ProjectDef): string {
     const parts: string[] = [];
-    if (def.reward.signalProgress) parts.push(`+${def.reward.signalProgress} signal`);
-    if (def.reward.resources?.funding) parts.push(`+${def.reward.resources.funding}F`);
-    if (def.reward.resources?.materials) parts.push(`+${def.reward.resources.materials}M`);
-    if (def.reward.resources?.politicalWill) parts.push(`+${def.reward.resources.politicalWill}W`);
-    if (def.reward.unlocksCards?.length) parts.push(`${def.reward.unlocksCards.length} card(s)`);
+    const r = def.oneOffReward;
+    if (r?.signalProgress) parts.push(`+${r.signalProgress} signal`);
+    if (r?.resources?.funding) parts.push(`+${r.resources.funding}F`);
+    if (r?.resources?.materials) parts.push(`+${r.resources.materials}M`);
+    if (r?.resources?.politicalWill) parts.push(`+${r.resources.politicalWill}W`);
+    if (r?.unlocksCards?.length) parts.push(`${r.unlocksCards.length} card(s)`);
+    if (def.ongoingReward) parts.push('+ ongoing output');
     return parts.join(', ');
   }
 

@@ -41,6 +41,8 @@ import {
   applyEventEffect,
   getEffectForResolution,
   formatEffectForNews,
+  tileDestructionNewsItems,
+  type DestroyedTileRecord,
 } from '../../engine/events';
 import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
 import { canInitiateProject, initiateProject } from '../../engine/projects';
@@ -788,12 +790,14 @@ export const gameStore = {
     const residualEffect = getEffectForResolution(def, 'mitigation');
     let updatedTiles = _state.map.earthTiles;
     let updatedSignal = _state.signal;
+    let destroyedTiles: DestroyedTileRecord[] = [];
     if (residualEffect) {
       const eventRng = createRng(`${_state.seed}-mitigate-${eventId}-t${_state.turn}`);
       const result = applyEventEffect(residualEffect, playerAfterCost, updatedTiles, _state.turn, eventRng, FACILITY_DEFS, _state.signal);
       playerAfterCost = result.player;
       updatedTiles = result.mapTiles;
       if (result.signal) updatedSignal = result.signal;
+      destroyedTiles = result.destroyedTiles;
     }
 
     // News item
@@ -813,6 +817,7 @@ export const gameStore = {
         newsFeed: [
           ..._state.player.newsFeed,
           { id: `event-mitigated-${eventId}-t${_state.turn}`, turn: _state.turn, text: newsText, category: 'event-neutral' as const },
+          ...tileDestructionNewsItems(destroyedTiles, eventId, 'mitigated', _state.turn),
         ],
       },
       activeEvents: _state.activeEvents.map((e) =>
@@ -832,12 +837,14 @@ export const gameStore = {
     let updatedPlayer = _state.player;
     let updatedTiles = _state.map.earthTiles;
     let updatedSignal = _state.signal;
+    let destroyedTiles: DestroyedTileRecord[] = [];
     if (effect) {
       const eventRng = createRng(`${_state.seed}-accept-${eventId}-t${_state.turn}`);
       const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, FACILITY_DEFS, _state.signal);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
       if (result.signal) updatedSignal = result.signal;
+      destroyedTiles = result.destroyedTiles;
     }
 
     const isBoardProposal = def.id === 'boardProposalOrbitalStation';
@@ -866,6 +873,7 @@ export const gameStore = {
             text: newsText,
             category: 'event-gain' as const,
           },
+          ...tileDestructionNewsItems(destroyedTiles, eventId, 'accepted', _state.turn),
         ],
       },
       activeEvents: _state.activeEvents.map((e) =>
@@ -920,12 +928,14 @@ export const gameStore = {
     let updatedPlayer = _state.player;
     let updatedTiles = _state.map.earthTiles;
     let updatedSignal = _state.signal;
+    let destroyedTiles: DestroyedTileRecord[] = [];
     if (effect) {
       const eventRng = createRng(`${_state.seed}-decline-${eventId}-t${_state.turn}`);
       const result = applyEventEffect(effect, updatedPlayer, updatedTiles, _state.turn, eventRng, FACILITY_DEFS, _state.signal);
       updatedPlayer = result.player;
       updatedTiles = result.mapTiles;
       if (result.signal) updatedSignal = result.signal;
+      destroyedTiles = result.destroyedTiles;
     }
 
     const summary = effect ? formatEffectForNews(effect) : 'no effect';
@@ -943,6 +953,7 @@ export const gameStore = {
             text: `${def.name} — consequence applied: ${summary}.`,
             category: 'event-loss' as const,
           },
+          ...tileDestructionNewsItems(destroyedTiles, eventId, 'declined', _state.turn),
         ],
       },
       activeEvents: _state.activeEvents.map((e) =>

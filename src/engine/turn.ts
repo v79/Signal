@@ -41,6 +41,7 @@ import {
   applyEventEffect,
   getEffectForResolution,
   formatEffectForNews,
+  tileDestructionNewsItems,
 } from './events';
 import { simulateBlocs, checkBlocMergers } from './blocs';
 import {
@@ -58,7 +59,7 @@ import {
   computeSignalCap,
   isSignalPaused,
 } from './signal';
-import { tickActiveProjects } from './projects';
+import { tickActiveProjects, applyOngoingProjectRewards, reanchorCern } from './projects';
 import { applyClimateDegradation } from './climate';
 import { checkVictoryConditions, tickEarthWelfare } from './victory';
 import { ZERO_RESOURCES, ZERO_FIELDS, recomputeLaunchCapacity } from './state';
@@ -199,6 +200,7 @@ export function executeEventPhase(
       text: `${def.name} expired — ${summary}.`,
       category: 'event-loss',
     });
+    expiryNews.push(...tileDestructionNewsItems(result.destroyedTiles, event.id, 'expired', state.turn));
   }
 
   // 3. Select and add new events
@@ -438,6 +440,15 @@ export function executeWorldPhase(
     bankDecay,
     ZERO_RESOURCES,
   );
+
+  // 5b. Ongoing output from completed scientific/landmark projects
+  const ongoingOut = applyOngoingProjectRewards(player, projectDefs);
+  for (const [k, v] of Object.entries(ongoingOut.fields) as [keyof FieldPoints, number][]) {
+    newFields[k] = (newFields[k] ?? 0) + v;
+  }
+  if (ongoingOut.resources.funding) newResources.funding += ongoingOut.resources.funding;
+  if (ongoingOut.resources.materials) newResources.materials = Math.max(0, newResources.materials + ongoingOut.resources.materials);
+  if (ongoingOut.resources.politicalWill) newResources.politicalWill = Math.max(0, newResources.politicalWill + ongoingOut.resources.politicalWill);
 
   // 6a. Breakthrough check — may promote 'unknown' techs to 'rumour' before distribution
   const activeFacilityDefIds = facilitiesAfterQueue

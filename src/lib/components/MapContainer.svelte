@@ -240,6 +240,16 @@
 
   const hasCompletedProjects = $derived(completedProjectKeys.length > 0);
 
+  /** Coord key of the tile containing CERN's host publicUniversity, or null. */
+  const cernHostCoordKey = $derived((): string | null => {
+    const state = gameStore.state;
+    if (!state) return null;
+    const hostFacilityId = state.player.projectHostFacilityIds['cern'];
+    if (!hostFacilityId) return null;
+    const tile = state.map.earthTiles.find((t) => t.facilitySlots.includes(hostFacilityId));
+    return tile ? `${tile.coord.q},${tile.coord.r}` : null;
+  });
+
   /** The currently selected space node, if any. */
   const selectedSpaceNode = $derived(
     gameStore.selectedSpaceNodeId != null && gameStore.state
@@ -332,6 +342,7 @@
         getSelected: () => gameStore.selectedCoordKey,
         getClimate: () => gameStore.state?.climatePressure ?? 0,
         getAdjacencyMap: () => adjacencyMap,
+        getCernHostCoordKey: () => cernHostCoordKey(),
         onTileClick: (key: string) => {
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },

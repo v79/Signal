@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ProjectDef, ProjectReward, ResearchField } from '../../engine/types';
+  import type { ProjectDef, ProjectReward, OngoingProjectReward, ProjectType, ResearchField } from '../../engine/types';
   import { turnToYear } from '../../engine/projects';
 
   let {
@@ -18,9 +18,17 @@
     id: string;
     name: string;
     description: string;
-    reward: ProjectReward;
+    type: ProjectType;
+    oneOffReward: ProjectReward;
+    ongoingReward?: OngoingProjectReward;
     era: string;
     completedYear: number;
+  };
+
+  const TYPE_GLYPH: Record<ProjectType, string> = {
+    scientific: '!',
+    landmark: '=',
+    contract: '¤',
   };
 
   const entries = $derived((): DisplayEntry[] => {
@@ -32,35 +40,50 @@
         if (seenGroups.has(def.groupId)) continue;
         seenGroups.add(def.groupId);
 
-        // Collect all stages in this group
         const stageDefs = [...projectDefs.values()].filter((d) => d.groupId === def.groupId);
         const allComplete = stageDefs.every((d) => d.id in completedProjectIds);
         if (!allComplete) continue;
 
-        // Aggregate rewards across all stages
+        // Aggregate one-off rewards across all stages
         const combined: ProjectReward = {};
+        const combinedOngoing: OngoingProjectReward = {};
         for (const stage of stageDefs) {
-          if (stage.reward.signalProgress) {
-            combined.signalProgress = (combined.signalProgress ?? 0) + stage.reward.signalProgress;
-          }
-          if (stage.reward.resources) {
+          const r = stage.oneOffReward;
+          if (r?.signalProgress) combined.signalProgress = (combined.signalProgress ?? 0) + r.signalProgress;
+          if (r?.resources) {
             if (!combined.resources) combined.resources = {};
-            for (const [k, v] of Object.entries(stage.reward.resources)) {
+            for (const [k, v] of Object.entries(r.resources)) {
               const key = k as keyof typeof combined.resources;
               combined.resources[key] = (combined.resources[key] ?? 0) + (v ?? 0);
             }
           }
-          if (stage.reward.fields) {
+          if (r?.fields) {
             if (!combined.fields) combined.fields = {};
-            for (const [k, v] of Object.entries(stage.reward.fields)) {
+            for (const [k, v] of Object.entries(r.fields)) {
               const key = k as ResearchField;
               (combined.fields as Record<string, number>)[key] =
                 ((combined.fields as Record<string, number>)[key] ?? 0) + (v ?? 0);
             }
           }
-          if (stage.reward.unlocksCards?.length) {
+          if (r?.unlocksCards?.length) {
             if (!combined.unlocksCards) combined.unlocksCards = [];
-            combined.unlocksCards.push(...stage.reward.unlocksCards);
+            combined.unlocksCards.push(...r.unlocksCards);
+          }
+          const o = stage.ongoingReward;
+          if (o?.fields) {
+            if (!combinedOngoing.fields) combinedOngoing.fields = {};
+            for (const [k, v] of Object.entries(o.fields)) {
+              const key = k as ResearchField;
+              (combinedOngoing.fields as Record<string, number>)[key] =
+                ((combinedOngoing.fields as Record<string, number>)[key] ?? 0) + (v ?? 0);
+            }
+          }
+          if (o?.resources) {
+            if (!combinedOngoing.resources) combinedOngoing.resources = {};
+            for (const [k, v] of Object.entries(o.resources)) {
+              const key = k as keyof typeof combinedOngoing.resources;
+              combinedOngoing.resources[key] = (combinedOngoing.resources[key] ?? 0) + (v ?? 0);
+            }
           }
         }
 
@@ -69,7 +92,9 @@
           id: def.groupId,
           name: def.groupName ?? def.groupId,
           description: stageDefs[stageDefs.length - 1].description,
-          reward: combined,
+          type: def.type,
+          oneOffReward: combined,
+          ongoingReward: Object.keys(combinedOngoing).length > 0 ? combinedOngoing : undefined,
           era: def.era,
           completedYear: turnToYear(latestTurn),
         });
@@ -79,7 +104,9 @@
           id: def.id,
           name: def.name,
           description: def.description,
-          reward: def.reward,
+          type: def.type,
+          oneOffReward: def.oneOffReward ?? {},
+          ongoingReward: def.ongoingReward,
           era: def.era,
           completedYear: turnToYear(completedProjectIds[def.id] ?? 0),
         });
@@ -119,7 +146,7 @@
         <div class="project-card">
           <div class="card-top">
             <div class="image-placeholder">
-              <span class="image-glyph">◈</span>
+              <span class="image-glyph" title={entry.type}>{TYPE_GLYPH[entry.type]}</span>
             </div>
             <div class="card-info">
               <div class="project-name">{entry.name}</div>
@@ -127,27 +154,37 @@
             </div>
           </div>
           <div class="reward-row">
-            {#if entry.reward.signalProgress}
-              <span class="chip signal">+{entry.reward.signalProgress} SIG</span>
+            {#if entry.oneOffReward.signalProgress}
+              <span class="chip signal">+{entry.oneOffReward.signalProgress} SIG</span>
             {/if}
-            {#if entry.reward.resources?.funding}
-              <span class="chip funding">+{entry.reward.resources.funding}F</span>
+            {#if entry.oneOffReward.resources?.funding}
+              <span class="chip funding">+{entry.oneOffReward.resources.funding}F</span>
             {/if}
-            {#if entry.reward.resources?.materials}
-              <span class="chip materials">+{entry.reward.resources.materials}M</span>
+            {#if entry.oneOffReward.resources?.materials}
+              <span class="chip materials">+{entry.oneOffReward.resources.materials}M</span>
             {/if}
-            {#if entry.reward.resources?.politicalWill}
-              <span class="chip will">+{entry.reward.resources.politicalWill}W</span>
+            {#if entry.oneOffReward.resources?.politicalWill}
+              <span class="chip will">+{entry.oneOffReward.resources.politicalWill}W</span>
             {/if}
-            {#if entry.reward.fields}
-              {#each Object.entries(entry.reward.fields) as [field, pts]}
+            {#if entry.oneOffReward.fields}
+              {#each Object.entries(entry.oneOffReward.fields) as [field, pts]}
                 {#if pts}
                   <span class="chip field">{FIELD_LABELS[field] ?? field} +{pts}</span>
                 {/if}
               {/each}
             {/if}
-            {#if entry.reward.unlocksCards?.length}
-              <span class="chip card">{entry.reward.unlocksCards.length} card{entry.reward.unlocksCards.length === 1 ? '' : 's'}</span>
+            {#if entry.oneOffReward.unlocksCards?.length}
+              <span class="chip card">{entry.oneOffReward.unlocksCards.length} card{entry.oneOffReward.unlocksCards.length === 1 ? '' : 's'}</span>
+            {/if}
+            {#if entry.ongoingReward?.fields}
+              {#each Object.entries(entry.ongoingReward.fields) as [field, pts]}
+                {#if pts}
+                  <span class="chip ongoing">{FIELD_LABELS[field] ?? field} +{pts}/t</span>
+                {/if}
+              {/each}
+            {/if}
+            {#if entry.ongoingReward?.resources?.funding}
+              <span class="chip ongoing">+{entry.ongoingReward.resources.funding}F/t</span>
             {/if}
           </div>
         </div>
@@ -287,5 +324,11 @@
     background: #1a0a18;
     color: #b060a0;
     border: 1px solid #4a1a40;
+  }
+
+  .chip.ongoing {
+    background: #0a1a12;
+    color: #50c878;
+    border: 1px solid #1a4a28;
   }
 </style>
