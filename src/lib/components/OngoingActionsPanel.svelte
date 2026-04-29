@@ -269,6 +269,8 @@
     gap: 0.35rem;
     min-height: 0;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #1a2a38 transparent;
   }
 
   .section-header {

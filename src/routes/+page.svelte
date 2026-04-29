@@ -4,11 +4,9 @@
   import { browser } from '$app/environment';
   import HUD from '$lib/components/HUD.svelte';
   import EventZone from '$lib/components/EventZone.svelte';
-  import ResearchFeed from '$lib/components/ResearchFeed.svelte';
   import TechProgressSummary from '$lib/components/TechProgressSummary.svelte';
   import TechTreeModal from '$lib/components/TechTreeModal.svelte';
   import SignalTrack from '$lib/components/SignalTrack.svelte';
-  import ScienceNewsFeed from '$lib/components/ScienceNewsFeed.svelte';
   import OngoingActionsPanel from '$lib/components/OngoingActionsPanel.svelte';
   import CardHand from '$lib/components/CardHand.svelte';
   import MapContainer from '$lib/components/MapContainer.svelte';
@@ -30,7 +28,6 @@
   } from '../engine/facilities';
   import { CLIMATE_PRESSURE_PER_TURN } from '../engine/turn';
   import { computeBankDecay, tickWill, DEFAULT_WILL_CONFIG } from '../engine/resources';
-  import { isSignalClimax } from '../engine/signal';
   // Redirect to /newgame if there is no active game state (cold start).
   // Also register back-button / unload guards during the action phase.
   function beforeUnloadHandler(e: BeforeUnloadEvent): string | undefined {
@@ -94,11 +91,6 @@
     gameStore.state
       ? computeClimateBreakdown(gameStore.state.player.facilities, FACILITY_DEFS, CLIMATE_PRESSURE_PER_TURN)
       : { base: CLIMATE_PRESSURE_PER_TURN, entries: [] },
-  );
-
-  // Generate wormhole options once when the climax is reached (deterministic seed).
-  const wormholeOptions = $derived(
-    gameStore.state && isSignalClimax(gameStore.state.signal) ? gameStore.getWormholeOptions() : [],
   );
 
   let showTechTree = $state(false);
@@ -205,9 +197,9 @@
       onSettings={() => {}}
     />
 
-    <!-- Middle row -->
-    <div class="middle-row">
-      <!-- Left column: events + ongoing construction + standing actions -->
+    <!-- Main grid: left + centre stack vertically; right column spans full height -->
+    <div class="main-grid">
+      <!-- Left column: events + ongoing construction (upper portion only) -->
       <div class="left-column">
         <EventZone
           events={gs.activeEvents}
@@ -228,13 +220,36 @@
           actionsRemaining={actionsRemaining}
           onInitiateProject={(defId) => gameStore.initiateProject(defId)}
         />
-
       </div>
 
       <!-- Centre: Earth map (Phaser) -->
-      <MapContainer />
+      <div class="centre-area">
+        <MapContainer />
+      </div>
 
-      <!-- Right column: signal track + tech tree + in-progress research -->
+      <!-- News ticker spans left + centre columns -->
+      <div class="ticker-area">
+        <NewsTicker items={gs.player.newsFeed} />
+      </div>
+
+      <!-- Card hand spans left + centre columns -->
+      <div class="hand-area">
+        <CardHand
+          cards={gs.player.cards}
+          cardDefs={CARD_DEFS}
+          phase={gs.phase}
+          activeEventTags={counterableTags}
+          actionsThisTurn={gs.actionsThisTurn ?? 0}
+          maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
+          playerResources={gs.player.resources}
+          activeBoardRoles={activeBoardRoles}
+          onPlay={(id) => gameStore.playCard(id)}
+          onBank={(id) => gameStore.bankCard(id)}
+          onUnbank={(id) => gameStore.unbankCard(id)}
+        />
+      </div>
+
+      <!-- Right column: full height — signal + tech + phase controls -->
       <div class="right-column">
         <SignalTrack signal={gs.signal} era={gs.era} techs={gs.player.techs} />
 
@@ -251,43 +266,15 @@
           {/if}
         </button>
 
-       <!-- <ScienceNewsFeed items={gs.player.newsFeed} />-->
-
         <TechProgressSummary techs={gs.player.techs} techDefs={TECH_DEFS} />
 
-        <ResearchFeed
-          signal={gs.signal}
-          {wormholeOptions}
-          onCommitWormholeResponse={(id) => gameStore.commitWormholeResponse(id, wormholeOptions)}
+        <PhaseControls
+          phase={gs.phase}
+          actionsThisTurn={gs.actionsThisTurn ?? 0}
+          maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
+          onAdvance={() => gameStore.advancePhase()}
         />
       </div>
-    </div>
-
-    <!-- News ticker strip (click to open popup) -->
-    <NewsTicker items={gs.player.newsFeed} />
-
-    <!-- Bottom row: card hand + phase controls -->
-    <div class="bottom-row">
-      <CardHand
-        cards={gs.player.cards}
-        cardDefs={CARD_DEFS}
-        phase={gs.phase}
-        activeEventTags={counterableTags}
-        actionsThisTurn={gs.actionsThisTurn ?? 0}
-        maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
-        playerResources={gs.player.resources}
-        activeBoardRoles={activeBoardRoles}
-        onPlay={(id) => gameStore.playCard(id)}
-        onBank={(id) => gameStore.bankCard(id)}
-        onUnbank={(id) => gameStore.unbankCard(id)}
-      />
-
-      <PhaseControls
-        phase={gs.phase}
-        actionsThisTurn={gs.actionsThisTurn ?? 0}
-        maxActionsPerTurn={(gs.maxActionsPerTurn ?? 3) + (gs.bonusActionsThisTurn ?? 0)}
-        onAdvance={() => gameStore.advancePhase()}
-      />
     </div>
   </div>
 {/if}
@@ -301,15 +288,21 @@
     overflow: hidden;
   }
 
-  .middle-row {
+  .main-grid {
     display: grid;
     grid-template-columns: 17rem 1fr 20rem;
+    grid-template-rows: 1fr auto auto;
+    grid-template-areas:
+      'left   centre  right'
+      'ticker ticker  right'
+      'hand   hand    right';
     flex: 1;
     min-height: 0;
     overflow: hidden;
   }
 
   .left-column {
+    grid-area: left;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -317,11 +310,34 @@
     min-height: 0;
   }
 
-  .right-column {
+  .centre-area {
+    grid-area: centre;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    min-width: 0;
+  }
+
+  .ticker-area {
+    grid-area: ticker;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .hand-area {
+    grid-area: hand;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .right-column {
+    grid-area: right;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    border-left: 1px solid #1e2530;
   }
 
   .tree-btn {
@@ -336,7 +352,6 @@
     border: none;
     border-top: 1px solid #1e2530;
     border-bottom: 1px solid #1e2530;
-    border-left: 1px solid #1e2530;
     color: #4a7888;
     font-family: var(--ff-mono);
     font-size: 0.65rem;
@@ -364,14 +379,5 @@
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.35; }
-  }
-
-  .bottom-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    border-top: 1px solid #1e2530;
-    flex-shrink: 0;
-    max-height: 16rem;
-    overflow: hidden;
   }
 </style>

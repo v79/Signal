@@ -70,11 +70,11 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem 0.5rem 0.75rem;
+    padding: 0.6rem 0.75rem;
     background: var(--surface-0);
-    border-left: 1px solid var(--border-panel);
+    border-top: 1px solid var(--border-panel);
     flex-shrink: 0;
-    min-width: 13rem;
+    margin-top: auto;
     gap: 0.5rem;
   }
 

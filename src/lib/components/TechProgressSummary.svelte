@@ -51,7 +51,6 @@
                   <div class="track">
                     <div class="fill" style="width: {pct}%; background: {color}"></div>
                   </div>
-                  <span class="raw">{current}/{threshold}</span>
                 </div>
               {/if}
             {/each}
@@ -82,6 +81,8 @@
     overflow-y: auto;
     flex: 1;
     min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #1a2a38 transparent;
   }
 
   .empty {
@@ -126,15 +127,6 @@
     width: 2.2rem;
     flex-shrink: 0;
     letter-spacing: 0.06em;
-  }
-
-  .raw {
-    font-size: var(--fs-xs);
-    color: #2a4050;
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-    width: 3.8rem;
-    text-align: right;
   }
 
   .track {

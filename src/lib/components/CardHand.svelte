@@ -207,6 +207,25 @@
     background: var(--surface-0);
     overflow-x: auto;
     flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #1a2a38 transparent;
+  }
+
+  .card-hand::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .card-hand::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .card-hand::-webkit-scrollbar-thumb {
+    background: #1a2a38;
+    border-radius: 3px;
+  }
+
+  .card-hand::-webkit-scrollbar-thumb:hover {
+    background: #2a3a48;
   }
 
   .zone-label {
