@@ -179,6 +179,25 @@
     border-right: 1px solid var(--border-panel);
     overflow-y: auto;
     min-width: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #1a2a38 transparent;
+  }
+
+  .event-zone::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .event-zone::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .event-zone::-webkit-scrollbar-thumb {
+    background: #1a2a38;
+    border-radius: 3px;
+  }
+
+  .event-zone::-webkit-scrollbar-thumb:hover {
+    background: #2a3a48;
   }
 
   .panel-title {
