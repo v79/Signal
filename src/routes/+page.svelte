@@ -251,7 +251,7 @@
           {/if}
         </button>
 
-        <ScienceNewsFeed items={gs.player.newsFeed} />
+       <!-- <ScienceNewsFeed items={gs.player.newsFeed} />-->
 
         <TechProgressSummary techs={gs.player.techs} techDefs={TECH_DEFS} />
 
