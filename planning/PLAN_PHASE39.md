@@ -153,13 +153,13 @@ Add a short section to `SignalGDD.md` describing the infrastructure-project plac
 
 - [ ] `projects.json`: add `producesFacility: { defId: "spaceLaunchCentre", placement: "manualTile" }` to whichever project produces the launch centre. (May need a new project entry if the centre is currently produced solely by an event.)
 - [ ] `projects.json`: optionally add `producesFacility: { defId: "cern", placement: "anchoredToHost", hostFacilityDefId: "publicUniversity" }` for documentation/consistency, even though Phase 38 hard-codes the behaviour.
-- [ ] `src/data/helpTopics.ts`: new file with help-text strings keyed by tab id.
+- ✅ `src/data/helpTopics.ts`: new file with help-text strings keyed by tab id.
 
 ### UI (`src/lib/components/`)
 
-- [ ] `HelpButton.svelte` — new.
-- [ ] `HelpModal.svelte` — new (or fold into existing modal).
-- [ ] `MapContainer.svelte`: render `HelpButton` per tab; render pulsing `.new-dot` on tabs whose seen flag is `false`; clear flag on `switchTab`.
+- ✅ `HelpButton.svelte` — new (small `?` glyph button, accessible label).
+- ✅ `HelpModal.svelte` — new; closes on Escape, Enter, backdrop click, or CLOSE button. Reuses the surface/border tokens of `NarrativeModal` for visual consistency.
+- ✅ `MapContainer.svelte`: single `HelpButton` right-aligned in the tab bar, opening a modal whose content is keyed off the active tab id (`HELP_TOPICS[activeTab]`). Pulsing `.new-dot` work deferred to 39.3.
 - [ ] `BoardPanel.svelte` (or wherever the committee tab content lives): pulsing dot binding.
 - [ ] `FacilityPicker.svelte` or new `PlacementPrompt.svelte`: modal flow for placing the produced facility on a chosen tile. Reuse existing tile-type filtering from the standard build flow.
 - [ ] `+page.svelte`: surface placement modal when `pendingFacilityPlacements` is non-empty at the start of the action phase.

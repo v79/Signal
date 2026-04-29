@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { TurnPhase } from '../../engine/types';
   import NarrativeModal from './NarrativeModal.svelte';
+  import HelpButton from './HelpButton.svelte';
   import { NARRATIVE_GAME_HELP } from '../../data/loader';
 
   let showHelp = $state(false);
@@ -41,7 +42,7 @@
 <div class="phase-controls">
   <div class="top-row">
     <span class="phase-desc">{phaseDesc}</span>
-    <button class="help-btn" onclick={() => (showHelp = true)} title="Help">?</button>
+    <HelpButton onClick={() => (showHelp = true)} label="Help" />
   </div>
 
   <div class="bottom-row">
@@ -92,32 +93,6 @@
     font-style: italic;
     line-height: 1.4;
     flex: 1;
-  }
-
-  .help-btn {
-    width: 1.3rem;
-    height: 1.3rem;
-    border-radius: 50%;
-    background: transparent;
-    border: 1px solid #3a2020;
-    color: #6a4040;
-    font-family: var(--ff-mono);
-    font-size: var(--fs-md);
-    font-weight: bold;
-    line-height: 1;
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-
-  .help-btn:hover {
-    background: #1a0a0a;
-    border-color: #804040;
-    color: #c07070;
   }
 
   .bottom-row {

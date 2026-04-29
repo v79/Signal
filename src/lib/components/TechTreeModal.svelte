@@ -15,6 +15,9 @@
   } from '../../phaser/TechTreeScene';
   import { PROJECT_DEFS, TILE_ACTION_DEFS } from '../../data/loader';
   import { FIELD_COLOURS_CSS, FIELD_ABBR } from '../fieldColours';
+  import HelpButton from './HelpButton.svelte';
+  import HelpModal from './HelpModal.svelte';
+  import { HELP_TOPICS } from '../../data/helpTopics';
 
   let {
     techs,
@@ -47,6 +50,7 @@
   let game: import('phaser').Game | null = null;
   let scene: TechTreeSceneType | null = null;
   let loading = $state(true);
+  let helpOpen = $state(false);
 
   // Per-era completion state — used for tab badges.
   function eraStats(e: Era): { discovered: number; total: number } {
@@ -261,6 +265,7 @@
 
   function handleKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
+      if (helpOpen) return; // HelpModal owns Escape while it's open
       if (selectedTechId) {
         selectedTechId = null;
       } else {
@@ -344,6 +349,7 @@
           {ERA_LABELS[activeEra]}
           <span class="header-count">{discoveredCount}/{totalCount} CONFIRMED</span>
         </span>
+        <HelpButton onClick={() => (helpOpen = true)} label="Help — Research Database" />
         <button class="close-btn" onclick={onClose} aria-label="Close tech tree">✕</button>
       </div>
     </div>
@@ -495,6 +501,10 @@
     </div>
   </div>
 </div>
+
+{#if helpOpen}
+  <HelpModal topic={HELP_TOPICS.techTree} onClose={() => (helpOpen = false)} />
+{/if}
 
 <style>
   .backdrop {

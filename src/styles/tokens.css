@@ -50,6 +50,14 @@
   --info-border:   #2a5080;
   --info-hover:    #081828;
 
+  /* Help affordance — muted red, distinct from --danger so the latter remains
+     reserved for destructive/error states. Used by HelpButton.svelte. */
+  --help:              #6a4040;
+  --help-border:       #3a2020;
+  --help-hover-bg:     #1a0a0a;
+  --help-hover-border: #804040;
+  --help-hover-text:   #c07070;
+
   /* ── Resource colours ─────────────────────────────────────────────────── */
   --funding:           #c8d050;
   --funding-negative:  #d46a4a;
