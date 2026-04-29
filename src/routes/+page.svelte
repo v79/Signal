@@ -210,16 +210,6 @@
           onDefer={(id) => gameStore.deferBoardProposal(id)}
         />
 
-        <OngoingActionsPanel
-          queue={gs.player.constructionQueue}
-          facilityDefs={FACILITY_DEFS}
-          availableProjects={gs.phase === 'action' ? availableProjects : []}
-          activeProjects={gs.player.activeProjects}
-          projectDefs={PROJECT_DEFS}
-          completedProjectIds={gs.player.completedProjectIds}
-          actionsRemaining={actionsRemaining}
-          onInitiateProject={(defId) => gameStore.initiateProject(defId)}
-        />
       </div>
 
       <!-- Centre: Earth map (Phaser) -->
@@ -267,6 +257,17 @@
         </button>
 
         <TechProgressSummary techs={gs.player.techs} techDefs={TECH_DEFS} />
+
+        <OngoingActionsPanel
+          queue={gs.player.constructionQueue}
+          facilityDefs={FACILITY_DEFS}
+          availableProjects={gs.phase === 'action' ? availableProjects : []}
+          activeProjects={gs.player.activeProjects}
+          projectDefs={PROJECT_DEFS}
+          completedProjectIds={gs.player.completedProjectIds}
+          actionsRemaining={actionsRemaining}
+          onInitiateProject={(defId) => gameStore.initiateProject(defId)}
+        />
 
         <PhaseControls
           phase={gs.phase}
