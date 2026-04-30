@@ -366,19 +366,4 @@
     color: #8aacca;
     background: #0d1820;
   }
-
-  .new-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #4ab8d8;
-    box-shadow: 0 0 6px #4ab8d8;
-    animation: pulse 1.6s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
 </style>

@@ -180,9 +180,14 @@ export function tickBoardAges(
   board: BoardSlots,
   defs: Map<string, BoardMemberDef>,
   turn: number,
-): { updatedBoard: BoardSlots; newNewsItems: NewsItem[] } {
+): {
+  updatedBoard: BoardSlots;
+  newNewsItems: NewsItem[];
+  newNotifications: CommitteeNotification[];
+} {
   const updatedBoard: BoardSlots = { ...board };
   const newNewsItems: NewsItem[] = [];
+  const newNotifications: CommitteeNotification[] = [];
 
   for (const role of Object.keys(board) as BoardRole[]) {
     const member = board[role];
@@ -192,18 +197,22 @@ export function tickBoardAges(
     if (newAge >= RETIREMENT_AGE) {
       updatedBoard[role] = { ...member, age: newAge, leftTurn: turn, leftReason: 'retired' };
       const displayName = defs.get(member.defId)?.name ?? member.defId;
-      newNewsItems.push({
-        id: `retire-${member.id}-t${turn}`,
-        turn,
-        text: `${displayName} has retired from the Steering Committee after a long and distinguished career.`,
-        category: 'board' as const,
+      const text = `${displayName} has retired from the Steering Committee after a long and distinguished career.`;
+      const id = `retire-${member.id}-t${turn}`;
+      newNewsItems.push({ id, turn, text, category: 'board' as const });
+      newNotifications.push({
+        id,
+        memberDefId: member.defId,
+        text,
+        turnCreated: turn,
+        dismissed: false,
       });
     } else {
       updatedBoard[role] = { ...member, age: newAge };
     }
   }
 
-  return { updatedBoard, newNewsItems };
+  return { updatedBoard, newNewsItems, newNotifications };
 }
 
 /**

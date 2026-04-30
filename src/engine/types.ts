@@ -986,4 +986,13 @@ export interface GameState {
    * are then treated as self-sustaining (no launch capacity consumed).
    */
   isruOperational: boolean;
+  /**
+   * Per-tab "seen" flags driving the pulsing notification dot in the map tab
+   * bar. Keyed by tab id — `space`, `belt`, `board`, plus any tabs added
+   * later. A missing key is treated as `true` (seen, no dot). The engine
+   * sets a key to `false` when something noteworthy happens for that tab
+   * (era unlock, new committee notification, etc.); the UI sets it back to
+   * `true` when the player switches to that tab.
+   */
+  tabSeen: Record<string, boolean>;
 }

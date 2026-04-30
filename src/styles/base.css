@@ -23,3 +23,21 @@ body {
   font-family: var(--ff-mono);
   overflow: hidden;
 }
+
+/* ── Pulsing notification dot ──────────────────────────────────────────── */
+/* Shared by the TECH TREE button (+page.svelte) and map tab notifications
+   (MapContainer.svelte). */
+.new-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ab8d8;
+  box-shadow: 0 0 6px #4ab8d8;
+  animation: new-dot-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes new-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

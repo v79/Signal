@@ -45,6 +45,7 @@ import {
   type DestroyedTileRecord,
 } from '../../engine/events';
 import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
+import { placeStarterFacilities } from '../../engine/starterFacilities';
 import { canInitiateProject, initiateProject } from '../../engine/projects';
 import {
   BLOC_MAPS,
@@ -351,6 +352,16 @@ export const gameStore = {
     _hoveredTileKey = key;
   },
 
+  /** Clear the pulsing dot for `tab`. No-op if the dot isn't lit. */
+  markTabSeen(tab: string): void {
+    if (!_state) return;
+    if (_state.tabSeen[tab] !== false) return;
+    mutateState({
+      ..._state,
+      tabSeen: { ..._state.tabSeen, [tab]: true },
+    });
+  },
+
   /**
    * Initialise a fresh game run from the new-game setup screen.
    * Replaces any existing save, builds the full initial state from the chosen
@@ -446,9 +457,15 @@ export const gameStore = {
         : t,
     );
 
+    // Phase 39.1: pre-build a deterministic trio of facilities (science + income +
+    // resource) so the map isn't blank on turn 1. Placement is keyed off bloc id
+    // and the bloc's tile declaration order — same seed, same starter layout.
+    const starter = placeStarterFacilities(playerBlocDefId, tilesWithHq, FACILITY_DEFS);
+    tilesWithHq = starter.tiles;
+
     // Dev: if starting in a later era, pre-place a Space Launch Centre on a
     // suitable Earth tile so the player has launch capacity from the start.
-    const initialFacilities: FacilityInstance[] = [hqFacility];
+    const initialFacilities: FacilityInstance[] = [hqFacility, ...starter.facilities];
     if (startEra !== 'earth') {
       const slcDef = FACILITY_DEFS.get('spaceLaunchCentre');
       const slotCost = slcDef?.slotCost ?? 3;

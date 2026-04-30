@@ -9,6 +9,9 @@
   import FacilityOverview from './FacilityOverview.svelte';
   import SpaceOverview from './SpaceOverview.svelte';
   import SpaceNodePicker from './SpaceNodePicker.svelte';
+  import HelpButton from './HelpButton.svelte';
+  import HelpModal from './HelpModal.svelte';
+  import { HELP_TOPICS, type HelpTopicId } from '../../data/helpTopics';
   import { gameStore } from '../stores/game.svelte';
   import { BOARD_DEFS, FACILITY_DEFS, PROJECT_DEFS, TECH_DEFS, TILE_ACTION_DEFS } from '../../data/loader';
   import type { AdjacencyIndicator, EarthScene as EarthSceneType } from '../../phaser/EarthScene';
@@ -49,6 +52,13 @@
     return false;
   }
 
+  /** True when a tab has a pending notification dot. */
+  function tabHasNewDot(tabId: string): boolean {
+    const state = gameStore.state;
+    if (!state) return false;
+    return state.tabSeen[tabId] === false;
+  }
+
   const hasLunarFacility = $derived(
     gameStore.state?.player.facilities.some((f) => LUNAR_FACILITY_IDS.has(f.defId)) ?? false,
   );
@@ -67,6 +77,14 @@
   let showFacilityOverview = $state(false);
   let showSpaceOverview = $state(false);
   let launchDetailOpen = $state(false);
+  let helpOpen = $state(false);
+
+  /**
+   * The current tab's help topic. Map tab ids match HelpTopicId 1:1, so this
+   * is just a typed cast — kept as a $derived so the modal updates if the
+   * active tab changes while help is somehow still open.
+   */
+  const helpTopic = $derived(HELP_TOPICS[activeTab as HelpTopicId]);
 
   /** HQ bonus including tech field bonuses — passed to TileTooltip for the HQ tile. */
   const hqBonus = $derived.by<HqBonus>(() => {
@@ -204,6 +222,8 @@
 
   function switchTab(tab: AllTab): void {
     if (activeTab === tab) return;
+
+    gameStore.markTabSeen(tab);
 
     if (!isMapTab(tab)) {
       // Just show the panel — don't stop the running Phaser scene.
@@ -383,6 +403,8 @@
           {tab.label}
           {#if !tabUnlocked(tab)}
             <span class="lock">&#x1F512;</span>
+          {:else if tabHasNewDot(tab.id)}
+            <span class="new-dot" aria-label="New content"></span>
           {/if}
         </button>
       </Tooltip>
@@ -399,6 +421,9 @@
         COMMITTEE (<span class:empty-committee={filled === 0}>{filled}</span>/{total})
       {:else}
         COMMITTEE
+      {/if}
+      {#if tabHasNewDot('board')}
+        <span class="new-dot" aria-label="New committee activity"></span>
       {/if}
     </button>
     <button
@@ -422,9 +447,15 @@
           PROJECTS
           {#if !hasCompletedProjects}
             <span class="lock">&#x1F512;</span>
+          {:else if tabHasNewDot('projects')}
+            <span class="new-dot" aria-label="New project completed"></span>
           {/if}
         </button>
       </Tooltip>
+    <div class="tab-spacer"></div>
+    <div class="help-slot">
+      <HelpButton onClick={() => (helpOpen = true)} label={`Help — ${helpTopic.title}`} />
+    </div>
   </div>
   {#if activeTab === 'earth' && gameStore.state}
     <div class="map-toolbar">
@@ -651,6 +682,10 @@
   </div>
 </div>
 
+{#if helpOpen}
+  <HelpModal topic={helpTopic} onClose={() => (helpOpen = false)} />
+{/if}
+
 <style>
     .map-wrapper {
         width: 100%;
@@ -662,11 +697,22 @@
 
     .tab-bar {
         display: flex;
+        align-items: center;
         gap: 1px;
         background: var(--surface-1);
         border-bottom: 1px solid var(--border-panel);
         flex-shrink: 0;
         padding: 2px 4px 0;
+    }
+
+    .tab-spacer {
+        flex: 1;
+    }
+
+    .help-slot {
+        display: flex;
+        align-items: center;
+        padding: 0 6px 2px;
     }
 
     .tab {
@@ -705,6 +751,12 @@
         font-size: var(--fs-xs);
         opacity: 0.6;
         margin-left: 2px;
+    }
+
+    /* Tab-bar variant of the global .new-dot — adds spacing + alignment. */
+    .tab :global(.new-dot) {
+        margin-left: 4px;
+        vertical-align: middle;
     }
 
     .board-panel-wrap {
