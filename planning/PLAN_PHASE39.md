@@ -142,11 +142,11 @@ Add a short section to `SignalGDD.md` describing the infrastructure-project plac
 
 ### Engine (`src/engine/`)
 
-- [ ] `types.ts`: add `producesFacility` to `ProjectDef`; add `pendingFacilityPlacements` to `GameState`; add tab-seen booleans (or equivalent) to `GameState`.
+- [ ] `types.ts`: add `producesFacility` to `ProjectDef`; add `pendingFacilityPlacements` to `GameState`. ✅ Tab-seen booleans (`nearSpaceTabSeen`, `asteroidTabSeen`) added.
 - ✅ `starterFacilities.ts` (new module): pure `placeStarterFacilities(blocDefId, tiles, facilityDefs)` helper, called from `startNewGame` in `game.svelte.ts` after HQ placement. v1 trio is `researchLab` + `coalPowerStation` + `mine` for every bloc; per-bloc overrides via `STARTER_FACILITY_TRIOS` map. Tab-seen booleans deferred to 39.3.
 - [ ] `projects.ts`: on completion of a project with `producesFacility.placement === 'manualTile'`, push to `pendingFacilityPlacements`.
 - [ ] `turn.ts`: increment defer counters on pending placements that aged through a turn without being placed.
-- [ ] Era-advance code (wherever `state.era` is mutated): set `nearSpaceTabSeen = false` / `asteroidTabSeen = false` as appropriate.
+- ✅ Era-advance code (`turn.ts`): sets `nearSpaceTabSeen = false` on `opensEra2` or `orbitalStation_stage1` completion; sets `asteroidTabSeen = false` on `opensEra3`.
 - [ ] Board lifecycle (`board.ts`): when a member exits, ensure `committeeNotifications` (or the new unread counter) is updated.
 
 ### Data
@@ -159,15 +159,15 @@ Add a short section to `SignalGDD.md` describing the infrastructure-project plac
 
 - ✅ `HelpButton.svelte` — new (small `?` glyph button, accessible label).
 - ✅ `HelpModal.svelte` — new; closes on Escape, Enter, backdrop click, or CLOSE button. Reuses the surface/border tokens of `NarrativeModal` for visual consistency.
-- ✅ `MapContainer.svelte`: single `HelpButton` right-aligned in the tab bar, opening a modal whose content is keyed off the active tab id (`HELP_TOPICS[activeTab]`). Pulsing `.new-dot` work deferred to 39.3.
-- [ ] `BoardPanel.svelte` (or wherever the committee tab content lives): pulsing dot binding.
+- ✅ `MapContainer.svelte`: single `HelpButton` right-aligned in the tab bar, opening a modal whose content is keyed off the active tab id (`HELP_TOPICS[activeTab]`). Pulsing `.new-dot` now rendered on Near Space, Asteroid Belt (era unlock) and Committee (any undismissed `committeeNotifications`) tabs; cleared by switching to the tab.
+- ✅ Committee dot is bound on the COMMITTEE tab in `MapContainer.svelte` directly — drives off `committeeNotifications.some(!dismissed)`, no `BoardPanel` change needed.
 - [ ] `FacilityPicker.svelte` or new `PlacementPrompt.svelte`: modal flow for placing the produced facility on a chosen tile. Reuse existing tile-type filtering from the standard build flow.
 - [ ] `+page.svelte`: surface placement modal when `pendingFacilityPlacements` is non-empty at the start of the action phase.
 
 ### Tests
 
 - ✅ Starter facilities placed deterministically per bloc; tile-type compatibility, idempotence, no input mutation, and `builtTurn: 0` all covered in `starterFacilities.test.ts` (7 tests).
-- [ ] Tab-seen flags flip correctly when era advances and clear on click.
+- ✅ Tab-seen flags flip correctly when era advances (`tabSeen.test.ts`, 6 tests covering defaults, deserialise migration, era 2 / era 3 / orbitalStation_stage1 unlocks, no spurious resets).
 - [ ] Project completion writes a placement-pending entry; `tickActiveProjects` does not duplicate it across turns.
 - [ ] Defer counter increments correctly; third defer surfaces a non-dismissable prompt.
 - [ ] `producesFacility.placement === 'anchoredToHost'` does not produce a placement-pending entry (CERN regression).

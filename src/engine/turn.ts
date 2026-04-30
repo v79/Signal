@@ -581,6 +581,10 @@ export function executeWorldPhase(
         ? ('nearSpace' as const)
         : state.era;
   const willBoostFromEraTransition = (opensEra2 || opensEra3) ? 30 : 0;
+
+  const nearSpaceUnlockedThisTurn =
+    opensEra2 || projectTickResult.completedDefIds.includes('orbitalStation_stage1');
+  const asteroidUnlockedThisTurn = opensEra3;
   const eraTransitionNews: NewsItem[] = [
     ...(opensEra2
       ? [
@@ -725,8 +729,12 @@ export function executeWorldPhase(
   const { updatedBlocs, newNewsItems: blocNews, pendingEventInstances } = simulateBlocs(state.blocs, blocDefs, nextTurn);
   const mergerNews = checkBlocMergers(updatedBlocs, blocDefs, nextTurn);
 
-  // 15. Board age ticking (retirements generate news)
-  const { updatedBoard, newNewsItems: boardNews } = tickBoardAges(player.board, boardDefs, nextTurn);
+  // 15. Board age ticking (retirements generate news + committee notifications)
+  const {
+    updatedBoard,
+    newNewsItems: boardNews,
+    newNotifications: retirementNotifications,
+  } = tickBoardAges(player.board, boardDefs, nextTurn);
 
   // 15b. Board proposal deferred re-surfacing: if the player deferred the proposal
   //      and the resurfaceTurn has arrived, re-queue the proposal event and add a
@@ -747,7 +755,10 @@ export function executeWorldPhase(
       }
     : null;
 
-  let committeeNotificationsAfterBoard = state.committeeNotifications;
+  let committeeNotificationsAfterBoard = [
+    ...state.committeeNotifications,
+    ...retirementNotifications,
+  ];
   const chiefScientistMember = updatedBoard.chiefScientist;
   const chiefName = chiefScientistMember
     ? (boardDefs.get(chiefScientistMember.defId)?.name ?? 'The Chief Scientist')
@@ -906,6 +917,15 @@ export function executeWorldPhase(
     moonColonyDeferCount: state.moonColonyDeferCount,
     moonColonyDeferResurfaceTurn: moonColonyProposalResurfaces ? null : state.moonColonyDeferResurfaceTurn,
     isruOperational: newIsruOperational,
+    tabSeen: {
+      ...state.tabSeen,
+      ...(nearSpaceUnlockedThisTurn ? { space: false } : {}),
+      ...(asteroidUnlockedThisTurn ? { belt: false } : {}),
+      ...(committeeNotificationsAfterBoard.length > state.committeeNotifications.length
+        ? { board: false }
+        : {}),
+      ...(projectTickResult.completedDefIds.length > 0 ? { projects: false } : {}),
+    },
     committeeNotifications: committeeNotificationsAfterBoard,
     player: {
       ...player,

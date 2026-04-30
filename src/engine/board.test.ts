@@ -231,9 +231,10 @@ describe('applyBoardResourceMultipliers', () => {
 describe('tickBoardAges', () => {
   it('increments age for active members', () => {
     const board: BoardSlots = { chiefScientist: makeInstance('drRamirez', 'chiefScientist', 40) };
-    const { updatedBoard, newNewsItems } = tickBoardAges(board, DEFS, 5);
+    const { updatedBoard, newNewsItems, newNotifications } = tickBoardAges(board, DEFS, 5);
     expect(updatedBoard.chiefScientist?.age).toBe(41);
     expect(newNewsItems).toHaveLength(0);
+    expect(newNotifications).toHaveLength(0);
   });
 
   it('retires member at age 70', () => {
@@ -252,6 +253,16 @@ describe('tickBoardAges', () => {
     expect(newNewsItems[0].text).toContain('Dr. Elena Ramirez');
   });
 
+  it('emits a committee notification when a member retires', () => {
+    const board: BoardSlots = { chiefScientist: makeInstance('drRamirez', 'chiefScientist', 69) };
+    const { newNotifications } = tickBoardAges(board, DEFS, 10);
+    expect(newNotifications).toHaveLength(1);
+    expect(newNotifications[0].dismissed).toBe(false);
+    expect(newNotifications[0].turnCreated).toBe(10);
+    expect(newNotifications[0].memberDefId).toBe('drRamirez');
+    expect(newNotifications[0].text).toContain('Dr. Elena Ramirez');
+  });
+
   it('skips already-departed members', () => {
     const departed = {
       ...makeInstance('drRamirez', 'chiefScientist', 65),
@@ -259,9 +270,10 @@ describe('tickBoardAges', () => {
       leftReason: 'resigned' as const,
     };
     const board: BoardSlots = { chiefScientist: departed };
-    const { updatedBoard, newNewsItems } = tickBoardAges(board, DEFS, 7);
+    const { updatedBoard, newNewsItems, newNotifications } = tickBoardAges(board, DEFS, 7);
     expect(updatedBoard.chiefScientist?.age).toBe(65); // no change
     expect(newNewsItems).toHaveLength(0);
+    expect(newNotifications).toHaveLength(0);
   });
 });
 

@@ -52,6 +52,13 @@
     return false;
   }
 
+  /** True when a tab has a pending notification dot. */
+  function tabHasNewDot(tabId: string): boolean {
+    const state = gameStore.state;
+    if (!state) return false;
+    return state.tabSeen[tabId] === false;
+  }
+
   const hasLunarFacility = $derived(
     gameStore.state?.player.facilities.some((f) => LUNAR_FACILITY_IDS.has(f.defId)) ?? false,
   );
@@ -215,6 +222,8 @@
 
   function switchTab(tab: AllTab): void {
     if (activeTab === tab) return;
+
+    gameStore.markTabSeen(tab);
 
     if (!isMapTab(tab)) {
       // Just show the panel — don't stop the running Phaser scene.
@@ -394,6 +403,8 @@
           {tab.label}
           {#if !tabUnlocked(tab)}
             <span class="lock">&#x1F512;</span>
+          {:else if tabHasNewDot(tab.id)}
+            <span class="new-dot" aria-label="New content"></span>
           {/if}
         </button>
       </Tooltip>
@@ -410,6 +421,9 @@
         COMMITTEE (<span class:empty-committee={filled === 0}>{filled}</span>/{total})
       {:else}
         COMMITTEE
+      {/if}
+      {#if tabHasNewDot('board')}
+        <span class="new-dot" aria-label="New committee activity"></span>
       {/if}
     </button>
     <button
@@ -433,6 +447,8 @@
           PROJECTS
           {#if !hasCompletedProjects}
             <span class="lock">&#x1F512;</span>
+          {:else if tabHasNewDot('projects')}
+            <span class="new-dot" aria-label="New project completed"></span>
           {/if}
         </button>
       </Tooltip>
@@ -735,6 +751,12 @@
         font-size: var(--fs-xs);
         opacity: 0.6;
         margin-left: 2px;
+    }
+
+    /* Tab-bar variant of the global .new-dot — adds spacing + alignment. */
+    .tab :global(.new-dot) {
+        margin-left: 4px;
+        vertical-align: middle;
     }
 
     .board-panel-wrap {

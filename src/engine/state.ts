@@ -138,6 +138,7 @@ export function createGameState(config: GameConfig): GameState {
     moonColonyDeferCount: 0,
     moonColonyDeferResurfaceTurn: null,
     isruOperational: false,
+    tabSeen: {},
   };
 }
 
@@ -185,6 +186,18 @@ export function deserialiseGameState(json: string): GameState {
   if (origLunar && origLunar.label === 'Lunar Surface') {
     origLunar.label = 'Mare Tranquillitatis';
     origLunar.launchCost = 40;
+  }
+
+  if (!state.tabSeen) {
+    const legacy = state as unknown as {
+      nearSpaceTabSeen?: boolean;
+      asteroidTabSeen?: boolean;
+    };
+    state.tabSeen = {};
+    if (legacy.nearSpaceTabSeen === false) state.tabSeen.space = false;
+    if (legacy.asteroidTabSeen === false) state.tabSeen.belt = false;
+    delete legacy.nearSpaceTabSeen;
+    delete legacy.asteroidTabSeen;
   }
 
   return state;

@@ -352,6 +352,16 @@ export const gameStore = {
     _hoveredTileKey = key;
   },
 
+  /** Clear the pulsing dot for `tab`. No-op if the dot isn't lit. */
+  markTabSeen(tab: string): void {
+    if (!_state) return;
+    if (_state.tabSeen[tab] !== false) return;
+    mutateState({
+      ..._state,
+      tabSeen: { ..._state.tabSeen, [tab]: true },
+    });
+  },
+
   /**
    * Initialise a fresh game run from the new-game setup screen.
    * Replaces any existing save, builds the full initial state from the chosen
