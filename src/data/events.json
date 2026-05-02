@@ -261,6 +261,23 @@
     "positiveEffect": null,
     "mitigationCost": { "funding": 15 }
   },
+  "spaceLaunchCentreProposal": {
+    "id": "spaceLaunchCentreProposal",
+    "name": "Board Proposal: Space Launch Centre",
+    "description": "Orbital mechanics is settled science. The Chief Engineer proposes constructing a full-scale launch facility to put the theory to use. On approval, the Centre is sited on a tile of your choosing.",
+    "flavourText": "\"We have the maths. We need the gantry.\"",
+    "tags": ["proposal"],
+    "eras": ["earth", "nearSpace"],
+    "pushFactors": null,
+    "blocIds": null,
+    "countdownTurns": 999,
+    "weight": 0,
+    "responseTier": "noCounter",
+    "oneShot": true,
+    "negativeEffect": {},
+    "positiveEffect": { "resources": { "funding": -80, "materials": -60 } },
+    "producesFacilityOnAccept": { "defId": "spaceLaunchCentre", "placement": "manualTile" }
+  },
   "boardProposalOrbitalStation": {
     "id": "boardProposalOrbitalStation",
     "name": "Board Proposal: Orbital Station",
@@ -273,6 +290,7 @@
     "countdownTurns": 999,
     "weight": 0,
     "responseTier": "noCounter",
+    "oneShot": true,
     "negativeEffect": {},
     "positiveEffect": { "resources": { "funding": -50, "politicalWill": -30 } }
   },
@@ -636,6 +654,7 @@
     "countdownTurns": 999,
     "weight": 0,
     "responseTier": "fullCounter",
+    "oneShot": true,
     "negativeEffect": {},
     "positiveEffect": {
       "resources": { "funding": -60, "politicalWill": -40 }

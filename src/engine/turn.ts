@@ -83,6 +83,84 @@ import type { Rng } from './rng';
 export const CLIMATE_PRESSURE_PER_TURN = 0.2;
 
 // ---------------------------------------------------------------------------
+// Data-driven event triggers (Phase 39.4 revised)
+// ---------------------------------------------------------------------------
+
+export interface OneShotTriggerResult {
+  events: EventInstance[];
+  firedIds: string[];
+}
+
+/**
+ * For each newly discovered tech with `triggersEventOnDiscovery`, queue a
+ * one-shot EventInstance unless the event id is already in
+ * `firedOneShotEventIds`.
+ */
+export function collectTechTriggeredEvents(
+  newDiscoveries: string[],
+  techDefs: Map<string, TechDef>,
+  firedOneShotEventIds: string[],
+  arrivedTurn: number,
+): OneShotTriggerResult {
+  const events: EventInstance[] = [];
+  const firedIds: string[] = [];
+  const fired = new Set(firedOneShotEventIds);
+  for (const techId of newDiscoveries) {
+    const eventDefId = techDefs.get(techId)?.triggersEventOnDiscovery;
+    if (!eventDefId || fired.has(eventDefId)) continue;
+    events.push({
+      id: `${eventDefId}-t${arrivedTurn}`,
+      defId: eventDefId,
+      arrivedTurn,
+      countdownRemaining: 999,
+      resolved: false,
+      resolvedWith: null,
+    });
+    firedIds.push(eventDefId);
+    fired.add(eventDefId);
+  }
+  return { events, firedIds };
+}
+
+/**
+ * For each facility def with `triggersEventOnFirstBuild`, queue a one-shot
+ * EventInstance the first time an instance of that def appears in
+ * `currentFacilities` that wasn't in `previousFacilities` (and the trigger
+ * id has not yet fired).
+ */
+export function collectFacilityFirstBuildEvents(
+  previousFacilities: { defId: string }[],
+  currentFacilities: { defId: string }[],
+  facilityDefs: Map<string, FacilityDef>,
+  firedOneShotEventIds: string[],
+  arrivedTurn: number,
+): OneShotTriggerResult {
+  const events: EventInstance[] = [];
+  const firedIds: string[] = [];
+  const fired = new Set(firedOneShotEventIds);
+  const previouslyHadDef = new Set(previousFacilities.map((f) => f.defId));
+  const seenDefs = new Set<string>();
+  for (const inst of currentFacilities) {
+    if (seenDefs.has(inst.defId)) continue;
+    seenDefs.add(inst.defId);
+    if (previouslyHadDef.has(inst.defId)) continue;
+    const eventDefId = facilityDefs.get(inst.defId)?.triggersEventOnFirstBuild;
+    if (!eventDefId || fired.has(eventDefId)) continue;
+    events.push({
+      id: `${eventDefId}-t${arrivedTurn}`,
+      defId: eventDefId,
+      arrivedTurn,
+      countdownRemaining: 999,
+      resolved: false,
+      resolvedWith: null,
+    });
+    firedIds.push(eventDefId);
+    fired.add(eventDefId);
+  }
+  return { events, firedIds };
+}
+
+// ---------------------------------------------------------------------------
 // Phase 1: Event Phase
 // ---------------------------------------------------------------------------
 
@@ -496,43 +574,26 @@ export function executeWorldPhase(
     }
   }
 
-  // 7a. Board proposal: fire if orbitalMechanics just discovered OR Space Launch Centre
-  //     just completed, and the proposal has not been fired before.
-  const spaceLaunchJustBuilt =
-    !state.boardProposalFired &&
-    facilitiesAfterQueue.some((f) => f.defId === 'spaceLaunchCentre') &&
-    !player.facilities.some((f) => f.defId === 'spaceLaunchCentre');
-  const orbitalMechanicsJustDiscovered =
-    !state.boardProposalFired && newDiscoveries.includes('orbitalMechanics');
-
-  const shouldFireBoardProposal = orbitalMechanicsJustDiscovered || spaceLaunchJustBuilt;
-  const newBoardProposalEvent: EventInstance | null = shouldFireBoardProposal
-    ? {
-        id: `board-proposal-orbital-t${nextTurn}`,
-        defId: 'boardProposalOrbitalStation',
-        arrivedTurn: nextTurn,
-        countdownRemaining: 999,
-        resolved: false,
-        resolvedWith: null,
-      }
-    : null;
-
-  // 7b. Moon Colony proposal: fires when lunarHabitat first completes, if not already fired.
-  const lunarHabitatJustBuilt =
-    !state.moonColonyProposalFired &&
-    facilitiesAfterQueue.some((f) => f.defId === 'lunarHabitat') &&
-    !player.facilities.some((f) => f.defId === 'lunarHabitat');
-
-  const newMoonColonyProposalEvent: EventInstance | null = lunarHabitatJustBuilt
-    ? {
-        id: `board-proposal-moon-colony-t${nextTurn}`,
-        defId: 'boardProposalMoonColony',
-        arrivedTurn: nextTurn,
-        countdownRemaining: 999,
-        resolved: false,
-        resolvedWith: null,
-      }
-    : null;
+  // 7a/b. Data-driven proposal triggers (Phase 39.4 revised).
+  //   - Tech-discovered triggers: see TechDef.triggersEventOnDiscovery.
+  //   - Facility-first-build triggers: see FacilityDef.triggersEventOnFirstBuild.
+  // The post-load `firedOneShotEventIds` migration backfills these from the
+  // legacy boardProposalFired / moonColonyProposalFired booleans.
+  const techTriggered = collectTechTriggeredEvents(
+    newDiscoveries,
+    techDefs,
+    state.firedOneShotEventIds,
+    nextTurn,
+  );
+  const facilityTriggered = collectFacilityFirstBuildEvents(
+    player.facilities,
+    facilitiesAfterQueue,
+    facilityDefs,
+    [...state.firedOneShotEventIds, ...techTriggered.firedIds],
+    nextTurn,
+  );
+  const oneShotTriggeredEvents = [...techTriggered.events, ...facilityTriggered.events];
+  const oneShotFiredThisTurn = [...techTriggered.firedIds, ...facilityTriggered.firedIds];
 
   // 7c. Project tick — advance active projects, apply completions + upkeep
   // Run against a temporary state with the post-card resources so upkeep is
@@ -615,7 +676,7 @@ export function executeWorldPhase(
   // Moon Colony proposal resurface
   const moonColonyProposalResurfaces =
     !state.moonColonyAuthorised &&
-    state.moonColonyProposalFired &&
+    state.firedOneShotEventIds.includes('boardProposalMoonColony') &&
     state.moonColonyDeferResurfaceTurn === nextTurn;
 
   const resurfacedMoonColonyEvent: EventInstance | null = moonColonyProposalResurfaces
@@ -741,7 +802,7 @@ export function executeWorldPhase(
   //      committee notification from the active Chief Scientist.
   const proposalResurfaces =
     !state.orbitalStationAuthorised &&
-    state.boardProposalFired &&
+    state.firedOneShotEventIds.includes('boardProposalOrbitalStation') &&
     state.orbitalStationDeferResurfaceTurn === nextTurn;
 
   const resurfacedProposalEvent: EventInstance | null = proposalResurfaces
@@ -885,13 +946,16 @@ export function executeWorldPhase(
 
   // Assemble updated active events list (carry over non-resolved + any new ones)
   const worldPhaseEvents = [
-    newBoardProposalEvent,
     resurfacedProposalEvent,
     engineeringChallengeEvent,
-    newMoonColonyProposalEvent,
     resurfacedMoonColonyEvent,
   ].filter((e): e is EventInstance => e !== null);
-  const eventsAfterWorld = [...state.activeEvents, ...pendingEventInstances, ...worldPhaseEvents];
+  const eventsAfterWorld = [
+    ...state.activeEvents,
+    ...pendingEventInstances,
+    ...worldPhaseEvents,
+    ...oneShotTriggeredEvents,
+  ];
 
   // Assemble the next state (outcome checked below)
   const nextState: GameState = {
@@ -908,16 +972,18 @@ export function executeWorldPhase(
     launchCapacity: newLaunchCapacity,
     launchAllocation: launchAllocationAfterQueue,
     map: { ...map, earthTiles: degradedTiles, spaceNodes: spaceNodesAfterDepletion },
-    boardProposalFired: state.boardProposalFired || shouldFireBoardProposal,
     orbitalStationAuthorised: state.orbitalStationAuthorised,
     orbitalStationDeferCount: state.orbitalStationDeferCount,
     orbitalStationDeferResurfaceTurn: proposalResurfaces ? null : state.orbitalStationDeferResurfaceTurn,
-    moonColonyProposalFired: state.moonColonyProposalFired || lunarHabitatJustBuilt,
     moonColonyAuthorised: state.moonColonyAuthorised,
     moonColonyDeferCount: state.moonColonyDeferCount,
     moonColonyDeferResurfaceTurn: moonColonyProposalResurfaces ? null : state.moonColonyDeferResurfaceTurn,
     isruOperational: newIsruOperational,
     pendingFacilityPlacements: projectTickResult.state.pendingFacilityPlacements,
+    firedOneShotEventIds:
+      oneShotFiredThisTurn.length > 0
+        ? [...state.firedOneShotEventIds, ...oneShotFiredThisTurn]
+        : state.firedOneShotEventIds,
     tabSeen: {
       ...state.tabSeen,
       ...(nearSpaceUnlockedThisTurn ? { space: false } : {}),

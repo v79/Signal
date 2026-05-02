@@ -10,6 +10,7 @@ import type {
   FacilityDef,
   FacilityInstance,
   MapTile,
+  OngoingAction,
 } from './types';
 import { coordKey } from './facilities';
 
@@ -299,7 +300,7 @@ export function tickActiveProjects(
       if (def.producesFacility) {
         if (def.producesFacility.placement === 'manualTile') {
           newPendingPlacements.push({
-            projectId: def.id,
+            sourceId: def.id,
             facilityDefId: def.producesFacility.defId,
             deferCount: 0,
           });
@@ -475,20 +476,27 @@ export function hasAnyEligibleTile(
 
 /**
  * Place a pending facility on the chosen tile and remove the pending entry.
- * Construction is instantaneous — the project completion already produced the
- * facility, so no entry is added to the construction queue. Returns the new
- * GameState; throws if the tile cannot host the facility.
+ *
+ * Honours the facility def's `buildTime`:
+ *   - buildTime === 0 → instant placement (FacilityInstance created now).
+ *   - buildTime  >  0 → an OngoingAction is enqueued and the tile marked
+ *     pending; the FacilityInstance is created later by tickConstructionQueue
+ *     when turnsRemaining reaches zero. Build cost is NOT charged — the
+ *     player has already paid via the upstream source (project completion or
+ *     event acceptance).
+ *
+ * Returns the new GameState; throws if the tile cannot host the facility.
  */
 export function placePendingFacility(
   state: GameState,
-  projectId: string,
+  sourceId: string,
   targetCoordKey: string,
   slotIndex: number,
   facilityDefs: Map<string, FacilityDef>,
 ): GameState {
-  const pending = state.pendingFacilityPlacements.find((p) => p.projectId === projectId);
+  const pending = state.pendingFacilityPlacements.find((p) => p.sourceId === sourceId);
   if (!pending) {
-    throw new Error(`No pending placement for project ${projectId}`);
+    throw new Error(`No pending placement for source ${sourceId}`);
   }
   const def = facilityDefs.get(pending.facilityDefId);
   if (!def) {
@@ -503,6 +511,45 @@ export function placePendingFacility(
   }
 
   const slotCost = def.slotCost ?? 1;
+  const remainingPending = state.pendingFacilityPlacements.filter(
+    (p) => p.sourceId !== sourceId,
+  );
+
+  if (def.buildTime > 0) {
+    // Multi-turn construction — enqueue an OngoingAction, mark the tile
+    // pending. The FacilityInstance is created by tickConstructionQueue.
+    const actionId = `construct-${def.id}-${targetCoordKey}-t${state.turn}`;
+    const action: OngoingAction = {
+      id: actionId,
+      type: 'construct',
+      facilityDefId: def.id,
+      coordKey: targetCoordKey,
+      turnsRemaining: def.buildTime,
+      totalTurns: def.buildTime,
+      slotIndex,
+    };
+    const updatedTiles = state.map.earthTiles.map((t) =>
+      coordKey(t.coord) === targetCoordKey ? { ...t, pendingActionId: actionId } : t,
+    );
+    const newsItem: NewsItem = {
+      id: `placement-begun-${sourceId}-t${state.turn}`,
+      turn: state.turn,
+      text: `Construction of ${def.name} has begun (${def.buildTime} turns).`,
+      category: 'discovery',
+    };
+    return {
+      ...state,
+      map: { ...state.map, earthTiles: updatedTiles },
+      pendingFacilityPlacements: remainingPending,
+      player: {
+        ...state.player,
+        constructionQueue: [...state.player.constructionQueue, action],
+        newsFeed: [...state.player.newsFeed, newsItem],
+      },
+    };
+  }
+
+  // Instant placement (buildTime === 0).
   const facilityId = `${def.id}-${targetCoordKey}-t${state.turn}`;
   const startCondition = def.depletes ? tile.mineDepletion : 1.0;
   const newInstance: FacilityInstance = {
@@ -523,7 +570,7 @@ export function placePendingFacility(
   });
 
   const newsItem: NewsItem = {
-    id: `placement-complete-${projectId}-t${state.turn}`,
+    id: `placement-complete-${sourceId}-t${state.turn}`,
     turn: state.turn,
     text: `${def.name} sited and operational.`,
     category: 'discovery',
@@ -532,9 +579,7 @@ export function placePendingFacility(
   return {
     ...state,
     map: { ...state.map, earthTiles: updatedTiles },
-    pendingFacilityPlacements: state.pendingFacilityPlacements.filter(
-      (p) => p.projectId !== projectId,
-    ),
+    pendingFacilityPlacements: remainingPending,
     player: {
       ...state.player,
       facilities: [...state.player.facilities, newInstance],
@@ -550,12 +595,12 @@ export function placePendingFacility(
  */
 export function deferPendingPlacement(
   state: GameState,
-  projectId: string,
+  sourceId: string,
 ): GameState {
   return {
     ...state,
     pendingFacilityPlacements: state.pendingFacilityPlacements.map((p) =>
-      p.projectId === projectId ? { ...p, deferCount: p.deferCount + 1 } : p,
+      p.sourceId === sourceId ? { ...p, deferCount: p.deferCount + 1 } : p,
     ),
   };
 }

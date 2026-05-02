@@ -392,7 +392,7 @@ describe('tickActiveProjects — manualTile placement', () => {
     expect(newPendingPlacements).toHaveLength(1);
     expect(after2.pendingFacilityPlacements).toHaveLength(1);
     expect(after2.pendingFacilityPlacements[0]).toMatchObject({
-      projectId: DEF_PRODUCES_MANUAL.id,
+      sourceId: DEF_PRODUCES_MANUAL.id,
       facilityDefId: 'testFacility',
       deferCount: 0,
     });
@@ -481,7 +481,7 @@ describe('placePendingFacility', () => {
     return {
       ...state,
       pendingFacilityPlacements: [
-        { projectId: DEF_PRODUCES_MANUAL.id, facilityDefId: FAC_TEST.id, deferCount: 0 },
+        { sourceId: DEF_PRODUCES_MANUAL.id, facilityDefId: FAC_TEST.id, deferCount: 0 },
       ],
     };
   }
@@ -524,12 +524,73 @@ describe('placePendingFacility', () => {
     const state = {
       ...withTile(makeState(), makeTile({ type: 'forested' })),
       pendingFacilityPlacements: [
-        { projectId: DEF_PRODUCES_MANUAL.id, facilityDefId: FAC_TEST.id, deferCount: 0 },
+        { sourceId: DEF_PRODUCES_MANUAL.id, facilityDefId: FAC_TEST.id, deferCount: 0 },
       ],
     };
     expect(() =>
       placePendingFacility(state, DEF_PRODUCES_MANUAL.id, '0,0', 0, FACILITY_DEFS),
     ).toThrow();
+  });
+
+  // Multi-turn build path — facilities with buildTime > 0 must enqueue an
+  // OngoingAction rather than instantly creating a FacilityInstance.
+  describe('with buildTime > 0', () => {
+    const FAC_MULTI: FacilityDef = { ...FAC_TEST, id: 'slowFacility', buildTime: 4 };
+    const DEFS_MULTI = new Map<string, FacilityDef>([[FAC_MULTI.id, FAC_MULTI]]);
+    const PROJ_MULTI = 'multiTurnProject';
+
+    function stateWithMultiPending(): GameState {
+      const state = withTile(makeState(), makeTile());
+      return {
+        ...state,
+        pendingFacilityPlacements: [
+          { sourceId: PROJ_MULTI, facilityDefId: FAC_MULTI.id, deferCount: 0 },
+        ],
+      };
+    }
+
+    it('does NOT create a FacilityInstance immediately', () => {
+      const state = stateWithMultiPending();
+      const next = placePendingFacility(state, PROJ_MULTI, '0,0', 0, DEFS_MULTI);
+      expect(next.player.facilities).toHaveLength(0);
+    });
+
+    it('enqueues an OngoingAction with the def buildTime', () => {
+      const state = stateWithMultiPending();
+      const next = placePendingFacility(state, PROJ_MULTI, '0,0', 0, DEFS_MULTI);
+      expect(next.player.constructionQueue).toHaveLength(1);
+      expect(next.player.constructionQueue[0]).toMatchObject({
+        type: 'construct',
+        facilityDefId: FAC_MULTI.id,
+        coordKey: '0,0',
+        turnsRemaining: 4,
+        totalTurns: 4,
+        slotIndex: 0,
+      });
+    });
+
+    it('marks the chosen tile pending with the action id', () => {
+      const state = stateWithMultiPending();
+      const next = placePendingFacility(state, PROJ_MULTI, '0,0', 0, DEFS_MULTI);
+      const tile = next.map.earthTiles.find((t) => `${t.coord.q},${t.coord.r}` === '0,0');
+      expect(tile?.pendingActionId).toBe(next.player.constructionQueue[0].id);
+      expect(tile?.facilitySlots).toEqual([null, null, null]);
+    });
+
+    it('removes the pending entry even though build is incomplete', () => {
+      const state = stateWithMultiPending();
+      const next = placePendingFacility(state, PROJ_MULTI, '0,0', 0, DEFS_MULTI);
+      expect(next.pendingFacilityPlacements).toHaveLength(0);
+    });
+
+    it('adds a "construction begun" news item that mentions the build time', () => {
+      const state = stateWithMultiPending();
+      const next = placePendingFacility(state, PROJ_MULTI, '0,0', 0, DEFS_MULTI);
+      const added = next.player.newsFeed.slice(state.player.newsFeed.length);
+      expect(added).toHaveLength(1);
+      expect(added[0].text).toContain(FAC_MULTI.name);
+      expect(added[0].text).toContain('4 turns');
+    });
   });
 });
 
@@ -538,8 +599,8 @@ describe('deferPendingPlacement', () => {
     const state: GameState = {
       ...makeState(),
       pendingFacilityPlacements: [
-        { projectId: 'a', facilityDefId: 'x', deferCount: 0 },
-        { projectId: 'b', facilityDefId: 'y', deferCount: 1 },
+        { sourceId: 'a', facilityDefId: 'x', deferCount: 0 },
+        { sourceId: 'b', facilityDefId: 'y', deferCount: 1 },
       ],
     };
     const next = deferPendingPlacement(state, 'a');
@@ -550,7 +611,7 @@ describe('deferPendingPlacement', () => {
   it('reaches the blocking threshold (>= 3) after three defers', () => {
     let state: GameState = {
       ...makeState(),
-      pendingFacilityPlacements: [{ projectId: 'a', facilityDefId: 'x', deferCount: 0 }],
+      pendingFacilityPlacements: [{ sourceId: 'a', facilityDefId: 'x', deferCount: 0 }],
     };
     state = deferPendingPlacement(state, 'a');
     state = deferPendingPlacement(state, 'a');

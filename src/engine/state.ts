@@ -11,6 +11,7 @@ import type {
   WillProfile,
   FacilityInstance,
   TechState,
+  PendingFacilityPlacement,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -129,14 +130,13 @@ export function createGameState(config: GameConfig): GameState {
     availableBoardDefIds: [],
     boardGracePeriodEnds: 4,
     committeeNotifications: [],
-    boardProposalFired: false,
     orbitalStationAuthorised: false,
     orbitalStationDeferCount: 0,
     orbitalStationDeferResurfaceTurn: null,
-    moonColonyProposalFired: false,
     moonColonyAuthorised: false,
     moonColonyDeferCount: 0,
     moonColonyDeferResurfaceTurn: null,
+    firedOneShotEventIds: [],
     isruOperational: false,
     tabSeen: {},
     pendingFacilityPlacements: [],
@@ -203,6 +203,29 @@ export function deserialiseGameState(json: string): GameState {
 
   if (!Array.isArray(state.pendingFacilityPlacements)) {
     state.pendingFacilityPlacements = [];
+  }
+
+  // Rename: PendingFacilityPlacement.projectId → sourceId (Phase 39.4 revised).
+  for (const p of state.pendingFacilityPlacements) {
+    const legacy = p as unknown as { projectId?: string };
+    if (legacy.projectId !== undefined && (p as PendingFacilityPlacement).sourceId === undefined) {
+      (p as PendingFacilityPlacement).sourceId = legacy.projectId;
+      delete legacy.projectId;
+    }
+  }
+
+  // Replace boardProposalFired / moonColonyProposalFired booleans with a
+  // unified firedOneShotEventIds array (Phase 39.4 revised).
+  if (!Array.isArray(state.firedOneShotEventIds)) {
+    state.firedOneShotEventIds = [];
+    const legacy = state as unknown as {
+      boardProposalFired?: boolean;
+      moonColonyProposalFired?: boolean;
+    };
+    if (legacy.boardProposalFired) state.firedOneShotEventIds.push('boardProposalOrbitalStation');
+    if (legacy.moonColonyProposalFired) state.firedOneShotEventIds.push('boardProposalMoonColony');
+    delete legacy.boardProposalFired;
+    delete legacy.moonColonyProposalFired;
   }
 
   return state;

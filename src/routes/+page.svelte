@@ -172,9 +172,9 @@
   <PlacementPromptModal
     placement={blockingPlacement}
     facilityDef={FACILITY_DEFS.get(blockingPlacement.facilityDefId) ?? null}
-    eligibleTileCount={gameStore.pendingPlacementHasEligibleTile(blockingPlacement.projectId) ? 1 : 0}
-    isPlacing={gameStore.placementModeProjectId === blockingPlacement.projectId}
-    onPlace={() => gameStore.enterPlacementMode(blockingPlacement.projectId)}
+    eligibleTileCount={gameStore.pendingPlacementHasEligibleTile(blockingPlacement.sourceId) ? 1 : 0}
+    isPlacing={gameStore.placementModeSourceId === blockingPlacement.sourceId}
+    onPlace={() => gameStore.enterPlacementMode(blockingPlacement.sourceId)}
     onCancel={() => gameStore.exitPlacementMode()}
   />
 {/if}
@@ -233,14 +233,14 @@
           onDefer={(id) => gameStore.deferBoardProposal(id)}
         />
 
-        {#each nonBlockingPlacements as placement (placement.projectId)}
+        {#each nonBlockingPlacements as placement (placement.sourceId)}
           <PlacementPromptCard
             {placement}
             facilityDef={FACILITY_DEFS.get(placement.facilityDefId) ?? null}
-            eligibleTileCount={gameStore.pendingPlacementHasEligibleTile(placement.projectId) ? 1 : 0}
-            isPlacing={gameStore.placementModeProjectId === placement.projectId}
-            onPlace={() => gameStore.enterPlacementMode(placement.projectId)}
-            onDefer={() => gameStore.deferPendingPlacement(placement.projectId)}
+            eligibleTileCount={gameStore.pendingPlacementHasEligibleTile(placement.sourceId) ? 1 : 0}
+            isPlacing={gameStore.placementModeSourceId === placement.sourceId}
+            onPlace={() => gameStore.enterPlacementMode(placement.sourceId)}
+            onDefer={() => gameStore.deferPendingPlacement(placement.sourceId)}
             onCancel={() => gameStore.exitPlacementMode()}
           />
         {/each}

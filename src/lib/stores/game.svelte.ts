@@ -306,17 +306,52 @@ let _selectedBeltNodeId = $state<string | null>(null);
 /** UI-only: the coord key of the tile currently under the mouse cursor. */
 let _hoveredTileKey = $state<string | null>(null);
 /**
- * UI-only: project ID whose pending facility is currently being placed.
- * When non-null, EarthScene tile clicks call placePendingFacilityOnTile
- * instead of opening the FacilityPicker.
+ * UI-only: source ID (project def id or event instance id) whose pending
+ * facility is currently being placed. When non-null, EarthScene tile clicks
+ * call placePendingFacilityOnTile instead of opening the FacilityPicker.
  */
-let _placementModeProjectId = $state<string | null>(null);
+let _placementModeSourceId = $state<string | null>(null);
 
 function resetSelections(): void {
   _selectedCoordKey = null;
   _selectedSpaceNodeId = null;
   _selectedBeltNodeId = null;
-  _placementModeProjectId = null;
+  _placementModeSourceId = null;
+}
+
+/**
+ * Closes any side effects that should resolve when the player manually
+ * commits to building a facility:
+ *   1. Active events with `producesFacilityOnAccept.defId === defId` are
+ *      marked resolved (auto-decline; no resources deducted, no placement
+ *      queued — the player got there another way).
+ *   2. Pending placements with the same facility def are dropped. The
+ *      manually built facility is treated as fulfilling the pending entry.
+ *
+ * Returns the patched state. Call before `mutateState` in `buildFacility`.
+ */
+function closeMatchingProposalsAndPending(state: GameState, defId: string): GameState {
+  let changed = false;
+  const updatedEvents = state.activeEvents.map((e) => {
+    if (e.resolved) return e;
+    const def = EVENT_DEFS.get(e.defId);
+    if (def?.producesFacilityOnAccept?.defId !== defId) return e;
+    changed = true;
+    return { ...e, resolved: true, resolvedWith: 'expired' as const };
+  });
+  const matchingPending = state.pendingFacilityPlacements.filter(
+    (p) => p.facilityDefId === defId,
+  );
+  if (matchingPending.length > 0) changed = true;
+  if (!changed) return state;
+  const remainingPending = state.pendingFacilityPlacements.filter(
+    (p) => p.facilityDefId !== defId,
+  );
+  return {
+    ...state,
+    activeEvents: updatedEvents,
+    pendingFacilityPlacements: remainingPending,
+  };
 }
 
 function computeRemainingCapacity(state: GameState): number {
@@ -352,8 +387,8 @@ export const gameStore = {
   get hoveredTileKey(): string | null {
     return _hoveredTileKey;
   },
-  get placementModeProjectId(): string | null {
-    return _placementModeProjectId;
+  get placementModeSourceId(): string | null {
+    return _placementModeSourceId;
   },
 
   selectTile(key: string | null): void {
@@ -616,6 +651,11 @@ export const gameStore = {
     };
     const newActionsThisTurn = (_state.actionsThisTurn ?? 0) + 1;
 
+    // Manual commitment to build closes any pending placement / matching
+    // proposal event for this facility def. The player chose this path; the
+    // proposal is no longer needed.
+    const stateWithProposalsClosed = closeMatchingProposalsAndPending(_state, defId);
+
     if (def.buildTime === 0) {
       // Instant build
       const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
@@ -631,16 +671,16 @@ export const gameStore = {
         newSlots[i] = facilityId;
       }
       mutateState({
-        ..._state,
+        ...stateWithProposalsClosed,
         actionsThisTurn: newActionsThisTurn,
         player: {
-          ..._state.player,
+          ...stateWithProposalsClosed.player,
           resources: newResources,
-          facilities: [..._state.player.facilities, newFacility],
+          facilities: [...stateWithProposalsClosed.player.facilities, newFacility],
         },
         map: {
-          ..._state.map,
-          earthTiles: _state.map.earthTiles.map((t) =>
+          ...stateWithProposalsClosed.map,
+          earthTiles: stateWithProposalsClosed.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilitySlots: newSlots } : t,
           ),
         },
@@ -658,16 +698,16 @@ export const gameStore = {
         slotIndex: start,
       };
       mutateState({
-        ..._state,
+        ...stateWithProposalsClosed,
         actionsThisTurn: newActionsThisTurn,
         player: {
-          ..._state.player,
+          ...stateWithProposalsClosed.player,
           resources: newResources,
-          constructionQueue: [..._state.player.constructionQueue, action],
+          constructionQueue: [...stateWithProposalsClosed.player.constructionQueue, action],
         },
         map: {
-          ..._state.map,
-          earthTiles: _state.map.earthTiles.map((t) =>
+          ...stateWithProposalsClosed.map,
+          earthTiles: stateWithProposalsClosed.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
           ),
         },
@@ -681,15 +721,15 @@ export const gameStore = {
    * EarthScene tile click routes through placePendingFacilityOnTile rather
    * than opening the FacilityPicker.
    */
-  enterPlacementMode(projectId: string): void {
+  enterPlacementMode(sourceId: string): void {
     if (!_state) return;
-    if (!_state.pendingFacilityPlacements.some((p) => p.projectId === projectId)) return;
+    if (!_state.pendingFacilityPlacements.some((p) => p.sourceId === sourceId)) return;
     _selectedCoordKey = null;
-    _placementModeProjectId = projectId;
+    _placementModeSourceId = sourceId;
   },
 
   exitPlacementMode(): void {
-    _placementModeProjectId = null;
+    _placementModeSourceId = null;
   },
 
   /**
@@ -698,9 +738,9 @@ export const gameStore = {
    * ineligible tile.
    */
   placePendingFacilityOnTile(coordKey: string): boolean {
-    if (!_state || !_placementModeProjectId) return false;
+    if (!_state || !_placementModeSourceId) return false;
     const pending = _state.pendingFacilityPlacements.find(
-      (p) => p.projectId === _placementModeProjectId,
+      (p) => p.sourceId === _placementModeSourceId,
     );
     if (!pending) return false;
     const def = FACILITY_DEFS.get(pending.facilityDefId);
@@ -716,21 +756,21 @@ export const gameStore = {
 
     const next = placePendingFacility(
       _state,
-      _placementModeProjectId,
+      _placementModeSourceId,
       coordKey,
       start,
       FACILITY_DEFS,
     );
     mutateState(next);
-    _placementModeProjectId = null;
+    _placementModeSourceId = null;
     _selectedCoordKey = null;
     return true;
   },
 
-  deferPendingPlacement(projectId: string): void {
+  deferPendingPlacement(sourceId: string): void {
     if (!_state) return;
-    if (_placementModeProjectId === projectId) _placementModeProjectId = null;
-    mutateState(deferPendingPlacement(_state, projectId));
+    if (_placementModeSourceId === sourceId) _placementModeSourceId = null;
+    mutateState(deferPendingPlacement(_state, sourceId));
   },
 
   /**
@@ -738,10 +778,10 @@ export const gameStore = {
    * placement. Used by the UI to disable the Place button when no slot is
    * available.
    */
-  pendingPlacementHasEligibleTile(projectId: string): boolean {
+  pendingPlacementHasEligibleTile(sourceId: string): boolean {
     if (!_state) return false;
     const pending = _state.pendingFacilityPlacements.find(
-      (p) => p.projectId === projectId,
+      (p) => p.sourceId === sourceId,
     );
     if (!pending) return false;
     const def = FACILITY_DEFS.get(pending.facilityDefId);
@@ -962,6 +1002,19 @@ export const gameStore = {
         ? 'The Corporation has committed to establishing a permanent Moon Colony.'
         : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
 
+    // If this event produces a facility on accept, queue a pending placement
+    // keyed by the event instance id (so the prompt and the source are linked).
+    const newPendingPlacements = def.producesFacilityOnAccept
+      ? [
+          ..._state.pendingFacilityPlacements,
+          {
+            sourceId: eventId,
+            facilityDefId: def.producesFacilityOnAccept.defId,
+            deferCount: 0,
+          },
+        ]
+      : _state.pendingFacilityPlacements;
+
     mutateState({
       ..._state,
       signal: updatedSignal,
@@ -970,6 +1023,7 @@ export const gameStore = {
       orbitalStationDeferResurfaceTurn: isBoardProposal ? null : _state.orbitalStationDeferResurfaceTurn,
       moonColonyAuthorised: isMoonColonyProposal ? true : _state.moonColonyAuthorised,
       moonColonyDeferResurfaceTurn: isMoonColonyProposal ? null : _state.moonColonyDeferResurfaceTurn,
+      pendingFacilityPlacements: newPendingPlacements,
       player: {
         ...updatedPlayer,
         newsFeed: [

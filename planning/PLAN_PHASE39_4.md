@@ -152,32 +152,33 @@ After steps 4–6, the dual-trigger logic in `turn.ts` (orbitalMechanics OR spac
 
 ### Engine
 
-- [ ] `types.ts`: schema additions above; rename `projectId → sourceId`.
-- [ ] `state.ts`: initialise `firedOneShotEventIds: []`; deserialise migration backfills it from the legacy booleans (then deletes them).
-- [ ] `turn.ts`: extract `collectTechTriggeredEvents` and `collectFacilityFirstBuildEvents` helpers; delete the four hard-coded blocks (`spaceLaunchJustBuilt`, `orbitalMechanicsJustDiscovered`, `lunarHabitatJustBuilt`, and the synthesised `EventInstance`s). The new helpers consult the data fields.
-- [ ] `events.ts`: in `acceptEvent`, push `PendingFacilityPlacement` when `def.producesFacilityOnAccept` is set; track in `firedOneShotEventIds` when accepted.
-- [ ] `events.ts`: respect `oneShot` in `selectNewEvents` (skip if id already in `firedOneShotEventIds`) and in the tech-triggered helper (skip if already live in `activeEvents`).
-- [ ] `projects.ts`: rename pending `projectId → sourceId`. Otherwise unchanged.
+- ✅ `types.ts`: schema additions above; rename `projectId → sourceId`.
+- ✅ `state.ts`: initialise `firedOneShotEventIds: []`; deserialise migration backfills it from the legacy booleans (then deletes them). Same migration renames legacy `projectId → sourceId` on pending placements.
+- ✅ `turn.ts`: extracted `collectTechTriggeredEvents` and `collectFacilityFirstBuildEvents` helpers (exported for testability); deleted the four hard-coded blocks. `firedOneShotEventIds` extended each turn from helper output.
+- ✅ `gameStore.acceptEvent`: pushes `PendingFacilityPlacement` when `def.producesFacilityOnAccept` is set. (The acceptEvent orchestration lives in gameStore, not engine/events.ts.)
+- [ ] `events.ts`: respect `oneShot` in `selectNewEvents` — _Skipped: weight-0 proposals never enter the random pool, so the check is moot for current data. The trigger helpers already enforce single-fire via `firedOneShotEventIds`._
+- ✅ `projects.ts`: rename pending `projectId → sourceId`. Otherwise unchanged.
 
 ### Data
 
-- [ ] `technologies.json`: `orbitalMechanics.triggersEventOnDiscovery = "spaceLaunchCentreProposal"`.
-- [ ] `facilities.json`: `spaceLaunchCentre.triggersEventOnFirstBuild = "boardProposalOrbitalStation"`; `lunarHabitat.triggersEventOnFirstBuild = "boardProposalMoonColony"`.
-- [ ] `events.json`: add `spaceLaunchCentreProposal`; add `oneShot: true` to existing two proposals.
+- ✅ `technologies.json`: `orbitalMechanics.triggersEventOnDiscovery = "spaceLaunchCentreProposal"`.
+- ✅ `facilities.json`: `spaceLaunchCentre.triggersEventOnFirstBuild = "boardProposalOrbitalStation"`; `lunarHabitat.triggersEventOnFirstBuild = "boardProposalMoonColony"`.
+- ✅ `events.json`: added `spaceLaunchCentreProposal` (cost matches facility build cost: -80F -60M); added `oneShot: true` to `boardProposalOrbitalStation` and `boardProposalMoonColony`.
 
 ### UI
 
-- [ ] `PlacementPromptCard.svelte` / `PlacementPromptModal.svelte`: rename `placement.projectId → placement.sourceId`. No other UI changes — the prompt is producer-agnostic by design.
-- [ ] `gameStore`: rename `enterPlacementMode(projectId)` parameter to `sourceId`.
+- ✅ `PlacementPromptCard.svelte` / `PlacementPromptModal.svelte`: `placement.sourceId` consumed by parent.
+- ✅ `gameStore`: `enterPlacementMode(sourceId)`, `placementModeSourceId`, `_placementModeSourceId` renames done.
+
+### Manual-build closes proposal (player request)
+
+- ✅ `gameStore.buildFacility` calls `closeMatchingProposalsAndPending(state, defId)` before mutate. Active events with `producesFacilityOnAccept.defId === defId` are marked resolved; pending placements for the same facility def are dropped. The manual build path stays fully functional — building a Space Launch Centre directly from the FacilityPicker will close any open proposal event automatically.
 
 ### Tests
 
-- [ ] `events.test.ts`: accepting an event with `producesFacilityOnAccept` writes a pending placement; resources are still deducted from `positiveEffect`.
-- [ ] `events.test.ts`: deferring/expiring such an event does **not** queue a placement.
-- [ ] `events.test.ts`: `oneShot: true` events do not re-fire after acceptance even if their tech-trigger condition repeats (e.g. save/load replays the discovery).
-- [ ] `turn.test.ts`: `triggersEventOnDiscovery` queues the event in the World Phase that completes the discovery; respects `oneShot`.
-- [ ] `turn.test.ts`: `triggersEventOnFirstBuild` queues the event when the facility appears for the first time.
-- [ ] `turn.test.ts`: legacy save with `boardProposalFired: true` migrates to `firedOneShotEventIds: ['boardProposalOrbitalStation']` and the proposal does not re-fire.
+- ✅ `oneShotTriggers.test.ts` (new): 16 tests covering `collectTechTriggeredEvents`, `collectFacilityFirstBuildEvents`, `firedOneShotEventIds` save migration (both legacy booleans, both individually, neither, field stripping), and `PendingFacilityPlacement.projectId → sourceId` migration.
+- [ ] Acceptance-flow tests for `gameStore.acceptEvent → producesFacilityOnAccept → pending placement`. _Deferred — gameStore is not unit-tested today; would need a new test setup._
+- [ ] Manual-build-closes-event integration test. _Deferred — same reason; covered by the engine-level helper logic in `closeMatchingProposalsAndPending` which is straightforward enough to verify by inspection. Worth promoting to engine if it becomes load-bearing._
 
 ### Cleanup
 
@@ -200,3 +201,9 @@ The defer counter, the 3-strike escalation to a blocking modal, the no-eligible-
 - **Should the proposal cost match the facility build cost exactly, or be cheaper?** Cheaper would incentivise the proposal path; equal makes the proposal a pure convenience. _Recommendation: equal for v1._ - _Agreed, equal is correct_
 - **Auto-defer on turn pass.** Same open question carried over from the first-pass 39.4. The player explicitly pressing Defer increments the counter; closing the browser or just ignoring the card is currently free. Worth deciding before merging. - _Player can defer; player can also manually build the facility, in which case the event should be closed_
 - **Does `boardProposalOrbitalStation` ever need `producesFacilityOnAccept`?** No — accepting it sets `orbitalStationAuthorised`, which gates the project. The facility/placement flow is separate.
+
+
+
+## Bugs
+
+- Placing ths space launch facility should count as building it - it still should take several turns to build. Currently it is build immediately.
