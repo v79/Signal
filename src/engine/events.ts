@@ -409,6 +409,11 @@ export function getEffectForResolution(
 
     case 'expired':
       return def.negativeEffect;
+
+    case 'superseded':
+      // Resolved by an external action (e.g. player manually built the
+      // facility this proposal would have produced). No effect to apply.
+      return null;
   }
 }
 

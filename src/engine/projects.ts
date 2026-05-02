@@ -6,7 +6,12 @@ import type {
   Resources,
   FieldPoints,
   NewsItem,
+  PendingFacilityPlacement,
+  FacilityDef,
+  FacilityInstance,
+  MapTile,
 } from './types';
+import { coordKey, enqueueConstruction } from './facilities';
 
 // ---------------------------------------------------------------------------
 // Projects
@@ -176,6 +181,8 @@ export interface ProjectTickResult {
   state: GameState;
   /** DefIds of projects that completed this tick. */
   completedDefIds: string[];
+  /** New pending placements written by completions this tick (for news/UI hooks). */
+  newPendingPlacements: PendingFacilityPlacement[];
 }
 
 /**
@@ -195,6 +202,7 @@ export function tickActiveProjects(
   let signal = { ...state.signal };
   const stillActive: ProjectInstance[] = [];
   const projectNews: NewsItem[] = [];
+  const newPendingPlacements: PendingFacilityPlacement[] = [];
 
   for (const project of player.activeProjects) {
     const def = defs.get(project.defId);
@@ -284,6 +292,20 @@ export function tickActiveProjects(
         };
       }
 
+      // Infrastructure projects: queue a manual placement, or auto-resolve a host.
+      // anchoredToHost is documentation-only here — CERN's host resolution above
+      // remains the load-bearing implementation. Listing it on the def lets
+      // future tooling (UI, save inspectors) reason about producers consistently.
+      if (def.producesFacility) {
+        if (def.producesFacility.placement === 'manualTile') {
+          newPendingPlacements.push({
+            sourceId: def.id,
+            facilityDefId: def.producesFacility.defId,
+            deferCount: 0,
+          });
+        }
+      }
+
       projectNews.push({
         id: `project-complete-${def.id}-t${turn}`,
         turn,
@@ -323,9 +345,15 @@ export function tickActiveProjects(
     newsFeed: [...player.newsFeed, ...projectNews],
   };
 
+  const pendingFacilityPlacements =
+    newPendingPlacements.length > 0
+      ? [...state.pendingFacilityPlacements, ...newPendingPlacements]
+      : state.pendingFacilityPlacements;
+
   return {
-    state: { ...state, player, signal },
+    state: { ...state, player, signal, pendingFacilityPlacements },
     completedDefIds,
+    newPendingPlacements,
   };
 }
 
@@ -399,5 +427,172 @@ export function reanchorCern(player: PlayerState): PlayerState {
   return {
     ...player,
     projectHostFacilityIds: { ...player.projectHostFacilityIds, cern: hostId },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Pending facility placements (manualTile flow)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if the tile can host a facility of the given def in a single
+ * contiguous run of slots starting at slotIndex. Honours tile-type filter,
+ * existing slot occupancy, destroyedStatus, and any pending action on the tile.
+ */
+export function canPlaceProducedFacility(
+  tile: MapTile,
+  def: FacilityDef,
+  slotIndex: number,
+): boolean {
+  if (tile.destroyedStatus !== null) return false;
+  if (tile.pendingActionId !== null) return false;
+  if (def.allowedTileTypes.length > 0 && !def.allowedTileTypes.includes(tile.type)) return false;
+
+  const slotCost = def.slotCost ?? 1;
+  if (slotIndex < 0 || slotIndex + slotCost > 3) return false;
+  for (let i = slotIndex; i < slotIndex + slotCost; i++) {
+    if (tile.facilitySlots[i] !== null) return false;
+  }
+  return true;
+}
+
+/**
+ * Find any tile in the bloc that can host the produced facility. Used to
+ * detect the zero-eligible-tiles edge case so the UI can keep the prompt
+ * dismissed instead of escalating to the blocking modal.
+ */
+export function hasAnyEligibleTile(
+  tiles: MapTile[],
+  def: FacilityDef,
+): boolean {
+  for (const tile of tiles) {
+    for (let slot = 0; slot < 3; slot++) {
+      if (canPlaceProducedFacility(tile, def, slot)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Place a pending facility on the chosen tile and remove the pending entry.
+ *
+ * Honours the facility def's `buildTime`:
+ *   - buildTime === 0 → instant placement (FacilityInstance created now).
+ *   - buildTime  >  0 → an OngoingAction is enqueued and the tile marked
+ *     pending; the FacilityInstance is created later by tickConstructionQueue
+ *     when turnsRemaining reaches zero. Build cost is NOT charged — the
+ *     player has already paid via the upstream source (project completion or
+ *     event acceptance).
+ *
+ * Returns the new GameState; throws if the tile cannot host the facility.
+ */
+export function placePendingFacility(
+  state: GameState,
+  sourceId: string,
+  targetCoordKey: string,
+  slotIndex: number,
+  facilityDefs: Map<string, FacilityDef>,
+): GameState {
+  const pending = state.pendingFacilityPlacements.find((p) => p.sourceId === sourceId);
+  if (!pending) {
+    throw new Error(`No pending placement for source ${sourceId}`);
+  }
+  const def = facilityDefs.get(pending.facilityDefId);
+  if (!def) {
+    throw new Error(`Unknown facility def ${pending.facilityDefId}`);
+  }
+  const tile = state.map.earthTiles.find((t) => coordKey(t.coord) === targetCoordKey);
+  if (!tile) {
+    throw new Error(`Tile not found at ${targetCoordKey}`);
+  }
+  if (!canPlaceProducedFacility(tile, def, slotIndex)) {
+    throw new Error(`Tile ${targetCoordKey} cannot host ${def.id} at slot ${slotIndex}`);
+  }
+
+  const slotCost = def.slotCost ?? 1;
+  const remainingPending = state.pendingFacilityPlacements.filter(
+    (p) => p.sourceId !== sourceId,
+  );
+
+  if (def.buildTime > 0) {
+    const { action, updatedTiles } = enqueueConstruction(
+      state.map.earthTiles,
+      def.id,
+      targetCoordKey,
+      slotIndex,
+      def.buildTime,
+      state.turn,
+    );
+    const newsItem: NewsItem = {
+      id: `placement-begun-${sourceId}-t${state.turn}`,
+      turn: state.turn,
+      text: `Construction of ${def.name} has begun (${def.buildTime} turns).`,
+      category: 'discovery',
+    };
+    return {
+      ...state,
+      map: { ...state.map, earthTiles: updatedTiles },
+      pendingFacilityPlacements: remainingPending,
+      player: {
+        ...state.player,
+        constructionQueue: [...state.player.constructionQueue, action],
+        newsFeed: [...state.player.newsFeed, newsItem],
+      },
+    };
+  }
+
+  // Instant placement (buildTime === 0).
+  const facilityId = `${def.id}-${targetCoordKey}-t${state.turn}`;
+  const startCondition = def.depletes ? tile.mineDepletion : 1.0;
+  const newInstance: FacilityInstance = {
+    id: facilityId,
+    defId: def.id,
+    locationKey: targetCoordKey,
+    condition: startCondition,
+    builtTurn: state.turn,
+  };
+
+  const updatedTiles = state.map.earthTiles.map((t) => {
+    if (coordKey(t.coord) !== targetCoordKey) return t;
+    const newSlots = [...t.facilitySlots] as [string | null, string | null, string | null];
+    for (let i = slotIndex; i < slotIndex + slotCost && i < 3; i++) {
+      newSlots[i] = facilityId;
+    }
+    return { ...t, facilitySlots: newSlots };
+  });
+
+  const newsItem: NewsItem = {
+    id: `placement-complete-${sourceId}-t${state.turn}`,
+    turn: state.turn,
+    text: `${def.name} sited and operational.`,
+    category: 'discovery',
+  };
+
+  return {
+    ...state,
+    map: { ...state.map, earthTiles: updatedTiles },
+    pendingFacilityPlacements: remainingPending,
+    player: {
+      ...state.player,
+      facilities: [...state.player.facilities, newInstance],
+      newsFeed: [...state.player.newsFeed, newsItem],
+    },
+  };
+}
+
+/**
+ * Increment the defer counter on a pending placement. Caller should compare
+ * the resulting deferCount to 3 to decide whether to escalate to the blocking
+ * modal next time the prompt resurfaces.
+ */
+export function deferPendingPlacement(
+  state: GameState,
+  sourceId: string,
+): GameState {
+  return {
+    ...state,
+    pendingFacilityPlacements: state.pendingFacilityPlacements.map((p) =>
+      p.sourceId === sourceId ? { ...p, deferCount: p.deferCount + 1 } : p,
+    ),
   };
 }

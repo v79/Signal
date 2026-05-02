@@ -88,6 +88,11 @@ This is a list of future requirements for the game but they are not to be implem
 - Era 1→2 gate: Permanent Orbital Station (multi-stage landmark project), guided by Board proposal event triggered on Orbital Mechanics tech discovery. Orbital Telescope Array as a smaller warm-up Scientific Project.
 - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
 
+## Help Text
+
+- Add support for basic text formatting (bold, italic) in help text screens
+- Add 'goals in this era' to the help text
+
 ## Projects
 
 - See `planning/PLAN_PHASE38.md` for Project panel and improvements
@@ -133,6 +138,7 @@ This is a list of future requirements for the game but they are not to be implem
 - See `planning/DESIGN_STEERING_COMMITTEE.md` for full design discussion.
 - Flavour text for board members
 - Board members should be procedurally generated, not a fixed list, so we have enough content for three eras
+- No longer clear what the blue dot with a number it means
 
 ## Climate management:
 

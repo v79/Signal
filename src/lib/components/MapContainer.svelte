@@ -364,6 +364,10 @@
         getAdjacencyMap: () => adjacencyMap,
         getCernHostCoordKey: () => cernHostCoordKey(),
         onTileClick: (key: string) => {
+          if (gameStore.placementModeSourceId !== null) {
+            gameStore.placePendingFacilityOnTile(key);
+            return;
+          }
           gameStore.selectTile(gameStore.selectedCoordKey === key ? null : key);
         },
         onTileHover: (key: string | null) => {

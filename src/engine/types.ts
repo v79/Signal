@@ -241,6 +241,12 @@ export interface FacilityDef {
    * facility replaces the old one on completion.
    */
   upgradesFrom?: string;
+  /**
+   * Event def ID to fire (one-shot) the first time a facility of this def
+   * appears in player.facilities. Single-fire is enforced by
+   * firedOneShotEventIds so reload/replay does not double-fire.
+   */
+  triggersEventOnFirstBuild?: string;
 }
 
 export interface AdjacencyRule {
@@ -306,6 +312,22 @@ export interface ProjectDef {
   groupId?: string;
   /** Human-readable label for the group header (required when groupId is set). */
   groupName?: string;
+  /**
+   * Marks this project as an "infrastructure" project that produces a
+   * placeable facility on completion. See PendingFacilityPlacement.
+   *
+   * - placement: 'manualTile' — engine queues a placement prompt; the player
+   *   chooses a tile (filtered by the produced facility's allowedTileTypes).
+   * - placement: 'anchoredToHost' — engine resolves an existing host facility
+   *   instance (e.g. CERN anchors to the earliest publicUniversity). No
+   *   prompt is shown; no PendingFacilityPlacement is written.
+   */
+  producesFacility?: {
+    defId: string;
+    placement: 'manualTile' | 'anchoredToHost';
+    /** Required when placement === 'anchoredToHost'. */
+    hostFacilityDefId?: string;
+  };
 }
 
 /** One-time reward applied when a project completes. */
@@ -349,6 +371,30 @@ export interface ProjectInstance {
   turnsElapsed: number;
   /** Effective duration after Will modifier. */
   effectiveDuration: number;
+}
+
+/**
+ * A facility produced by an upstream source (a completed project, or an
+ * accepted proposal event) that is awaiting a player-chosen tile. Surfaced
+ * in the event zone as a non-blocking prompt; promoted to a blocking modal
+ * once deferCount >= 3.
+ *
+ * While the entry exists, the facility does not occupy a tile and produces
+ * no output.
+ */
+export interface PendingFacilityPlacement {
+  /**
+   * Identifier of the source that produced this pending placement. May be a
+   * project def id (for project-produced facilities) or an event instance id
+   * (for event-accepted facilities). Treated as opaque by consumers.
+   * Stable within a single run; not stable across runs for event-sourced
+   * placements (event instance ids embed the arrival turn).
+   */
+  sourceId: string;
+  /** Facility def to be placed. */
+  facilityDefId: string;
+  /** How many turns the player has dismissed the prompt without placing. */
+  deferCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -404,6 +450,11 @@ export interface TechDef {
    * is discovered. Stacks with other tech bonuses.
    */
   hqFieldBonus?: Partial<FieldPoints>;
+  /**
+   * Event def ID to fire (one-shot) when this tech first transitions to
+   * 'discovered'. Single-fire is enforced via firedOneShotEventIds.
+   */
+  triggersEventOnDiscovery?: string;
 }
 
 /** Per-run recipe generated from TechDef.baseRecipe + RNG. */
@@ -541,6 +592,23 @@ export interface EventDef {
   positiveEffect: EventEffect | null;
   /** Partial mitigation cost (if responseTier is 'partialMitigation'). Paying this cost is the player's total penalty — no additional residual effect is applied. */
   mitigationCost?: Partial<Resources>;
+  /**
+   * If true, this event may fire at most once per run. Tracked via
+   * GameState.firedOneShotEventIds. Used by tech/facility-triggered
+   * proposals to prevent duplicate prompts on reload or repeat triggers.
+   */
+  oneShot?: boolean;
+  /**
+   * When this event is resolved with 'accepted', queue a pending placement
+   * for the listed facility. Cost still comes from positiveEffect; placement
+   * is the additional consequence beyond the resource delta. Uses the
+   * existing PendingFacilityPlacement / manualTile flow.
+   */
+  producesFacilityOnAccept?: {
+    defId: string;
+    /** Reserved — only 'manualTile' supported today. */
+    placement: 'manualTile';
+  };
 }
 
 export interface EventEffect {
@@ -572,7 +640,7 @@ export interface EventInstance {
   countdownRemaining: number;
   /** Whether the player has responded to this event. */
   resolved: boolean;
-  resolvedWith: 'counter' | 'mitigation' | 'accepted' | 'expired' | null;
+  resolvedWith: 'counter' | 'mitigation' | 'accepted' | 'expired' | 'superseded' | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -953,11 +1021,6 @@ export interface GameState {
   boardGracePeriodEnds: number;
   /** Active committee notifications from board members. */
   committeeNotifications: CommitteeNotification[];
-  /**
-   * Set to true the first time the Orbital Station board proposal fires.
-   * Prevents it from re-firing after the player has already seen it.
-   */
-  boardProposalFired: boolean;
   /** Set to true when the player authorises the Orbital Station programme. */
   orbitalStationAuthorised: boolean;
   /** How many times the player has deferred the board proposal. */
@@ -967,11 +1030,6 @@ export interface GameState {
    * Null when not deferred.
    */
   orbitalStationDeferResurfaceTurn: number | null;
-  /**
-   * Set to true the first time the Moon Colony board proposal fires.
-   * Prevents re-firing after the player has already seen it.
-   */
-  moonColonyProposalFired: boolean;
   /** Set to true when the player authorises the Moon Colony programme. */
   moonColonyAuthorised: boolean;
   /** How many times the player has deferred the Moon Colony proposal. */
@@ -995,4 +1053,17 @@ export interface GameState {
    * `true` when the player switches to that tab.
    */
   tabSeen: Record<string, boolean>;
+  /**
+   * Facilities produced by completed infrastructure projects or accepted
+   * proposal events awaiting a player-chosen tile. See
+   * PendingFacilityPlacement.
+   */
+  pendingFacilityPlacements: PendingFacilityPlacement[];
+  /**
+   * Event def IDs that have already fired their one-shot trigger (whether
+   * still active, accepted, deferred, or expired). Replaces the legacy
+   * boardProposalFired / moonColonyProposalFired booleans; back-filled on
+   * load.
+   */
+  firedOneShotEventIds: string[];
 }

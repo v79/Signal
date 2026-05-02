@@ -515,6 +515,7 @@
   "spaceLaunchCentre": {
     "id": "spaceLaunchCentre",
     "name": "Space Launch Centre",
+    "triggersEventOnFirstBuild": "boardProposalOrbitalStation",
     "description": "Full-scale orbital launch infrastructure. Engineering, Physics, and Mathematics research output, but consumes Materials each turn for ongoing launch operations. Required for Near Space access. Occupies a full tile.",
     "era": "earth",
     "allowedTileTypes": [
@@ -1067,6 +1068,7 @@
   "lunarHabitat": {
     "id": "lunarHabitat",
     "name": "Lunar Habitat",
+    "triggersEventOnFirstBuild": "boardProposalMoonColony",
     "description": "Pressurised surface habitat for long-duration lunar residency. Biochemistry and Social Science research from crew health and behavioural studies.",
     "era": "nearSpace",
     "allowedTileTypes": [],

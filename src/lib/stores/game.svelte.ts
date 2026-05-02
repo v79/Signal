@@ -44,9 +44,23 @@ import {
   tileDestructionNewsItems,
   type DestroyedTileRecord,
 } from '../../engine/events';
-import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
+import {
+  getFacilitiesOnTile,
+  findContiguousFreeStart,
+  canUpgradeFacility,
+  isLunarChainTaken,
+  enqueueConstruction,
+  coordKey as makeCoordKey,
+} from '../../engine/facilities';
 import { placeStarterFacilities } from '../../engine/starterFacilities';
-import { canInitiateProject, initiateProject } from '../../engine/projects';
+import {
+  canInitiateProject,
+  canPlaceProducedFacility,
+  deferPendingPlacement,
+  hasAnyEligibleTile,
+  initiateProject,
+  placePendingFacility,
+} from '../../engine/projects';
 import {
   BLOC_MAPS,
   BLOC_DEFS,
@@ -298,11 +312,53 @@ let _selectedSpaceNodeId = $state<string | null>(null);
 let _selectedBeltNodeId = $state<string | null>(null);
 /** UI-only: the coord key of the tile currently under the mouse cursor. */
 let _hoveredTileKey = $state<string | null>(null);
+/**
+ * UI-only: source ID (project def id or event instance id) whose pending
+ * facility is currently being placed. When non-null, EarthScene tile clicks
+ * call placePendingFacilityOnTile instead of opening the FacilityPicker.
+ */
+let _placementModeSourceId = $state<string | null>(null);
 
 function resetSelections(): void {
   _selectedCoordKey = null;
   _selectedSpaceNodeId = null;
   _selectedBeltNodeId = null;
+  _placementModeSourceId = null;
+}
+
+/**
+ * Closes any side effects that should resolve when the player manually
+ * commits to building a facility:
+ *   1. Active events with `producesFacilityOnAccept.defId === defId` are
+ *      marked resolved (auto-decline; no resources deducted, no placement
+ *      queued — the player got there another way).
+ *   2. Pending placements with the same facility def are dropped. The
+ *      manually built facility is treated as fulfilling the pending entry.
+ *
+ * Returns the patched state. Call before `mutateState` in `buildFacility`.
+ */
+function closeMatchingProposalsAndPending(state: GameState, defId: string): GameState {
+  let changed = false;
+  const updatedEvents = state.activeEvents.map((e) => {
+    if (e.resolved) return e;
+    const def = EVENT_DEFS.get(e.defId);
+    if (def?.producesFacilityOnAccept?.defId !== defId) return e;
+    changed = true;
+    return { ...e, resolved: true, resolvedWith: 'superseded' as const };
+  });
+  const matchingPending = state.pendingFacilityPlacements.filter(
+    (p) => p.facilityDefId === defId,
+  );
+  if (matchingPending.length > 0) changed = true;
+  if (!changed) return state;
+  const remainingPending = state.pendingFacilityPlacements.filter(
+    (p) => p.facilityDefId !== defId,
+  );
+  return {
+    ...state,
+    activeEvents: updatedEvents,
+    pendingFacilityPlacements: remainingPending,
+  };
 }
 
 function computeRemainingCapacity(state: GameState): number {
@@ -337,6 +393,9 @@ export const gameStore = {
   },
   get hoveredTileKey(): string | null {
     return _hoveredTileKey;
+  },
+  get placementModeSourceId(): string | null {
+    return _placementModeSourceId;
   },
 
   selectTile(key: string | null): void {
@@ -599,6 +658,11 @@ export const gameStore = {
     };
     const newActionsThisTurn = (_state.actionsThisTurn ?? 0) + 1;
 
+    // Manual commitment to build closes any pending placement / matching
+    // proposal event for this facility def. The player chose this path; the
+    // proposal is no longer needed.
+    const stateWithProposalsClosed = closeMatchingProposalsAndPending(_state, defId);
+
     if (def.buildTime === 0) {
       // Instant build
       const facilityId = `${defId}-${coordKey}-t${_state.turn}`;
@@ -614,49 +678,112 @@ export const gameStore = {
         newSlots[i] = facilityId;
       }
       mutateState({
-        ..._state,
+        ...stateWithProposalsClosed,
         actionsThisTurn: newActionsThisTurn,
         player: {
-          ..._state.player,
+          ...stateWithProposalsClosed.player,
           resources: newResources,
-          facilities: [..._state.player.facilities, newFacility],
+          facilities: [...stateWithProposalsClosed.player.facilities, newFacility],
         },
         map: {
-          ..._state.map,
-          earthTiles: _state.map.earthTiles.map((t) =>
+          ...stateWithProposalsClosed.map,
+          earthTiles: stateWithProposalsClosed.map.earthTiles.map((t) =>
             `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, facilitySlots: newSlots } : t,
           ),
         },
       });
     } else {
-      // Multi-turn build: enqueue action, mark tile as pending.
-      const actionId = `construct-${defId}-${coordKey}-t${_state.turn}`;
-      const action: OngoingAction = {
-        id: actionId,
-        type: 'construct',
-        facilityDefId: defId,
+      const { action, updatedTiles } = enqueueConstruction(
+        stateWithProposalsClosed.map.earthTiles,
+        defId,
         coordKey,
-        turnsRemaining: def.buildTime,
-        totalTurns: def.buildTime,
-        slotIndex: start,
-      };
+        start,
+        def.buildTime,
+        _state.turn,
+      );
       mutateState({
-        ..._state,
+        ...stateWithProposalsClosed,
         actionsThisTurn: newActionsThisTurn,
         player: {
-          ..._state.player,
+          ...stateWithProposalsClosed.player,
           resources: newResources,
-          constructionQueue: [..._state.player.constructionQueue, action],
+          constructionQueue: [...stateWithProposalsClosed.player.constructionQueue, action],
         },
-        map: {
-          ..._state.map,
-          earthTiles: _state.map.earthTiles.map((t) =>
-            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
-          ),
-        },
+        map: { ...stateWithProposalsClosed.map, earthTiles: updatedTiles },
       });
     }
     _selectedCoordKey = null;
+  },
+
+  /**
+   * Enter tile-pick mode for a pending facility placement. While active, an
+   * EarthScene tile click routes through placePendingFacilityOnTile rather
+   * than opening the FacilityPicker.
+   */
+  enterPlacementMode(sourceId: string): void {
+    if (!_state) return;
+    if (!_state.pendingFacilityPlacements.some((p) => p.sourceId === sourceId)) return;
+    _selectedCoordKey = null;
+    _placementModeSourceId = sourceId;
+  },
+
+  exitPlacementMode(): void {
+    _placementModeSourceId = null;
+  },
+
+  /**
+   * Attempt to place the active pending facility at the given tile.
+   * Returns true on success; false (and stays in placement mode) on
+   * ineligible tile.
+   */
+  placePendingFacilityOnTile(coordKey: string): boolean {
+    if (!_state || !_placementModeSourceId) return false;
+    const pending = _state.pendingFacilityPlacements.find(
+      (p) => p.sourceId === _placementModeSourceId,
+    );
+    if (!pending) return false;
+    const def = FACILITY_DEFS.get(pending.facilityDefId);
+    if (!def) return false;
+    const tile = _state.map.earthTiles.find((t) => makeCoordKey(t.coord) === coordKey);
+    if (!tile) return false;
+    const slotCost = def.slotCost ?? 1;
+    const start = findContiguousFreeStart(tile.facilitySlots, slotCost);
+    if (start === null) return false;
+    if (!canPlaceProducedFacility(tile, def, start)) return false;
+
+    const next = placePendingFacility(
+      _state,
+      _placementModeSourceId,
+      coordKey,
+      start,
+      FACILITY_DEFS,
+    );
+    mutateState(next);
+    _placementModeSourceId = null;
+    _selectedCoordKey = null;
+    return true;
+  },
+
+  deferPendingPlacement(sourceId: string): void {
+    if (!_state) return;
+    if (_placementModeSourceId === sourceId) _placementModeSourceId = null;
+    mutateState(deferPendingPlacement(_state, sourceId));
+  },
+
+  /**
+   * True if any tile in the bloc can host the facility for the given pending
+   * placement. Used by the UI to disable the Place button when no slot is
+   * available.
+   */
+  pendingPlacementHasEligibleTile(sourceId: string): boolean {
+    if (!_state) return false;
+    const pending = _state.pendingFacilityPlacements.find(
+      (p) => p.sourceId === sourceId,
+    );
+    if (!pending) return false;
+    const def = FACILITY_DEFS.get(pending.facilityDefId);
+    if (!def) return false;
+    return hasAnyEligibleTile(_state.map.earthTiles, def);
   },
 
   demolishFacility(coordKey: string, slotIndex: number): void {
@@ -872,6 +999,19 @@ export const gameStore = {
         ? 'The Corporation has committed to establishing a permanent Moon Colony.'
         : `${def.name} accepted — ${effect ? formatEffectForNews(effect) : 'no effect'}.`;
 
+    // If this event produces a facility on accept, queue a pending placement
+    // keyed by the event instance id (so the prompt and the source are linked).
+    const newPendingPlacements = def.producesFacilityOnAccept
+      ? [
+          ..._state.pendingFacilityPlacements,
+          {
+            sourceId: eventId,
+            facilityDefId: def.producesFacilityOnAccept.defId,
+            deferCount: 0,
+          },
+        ]
+      : _state.pendingFacilityPlacements;
+
     mutateState({
       ..._state,
       signal: updatedSignal,
@@ -880,6 +1020,7 @@ export const gameStore = {
       orbitalStationDeferResurfaceTurn: isBoardProposal ? null : _state.orbitalStationDeferResurfaceTurn,
       moonColonyAuthorised: isMoonColonyProposal ? true : _state.moonColonyAuthorised,
       moonColonyDeferResurfaceTurn: isMoonColonyProposal ? null : _state.moonColonyDeferResurfaceTurn,
+      pendingFacilityPlacements: newPendingPlacements,
       player: {
         ...updatedPlayer,
         newsFeed: [
