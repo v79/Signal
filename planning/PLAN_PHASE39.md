@@ -119,12 +119,15 @@ producesFacility?: {
 
 ### Flow (manualTile)
 
+From the player's perspective, a turn has two beats: click End Turn, then deal with what comes back (new events, new cards, news, etc.). Pending placements live in that same surface — they are not a separate "phase-step", they are another thing to attend to alongside events.
+
 1. Project completes during the world phase.
-2. Engine writes a placement-pending entry to `state.pendingFacilityPlacements: Array<{ projectId; facilityDefId; deferUntilTurn }>`.
-3. UI surfaces the prompt at the start of the next action phase — modal with "Place now" (opens map tile picker filtered by `allowedTileTypes`) or "Defer" (closes the modal, increments a defer counter).
-4. If the player closes the modal without placing, that counts as a defer.
-5. After 3 deferrals, the prompt resurfaces as a top-priority action-phase modal that cannot be dismissed without either placing or explicitly declining (which destroys the unbuilt facility — narrative consequence TBD).
+2. Engine writes a placement-pending entry to `state.pendingFacilityPlacements: Array<{ projectId; facilityDefId; deferCount: number }>`.
+3. After End Turn resolves, the prompt appears as an event-zone-style card (not a modal) sitting alongside the new event cards. Buttons: "Place" (opens the map tile picker filtered by `allowedTileTypes`) and "Defer" (dismisses the card for this turn and increments `deferCount`).
+4. The card is non-blocking — the player can play cards, respond to events, build other facilities, and click End Turn again with it unplaced. It reappears each subsequent turn until placed.
+5. When `deferCount` reaches 3, the prompt promotes to a blocking modal that surfaces immediately on End Turn and must be resolved (placed) before the player can End Turn again. Declining outright (destroying the unbuilt facility) is out of scope for this phase — see §"Out of scope".
 6. While pending, the facility does not produce output and does not occupy a tile.
+7. Edge case — bloc has zero compatible tiles: defer indefinitely with a news entry. (Rare; handle by not auto-promoting to blocking, since the player has nothing they can do.)
 
 ### Flow (anchoredToHost)
 
@@ -142,17 +145,17 @@ Add a short section to `SignalGDD.md` describing the infrastructure-project plac
 
 ### Engine (`src/engine/`)
 
-- [ ] `types.ts`: add `producesFacility` to `ProjectDef`; add `pendingFacilityPlacements` to `GameState`. ✅ Tab-seen booleans (`nearSpaceTabSeen`, `asteroidTabSeen`) added.
+- ✅ `types.ts`: `producesFacility` added to `ProjectDef`; `PendingFacilityPlacement` interface added; `pendingFacilityPlacements: PendingFacilityPlacement[]` added to `GameState`. Tab-seen booleans (`nearSpaceTabSeen`, `asteroidTabSeen`) added in 39.3.
 - ✅ `starterFacilities.ts` (new module): pure `placeStarterFacilities(blocDefId, tiles, facilityDefs)` helper, called from `startNewGame` in `game.svelte.ts` after HQ placement. v1 trio is `researchLab` + `coalPowerStation` + `mine` for every bloc; per-bloc overrides via `STARTER_FACILITY_TRIOS` map. Tab-seen booleans deferred to 39.3.
-- [ ] `projects.ts`: on completion of a project with `producesFacility.placement === 'manualTile'`, push to `pendingFacilityPlacements`.
-- [ ] `turn.ts`: increment defer counters on pending placements that aged through a turn without being placed.
+- ✅ `projects.ts`: on completion of a project with `producesFacility.placement === 'manualTile'`, push to `pendingFacilityPlacements`. Helpers `placePendingFacility`, `deferPendingPlacement`, `canPlaceProducedFacility`, `hasAnyEligibleTile` added.
+- [ ] `turn.ts`: increment defer counters on pending placements that aged through a turn without being placed. _Not yet wired — current model has the player explicitly press Defer; auto-defer-on-turn-pass is a separate decision._
 - ✅ Era-advance code (`turn.ts`): sets `nearSpaceTabSeen = false` on `opensEra2` or `orbitalStation_stage1` completion; sets `asteroidTabSeen = false` on `opensEra3`.
 - [ ] Board lifecycle (`board.ts`): when a member exits, ensure `committeeNotifications` (or the new unread counter) is updated.
 
 ### Data
 
-- [ ] `projects.json`: add `producesFacility: { defId: "spaceLaunchCentre", placement: "manualTile" }` to whichever project produces the launch centre. (May need a new project entry if the centre is currently produced solely by an event.)
-- [ ] `projects.json`: optionally add `producesFacility: { defId: "cern", placement: "anchoredToHost", hostFacilityDefId: "publicUniversity" }` for documentation/consistency, even though Phase 38 hard-codes the behaviour.
+- [ ] `projects.json`: add `producesFacility: { defId: "spaceLaunchCentre", placement: "manualTile" }` to whichever project produces the launch centre. _Blocked: no project today produces the launch centre — it's a tech-unlocked facility built via the standard build flow. Wiring requires a design decision (introduce a new "Launch Programme" project, or convert one of the existing space prerequisites)._
+- [ ] `projects.json`: optionally add `producesFacility: { defId: "cern", placement: "anchoredToHost", hostFacilityDefId: "publicUniversity" }` for documentation/consistency. _Skipped — there is no `cern` facility def (CERN's project anchors a ring effect to an existing publicUniversity), so the `defId` would point at nothing._
 - ✅ `src/data/helpTopics.ts`: new file with help-text strings keyed by tab id.
 
 ### UI (`src/lib/components/`)
@@ -161,16 +164,20 @@ Add a short section to `SignalGDD.md` describing the infrastructure-project plac
 - ✅ `HelpModal.svelte` — new; closes on Escape, Enter, backdrop click, or CLOSE button. Reuses the surface/border tokens of `NarrativeModal` for visual consistency.
 - ✅ `MapContainer.svelte`: single `HelpButton` right-aligned in the tab bar, opening a modal whose content is keyed off the active tab id (`HELP_TOPICS[activeTab]`). Pulsing `.new-dot` now rendered on Near Space, Asteroid Belt (era unlock) and Committee (any undismissed `committeeNotifications`) tabs; cleared by switching to the tab.
 - ✅ Committee dot is bound on the COMMITTEE tab in `MapContainer.svelte` directly — drives off `committeeNotifications.some(!dismissed)`, no `BoardPanel` change needed.
-- [ ] `FacilityPicker.svelte` or new `PlacementPrompt.svelte`: modal flow for placing the produced facility on a chosen tile. Reuse existing tile-type filtering from the standard build flow.
-- [ ] `+page.svelte`: surface placement modal when `pendingFacilityPlacements` is non-empty at the start of the action phase.
+- ✅ `PlacementPromptCard.svelte`: event-zone-style card for non-blocking placements. Buttons: Place (enters placement mode) and Defer (increments `deferCount`).
+- ✅ `PlacementPromptModal.svelte`: blocking modal surfaced when any pending placement has `deferCount >= 3`. Cannot be dismissed without placing.
+- ✅ Placement-mode wired through `gameStore` (`enterPlacementMode`, `placePendingFacilityOnTile`, `exitPlacementMode`); `MapContainer.svelte` routes EarthScene tile clicks to `placePendingFacilityOnTile` when placement mode is active.
+- ✅ `+page.svelte`: renders a `PlacementPromptCard` for each entry in `pendingFacilityPlacements` with `deferCount < 3`, alongside event cards; mounts `PlacementPromptModal` at top level when an entry has `deferCount >= 3`.
 
 ### Tests
 
 - ✅ Starter facilities placed deterministically per bloc; tile-type compatibility, idempotence, no input mutation, and `builtTurn: 0` all covered in `starterFacilities.test.ts` (7 tests).
 - ✅ Tab-seen flags flip correctly when era advances (`tabSeen.test.ts`, 6 tests covering defaults, deserialise migration, era 2 / era 3 / orbitalStation_stage1 unlocks, no spurious resets).
-- [ ] Project completion writes a placement-pending entry; `tickActiveProjects` does not duplicate it across turns.
-- [ ] Defer counter increments correctly; third defer surfaces a non-dismissable prompt.
-- [ ] `producesFacility.placement === 'anchoredToHost'` does not produce a placement-pending entry (CERN regression).
+- ✅ Project completion writes a placement-pending entry; `tickActiveProjects` does not duplicate it across turns. (`projects.test.ts` — manualTile placement block)
+- ✅ Defer counter increments correctly; reaches the blocking threshold (>= 3) after three defers. (`projects.test.ts` — `deferPendingPlacement` block)
+- ✅ `producesFacility.placement === 'anchoredToHost'` does not produce a placement-pending entry (CERN regression). (`projects.test.ts` — manualTile placement block, `does not write a pending entry for an anchoredToHost producer`)
+- ✅ `placePendingFacility` creates the FacilityInstance, removes the pending entry, adds a news item, and rejects ineligible tiles. (`projects.test.ts` — `placePendingFacility` block)
+- ✅ `canPlaceProducedFacility` / `hasAnyEligibleTile` honour tile type, destroyed status, pending construction, slot occupancy, multi-slot facilities. (`projects.test.ts`)
 
 ### Docs
 

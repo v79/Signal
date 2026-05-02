@@ -139,6 +139,7 @@ export function createGameState(config: GameConfig): GameState {
     moonColonyDeferResurfaceTurn: null,
     isruOperational: false,
     tabSeen: {},
+    pendingFacilityPlacements: [],
   };
 }
 
@@ -198,6 +199,10 @@ export function deserialiseGameState(json: string): GameState {
     if (legacy.asteroidTabSeen === false) state.tabSeen.belt = false;
     delete legacy.nearSpaceTabSeen;
     delete legacy.asteroidTabSeen;
+  }
+
+  if (!Array.isArray(state.pendingFacilityPlacements)) {
+    state.pendingFacilityPlacements = [];
   }
 
   return state;

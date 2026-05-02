@@ -306,6 +306,22 @@ export interface ProjectDef {
   groupId?: string;
   /** Human-readable label for the group header (required when groupId is set). */
   groupName?: string;
+  /**
+   * Marks this project as an "infrastructure" project that produces a
+   * placeable facility on completion. See PendingFacilityPlacement.
+   *
+   * - placement: 'manualTile' — engine queues a placement prompt; the player
+   *   chooses a tile (filtered by the produced facility's allowedTileTypes).
+   * - placement: 'anchoredToHost' — engine resolves an existing host facility
+   *   instance (e.g. CERN anchors to the earliest publicUniversity). No
+   *   prompt is shown; no PendingFacilityPlacement is written.
+   */
+  producesFacility?: {
+    defId: string;
+    placement: 'manualTile' | 'anchoredToHost';
+    /** Required when placement === 'anchoredToHost'. */
+    hostFacilityDefId?: string;
+  };
 }
 
 /** One-time reward applied when a project completes. */
@@ -349,6 +365,23 @@ export interface ProjectInstance {
   turnsElapsed: number;
   /** Effective duration after Will modifier. */
   effectiveDuration: number;
+}
+
+/**
+ * A facility produced by a completed project (placement: 'manualTile') that
+ * is awaiting a player-chosen tile. Surfaced in the event zone as a
+ * non-blocking prompt; promoted to a blocking modal once deferCount >= 3.
+ *
+ * While the entry exists, the facility does not occupy a tile and produces
+ * no output.
+ */
+export interface PendingFacilityPlacement {
+  /** ID of the project that produced this facility (project defId). */
+  projectId: string;
+  /** Facility def to be placed. */
+  facilityDefId: string;
+  /** How many turns the player has dismissed the prompt without placing. */
+  deferCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -995,4 +1028,9 @@ export interface GameState {
    * `true` when the player switches to that tab.
    */
   tabSeen: Record<string, boolean>;
+  /**
+   * Facilities produced by completed infrastructure projects awaiting a
+   * player-chosen tile. See PendingFacilityPlacement.
+   */
+  pendingFacilityPlacements: PendingFacilityPlacement[];
 }

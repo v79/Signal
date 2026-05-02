@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { canInitiateProject, getAvailableProjects, initiateProject, tickActiveProjects } from './projects';
-import type { GameState, ProjectDef, FacilityInstance, MapTile } from './types';
+import {
+  canInitiateProject,
+  canPlaceProducedFacility,
+  deferPendingPlacement,
+  getAvailableProjects,
+  hasAnyEligibleTile,
+  initiateProject,
+  placePendingFacility,
+  tickActiveProjects,
+} from './projects';
+import type { FacilityDef, GameState, ProjectDef, FacilityInstance, MapTile } from './types';
 import { createGameState } from './state';
 
 // ---------------------------------------------------------------------------
@@ -310,5 +319,242 @@ describe('tickActiveProjects', () => {
     const state = initiateProject(makeState(), DEF_SIMPLE);
     const { state: next } = tickActiveProjects(state, new Map(), 2);
     expect(next.player.activeProjects).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pending facility placements (manualTile flow)
+// ---------------------------------------------------------------------------
+
+const FAC_TEST: FacilityDef = {
+  id: 'testFacility',
+  name: 'Test Facility',
+  description: 'A facility produced by a test project.',
+  era: 'earth',
+  allowedTileTypes: ['urban'],
+  buildCost: {},
+  upkeepCost: {},
+  buildTime: 0,
+  deleteTime: 0,
+  canDelete: true,
+  fieldOutput: { physics: 1 },
+  resourceOutput: {},
+  adjacencyBonuses: [],
+  adjacencyPenalties: [],
+  depletes: false,
+  requiredTechId: null,
+};
+
+const DEF_PRODUCES_MANUAL: ProjectDef = {
+  ...DEF_SIMPLE,
+  id: 'producesManualProject',
+  producesFacility: { defId: 'testFacility', placement: 'manualTile' },
+};
+
+const DEF_PRODUCES_HOST: ProjectDef = {
+  ...DEF_SIMPLE,
+  id: 'producesHostProject',
+  producesFacility: {
+    defId: 'testFacility',
+    placement: 'anchoredToHost',
+    hostFacilityDefId: 'researchLab',
+  },
+};
+
+const FACILITY_DEFS = new Map<string, FacilityDef>([[FAC_TEST.id, FAC_TEST]]);
+
+function withTile(state: GameState, tile: MapTile): GameState {
+  return {
+    ...state,
+    map: { ...state.map, earthTiles: [...state.map.earthTiles, tile] },
+  };
+}
+
+function makeTile(overrides: Partial<MapTile> = {}): MapTile {
+  return {
+    coord: { q: 0, r: 0 },
+    type: 'urban',
+    destroyedStatus: null,
+    productivity: 1.0,
+    mineDepletion: 1.0,
+    facilitySlots: [null, null, null],
+    pendingActionId: null,
+    ...overrides,
+  };
+}
+
+describe('tickActiveProjects — manualTile placement', () => {
+  it('writes a pending placement entry on completion of a manualTile producer', () => {
+    let state = initiateProject(makeState(), DEF_PRODUCES_MANUAL);
+    const defs = new Map([[DEF_PRODUCES_MANUAL.id, DEF_PRODUCES_MANUAL]]);
+    const { state: after1 } = tickActiveProjects(state, defs, 2);
+    const { state: after2, newPendingPlacements } = tickActiveProjects(after1, defs, 3);
+    expect(newPendingPlacements).toHaveLength(1);
+    expect(after2.pendingFacilityPlacements).toHaveLength(1);
+    expect(after2.pendingFacilityPlacements[0]).toMatchObject({
+      projectId: DEF_PRODUCES_MANUAL.id,
+      facilityDefId: 'testFacility',
+      deferCount: 0,
+    });
+  });
+
+  it('does not duplicate the pending entry across subsequent ticks', () => {
+    let state = initiateProject(makeState(), DEF_PRODUCES_MANUAL);
+    const defs = new Map([[DEF_PRODUCES_MANUAL.id, DEF_PRODUCES_MANUAL]]);
+    const { state: after1 } = tickActiveProjects(state, defs, 2);
+    const { state: after2 } = tickActiveProjects(after1, defs, 3);
+    // Tick again with no active projects — pending entry should remain stable.
+    const { state: after3, newPendingPlacements } = tickActiveProjects(after2, defs, 4);
+    expect(newPendingPlacements).toHaveLength(0);
+    expect(after3.pendingFacilityPlacements).toHaveLength(1);
+  });
+
+  it('does not write a pending entry for an anchoredToHost producer (CERN regression)', () => {
+    let state = initiateProject(makeState(), DEF_PRODUCES_HOST);
+    const defs = new Map([[DEF_PRODUCES_HOST.id, DEF_PRODUCES_HOST]]);
+    const { state: after1 } = tickActiveProjects(state, defs, 2);
+    const { state: after2, newPendingPlacements } = tickActiveProjects(after1, defs, 3);
+    expect(newPendingPlacements).toHaveLength(0);
+    expect(after2.pendingFacilityPlacements).toHaveLength(0);
+  });
+
+  it('does not write a pending entry for projects without producesFacility', () => {
+    let state = initiateProject(makeState(), DEF_SIMPLE);
+    const defs = new Map([[DEF_SIMPLE.id, DEF_SIMPLE]]);
+    const { state: after1 } = tickActiveProjects(state, defs, 2);
+    const { state: after2 } = tickActiveProjects(after1, defs, 3);
+    expect(after2.pendingFacilityPlacements).toHaveLength(0);
+  });
+});
+
+describe('canPlaceProducedFacility', () => {
+  it('returns true for a matching empty tile', () => {
+    expect(canPlaceProducedFacility(makeTile(), FAC_TEST, 0)).toBe(true);
+  });
+
+  it('returns false when tile type is not in allowedTileTypes', () => {
+    expect(canPlaceProducedFacility(makeTile({ type: 'forested' }), FAC_TEST, 0)).toBe(false);
+  });
+
+  it('returns false when tile is destroyed', () => {
+    expect(canPlaceProducedFacility(makeTile({ destroyedStatus: 'flooded' }), FAC_TEST, 0)).toBe(
+      false,
+    );
+  });
+
+  it('returns false when tile has a pending construction action', () => {
+    expect(
+      canPlaceProducedFacility(makeTile({ pendingActionId: 'queued-action' }), FAC_TEST, 0),
+    ).toBe(false);
+  });
+
+  it('returns false when target slot is occupied', () => {
+    const tile = makeTile({ facilitySlots: ['existing', null, null] });
+    expect(canPlaceProducedFacility(tile, FAC_TEST, 0)).toBe(false);
+  });
+
+  it('respects multi-slot facilities', () => {
+    const multiSlot: FacilityDef = { ...FAC_TEST, slotCost: 2 };
+    expect(canPlaceProducedFacility(makeTile(), multiSlot, 0)).toBe(true);
+    // Slot 2 with slotCost 2 would overflow.
+    expect(canPlaceProducedFacility(makeTile(), multiSlot, 2)).toBe(false);
+  });
+});
+
+describe('hasAnyEligibleTile', () => {
+  it('returns true when at least one tile is eligible', () => {
+    expect(hasAnyEligibleTile([makeTile()], FAC_TEST)).toBe(true);
+  });
+
+  it('returns false when no tile is eligible', () => {
+    expect(hasAnyEligibleTile([makeTile({ type: 'forested' })], FAC_TEST)).toBe(false);
+  });
+
+  it('returns false on empty tile list', () => {
+    expect(hasAnyEligibleTile([], FAC_TEST)).toBe(false);
+  });
+});
+
+describe('placePendingFacility', () => {
+  function stateWithPending(): GameState {
+    const state = withTile(makeState(), makeTile());
+    return {
+      ...state,
+      pendingFacilityPlacements: [
+        { projectId: DEF_PRODUCES_MANUAL.id, facilityDefId: FAC_TEST.id, deferCount: 0 },
+      ],
+    };
+  }
+
+  it('creates a FacilityInstance on the chosen tile', () => {
+    const state = stateWithPending();
+    const next = placePendingFacility(state, DEF_PRODUCES_MANUAL.id, '0,0', 0, FACILITY_DEFS);
+    expect(next.player.facilities).toHaveLength(1);
+    expect(next.player.facilities[0]).toMatchObject({
+      defId: FAC_TEST.id,
+      locationKey: '0,0',
+      condition: 1.0,
+      builtTurn: state.turn,
+    });
+    expect(next.map.earthTiles[0].facilitySlots[0]).toBe(next.player.facilities[0].id);
+  });
+
+  it('removes the pending entry on placement', () => {
+    const state = stateWithPending();
+    const next = placePendingFacility(state, DEF_PRODUCES_MANUAL.id, '0,0', 0, FACILITY_DEFS);
+    expect(next.pendingFacilityPlacements).toHaveLength(0);
+  });
+
+  it('adds a placement-completed news item', () => {
+    const state = stateWithPending();
+    const next = placePendingFacility(state, DEF_PRODUCES_MANUAL.id, '0,0', 0, FACILITY_DEFS);
+    const added = next.player.newsFeed.slice(state.player.newsFeed.length);
+    expect(added).toHaveLength(1);
+    expect(added[0].text).toContain(FAC_TEST.name);
+  });
+
+  it('throws when no pending entry exists for the project', () => {
+    const state = withTile(makeState(), makeTile());
+    expect(() =>
+      placePendingFacility(state, 'unknownProject', '0,0', 0, FACILITY_DEFS),
+    ).toThrow();
+  });
+
+  it('throws when the chosen tile cannot host the facility', () => {
+    const state = {
+      ...withTile(makeState(), makeTile({ type: 'forested' })),
+      pendingFacilityPlacements: [
+        { projectId: DEF_PRODUCES_MANUAL.id, facilityDefId: FAC_TEST.id, deferCount: 0 },
+      ],
+    };
+    expect(() =>
+      placePendingFacility(state, DEF_PRODUCES_MANUAL.id, '0,0', 0, FACILITY_DEFS),
+    ).toThrow();
+  });
+});
+
+describe('deferPendingPlacement', () => {
+  it('increments deferCount on the matching entry', () => {
+    const state: GameState = {
+      ...makeState(),
+      pendingFacilityPlacements: [
+        { projectId: 'a', facilityDefId: 'x', deferCount: 0 },
+        { projectId: 'b', facilityDefId: 'y', deferCount: 1 },
+      ],
+    };
+    const next = deferPendingPlacement(state, 'a');
+    expect(next.pendingFacilityPlacements[0].deferCount).toBe(1);
+    expect(next.pendingFacilityPlacements[1].deferCount).toBe(1);
+  });
+
+  it('reaches the blocking threshold (>= 3) after three defers', () => {
+    let state: GameState = {
+      ...makeState(),
+      pendingFacilityPlacements: [{ projectId: 'a', facilityDefId: 'x', deferCount: 0 }],
+    };
+    state = deferPendingPlacement(state, 'a');
+    state = deferPendingPlacement(state, 'a');
+    state = deferPendingPlacement(state, 'a');
+    expect(state.pendingFacilityPlacements[0].deferCount).toBe(3);
   });
 });

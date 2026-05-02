@@ -4,6 +4,8 @@
   import { browser } from '$app/environment';
   import HUD from '$lib/components/HUD.svelte';
   import EventZone from '$lib/components/EventZone.svelte';
+  import PlacementPromptCard from '$lib/components/PlacementPromptCard.svelte';
+  import PlacementPromptModal from '$lib/components/PlacementPromptModal.svelte';
   import TechProgressSummary from '$lib/components/TechProgressSummary.svelte';
   import TechTreeModal from '$lib/components/TechTreeModal.svelte';
   import SignalTrack from '$lib/components/SignalTrack.svelte';
@@ -145,6 +147,16 @@
       : [],
   );
 
+  // Pending facility placements split by deferCount. The first entry with
+  // deferCount >= 3 promotes to a blocking modal; the rest render as
+  // non-blocking cards in the event zone.
+  const blockingPlacement = $derived(
+    gameStore.state?.pendingFacilityPlacements.find((p) => p.deferCount >= 3) ?? null,
+  );
+  const nonBlockingPlacements = $derived(
+    gameStore.state?.pendingFacilityPlacements.filter((p) => p.deferCount < 3) ?? [],
+  );
+
 </script>
 
 {#if gameStore.state && gameStore.state.narrativeQueue.length > 0}
@@ -154,6 +166,17 @@
       onDismiss={() => gameStore.dismissNarrativeModal()}
     />
   {/key}
+{/if}
+
+{#if blockingPlacement}
+  <PlacementPromptModal
+    placement={blockingPlacement}
+    facilityDef={FACILITY_DEFS.get(blockingPlacement.facilityDefId) ?? null}
+    eligibleTileCount={gameStore.pendingPlacementHasEligibleTile(blockingPlacement.projectId) ? 1 : 0}
+    isPlacing={gameStore.placementModeProjectId === blockingPlacement.projectId}
+    onPlace={() => gameStore.enterPlacementMode(blockingPlacement.projectId)}
+    onCancel={() => gameStore.exitPlacementMode()}
+  />
 {/if}
 
 {#if showTechTree && gameStore.state}
@@ -209,6 +232,18 @@
           onAccept={(id) => gameStore.acceptEvent(id)}
           onDefer={(id) => gameStore.deferBoardProposal(id)}
         />
+
+        {#each nonBlockingPlacements as placement (placement.projectId)}
+          <PlacementPromptCard
+            {placement}
+            facilityDef={FACILITY_DEFS.get(placement.facilityDefId) ?? null}
+            eligibleTileCount={gameStore.pendingPlacementHasEligibleTile(placement.projectId) ? 1 : 0}
+            isPlacing={gameStore.placementModeProjectId === placement.projectId}
+            onPlace={() => gameStore.enterPlacementMode(placement.projectId)}
+            onDefer={() => gameStore.deferPendingPlacement(placement.projectId)}
+            onCancel={() => gameStore.exitPlacementMode()}
+          />
+        {/each}
 
       </div>
 

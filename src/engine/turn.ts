@@ -917,6 +917,7 @@ export function executeWorldPhase(
     moonColonyDeferCount: state.moonColonyDeferCount,
     moonColonyDeferResurfaceTurn: moonColonyProposalResurfaces ? null : state.moonColonyDeferResurfaceTurn,
     isruOperational: newIsruOperational,
+    pendingFacilityPlacements: projectTickResult.state.pendingFacilityPlacements,
     tabSeen: {
       ...state.tabSeen,
       ...(nearSpaceUnlockedThisTurn ? { space: false } : {}),

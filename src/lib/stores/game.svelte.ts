@@ -46,7 +46,14 @@ import {
 } from '../../engine/events';
 import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
 import { placeStarterFacilities } from '../../engine/starterFacilities';
-import { canInitiateProject, initiateProject } from '../../engine/projects';
+import {
+  canInitiateProject,
+  canPlaceProducedFacility,
+  deferPendingPlacement,
+  hasAnyEligibleTile,
+  initiateProject,
+  placePendingFacility,
+} from '../../engine/projects';
 import {
   BLOC_MAPS,
   BLOC_DEFS,
@@ -298,11 +305,18 @@ let _selectedSpaceNodeId = $state<string | null>(null);
 let _selectedBeltNodeId = $state<string | null>(null);
 /** UI-only: the coord key of the tile currently under the mouse cursor. */
 let _hoveredTileKey = $state<string | null>(null);
+/**
+ * UI-only: project ID whose pending facility is currently being placed.
+ * When non-null, EarthScene tile clicks call placePendingFacilityOnTile
+ * instead of opening the FacilityPicker.
+ */
+let _placementModeProjectId = $state<string | null>(null);
 
 function resetSelections(): void {
   _selectedCoordKey = null;
   _selectedSpaceNodeId = null;
   _selectedBeltNodeId = null;
+  _placementModeProjectId = null;
 }
 
 function computeRemainingCapacity(state: GameState): number {
@@ -337,6 +351,9 @@ export const gameStore = {
   },
   get hoveredTileKey(): string | null {
     return _hoveredTileKey;
+  },
+  get placementModeProjectId(): string | null {
+    return _placementModeProjectId;
   },
 
   selectTile(key: string | null): void {
@@ -657,6 +674,79 @@ export const gameStore = {
       });
     }
     _selectedCoordKey = null;
+  },
+
+  /**
+   * Enter tile-pick mode for a pending facility placement. While active, an
+   * EarthScene tile click routes through placePendingFacilityOnTile rather
+   * than opening the FacilityPicker.
+   */
+  enterPlacementMode(projectId: string): void {
+    if (!_state) return;
+    if (!_state.pendingFacilityPlacements.some((p) => p.projectId === projectId)) return;
+    _selectedCoordKey = null;
+    _placementModeProjectId = projectId;
+  },
+
+  exitPlacementMode(): void {
+    _placementModeProjectId = null;
+  },
+
+  /**
+   * Attempt to place the active pending facility at the given tile.
+   * Returns true on success; false (and stays in placement mode) on
+   * ineligible tile.
+   */
+  placePendingFacilityOnTile(coordKey: string): boolean {
+    if (!_state || !_placementModeProjectId) return false;
+    const pending = _state.pendingFacilityPlacements.find(
+      (p) => p.projectId === _placementModeProjectId,
+    );
+    if (!pending) return false;
+    const def = FACILITY_DEFS.get(pending.facilityDefId);
+    if (!def) return false;
+    const tile = _state.map.earthTiles.find(
+      (t) => `${t.coord.q},${t.coord.r}` === coordKey,
+    );
+    if (!tile) return false;
+    const slotCost = def.slotCost ?? 1;
+    const start = findContiguousFreeStart(tile.facilitySlots, slotCost);
+    if (start === null) return false;
+    if (!canPlaceProducedFacility(tile, def, start)) return false;
+
+    const next = placePendingFacility(
+      _state,
+      _placementModeProjectId,
+      coordKey,
+      start,
+      FACILITY_DEFS,
+    );
+    mutateState(next);
+    _placementModeProjectId = null;
+    _selectedCoordKey = null;
+    return true;
+  },
+
+  deferPendingPlacement(projectId: string): void {
+    if (!_state) return;
+    if (_placementModeProjectId === projectId) _placementModeProjectId = null;
+    mutateState(deferPendingPlacement(_state, projectId));
+  },
+
+  /**
+   * True if any tile in the bloc can host the facility for the given pending
+   * placement. Used by the UI to disable the Place button when no slot is
+   * available.
+   */
+  pendingPlacementHasEligibleTile(projectId: string): boolean {
+    if (!_state) return false;
+    const pending = _state.pendingFacilityPlacements.find(
+      (p) => p.projectId === projectId,
+    );
+    if (!pending) return false;
+    const def = FACILITY_DEFS.get(pending.facilityDefId);
+    if (!def) return false;
+    return hasAnyEligibleTile(_state.map.earthTiles, def);
   },
 
   demolishFacility(coordKey: string, slotIndex: number): void {
