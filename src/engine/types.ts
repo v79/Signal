@@ -243,9 +243,8 @@ export interface FacilityDef {
   upgradesFrom?: string;
   /**
    * Event def ID to fire (one-shot) the first time a facility of this def
-   * appears in player.facilities. Replaces hard-coded `*-just-built` checks.
-   * The event still respects `oneShot` semantics via firedOneShotEventIds,
-   * so reload/replay does not double-fire.
+   * appears in player.facilities. Single-fire is enforced by
+   * firedOneShotEventIds so reload/replay does not double-fire.
    */
   triggersEventOnFirstBuild?: string;
 }
@@ -388,6 +387,8 @@ export interface PendingFacilityPlacement {
    * Identifier of the source that produced this pending placement. May be a
    * project def id (for project-produced facilities) or an event instance id
    * (for event-accepted facilities). Treated as opaque by consumers.
+   * Stable within a single run; not stable across runs for event-sourced
+   * placements (event instance ids embed the arrival turn).
    */
   sourceId: string;
   /** Facility def to be placed. */
@@ -451,8 +452,7 @@ export interface TechDef {
   hqFieldBonus?: Partial<FieldPoints>;
   /**
    * Event def ID to fire (one-shot) when this tech first transitions to
-   * 'discovered'. Replaces hard-coded `tech-discovered → event` checks in
-   * turn.ts. Single-fire is enforced via firedOneShotEventIds.
+   * 'discovered'. Single-fire is enforced via firedOneShotEventIds.
    */
   triggersEventOnDiscovery?: string;
 }
@@ -640,7 +640,7 @@ export interface EventInstance {
   countdownRemaining: number;
   /** Whether the player has responded to this event. */
   resolved: boolean;
-  resolvedWith: 'counter' | 'mitigation' | 'accepted' | 'expired' | null;
+  resolvedWith: 'counter' | 'mitigation' | 'accepted' | 'expired' | 'superseded' | null;
 }
 
 // ---------------------------------------------------------------------------

@@ -44,7 +44,14 @@ import {
   tileDestructionNewsItems,
   type DestroyedTileRecord,
 } from '../../engine/events';
-import { getFacilitiesOnTile, findContiguousFreeStart, canUpgradeFacility, isLunarChainTaken } from '../../engine/facilities';
+import {
+  getFacilitiesOnTile,
+  findContiguousFreeStart,
+  canUpgradeFacility,
+  isLunarChainTaken,
+  enqueueConstruction,
+  coordKey as makeCoordKey,
+} from '../../engine/facilities';
 import { placeStarterFacilities } from '../../engine/starterFacilities';
 import {
   canInitiateProject,
@@ -337,7 +344,7 @@ function closeMatchingProposalsAndPending(state: GameState, defId: string): Game
     const def = EVENT_DEFS.get(e.defId);
     if (def?.producesFacilityOnAccept?.defId !== defId) return e;
     changed = true;
-    return { ...e, resolved: true, resolvedWith: 'expired' as const };
+    return { ...e, resolved: true, resolvedWith: 'superseded' as const };
   });
   const matchingPending = state.pendingFacilityPlacements.filter(
     (p) => p.facilityDefId === defId,
@@ -686,17 +693,14 @@ export const gameStore = {
         },
       });
     } else {
-      // Multi-turn build: enqueue action, mark tile as pending.
-      const actionId = `construct-${defId}-${coordKey}-t${_state.turn}`;
-      const action: OngoingAction = {
-        id: actionId,
-        type: 'construct',
-        facilityDefId: defId,
+      const { action, updatedTiles } = enqueueConstruction(
+        stateWithProposalsClosed.map.earthTiles,
+        defId,
         coordKey,
-        turnsRemaining: def.buildTime,
-        totalTurns: def.buildTime,
-        slotIndex: start,
-      };
+        start,
+        def.buildTime,
+        _state.turn,
+      );
       mutateState({
         ...stateWithProposalsClosed,
         actionsThisTurn: newActionsThisTurn,
@@ -705,12 +709,7 @@ export const gameStore = {
           resources: newResources,
           constructionQueue: [...stateWithProposalsClosed.player.constructionQueue, action],
         },
-        map: {
-          ...stateWithProposalsClosed.map,
-          earthTiles: stateWithProposalsClosed.map.earthTiles.map((t) =>
-            `${t.coord.q},${t.coord.r}` === coordKey ? { ...t, pendingActionId: actionId } : t,
-          ),
-        },
+        map: { ...stateWithProposalsClosed.map, earthTiles: updatedTiles },
       });
     }
     _selectedCoordKey = null;
@@ -745,9 +744,7 @@ export const gameStore = {
     if (!pending) return false;
     const def = FACILITY_DEFS.get(pending.facilityDefId);
     if (!def) return false;
-    const tile = _state.map.earthTiles.find(
-      (t) => `${t.coord.q},${t.coord.r}` === coordKey,
-    );
+    const tile = _state.map.earthTiles.find((t) => makeCoordKey(t.coord) === coordKey);
     if (!tile) return false;
     const slotCost = def.slotCost ?? 1;
     const start = findContiguousFreeStart(tile.facilitySlots, slotCost);

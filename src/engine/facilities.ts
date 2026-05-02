@@ -92,6 +92,37 @@ export function findContiguousFreeStart(
   return null;
 }
 
+/**
+ * Build the OngoingAction + tile patch for a multi-turn Earth-tile
+ * construction. Caller is responsible for composing the returned `action` and
+ * `updatedTiles` into the final state alongside any cost / counter / news
+ * changes. Used by both the standard build flow and the pending-placement
+ * flow so the action shape stays in lock-step.
+ */
+export function enqueueConstruction(
+  earthTiles: MapTile[],
+  defId: string,
+  targetCoordKey: string,
+  slotIndex: number,
+  buildTime: number,
+  turn: number,
+): { action: OngoingAction; updatedTiles: MapTile[] } {
+  const actionId = `construct-${defId}-${targetCoordKey}-t${turn}`;
+  const action: OngoingAction = {
+    id: actionId,
+    type: 'construct',
+    facilityDefId: defId,
+    coordKey: targetCoordKey,
+    turnsRemaining: buildTime,
+    totalTurns: buildTime,
+    slotIndex,
+  };
+  const updatedTiles = earthTiles.map((t) =>
+    coordKey(t.coord) === targetCoordKey ? { ...t, pendingActionId: actionId } : t,
+  );
+  return { action, updatedTiles };
+}
+
 // ---------------------------------------------------------------------------
 // Tile productivity map — shared by output and breakdown helpers
 // ---------------------------------------------------------------------------

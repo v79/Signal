@@ -10,9 +10,8 @@ import type {
   FacilityDef,
   FacilityInstance,
   MapTile,
-  OngoingAction,
 } from './types';
-import { coordKey } from './facilities';
+import { coordKey, enqueueConstruction } from './facilities';
 
 // ---------------------------------------------------------------------------
 // Projects
@@ -516,20 +515,13 @@ export function placePendingFacility(
   );
 
   if (def.buildTime > 0) {
-    // Multi-turn construction — enqueue an OngoingAction, mark the tile
-    // pending. The FacilityInstance is created by tickConstructionQueue.
-    const actionId = `construct-${def.id}-${targetCoordKey}-t${state.turn}`;
-    const action: OngoingAction = {
-      id: actionId,
-      type: 'construct',
-      facilityDefId: def.id,
-      coordKey: targetCoordKey,
-      turnsRemaining: def.buildTime,
-      totalTurns: def.buildTime,
+    const { action, updatedTiles } = enqueueConstruction(
+      state.map.earthTiles,
+      def.id,
+      targetCoordKey,
       slotIndex,
-    };
-    const updatedTiles = state.map.earthTiles.map((t) =>
-      coordKey(t.coord) === targetCoordKey ? { ...t, pendingActionId: actionId } : t,
+      def.buildTime,
+      state.turn,
     );
     const newsItem: NewsItem = {
       id: `placement-begun-${sourceId}-t${state.turn}`,
