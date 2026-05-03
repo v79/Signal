@@ -17,6 +17,7 @@
   import { FIELD_COLOURS_CSS, FIELD_ABBR } from '../fieldColours';
   import HelpButton from './HelpButton.svelte';
   import HelpModal from './HelpModal.svelte';
+  import Tooltip from './Tooltip.svelte';
   import { HELP_TOPICS } from '../../data/helpTopics';
 
   let {
@@ -470,12 +471,13 @@
       {/if}
       <div class="zoom-controls" aria-label="Zoom controls">
         <button class="zoom-btn" onclick={() => scene?.zoomIn()} aria-label="Zoom in">+</button>
-        <button
-          class="zoom-btn zoom-reset"
-          onclick={() => scene?.resetZoom()}
-          aria-label="Reset zoom"
-          title="Reset zoom">⊙</button
-        >
+        <Tooltip text="Reset zoom" direction="above">
+          <button
+            class="zoom-btn zoom-reset"
+            onclick={() => scene?.resetZoom()}
+            aria-label="Reset zoom">⊙</button
+          >
+        </Tooltip>
         <button class="zoom-btn" onclick={() => scene?.zoomOut()} aria-label="Zoom out">−</button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Tooltip from './Tooltip.svelte';
   import type {
     BoardSlots,
     BoardMemberDef,
@@ -218,20 +219,23 @@
           <span class="role-label">{ROLE_LABELS[role]}</span>
           {#if active && def}
             {#if hasNotifications}
-              <span class="notification-badge" title="{memberNotifications.length} notification{memberNotifications.length > 1 ? 's' : ''}">
-                {memberNotifications.length}
-              </span>
+              <Tooltip text="{memberNotifications.length} notification{memberNotifications.length > 1 ? 's' : ''}" direction="above">
+                <span class="notification-badge">
+                  {memberNotifications.length}
+                </span>
+              </Tooltip>
             {/if}
             {@const disabledReason = dismissDisabledReason()}
-            <button
-              class="dismiss-btn"
-              class:disabled={!!disabledReason}
-              disabled={!!disabledReason || phase !== 'action'}
-              title={disabledReason ?? `Dismiss — costs ${DISMISS_COST}W`}
-              onclick={() => onDismiss(role)}
-            >
-              Dismiss
-            </button>
+            <Tooltip text={disabledReason ?? `Dismiss — costs ${DISMISS_COST}W`} direction="above">
+              <button
+                class="dismiss-btn"
+                class:disabled={!!disabledReason}
+                disabled={!!disabledReason || phase !== 'action'}
+                onclick={() => onDismiss(role)}
+              >
+                Dismiss
+              </button>
+            </Tooltip>
           {:else}
             <span class="vacant-badge">VACANT</span>
           {/if}
@@ -271,15 +275,16 @@
 
               {#if candidate}
                 {@const disabledReason = recruitDisabledReason(candidate)}
-                <button
-                  class="recruit-btn"
-                  class:disabled={!!disabledReason}
-                  disabled={!!disabledReason}
-                  title={disabledReason ?? `Recruit — costs 1 action`}
-                  onclick={() => onRecruit(candidate.id)}
-                >
-                  Recruit
-                </button>
+                <Tooltip text={disabledReason ?? `Recruit — costs 1 action`} direction="above">
+                  <button
+                    class="recruit-btn"
+                    class:disabled={!!disabledReason}
+                    disabled={!!disabledReason}
+                    onclick={() => onRecruit(candidate.id)}
+                  >
+                    Recruit
+                  </button>
+                </Tooltip>
                 <div class="recruit-cost">
                   1 action · {candidate.recruitCost.funding}F · {candidate.recruitCost.politicalWill}W
                 </div>

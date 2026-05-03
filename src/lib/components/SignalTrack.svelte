@@ -48,15 +48,20 @@
     return '#4a6878';
   }
 
-  const tooltipText = $derived(
-    definitelyPaused
-      ? 'Signal relay contact lost. Research Deep Space Relay Network and build a Signal Relay Station in cislunar space to resume decoding the alien signal.'
-      : !era1GateCleared
-        ? 'Our progress in decoding the signal has stalled; we need better tools and technologies to advance further.'
-        : !era2GateCleared
-          ? 'The signal is clearly interstellar in origin. But we will need to progress deeper into the solar system to make sense of it.'
-          : 'Progress decoding the alien signal. Unlocks new techs and events as it advances.',
-  );
+  function tooltipFor(s: SignalState): string {
+    if (definitelyPaused) {
+      return 'Signal relay contact lost. Research Deep Space Relay Network and build a Signal Relay Station in cislunar space to resume decoding the alien signal.';
+    }
+    if (!era1GateCleared && s.decodeProgress >= 33) {
+      return 'Signal decoding has reached its current limit. The Signal Pattern Analysis technology is required to decode further.';
+    }
+    if (!era2GateCleared && s.decodeProgress >= 66) {
+      return 'Signal decoding has reached its current limit. Further progress requires the Interstellar Signal Decryption technology.';
+    }
+    return 'The alien signal is being decoded as your programme advances. Research and infrastructure investments drive progress.';
+  }
+
+  const tooltipText = $derived(tooltipFor(signal));
 </script>
 
 <div class="signal-track-panel">

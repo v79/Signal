@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Tooltip from './Tooltip.svelte';
+
   let {
     onClick,
     label = 'Open help for this view',
@@ -8,9 +10,11 @@
   } = $props();
 </script>
 
-<button class="help-btn" type="button" onclick={onClick} aria-label={label} title={label}>
-  ?
-</button>
+<Tooltip text={label} direction="below">
+  <button class="help-btn" type="button" onclick={onClick} aria-label={label}>
+    ?
+  </button>
+</Tooltip>
 
 <style>
   .help-btn {

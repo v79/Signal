@@ -26,7 +26,7 @@ Out of scope: full CommonMark (no lists, links, headers, code blocks, blockquote
 
 ## Plan
 
-### 1. Markup parser (`src/lib/richText.ts`)
+### 1. Markup parser (`src/lib/richText.ts`) ✅
 
 A tiny pure-TS tokenizer + parser. No regex sledgehammer; one left-to-right pass producing an array of nodes:
 
@@ -53,7 +53,7 @@ Syntax rules:
 
 Tests in `src/lib/richText.test.ts` covering: plain text passthrough, each formatter individually, multiple formatters in one string, unknown token id, mismatched delimiters, empty input, `{facility:}` with empty id (treated as literal text).
 
-### 2. `RichText.svelte`
+### 2. `RichText.svelte` ✅
 
 Renders the parsed AST. One `{#each}` over nodes with an `{#if node.kind === '…'}` ladder.
 
@@ -78,11 +78,11 @@ Both return short single-string summaries (already supported by the existing `To
 - Facility: `"{name} — {description}"` (description already exists on `FacilityDef`).
 - Technology: `"{name} — {rumourText}"`.
 
-### 3. Update `HelpModal.svelte`
+### 3. Update `HelpModal.svelte` ✅
 
 Replace `<p class="help-paragraph">{paragraph}</p>` with `<p class="help-paragraph"><RichText source={paragraph} /></p>`. No other changes; the existing CSS keeps paragraph spacing.
 
-### 4. "YOUR GOAL" lines in help topics
+### 4. "YOUR GOAL" lines in help topics ✅
 
 Update `src/data/helpTopics.ts` so each topic body's first paragraph leads with a bolded goal line. Examples:
 
@@ -98,7 +98,7 @@ Goals are written by hand (not generated), but they should reference real def ID
 
 A small CSS tweak in `HelpModal.svelte` styles `<strong>` inside `.help-paragraph` to use `--text-accent` and slightly more letter-spacing — making the goal line read as a heading without it being a separate `<h3>`.
 
-### 5. Tooltip component accessibility upgrade
+### 5. Tooltip component accessibility upgrade ✅
 
 Modify `src/lib/components/Tooltip.svelte`:
 
@@ -111,7 +111,7 @@ Modify `src/lib/components/Tooltip.svelte`:
 
 This is a contained refactor — every existing call site already passes `text` + child snippet, so no caller needs to change.
 
-### 6. Tooltip migration: replace `title="…"`
+### 6. Tooltip migration: replace `title="…"` ✅
 
 Mechanical sweep. For each occurrence below, wrap the relevant element in `<Tooltip text={…}>` and delete the `title` attribute. Where the title text is dynamic (template string), pass it through as the `text` prop expression unchanged.
 
@@ -135,7 +135,7 @@ After the sweep, run `grep -rn 'title="' src/` and confirm no remaining hits in 
 
 While we're touching `Tooltip.svelte`, the current implementation only supports `above` / `below`. The migration list does not introduce horizontal cases, so no API extension needed in this phase. (Note for future: if a sidebar use case demands left/right, add it then.)
 
-### 8. Tests
+### 8. Tests ✅
 
 - `src/lib/richText.test.ts` — parser unit tests (see Plan §1).
 - `src/lib/components/RichText.test.ts` — render tests using `@testing-library/svelte`-style or a Vitest DOM environment, checking that `{facility:spaceLaunchCentre}` produces a tooltip host with the facility name and that an unknown id renders the fallback string. (If we don't have a Svelte component test harness yet, defer to playwright e2e — see below.)

@@ -186,9 +186,11 @@
         <div class="menu-dropdown" style="top: {dropdownPos.top}px; left: {dropdownPos.left}px;">
           <div class="menu-seed-row">
             <span class="menu-seed-label">SEED</span>
-            <button class="menu-seed-value" onclick={copySeed} title="Copy seed to clipboard">
-              {seed}<span class="menu-copy-hint">{seedCopied ? '✓' : '⧉'}</span>
-            </button>
+            <Tooltip text="Copy seed to clipboard" direction="below">
+              <button class="menu-seed-value" onclick={copySeed}>
+                {seed}<span class="menu-copy-hint">{seedCopied ? '✓' : '⧉'}</span>
+              </button>
+            </Tooltip>
           </div>
           <div class="menu-divider"></div>
           <button
@@ -197,15 +199,17 @@
           >
             EXPORT SAVE
           </button>
-          <label class="menu-item menu-import-label" title="Import a save file">
-            IMPORT SAVE
-            <input
-              type="file"
-              accept=".json,application/json"
-              onchange={handleFileChange}
-              class="menu-hidden-input"
-            />
-          </label>
+          <Tooltip text="Import a save file" direction="below">
+            <label class="menu-item menu-import-label">
+              IMPORT SAVE
+              <input
+                type="file"
+                accept=".json,application/json"
+                onchange={handleFileChange}
+                class="menu-hidden-input"
+              />
+            </label>
+          </Tooltip>
           <div class="menu-divider"></div>
           <button
             class="menu-item"

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { FacilityDef, PendingFacilityPlacement } from '../../engine/types';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     placement,
@@ -26,9 +27,11 @@
 <div class="placement-card" class:placing={isPlacing}>
   <div class="header">
     <span class="title">PLACE FACILITY</span>
-    <span class="defer-count" title="Times deferred ({placement.sourceId})">
-      {placement.deferCount}/3
-    </span>
+    <Tooltip text="Times deferred ({placement.sourceId})" direction="above">
+      <span class="defer-count">
+        {placement.deferCount}/3
+      </span>
+    </Tooltip>
   </div>
 
   <div class="facility-name">

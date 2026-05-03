@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ProjectDef, ProjectReward, OngoingProjectReward, ProjectType, ResearchField } from '../../engine/types';
   import { turnToYear } from '../../engine/projects';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     completedProjectIds,
@@ -146,7 +147,9 @@
         <div class="project-card">
           <div class="card-top">
             <div class="image-placeholder">
-              <span class="image-glyph" title={entry.type}>{TYPE_GLYPH[entry.type]}</span>
+              <Tooltip text={entry.type} direction="above">
+                <span class="image-glyph">{TYPE_GLYPH[entry.type]}</span>
+              </Tooltip>
             </div>
             <div class="card-info">
               <div class="project-name">{entry.name}</div>

@@ -3,6 +3,7 @@
   import { BLOC_DEFS, NARRATIVE_OPENING } from '../../data/loader';
   import type { Era, PushFactor } from '../../engine/types';
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
+  import Tooltip from '$lib/components/Tooltip.svelte';
 
   let showOpening = $state(true);
 
@@ -110,15 +111,16 @@
           autocomplete="off"
           placeholder="8-char hex string"
         />
-        <button
-          class="btn-refresh"
-          onclick={() => {
-            seed = generateSeed();
-          }}
-          title="Generate new seed"
-        >
-          ↺
-        </button>
+        <Tooltip text="Generate new seed" direction="above">
+          <button
+            class="btn-refresh"
+            onclick={() => {
+              seed = generateSeed();
+            }}
+          >
+            ↺
+          </button>
+        </Tooltip>
       </div>
       <p class="seed-hint">Share this string to replay identical starting conditions.</p>
     </section>

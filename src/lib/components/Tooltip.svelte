@@ -13,12 +13,15 @@
 
   let hostEl = $state<HTMLSpanElement | undefined>(undefined);
   let bubbleEl = $state<HTMLSpanElement | undefined>(undefined);
+  let visible = $state(false);
 
-  // Initial style parks the bubble off-screen while invisible so
-  // getBoundingClientRect() can measure its true rendered size on first hover.
+  const tooltipId = `tt-${crypto.randomUUID()}`;
+
+  // Park bubble off-screen on first paint so getBoundingClientRect() can measure
+  // its true rendered size before the first hover/focus event fires.
   let bubbleStyle = $state('position:fixed;left:-9999px;top:-9999px;bottom:auto');
 
-  function handleMouseEnter() {
+  function position() {
     if (!hostEl || !bubbleEl) return;
 
     const host = hostEl.getBoundingClientRect();
@@ -26,24 +29,63 @@
     const margin = 6;
     const gap = 4;
 
-    // Preferred vertical position
     let top = direction === 'below' ? host.bottom + gap : host.top - bubble.height - gap;
-
-    // Preferred horizontal centre-align
     let left = host.left + host.width / 2 - bubble.width / 2;
 
-    // Clamp to viewport
     left = Math.max(margin, Math.min(left, window.innerWidth - bubble.width - margin));
     top = Math.max(margin, Math.min(top, window.innerHeight - bubble.height - margin));
 
     bubbleStyle = `position:fixed;left:${left}px;top:${top}px;bottom:auto`;
   }
+
+  function show() {
+    visible = true;
+    requestAnimationFrame(position);
+  }
+
+  function hide() {
+    visible = false;
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && visible) hide();
+  }
+
+  // Wire aria-describedby onto the first focusable descendant so screen
+  // readers announce tooltip text when the wrapped control receives focus.
+  // Wrapper span is left non-focusable to avoid duplicate tab stops.
+  $effect(() => {
+    if (!hostEl) return;
+    const focusable = hostEl.querySelector(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable && focusable !== hostEl) {
+      focusable.setAttribute('aria-describedby', tooltipId);
+      return () => focusable.removeAttribute('aria-describedby');
+    }
+  });
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<span class="tooltip-host" onmouseenter={handleMouseEnter} bind:this={hostEl}>
+<span
+  class="tooltip-host"
+  onmouseenter={show}
+  onmouseleave={hide}
+  onfocusin={show}
+  onfocusout={hide}
+  bind:this={hostEl}
+>
   {@render children()}
-  <span class="tooltip-bubble" style={bubbleStyle} bind:this={bubbleEl}>{text}</span>
+  <span
+    class="tooltip-bubble"
+    style={bubbleStyle}
+    bind:this={bubbleEl}
+    id={tooltipId}
+    role="tooltip"
+    data-visible={visible}
+  >{text}</span>
 </span>
 
 <style>
@@ -55,7 +97,7 @@
   .tooltip-bubble {
     visibility: hidden;
     opacity: 0;
-    position: fixed; /* overridden by inline style; declared here for specificity */
+    position: fixed;
     background: var(--surface-3);
     color: var(--text-primary);
     font-size: var(--fs-sm);
@@ -69,7 +111,7 @@
     z-index: 1000;
   }
 
-  .tooltip-host:hover .tooltip-bubble {
+  .tooltip-bubble[data-visible='true'] {
     visibility: visible;
     opacity: 1;
   }
