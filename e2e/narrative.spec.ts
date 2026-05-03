@@ -28,7 +28,7 @@ test('Help button — open, page through all slides, close', async ({ page }) =>
   await startNewGame(page);
 
   // Help? button should be visible in the phase controls
-  const helpBtn = page.locator('.help-btn');
+  const helpBtn = page.locator('.help-btn[aria-label="Help"]');
   await expect(helpBtn).toBeVisible();
 
   // Open the help modal
@@ -94,7 +94,7 @@ test('opening narrative — Skip button dismisses immediately', async ({ page })
 test('Help modal — keyboard navigation (ArrowRight / ArrowLeft)', async ({ page }) => {
   await startNewGame(page);
 
-  await page.locator('.help-btn').click();
+  await page.locator('.help-btn[aria-label="Help"]').click();
   const modal = page.locator('[role="dialog"]');
   await expect(modal).toBeVisible();
 

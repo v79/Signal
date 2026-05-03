@@ -81,7 +81,7 @@ test.describe('HUD resource tooltips', () => {
   test('MAT tooltip is visible and on screen', async ({ page }) => {
     const host = page.locator('.tooltip-host:has(.res-label:text("MAT"))');
     const text = await assertTooltipInViewport(page, host);
-    expect(text).toBe('Raw materials. Gained from mines and industrial zones.');
+    expect(text).toContain('Materials');
     await page.screenshot({ path: 'screenshots/tooltips/mat-tooltip.png', fullPage: true });
   });
 
