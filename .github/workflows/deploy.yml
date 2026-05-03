@@ -6,6 +6,9 @@ on:
     types: [closed]
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Build and deploy static site
@@ -19,7 +22,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
