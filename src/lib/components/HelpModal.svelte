@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { HelpTopic } from '../../data/helpTopics';
+  import RichText from './RichText.svelte';
 
   let {
     topic,
@@ -41,7 +42,7 @@
 
     <div class="modal-body">
       {#each topic.body as paragraph}
-        <p class="help-paragraph">{paragraph}</p>
+        <p class="help-paragraph"><RichText source={paragraph} /></p>
       {/each}
     </div>
   </div>
@@ -82,7 +83,7 @@
   }
 
   .modal-label {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-xs);
     letter-spacing: 0.25em;
     color: #2a6090;
@@ -92,7 +93,7 @@
   }
 
   .modal-title {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-lg);
     letter-spacing: 0.12em;
     color: #c8dce8;
@@ -106,7 +107,7 @@
     background: none;
     border: 1px solid var(--border-panel);
     color: #4a6070;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-xs);
     letter-spacing: 0.2em;
     padding: 0.2rem 0.6rem;
@@ -130,11 +131,17 @@
   }
 
   .help-paragraph {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.85rem;
     line-height: 1.7;
     color: #a8c4d8;
     margin: 0;
     max-width: 68ch;
+  }
+
+  :global(.help-paragraph strong) {
+    color: var(--text-accent);
+    letter-spacing: 0.08em;
+    font-weight: bold;
   }
 </style>

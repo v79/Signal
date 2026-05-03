@@ -3,6 +3,7 @@
   import { BLOC_DEFS, NARRATIVE_OPENING } from '../../data/loader';
   import type { Era, PushFactor } from '../../engine/types';
   import NarrativeModal from '$lib/components/NarrativeModal.svelte';
+  import Tooltip from '$lib/components/Tooltip.svelte';
 
   let showOpening = $state(true);
 
@@ -110,15 +111,16 @@
           autocomplete="off"
           placeholder="8-char hex string"
         />
-        <button
-          class="btn-refresh"
-          onclick={() => {
-            seed = generateSeed();
-          }}
-          title="Generate new seed"
-        >
-          ↺
-        </button>
+        <Tooltip text="Generate new seed" direction="above">
+          <button
+            class="btn-refresh"
+            onclick={() => {
+              seed = generateSeed();
+            }}
+          >
+            ↺
+          </button>
+        </Tooltip>
       </div>
       <p class="seed-hint">Share this string to replay identical starting conditions.</p>
     </section>
@@ -219,7 +221,7 @@
         margin: 0;
         background: #060a10;
         color: #8aacca;
-        font-family: var(--ff-mono);
+        font-family: var(--ff-mono),monospace;
     }
 
     .newgame-layout {
@@ -298,7 +300,7 @@
         background: #0d1520;
         border: 1px solid #2a3a50;
         color: #a0c8e8;
-        font-family: var(--ff-mono);
+        font-family: var(--ff-mono),monospace;
         font-size: 0.9rem;
         letter-spacing: 0.1em;
         padding: 0.5rem 0.75rem;
@@ -349,7 +351,7 @@
         padding: 0.75rem;
         cursor: pointer;
         text-align: left;
-        font-family: var(--ff-mono);
+        font-family: var(--ff-mono),monospace;
         transition: border-color 0.15s,
         background 0.15s;
     }
@@ -458,7 +460,7 @@
         border-radius: 3px;
         padding: 0.75rem 1rem;
         cursor: pointer;
-        font-family: var(--ff-mono);
+        font-family: var(--ff-mono),monospace;
         text-align: left;
         transition: border-color 0.15s,
         background 0.15s;
@@ -512,7 +514,7 @@
         border-radius: 3px;
         padding: 0.5rem 0.75rem;
         cursor: pointer;
-        font-family: var(--ff-mono);
+        font-family: var(--ff-mono),monospace;
         font-size: 0.7rem;
         color: #4a6a4a;
         text-align: left;
@@ -552,7 +554,7 @@
         border: 1px solid #2a4a6a;
         color: #6aacca;
         cursor: pointer;
-        font-family: var(--ff-mono);
+        font-family: var(--ff-mono),monospace;
         font-size: 0.8rem;
         letter-spacing: 0.1em;
         padding: 0.7rem 2.5rem;

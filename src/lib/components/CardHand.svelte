@@ -2,6 +2,7 @@
   import type { CardInstance, CardDef, FieldPoints, Resources, BoardRole } from '../../engine/types';
   import { BANK_LIMIT } from '../../engine/cards';
   import { FIELD_ABBR } from '../fieldColours';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     cards,
@@ -46,14 +47,22 @@
     if (!r) return true;
     if ((r.funding ?? 0) < 0 && playerResources.funding < -(r.funding!)) return false;
     if ((r.materials ?? 0) < 0 && playerResources.materials < -(r.materials!)) return false;
-    if ((r.politicalWill ?? 0) < 0 && playerResources.politicalWill < -(r.politicalWill!)) return false;
-    return true;
+    return !((r.politicalWill ?? 0) < 0 && playerResources.politicalWill < -(r.politicalWill!));
+
   }
 
   function canCounter(def: CardDef): boolean {
     return (
       !!def.counterEffect && activeEventTags.includes(def.counterEffect.countersEventTag)
     );
+  }
+
+  function playDisabledReason(def: CardDef): string {
+    if (atActionCap) return 'Action limit reached this turn';
+    if (!inAction) return 'Not the action phase';
+    if (!boardRequirementMet(def)) return 'Requires Director of Security on board';
+    if (!canAfford(def)) return 'Insufficient resources';
+    return 'Play this card';
   }
 
   function formatEffect(def: CardDef): string[] {
@@ -101,9 +110,9 @@
               <div class="card-header">
                 <span class="card-name">{def.name}</span>
                 {#if def.counterEffect}
-                  <span class="counter-tag" title="Counters: {def.counterEffect.countersEventTag}"
-                    >⚡</span
-                  >
+                  <Tooltip text="Counters: {def.counterEffect.countersEventTag}" direction="above">
+                    <span class="counter-tag">⚡</span>
+                  </Tooltip>
                 {/if}
               </div>
               <div class="card-effects">
@@ -151,9 +160,9 @@
             <div class="card-header">
               <span class="card-name">{def.name}</span>
               {#if def.counterEffect}
-                <span class="counter-tag" title="Counters: {def.counterEffect.countersEventTag}"
-                  >⚡</span
-                >
+                <Tooltip text="Counters: {def.counterEffect.countersEventTag}" direction="above">
+                  <span class="counter-tag">⚡</span>
+                </Tooltip>
               {/if}
             </div>
             <div class="card-effects">
@@ -166,24 +175,26 @@
               <div class="counter-info">Counter: {def.counterEffect.countersEventTag}</div>
             {/if}
             <div class="card-actions">
-              <button
-                class="btn btn-play"
-                class:disabled={!canPlay || !canAfford(def) || !boardRequirementMet(def)}
-                disabled={!canPlay || !canAfford(def) || !boardRequirementMet(def)}
-                onclick={() => onPlay(card.id)}
-                title={atActionCap ? 'Action limit reached this turn' : !inAction ? 'Not the action phase' : !boardRequirementMet(def) ? `Requires Director of Security on board` : !canAfford(def) ? 'Insufficient resources' : ''}
-              >
-                PLAY
-              </button>
-              <button
-                class="btn btn-bank"
-                class:disabled={!inAction || bankFull}
-                disabled={!inAction || bankFull}
-                onclick={() => onBank(card.id)}
-                title={bankFull ? 'Bank is full' : 'Hold for next turn (costs 10 Will/turn)'}
-              >
-                BANK
-              </button>
+              <Tooltip text={playDisabledReason(def)} direction="above">
+                <button
+                  class="btn btn-play"
+                  class:disabled={!canPlay || !canAfford(def) || !boardRequirementMet(def)}
+                  disabled={!canPlay || !canAfford(def) || !boardRequirementMet(def)}
+                  onclick={() => onPlay(card.id)}
+                >
+                  PLAY
+                </button>
+              </Tooltip>
+              <Tooltip text={bankFull ? 'Bank is full' : 'Hold for next turn (costs 10 Will/turn)'} direction="above">
+                <button
+                  class="btn btn-bank"
+                  class:disabled={!inAction || bankFull}
+                  disabled={!inAction || bankFull}
+                  onclick={() => onBank(card.id)}
+                >
+                  BANK
+                </button>
+              </Tooltip>
             </div>
           </div>
         {/if}
@@ -249,8 +260,7 @@
   }
 
   .hand-section {
-    flex-shrink: 0;
-    flex: 1;
+      flex: 1;
   }
 
   .hand-header {

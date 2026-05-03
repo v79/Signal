@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { FacilityDef, FacilityInstance, MapTile, Resources, TileActionDef } from '../../engine/types';
   import { findContiguousFreeStart } from '../../engine/facilities';
+  import Tooltip from '$lib/components/Tooltip.svelte';
 
   let {
     tile,
@@ -157,8 +158,8 @@
       const matchesHealthy = !requiresDestroyed && tile.destroyedStatus == null;
       if (!typeMatch || (!matchesDestroyed && !matchesHealthy)) return false;
       // Skip sea wall if already protected
-      if (ta.seaWallProtection && tile.seaWallProtected) return false;
-      return true;
+      return !(ta.seaWallProtection && tile.seaWallProtected);
+
     }),
   );
 
@@ -230,7 +231,9 @@
                     </span>
                   {/if}
                   {#if slot.def.canDelete}
-                    <button class="demolish-btn" onclick={() => onDemolish(slot.idx)}>DECOMMISSION</button>
+                    <Tooltip text="Demolish facility. Takes one turn to complete." direction="above">
+                      <button class="demolish-btn" onclick={() => onDemolish(slot.idx)}>DECOMMISSION</button>
+                    </Tooltip>
                   {:else}
                     <span class="no-demolish">Permanent</span>
                   {/if}

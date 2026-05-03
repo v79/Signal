@@ -17,6 +17,7 @@
   import { FIELD_COLOURS_CSS, FIELD_ABBR } from '../fieldColours';
   import HelpButton from './HelpButton.svelte';
   import HelpModal from './HelpModal.svelte';
+  import Tooltip from './Tooltip.svelte';
   import { HELP_TOPICS } from '../../data/helpTopics';
 
   let {
@@ -470,12 +471,13 @@
       {/if}
       <div class="zoom-controls" aria-label="Zoom controls">
         <button class="zoom-btn" onclick={() => scene?.zoomIn()} aria-label="Zoom in">+</button>
-        <button
-          class="zoom-btn zoom-reset"
-          onclick={() => scene?.resetZoom()}
-          aria-label="Reset zoom"
-          title="Reset zoom">⊙</button
-        >
+        <Tooltip text="Reset zoom" direction="above">
+          <button
+            class="zoom-btn zoom-reset"
+            onclick={() => scene?.resetZoom()}
+            aria-label="Reset zoom">⊙</button
+          >
+        </Tooltip>
         <button class="zoom-btn" onclick={() => scene?.zoomOut()} aria-label="Zoom out">−</button>
       </div>
     </div>
@@ -578,7 +580,7 @@
   }
 
   .classify-badge {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.58rem;
     letter-spacing: 0.18em;
     color: #8a6810;
@@ -597,7 +599,7 @@
   }
 
   .header-datestamp {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.58rem;
     letter-spacing: 0.12em;
     color: #3a5a6a;
@@ -605,7 +607,7 @@
   }
 
   .modal-title {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-base);
     letter-spacing: 0.22em;
     color: #4a7888;
@@ -620,7 +622,7 @@
   }
 
   .era-tab {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.58rem;
     letter-spacing: 0.12em;
     padding: 0.15rem 0.5rem;
@@ -674,7 +676,7 @@
   }
 
   .header-status {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-sm);
     letter-spacing: 0.08em;
     color: #304858;
@@ -693,7 +695,7 @@
   }
 
   .dev-badge {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.58rem;
     letter-spacing: 0.18em;
     color: #e8a820;
@@ -711,7 +713,7 @@
     font-size: 0.7rem;
     padding: 0.18rem 0.45rem;
     cursor: pointer;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     border-radius: 1px;
     transition:
       color 0.15s,
@@ -775,7 +777,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
   }
 
   .detail-header {
@@ -818,7 +820,7 @@
     font-size: var(--fs-base);
     padding: 0.12rem 0.35rem;
     cursor: pointer;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     border-radius: 1px;
     flex-shrink: 0;
     line-height: 1;
@@ -1009,14 +1011,14 @@
   }
 
   .loading-label {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-base);
     letter-spacing: 0.25em;
     color: #2e5870;
   }
 
   .loading-dots {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.8rem;
     color: #1e3c50;
     animation: blink 1.4s step-start infinite;
@@ -1048,7 +1050,7 @@
   .zoom-btn {
     width: 28px;
     height: 28px;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 1rem;
     line-height: 1;
     background: rgba(4, 8, 16, 0.88);
@@ -1091,7 +1093,7 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-sm);
     letter-spacing: 0.06em;
     color: #587888;
@@ -1106,7 +1108,7 @@
 
   .legend-scroll-hint {
     margin-left: auto;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.58rem;
     letter-spacing: 0.1em;
     color: #1e3040;

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { OngoingAction, ProjectDef, ProjectInstance } from '../../engine/types';
   import type { FacilityDef } from '../../engine/types';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     queue,
@@ -208,14 +209,15 @@
             <div class="turns-left">{remaining} turn{remaining === 1 ? '' : 's'} remaining</div>
           {:else if status === 'available'}
             <div class="stage-cost">{costSummary(def)}</div>
-            <button
-              class="initiate-btn"
-              disabled={actionsRemaining <= 0}
-              title={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`}
-              onclick={() => onInitiateProject?.(def.id)}
-            >
-              BEGIN · {costSummary(def)}
-            </button>
+            <Tooltip text={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`} direction="above">
+              <button
+                class="initiate-btn"
+                disabled={actionsRemaining <= 0}
+                onclick={() => onInitiateProject?.(def.id)}
+              >
+                BEGIN · {costSummary(def)}
+              </button>
+            </Tooltip>
           {/if}
         </div>
       {/each}
@@ -243,14 +245,15 @@
                   <span class="reward-line">Reward: {rewardSummary(def)}</span>
                 {/if}
               </div>
-              <button
-                class="initiate-btn"
-                disabled={actionsRemaining <= 0}
-                title={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`}
-                onclick={() => onInitiateProject?.(def.id)}
-              >
-                INITIATE · {costSummary(def)}
-              </button>
+              <Tooltip text={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`} direction="above">
+                <button
+                  class="initiate-btn"
+                  disabled={actionsRemaining <= 0}
+                  onclick={() => onInitiateProject?.(def.id)}
+                >
+                  INITIATE · {costSummary(def)}
+                </button>
+              </Tooltip>
             </div>
           {/if}
         </div>

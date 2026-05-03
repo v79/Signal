@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { TechState, TechDef, FieldPoints } from '../../engine/types';
   import { FIELD_COLOURS_CSS, FIELD_ABBR } from '../fieldColours';
+  import Tooltip from './Tooltip.svelte';
 
   let {
     techs = [],
@@ -46,12 +47,14 @@
                 {@const pct = Math.min(100, ((tech.fieldProgress[field as keyof FieldPoints] ?? 0) / threshold) * 100)}
                 {@const color = FIELD_COLOURS_CSS[field as keyof FieldPoints] ?? '#4a6880'}
                 {@const current = tech.fieldProgress[field as keyof FieldPoints] ?? 0}
-                <div class="bar-row" title="{FIELD_ABBR[field as keyof FieldPoints] ?? field}: {current} / {threshold}">
-                  <span class="abbr" style="color: {color}">{FIELD_ABBR[field as keyof FieldPoints] ?? field.slice(0, 3).toUpperCase()}</span>
-                  <div class="track">
-                    <div class="fill" style="width: {pct}%; background: {color}"></div>
+                <Tooltip text="{FIELD_ABBR[field as keyof FieldPoints] ?? field}: {current} / {threshold}" direction="above">
+                  <div class="bar-row">
+                    <span class="abbr" style="color: {color}">{FIELD_ABBR[field as keyof FieldPoints] ?? field.slice(0, 3).toUpperCase()}</span>
+                    <div class="track">
+                      <div class="fill" style="width: {pct}%; background: {color}"></div>
+                    </div>
                   </div>
-                </div>
+                </Tooltip>
               {/if}
             {/each}
           </div>
