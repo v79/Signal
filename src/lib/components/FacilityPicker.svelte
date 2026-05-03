@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { FacilityDef, FacilityInstance, MapTile, Resources, TileActionDef } from '../../engine/types';
   import { findContiguousFreeStart } from '../../engine/facilities';
+  import Tooltip from '$lib/components/Tooltip.svelte';
 
   let {
     tile,
@@ -230,7 +231,9 @@
                     </span>
                   {/if}
                   {#if slot.def.canDelete}
-                    <button class="demolish-btn" onclick={() => onDemolish(slot.idx)}>DECOMMISSION</button>
+                    <Tooltip text="Demolish facility. Takes one turn to complete." direction="above">
+                      <button class="demolish-btn" onclick={() => onDemolish(slot.idx)}>DECOMMISSION</button>
+                    </Tooltip>
                   {:else}
                     <span class="no-demolish">Permanent</span>
                   {/if}
