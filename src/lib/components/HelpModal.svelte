@@ -83,7 +83,7 @@
   }
 
   .modal-label {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-xs);
     letter-spacing: 0.25em;
     color: #2a6090;
@@ -93,7 +93,7 @@
   }
 
   .modal-title {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-lg);
     letter-spacing: 0.12em;
     color: #c8dce8;
@@ -107,7 +107,7 @@
     background: none;
     border: 1px solid var(--border-panel);
     color: #4a6070;
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-xs);
     letter-spacing: 0.2em;
     padding: 0.2rem 0.6rem;
@@ -131,7 +131,7 @@
   }
 
   .help-paragraph {
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: 0.85rem;
     line-height: 1.7;
     color: #a8c4d8;

@@ -107,8 +107,8 @@
       if (!def || def.role !== role) return false;
       if (def.isAI && era !== 'deepSpace') return false;
       if (def.techGate && !discoveredTechIds.includes(def.techGate)) return false;
-      if (activeDefIds.has(id)) return false;
-      return true;
+      return !activeDefIds.has(id);
+
     });
     return defId ? (boardDefs.get(defId) ?? null) : null;
   }
@@ -131,8 +131,8 @@
         if (def.isAI && era !== 'deepSpace') return false;
         if (!def.techGate) return false;
         if (discoveredTechIds.includes(def.techGate)) return false;
-        if (activeDefIds.has(def.id)) return false;
-        return true;
+        return !activeDefIds.has(def.id);
+
       });
     return gatedDef?.techGate ?? null;
   }
@@ -196,8 +196,7 @@
   const visibleRoles = $derived(
     ALL_ROLES.filter((r) => {
       if (r === 'stationCommander' && era === 'earth') return false;
-      if (r === 'directorOfLunarOperations' && !hasLunarFacility) return false;
-      return true;
+      return !(r === 'directorOfLunarOperations' && !hasLunarFacility);
     }),
   );
 </script>

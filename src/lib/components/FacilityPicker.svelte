@@ -158,8 +158,8 @@
       const matchesHealthy = !requiresDestroyed && tile.destroyedStatus == null;
       if (!typeMatch || (!matchesDestroyed && !matchesHealthy)) return false;
       // Skip sea wall if already protected
-      if (ta.seaWallProtection && tile.seaWallProtected) return false;
-      return true;
+      return !(ta.seaWallProtection && tile.seaWallProtected);
+
     }),
   );
 

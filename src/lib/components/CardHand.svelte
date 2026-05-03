@@ -47,8 +47,8 @@
     if (!r) return true;
     if ((r.funding ?? 0) < 0 && playerResources.funding < -(r.funding!)) return false;
     if ((r.materials ?? 0) < 0 && playerResources.materials < -(r.materials!)) return false;
-    if ((r.politicalWill ?? 0) < 0 && playerResources.politicalWill < -(r.politicalWill!)) return false;
-    return true;
+    return !((r.politicalWill ?? 0) < 0 && playerResources.politicalWill < -(r.politicalWill!));
+
   }
 
   function canCounter(def: CardDef): boolean {
@@ -260,8 +260,7 @@
   }
 
   .hand-section {
-    flex-shrink: 0;
-    flex: 1;
+      flex: 1;
   }
 
   .hand-header {

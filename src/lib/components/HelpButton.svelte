@@ -27,7 +27,7 @@
     background: transparent;
     border: 1px solid var(--help-border);
     color: var(--help);
-    font-family: var(--ff-mono);
+    font-family: var(--ff-mono),monospace;
     font-size: var(--fs-md);
     font-weight: bold;
     line-height: 1;
