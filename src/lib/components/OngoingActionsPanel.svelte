@@ -11,6 +11,11 @@
     projectDefs = new Map(),
     completedProjectIds = {},
     actionsRemaining = 0,
+    playerResources,
+    discoveredTechIds,
+    builtFacilityDefIds,
+    orbitalStationAuthorised = false,
+    moonColonyAuthorised = false,
     onInitiateProject,
   }: {
     queue: OngoingAction[];
@@ -20,6 +25,11 @@
     projectDefs?: Map<string, ProjectDef>;
     completedProjectIds?: Record<string, number>;
     actionsRemaining?: number;
+    playerResources?: { funding?: number; materials?: number; politicalWill?: number };
+    discoveredTechIds?: Set<string>;
+    builtFacilityDefIds?: Set<string>;
+    orbitalStationAuthorised?: boolean;
+    moonColonyAuthorised?: boolean;
     onInitiateProject?: (defId: string) => void;
   } = $props();
 
@@ -113,6 +123,67 @@
     return parts.length ? `${parts.join(' · ')}/turn` : '';
   }
 
+  function canAfford(def: ProjectDef): boolean {
+    if (!playerResources) return true;
+    return (
+      (def.cost.funding ?? 0) <= (playerResources.funding ?? 0) &&
+      (def.cost.materials ?? 0) <= (playerResources.materials ?? 0) &&
+      (def.cost.politicalWill ?? 0) <= (playerResources.politicalWill ?? 0)
+    );
+  }
+
+  function initiateTooltip(def: ProjectDef): string {
+    if (actionsRemaining <= 0) return 'No actions remaining this turn';
+    if (playerResources && !canAfford(def)) {
+      const parts: string[] = [];
+      const fundingShort = (def.cost.funding ?? 0) - (playerResources.funding ?? 0);
+      const materialsShort = (def.cost.materials ?? 0) - (playerResources.materials ?? 0);
+      const willShort = (def.cost.politicalWill ?? 0) - (playerResources.politicalWill ?? 0);
+      if (fundingShort > 0) parts.push(`${fundingShort}F`);
+      if (materialsShort > 0) parts.push(`${materialsShort}M`);
+      if (willShort > 0) parts.push(`${willShort}W`);
+      return `Cannot afford — short ${parts.join(', ')}`;
+    }
+    return `Initiate: ${costSummary(def)}`;
+  }
+
+  function lockReason(def: ProjectDef): string {
+    const prereqs = def.prerequisites;
+    const reasons: string[] = [];
+
+    if (prereqs.requiresOrbitalStationAuthorised && !orbitalStationAuthorised)
+      reasons.push('Orbital Station Programme not yet authorised');
+    if (prereqs.requiresMoonColonyAuthorised && !moonColonyAuthorised)
+      reasons.push('Moon Colony Programme not yet authorised');
+
+    if (prereqs.requiredProjects?.length) {
+      const missing = prereqs.requiredProjects.filter((id) => !(id in completedProjectIds));
+      if (missing.length) {
+        const names = missing.map((id) => projectDefs.get(id)?.name ?? id);
+        reasons.push(`Requires completion of: ${names.join(', ')}`);
+      }
+    }
+
+    if (prereqs.requiredTechs?.length) {
+      const missing = discoveredTechIds
+        ? prereqs.requiredTechs.filter((t) => !discoveredTechIds!.has(t))
+        : prereqs.requiredTechs;
+      if (missing.length) reasons.push(`Requires tech: ${missing.join(', ')}`);
+    }
+
+    if (prereqs.requiredFacilityDefs?.length) {
+      const missing = builtFacilityDefIds
+        ? prereqs.requiredFacilityDefs.filter((f) => !builtFacilityDefIds!.has(f))
+        : prereqs.requiredFacilityDefs;
+      if (missing.length) {
+        const names = missing.map((id) => facilityDefs.get(id)?.name ?? id);
+        reasons.push(`Requires facility: ${names.join(', ')}`);
+      }
+    }
+
+    return reasons.length ? reasons.join('\n') : 'Prerequisites not yet met';
+  }
+
   const hasAnything = $derived(
     queue.length > 0 ||
       activeProjects.length > 0 ||
@@ -182,44 +253,46 @@
       {#each group.defs as def (def.id)}
         {@const status = groupMemberStatus(def.id)}
         {@const activeInst = activeProjects.find((p) => p.defId === def.id)}
-        <div
-          class="stage-row"
-          class:stage-completed={status === 'completed'}
-          class:stage-active={status === 'active'}
-          class:stage-locked={status === 'locked'}
-        >
-          <div class="stage-header">
-            <span class="stage-name">{def.name}</span>
-            {#if status === 'completed'}
-              <span class="stage-badge done">✓</span>
-            {:else if status === 'active'}
-              <span class="stage-badge active">IN PROGRESS</span>
+        <Tooltip text={status === 'locked' ? lockReason(def) : ''} direction="above" disabled={status !== 'locked'}>
+          <div
+            class="stage-row"
+            class:stage-completed={status === 'completed'}
+            class:stage-active={status === 'active'}
+            class:stage-locked={status === 'locked'}
+          >
+            <div class="stage-header">
+              <span class="stage-name">{def.name}</span>
+              {#if status === 'completed'}
+                <span class="stage-badge done">✓</span>
+              {:else if status === 'active'}
+                <span class="stage-badge active">IN PROGRESS</span>
+              {:else if status === 'available'}
+                <span class="stage-badge available">READY</span>
+              {:else}
+                <span class="stage-badge locked">LOCKED</span>
+              {/if}
+            </div>
+            {#if status === 'active' && activeInst}
+              {@const progress = activeInst.turnsElapsed / activeInst.effectiveDuration}
+              {@const remaining = activeInst.effectiveDuration - activeInst.turnsElapsed}
+              <div class="progress-track">
+                <div class="progress-fill project-fill" style="width: {Math.round(progress * 100)}%"></div>
+              </div>
+              <div class="turns-left">{remaining} turn{remaining === 1 ? '' : 's'} remaining</div>
             {:else if status === 'available'}
-              <span class="stage-badge available">READY</span>
-            {:else}
-              <span class="stage-badge locked">LOCKED</span>
+              <div class="stage-cost">{costSummary(def)}</div>
+              <Tooltip text={initiateTooltip(def)} direction="above">
+                <button
+                  class="initiate-btn"
+                  disabled={actionsRemaining <= 0 || !canAfford(def)}
+                  onclick={() => onInitiateProject?.(def.id)}
+                >
+                  BEGIN · {costSummary(def)}
+                </button>
+              </Tooltip>
             {/if}
           </div>
-          {#if status === 'active' && activeInst}
-            {@const progress = activeInst.turnsElapsed / activeInst.effectiveDuration}
-            {@const remaining = activeInst.effectiveDuration - activeInst.turnsElapsed}
-            <div class="progress-track">
-              <div class="progress-fill project-fill" style="width: {Math.round(progress * 100)}%"></div>
-            </div>
-            <div class="turns-left">{remaining} turn{remaining === 1 ? '' : 's'} remaining</div>
-          {:else if status === 'available'}
-            <div class="stage-cost">{costSummary(def)}</div>
-            <Tooltip text={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`} direction="above">
-              <button
-                class="initiate-btn"
-                disabled={actionsRemaining <= 0}
-                onclick={() => onInitiateProject?.(def.id)}
-              >
-                BEGIN · {costSummary(def)}
-              </button>
-            </Tooltip>
-          {/if}
-        </div>
+        </Tooltip>
       {/each}
     {/each}
 
@@ -245,10 +318,10 @@
                   <span class="reward-line">Reward: {rewardSummary(def)}</span>
                 {/if}
               </div>
-              <Tooltip text={actionsRemaining <= 0 ? 'No actions remaining this turn' : `Initiate: ${costSummary(def)}`} direction="above">
+              <Tooltip text={initiateTooltip(def)} direction="above">
                 <button
                   class="initiate-btn"
-                  disabled={actionsRemaining <= 0}
+                  disabled={actionsRemaining <= 0 || !canAfford(def)}
                   onclick={() => onInitiateProject?.(def.id)}
                 >
                   INITIATE · {costSummary(def)}

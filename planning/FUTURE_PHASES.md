@@ -19,6 +19,7 @@ This is a list of future requirements for the game but they are not to be implem
 
 - More playtesting required; Computing and physics remain a problem
 - Engineering research slows down a lot if you focus on keeping climate pressure low
+- The final tech (deep space relay network) is too late, too slow to research - move the signalRelayStation facility to the signapPatternAnalysis technology and find something else to do with the tier V tech tree item
 
 ## Era 2: nearSpace:
 

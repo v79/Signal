@@ -301,6 +301,11 @@
           projectDefs={PROJECT_DEFS}
           completedProjectIds={gs.player.completedProjectIds}
           actionsRemaining={actionsRemaining}
+          playerResources={gs.player.resources}
+          discoveredTechIds={new Set(gs.player.techs.filter(t => t.stage === 'discovered').map(t => t.defId))}
+          builtFacilityDefIds={new Set(gs.player.facilities.map(f => f.defId))}
+          orbitalStationAuthorised={gs.orbitalStationAuthorised}
+          moonColonyAuthorised={gs.moonColonyAuthorised}
           onInitiateProject={(defId) => gameStore.initiateProject(defId)}
         />
 

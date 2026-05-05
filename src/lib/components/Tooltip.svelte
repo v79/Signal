@@ -4,10 +4,12 @@
   let {
     text,
     direction = 'above',
+    disabled = false,
     children,
   }: {
     text: string;
     direction?: 'above' | 'below';
+    disabled?: boolean;
     children: Snippet;
   } = $props();
 
@@ -39,6 +41,7 @@
   }
 
   function show() {
+    if (disabled) return;
     visible = true;
     requestAnimationFrame(position);
   }
