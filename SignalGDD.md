@@ -523,13 +523,13 @@ This framing is intentional and should be preserved across all event text and fl
 The signal contains two things:
 
 1. **A warning** — the nature of which is decoded gradually through research investment. It relates to the wormhole (see below) and the consequences of an incorrect response.
-2. **An opportunity** — a protocol. If humanity can decode the signal's full sequence and respond correctly, a wormhole or subspace portal at the heliopause is activated, providing access to wherever the system's builders intended it to lead.
+2. **An opportunity** — a protocol. If humanity can decode the signal's full sequence and respond correctly, a wormhole or subspace portal in the outer Kuiper Belt is activated, providing access to wherever the system's builders intended it to lead.
 
 The destination of the wormhole is never revealed within the game. It is the final mystery — the moment the credits roll and the player imagines the rest.
 
 **The wormhole, not generic FTL**
 
-The endpoint of the wormhole victory path is not invented faster-than-light technology. It is a _door_ — a fixed structure at the heliopause, built by something else, that humanity learns to open. This distinction matters:
+The endpoint of the wormhole victory path is not invented faster-than-light technology. It is a _door_ — a fixed structure in the outer Kuiper Belt, built by something else, that humanity learns to open. This distinction matters:
 
 - The wormhole is a place on the late-game map, a concrete objective the player's ships travel toward
 - It cannot be replicated; there is only one door
@@ -544,12 +544,12 @@ The climax of the wormhole path is a late-game event card presenting the player 
 **Consequences of an incorrect response**
 
 - The wormhole option is permanently closed — the signal ceases the relevant transmission, the portal does not activate, and the wormhole victory path is no longer available in that run
-- Ships that subsequently attempt to cross the heliopause are intercepted by automated defensive systems — not an alien war, simply a system doing what it was designed to do when an incorrect response is followed by an intrusion attempt
+- Ships that subsequently attempt to approach the structure are intercepted by automated defensive systems — not an alien war, simply a system doing what it was designed to do when an incorrect response is followed by an intrusion attempt
 - This is a loss condition specific to the wormhole path; players pursuing other victories are unaffected but also cannot access the wormhole
 
 **Consequences of a correct response**
 
-- The wormhole activates at the heliopause — a new node appears on the deep space map
+- The wormhole activates at the outer Kuiper Belt — a new node appears on the deep space map
 - A crewed mission through the wormhole is the final landmark project, and its completion triggers the wormhole victory
 - The signal goes quiet after activation; it has done what it was built to do
 

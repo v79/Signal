@@ -1,19 +1,18 @@
 # Future Phases - NOT ready to be implemented
 
-This is a list of future requirements for the game but they are not to be implemented until a specific plan is created. This list is not ordered.
+This is a list of future requirements for the game, but they are not to be implemented until a specific plan is created. This list is not ordered.
 
 ## UI visual flare:
 
 - Visual flare/animation/effect when the player takes actions such as building a facility, playing a card, etc
 - The game is just too dark, the colour scheme is too muted
-- Fix the right column width
 
 ## Era 1: Earth map
 
-- Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles. Need a way to create more urban tiles (which is realistic anyway)
+- Some maps are too restrictive as they don't have sufficient tiles of various types, especially urban tiles.
 - There's special logic to animate the building of the Orbital Station stages on the map. This should be generalised to support any multi-stage landmark.
 - The proposal to build the space launch centre costs money and time, but there's no subsequent prompt to actually build the thing
-- A random map generator option?
+- A random map generator option - would need to ensure that there are at least 2 tiles of each type, must be largely contiguous, have a min and max size
 
 ## Earth era content pass
 
@@ -24,9 +23,7 @@ This is a list of future requirements for the game but they are not to be implem
 ## Era 2: nearSpace:
 
 - Starting a game in Era 2 breaks the LEO station; not a big concern
-- There isn't enough to do, there are few choices to make
 - It takes a long time between unlocking Era 2 and being able to build a facility on a space node
-- It's probably possible to progress in Era 2 by doing nothing - we need some way of blocking tech progress if there are no Era 2 facilities built?
 
 ## Near Earth/LEO Map
 
@@ -37,6 +34,16 @@ This is a list of future requirements for the game but they are not to be implem
 ## LEO era content pass
 
 - There should be four lunar build chains, but only three build slots, forcing a choice
+  - Lunar Habitat, Lunar Launch Centre, Lunar Mine, ???
+
+## Era 3: Asteroid Belt
+
+- Need a plan for this! And likely goes beyond the asteroid belt as well.
+- Prospecting as the core game mechanic in this Era?
+- Hohmann Transfer Orbits set up to link nodes?
+- Introduce a new resource type in Era 3? As we should be pretty stable on Funds/Materials/Will by now.
+- This should be the most Sci-Fi era, opportunities to be creative
+- Must start connecting this to the Signal and the eventual Wormhole
 
 ## Card rework:
 
@@ -55,15 +62,14 @@ This is a list of future requirements for the game but they are not to be implem
 - The solar storm event is countered by political will. Which is a weird choice.
 - Limit to only one diplomatic event active at any time?
 - Lunar seismic event should not fire if there are no lunar facilities
-- The ongoing actions panel may need a new home - left column can get very busy
 
 ## Research:
 
 - What to do once all the tech for an era has been researched?
-- Each Era should have a tier 5 technology that represents the end of the era.
+- Each Era should have a tier V technology that represents the end of the era.
 - The game is based around the idea that the player cannot choose the next technology to research, but perhaps they could initiate a project to focus on a tech that is near completion, with a percentage chance of success.
   - This could be gated by facilities - you must have a publicUniversity to run a 'moonshot' research boost project for a particular tech.
-- Every technology unlocked should give the player something new (facility, action, project, event)
+- Every technology unlocked should give the player something new (facility, action, project, event); some Era 1 techs do not
 
 ## The Signal:
 
@@ -90,9 +96,6 @@ This is a list of future requirements for the game but they are not to be implem
 - Era 2→3 gate: Lunar Base Establishment or Deep Space Transit (TBD).
 
 ## Help Text
-
-- Add support for basic text formatting (bold, italic) in help text screens
-- Add 'goals in this era' to the help text
 
 ## Projects
 
@@ -171,8 +174,6 @@ This is a list of future requirements for the game but they are not to be implem
 
 - Continue game after winning
 - Wormhole is currently disabled, so there is no win condition
-- New game experience - more guidance on what to do to play the game
-- New game experience - start with a couple of pre-built facilities
 - Fully random game map experience (custom bloc setup?)
 
 

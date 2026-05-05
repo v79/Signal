@@ -65,7 +65,7 @@ Banking mechanic: up to 2 cards held between turns at 1 Funding/card/turn decay 
 
 - **Research is never a direct action.** It accumulates because of what the player builds and plays. Do not add a "Research" standing action or direct field-point purchase.
 - **The signal is a system, not a being.** It has no personality or agenda. All event text and flavour writing must reflect this — it is an automated alien device activated by humanity's first satellites.
-- **The wormhole is a fixed structure at the heliopause, not invented technology.** It cannot be replicated; there is only one door. The destination is never revealed.
+- **The wormhole is a fixed structure in the outer Kuiper Belt, not invented technology.** It cannot be replicated; there is only one door. The destination is never revealed.
 - **Game state is fully client-side.** Seeded runs (shareable seed strings) are a lightweight community feature; the seed must deterministically drive bloc simulation and event pools.
 - **Some events cannot be countered.** The third event-response tier (no counter) must remain in the design — the player should never feel perfect play counters everything.
 - **Multiplayer is explicitly out of scope** — not a deferral, a positive design choice.
