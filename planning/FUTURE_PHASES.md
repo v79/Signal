@@ -24,6 +24,7 @@ This is a list of future requirements for the game, but they are not to be imple
 
 - Starting a game in Era 2 breaks the LEO station; not a big concern
 - It takes a long time between unlocking Era 2 and being able to build a facility on a space node
+- Drop the 'Trojan' label from L4 and L5 nodes. L4 and L5 should have more expensive launch costs.
 
 ## Near Earth/LEO Map
 
